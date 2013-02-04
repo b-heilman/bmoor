@@ -1,0 +1,31 @@
+<html>
+<head>
+<script src="../jquery.min.js"></script>
+<script src="../bMoor.js"></script>
+
+<script>
+bMoor.settings.jsRoot = 'js';
+bMoor.fileloader.resetLibrary();
+</script>
+
+</head>
+<body>
+<script>
+bMoor.fileloader.require([
+		'bmoor.Test2', 
+		['bmoor','test','Test3']
+	], function(){
+		var 
+			t1 = new bmoor.Test1(),
+			t2 = new bmoor.Test2(),
+			t3 = new bmoor.test.Test3();
+		
+		t1.hello();
+		t2.hello();
+		t3.hello();
+	}
+);
+</script>
+
+</body>
+</html>
