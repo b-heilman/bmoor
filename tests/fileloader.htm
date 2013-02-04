@@ -1,0 +1,41 @@
+<html>
+<head>
+<script>
+var 
+	jQuery = {
+		getScript : function( script ){
+			console.log('requesting: ', script);
+			
+			return {
+				done : function(){
+					return this;
+				},
+				fail : function(){
+					return this;
+				}
+			}
+		}	
+	};
+</script>
+<script src="../bMoor.js"></script>
+</head>
+<body>
+<script>
+bMoor.fileloader.loadClass('der');
+bMoor.fileloader.loadClass('der.fn.blar');
+
+bMoor.fileloader.setLibrary( ['der'], '/jquery' );
+bMoor.fileloader.setLibrary( ['der','fn'], '/jquery' );
+bMoor.fileloader.setLibrary( ['sometest'], '/sometest.min', {}, true );
+bMoor.fileloader.setLibrary( ['sometest','function','bar'], '/sometest/bar' );
+
+bMoor.fileloader.loadClass('der');
+bMoor.fileloader.loadClass('der.fn.blar');
+bMoor.fileloader.loadClass('sometest.function');
+bMoor.fileloader.loadClass('sometest.function.foo');
+bMoor.fileloader.loadClass('sometest.function.bar.woot');
+bMoor.fileloader.loadClass('test');
+
+</script>
+</body>
+</html>
