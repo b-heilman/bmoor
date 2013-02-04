@@ -293,14 +293,12 @@
 					if ( lib['/'] ){
 						masterLib = lib;
 						masterPath = classPath.slice(0);
-						console.log( masterPath );
 					}
 				}else{
 					break;
 				}
 			}
 			
-			console.log( masterLib, masterPath );
 			return masterLib['*'] 
 				? { root : masterLib['/'], path : [],         settings : masterLib['.'] } 
 				: { root : masterLib['/'], path : masterPath, settings : masterLib['.'] };
@@ -332,8 +330,6 @@
 					},
 					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' );
 
-				console.log( info, path );
-				
 				$.getScript( path+'.js' )
 					.done( success )
 					.fail( function(){
@@ -347,6 +343,31 @@
 		};
 	}());
 	FileLoader.resetLibrary();
+	
+	function Constructor(){}
+	(function(){
+		Constructor.prototype.create = function( settings ){
+			
+		};
+		
+		// used to extend a child instance using the parent's prototype
+		extend = function( child, parent ){
+			var 
+				proto = child.prototype,
+				_proto = parent.prototype,
+				_parent = { constructor : parent.prototype.constructor };
+			
+			child.prototype.__parent = _proto;
+			
+			for( var attr in _proto ){
+				if ( proto[attr] ){
+					_parent[attr] = _proto[attr];
+				}else{
+					proto[attr] = _proto[attr];
+				}
+			}
+		};
+	}());
 	
 	global.bMoor = {
 		fileloader : FileLoader
