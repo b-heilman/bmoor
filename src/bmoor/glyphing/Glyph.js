@@ -7,15 +7,16 @@ bMoor.constructor.define({
 	],
 	construct : function( settings, limits, $root ){
 		var
-			style = {},
+			style = null,
 			$glyph;
 		
 		this.settings = this.parseSettings( settings );
-		
-		$glyph = this.makeNode( $.extend({},this.__static.settings.style, settings.style) );
+		style = $.extend( {},this.__static.settings.style, this.settings.style );
+		$glyph = this.makeNode( style );
 		
 		this.$ = $glyph;
-		this.stats = style;
+		this.stats = {};
+		this.setStats( style );
 		this.limits = limits;
 		this.shiftOn = false;
 		
@@ -33,12 +34,10 @@ bMoor.constructor.define({
 		};
 			
 		// we need to adjust the positioning of the node now that we know the gaps
-		this.stats.top  = parseInt(this.stats.top) - this.stats.gap.top;
-		this.stats.left = parseInt(this.stats.left) - this.stats.gap.left;
 		
 		this.redraw();
 		
-		$glyph.data( 'glyph', this );
+		$glyph.data( 'self', this );
 	},
 	onReady : function(){
 		$(document.body).on('mouseenter','.glyphing-glyph', function( event ){
@@ -73,39 +72,6 @@ bMoor.constructor.define({
 	},
 	publics : {
 		// glyphing setters
-		setCenter : function( x, y ){
-			this.setLeft( x - this.stats.width / 2 );
-			this.setTop( y - this.stats.height / 2 );
-		},
-		setLeft : function ( left ){
-			this.stats.left = left;
-		},
-		setTop : function( top ){
-			this.stats.top = top;
-		},
-		setWidth : function ( width ){
-			this.stats.width = width;
-		},
-		setHeight : function ( height ){
-			this.stats.height = height;
-		},
-		setOpacity : function ( opacity ){
-			this.stats.opacity = opacity;
-		},
-		setAngle : function ( angle ){
-			this.stats.angle = angle;
-		},
-		redraw : function(){
-			this.$.css( {
-				top     : this.stats.top - this.stats.gap.top,
-				left    : this.stats.left - this.stats.gap.left,
-				width   : this.stats.width,
-				height  : this.stats.height,
-				opacity : this.stats.opacity
-			});
-		},
-		// glyph info
-		isGlyph : true,
 		parseSettings : function( settings ){
 			if ( !settings.style ){
 				settings.style = {};
@@ -132,17 +98,109 @@ bMoor.constructor.define({
 				delete settings.height;
 			}
 			
+			if ( settings.opacity && !settings.style.opacity ){
+				settings.style.opacity = settings.opacity;
+				delete settings.opacity;
+			}
+			
+			if ( settings.angle && !settings.style.angle ){
+				settings.style.angle = settings.angle;
+				delete settings.angle;
+			}
+			
 			return settings;
 		},
+		setStats : function( stats ){
+			if ( stats.top ){
+				this.setTop( stats.top );
+			}else if ( this.stats.top == undefined ){
+				this.setTop( this.$.position().top );
+			}
+			
+			if ( stats.left ){
+				this.setLeft( stats.left );
+			}else if ( this.stats.left == undefined ){
+				this.setLeft( this.$.position().left );
+			}
+			
+			if ( stats.width ){
+				this.setWidth( stats.width );
+			}else if ( this.stats.width == undefined ){
+				this.setWidth( this.$.width() );
+			}
+			
+			if ( stats.height ){
+				this.setHeight( stats.height );
+			}else if ( this.stats.height == undefined ){
+				this.setHeight( this.$.height() );
+			}
+			
+			if ( stats.opacity ){
+				this.setOpacity( stats.opacity );
+			}else if ( this.stats.opacity == undefined ){
+				this.setOpacity( 100 );
+			}
+			
+			if ( stats.angle ){
+				this.setAngle( stats.angle );
+			}else if ( this.stats.angle == undefined ){
+				this.setAngle( 0 );
+			}
+		},
+		setCenter : function( x, y ){
+			this.setLeft( x - this.stats.width / 2 );
+			this.setTop( y - this.stats.height / 2 );
+			return this;
+		},
+		setLeft : function ( left ){
+			this.stats.left = parseInt(left);
+			return this;
+		},
+		setTop : function( top ){
+			this.stats.top = parseInt(top);
+			return this;
+		},
+		setWidth : function ( width ){
+			this.stats.width = parseInt(width);
+			return this;
+		},
+		setHeight : function ( height ){
+			this.stats.height = parseInt(height);
+			return this;
+		},
+		setOpacity : function ( opacity ){
+			this.stats.opacity = opacity;
+			return this;
+		},
+		setAngle : function ( angle ){
+			this.stats.angle = angle;
+			return this;
+		},
+		redraw : function(){
+			var
+				rotate = 'rotate('+this.stats.angle+'deg)';
+			
+			this.$.css( {
+				top     : this.stats.top - this.stats.gap.top,
+				left    : this.stats.left - this.stats.gap.left,
+				width   : this.stats.width,
+				height  : this.stats.height,
+				opacity : this.stats.opacity,
+				'-webkit-transform' : rotate,
+				'-moz-transform'    : rotate,
+				'-ms-transform'     : rotate,
+				'trasnform'         : rotate
+			});
+			
+			return this;
+		},
+		// glyph info
+		isGlyph : true,
 		getClass : function(){
 			return 'glyphing-glyph';
 		},
 		makeStyle : function( style ){
-			return 'top:'+ parseInt(style.top) 
-				+ 'px; left:' + parseInt(style.left) 
-				+ 'px; width:' + parseInt(style.width)
-				+ 'px; height:' + parseInt(style.height)
-				+ 'px; position:absolute; border:'+ style.border+';';
+			return 'position:absolute; border:'+ style.border+';';
 		},
 		makeNode : function( style ){
 			return $( '<div class="'+this.getClass()+'" style="' + this.makeStyle( style ) + '"/>' ).append( this.getTemplate() );
@@ -181,9 +239,6 @@ bMoor.constructor.define({
 						top      : onStart.top - yDiff,
 						width    : onStart.width + xDiff + xDiff,
 						height   : onStart.height + yDiff + yDiff,
-						gap      : dis.stats.gap,
-						opacity  : dis.stats.opacity,
-						rotation : dis.stats.rotation
 					};
 					
 				if ( !dis.limits
@@ -191,7 +246,11 @@ bMoor.constructor.define({
 						&& dis.limits.top < stats.top
 						&& dis.limits.right > stats.left + stats.width
 						&& dis.limits.bottom > stats.top + stats.height) ){
-					dis.stats = stats;
+					dis.setWidth( stats.width );
+					dis.setHeight( stats.height );
+					dis.setTop( stats.top );
+					dis.setLeft( stats.left );
+					
 					dis.redraw();
 				}
 			};
@@ -200,17 +259,16 @@ bMoor.constructor.define({
 			$(document.body).mousemove( onMove );
 		},
 		_toJson : function( obj ){
-			return 'top:'    + obj.top
-				+ ',left:'   + obj.left
-				+ ',height:' + obj.height
-				+ ',width:'  + obj.width,
-				+ ',opacity:'+ obj.opacity;
+			console.log( obj );
+			return 'top:'   + obj.top
+				+ ',left:'    + obj.left
+				+ ',height:'  + obj.height
+				+ ',width:'   + obj.width,
+				+ ',opacity:' + obj.opacity,
+				+ ',angle:'   + obj.angle;
 		},
 		toJson : function(){
-			var 
-				obj = this.toObject();
-				
-			return '{' + this._toJson(obj) + '}';
+			return '{' + this._toJson( this.toObject() ) + '}';
 		},
 		toObject : function(){
 			return {
@@ -218,7 +276,8 @@ bMoor.constructor.define({
 				left    : parseInt(this.stats.left) + this.stats.gap.left,
 				height  : parseInt(this.stats.height),
 				width   : parseInt(this.stats.width),
-				opacity : this.stats.opacity
+				opacity : this.stats.opacity,
+				angle   : this.stats.angle
 			};
 		}
 	}

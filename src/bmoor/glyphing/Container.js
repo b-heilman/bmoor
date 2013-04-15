@@ -17,15 +17,16 @@ bMoor.constructor.define({
 			$this = this.makeNode( $el ),
 			dis = this;
 		
-		settings = this.settings = $.extend( true, {}, this.__static.defaultSettings, settings );
+		settings = this.settings = $.extend( true, {}, this.__static.settings, settings );
 		
-		$el.addClass( 'glyphing-container' ).data( 'container', this );          // for external reference
-		$this.data( 'container', this ).insertBefore( $el ).append( $el ); // for trigger reference
+		$el.data( 'self', this );  // for external reference
+		$this.data( 'self', this ).insertBefore( $el ).append( $el ); // for trigger reference
 		
 		this.glyphs = [];
 		this.locked = false;
 		this.$ = $this;
 		this.$el = $el;
+		this.controller = null;
 		
 		left = dis.$.offset().left;
 		top  = dis.$.offset().top;
@@ -52,7 +53,7 @@ bMoor.constructor.define({
 		// listen for a request to delete a glyph.  Glyphs generate these themselves, container has to put them out of their misery
 		$(document.body).on('glyph-undersized delete-request', '.glyphing-container', function( event, glyph ){
 			var 
-				dis = $(this).data('container');
+				dis = $(this).data('self');
 				
 			for( var i = 0; i < dis.glyphs.length; i++ ){
 				if ( dis.glyphs[i] == glyph ){
@@ -65,7 +66,7 @@ bMoor.constructor.define({
 		// mouse down is triggering the creation of a glyph to be added
 		$(document.body).on('mousedown', '.glyphing-container', function( event ){
 			var 
-				dis = $(this).data('container');
+				dis = $(this).data('self');
 			
 			if ( !dis.locked ){
 				dis.addGlyph({
