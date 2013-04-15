@@ -1,4 +1,4 @@
-bMoor.constructor.create({
+bMoor.constructor.define({
 	name : 'Test3',
 	namespace : ['bmoor','test'],
 	statics : {
@@ -6,7 +6,7 @@ bMoor.constructor.create({
 	},
 	publics : {
 		hello : function(){
-			console.log( this.__statics.message );
+			console.log( this.__static.message );
 		}
 	}
 });

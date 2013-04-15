@@ -214,10 +214,15 @@
 	(function(){
 		// A multi level hash that allows for different libraries to be located in different locations
 		var
-			libRoots = {};
-			
-		FileLoader.resetLibrary = function(){
 			libRoots = {
+				
+			};
+			
+		FileLoader.reset = function(){
+			libRoots = {
+				'.' : { 
+					fullName : false 
+				},
 				'/' : environmentSettings.jsRoot
 			};
 		};
@@ -278,11 +283,17 @@
 			}
 		};
 		
+		/**
+		 * 
+		 * @param className
+		 * @returns
+		 */
 		FileLoader.getLibrary = function( className ){
 			var
 				lib = libRoots,
-				masterLib = libRoots,
+				masterLib = libRoots, 
 				classPath = Namespace.parse( className ),
+				name = classPath.pop(),
 				masterPath = classPath.slice(0);
 			
 			while( classPath.length ){
@@ -302,11 +313,11 @@
 			}
 			
 			return masterLib['*'] 
-				? { root : masterLib['/'], path : [],         settings : masterLib['.'] } 
-				: { root : masterLib['/'], path : masterPath, settings : masterLib['.'] };
+				? { root : masterLib['/'], path : [],         name : name, settings : masterLib['.'] } 
+				: { root : masterLib['/'], path : masterPath, name : name, settings : masterLib['.'] };
 		};
 		
-		FileLoader.loadClass = function( className, callback, args, target ){
+		FileLoader.loadSpace = function( className, callback, args, target ){
 			var
 				classPath = Namespace.parse( className );
 
@@ -336,7 +347,7 @@
 							
 							// is this an object that is getting loaded via bMoor or just a different class?
 							// wait to call the callback until the class is really loaded, so store this request up
-							if ( obj.prototype.__delayedInstall ){
+							if ( obj.prototype && obj.prototype.__delayedInstall ){
 								obj.prototype.__delayedInstall( whenReady );
 							}else{
 								whenReady();
@@ -346,21 +357,26 @@
 							error( 'loaded file : '+script+"\n but no class : "+classPath.join('.') );
 						}
 					},
-					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' );
-
+					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' ) 
+						+ '/' + ( info.settings.fullName ? classPath.join('.') : info.name );
+						
 				$.getScript( path+'.js' )
 					.done( success )
-					.fail( function(){
-						$.getScript( path+'.min.js' )
-							.done( success )
-							.fail( function( jqxhr, settings, exception ){
-								error( 'failed to load file : '+path+"\nError : "+exception );
-							});
+					.fail( function( jqxhr, settings, exception ){
+						if ( exception == 'Not Found' ){
+							$.getScript( path+'.min.js' )
+								.done( success )
+								.fail( function( jqxhr, settings, exception ){
+									error( 'failed to load file : '+path+"\nError : "+exception );
+								});
+						}else{
+							error( 'failed to load file : '+path+"\nError : "+exception );
+						}
 					});
 			}
 		};
 		
-		FileLoader.require = function( requirements, callback, args, reference ){
+		FileLoader.require = function( requirements, callback, reference ){
 			var
 				reqCount = 1;
 			
@@ -368,20 +384,22 @@
 				reqCount--;
 				
 				if ( reqCount == 0 ){
+					var
+						aliases = [];
 					// now all requirements are loaded
 					
 					reqCount--; // locks any double calls, requests to -1
 					
-					callback.apply( reference, args );
+					for( var i = 0, req = requirements, len = req ? req.length : 0; i < len; i++ ){
+						aliases.push( Namespace.get(req[i]) );
+					}
+					
+					callback.apply( reference, aliases );
 				}
 			}
 			
 			if ( !reference ){
 				reference = {};
-			}
-			
-			if ( !args ){
-				args = [];
 			}
 			
 			// build up the request stack
@@ -392,31 +410,17 @@
 				// if namespace does not exist, load it
 				if ( !Namespace.exists(namespace) ){
 					reqCount++;
-					this.loadClass( namespace, cb );
+					this.loadSpace( namespace, cb );
 				}
 			}
 			
 			cb();
 		};
 	}());
-	FileLoader.resetLibrary();
+	FileLoader.reset();
 	
 	function Constructor(){}
 	(function(){
-		var
-			classesLoading = 0,
-			onLoaded = [];
-		
-		Constructor.prototype.onLoaded = function( cb, args ){
-			if ( classesLoading == 0 ){
-				cb.apply( this, args );
-			}else{
-				onLoaded.push({
-					callback  : cb,
-					arguments : args
-				});
-			}
-		};
 		/**
 		 * 
 		 * @param settings 
@@ -429,28 +433,21 @@
 		 *   construct   : the constructor for the class, called automatically
 		 *   publics     : the public interface for the class
 		 *   statics     : variables to be shared between class instances
+		 *   onReady     : function to call when DOM is ready, instance passed in
+		 *   onDefine    : function to call when class has been defined
 		 * }
 		 */
-		Constructor.prototype.create = function( settings, callback, args ){
+		Constructor.prototype.define = function( settings ){
 			var
 				dis = this,
-				requests = settings.requests,
+				requests = settings.require,
 				namespace = ( settings.namespace ? Namespace.get(settings.namespace) : global ),
 				obj  = namespace[ settings.name ] = function(){
 					this.__construct.apply( this, arguments );
 				}; 
 			
 			// callback used each time a new class is pulled in
-			
-			classesLoading++;
-			obj.prototype.__construct = settings.construct 
-				? settings.construct
-				: function(){};
-			
-			obj.prototype.__delayedInstalls = [];
-			obj.prototype.__delayedInstall = function( cb ){
-				this.__delayedInstalls.push( cb );
-			};
+			obj.prototype.__construct = settings.construct ? settings.construct : function(){};
 			
 			if ( !requests ){
 				 requests = [];
@@ -465,11 +462,16 @@
 			}
 			
 			FileLoader.require( requests, function(){
-				classesLoading--;
 				define.call( dis, settings, obj );
 				
-				if ( callback ){
-					callback.apply( callback, args | [] );
+				if ( settings.onDefine ){
+					settings.onDefine( obj );
+				}
+				
+				if ( settings.onReady ){
+					$(document).ready(function(){
+						settings.onReady( obj );
+					});
 				}
 			}, [], this);
 		};
@@ -499,19 +501,6 @@
 			if ( settings.publics ){
 				this.publics( obj, settings.publics );
 			}
-			
-			// run through any delays, clean up the prototype
-			for( var i = 0, installs = obj.prototype.__delayedInstalls, len = installs.length; i < len; i++ ){
-				installs[i]();
-			}
-			delete obj.prototype.__delayedInstalls;
-			delete obj.prototype.__delayedInstall;
-			
-			if ( classesLoading == 0 ){
-				for( var i = 0, len = onLoaded.length; i < len; i++ ){
-					onLoaded[i].callback.apply( this, onLoaded[i].arguments ); 
-				}
-			}
 		};
 		
 		Constructor.prototype.publics = function( child, publics ){
@@ -522,9 +511,9 @@
 		
 		Constructor.prototype.statics = function( child, statics ){
 			if ( statics ){
-				child.prototype.__statics = statics;
+				child.prototype.__static = statics;
 			}else{
-				child.prototype.__statics = {};
+				child.prototype.__static = {};
 			}
 		};
 		

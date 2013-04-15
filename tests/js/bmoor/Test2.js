@@ -1,4 +1,4 @@
-bMoor.constructor.create({
+bMoor.constructor.define({
 	name : 'Test2',
 	namespace : 'bmoor',
 	parent : 'bmoor.Test1',
@@ -7,7 +7,7 @@ bMoor.constructor.create({
 	},
 	publics : {
 		hello : function(){
-			console.log( this.__statics.message );
+			console.log( this.__static.message );
 		}
 	}
 });
