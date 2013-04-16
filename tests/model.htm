@@ -1,0 +1,31 @@
+<html>
+<head>
+	<style>
+		.noteable-note textarea{
+			display: none;
+		}
+		
+		.note-active textarea{
+			display: block;
+		}
+	</style>
+	
+	<script src='../src/jquery.min.js'></script>
+	<script src='../src/bMoor.js'></script>
+	<script src='../src/bmoor/Model.js'></script>
+</head>
+<body>
+	<script>
+		var
+			model = new bmoor.Model( { foo : 1, bar : 2 } );
+		
+		model._start();
+		model._bind( { notify : function( obj ){console.log(obj);} } );
+		
+		setTimeout( function(){ model.foo = 3; }, 500 );
+		setTimeout( function(){ model.tmp = 1; }, 1000 );
+		setTimeout( function(){ console.log( model._object() ); }, 2000);
+	</script>
+</body>
+</html>
+

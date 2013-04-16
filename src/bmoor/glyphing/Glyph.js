@@ -3,7 +3,8 @@ bMoor.constructor.define({
 	name : 'Glyph',
 	namespace : ['bmoor','glyphing'],
 	require: [
-		['jquery','jqote2'] // TODO : this is not technically the namespace...
+		['jquery','jqote2'], // TODO : this is not technically the namespace...
+		['bmoor','Model']
 	],
 	construct : function( settings, limits, $root ){
 		var
@@ -15,10 +16,11 @@ bMoor.constructor.define({
 		$glyph = this.makeNode( style );
 		
 		this.$ = $glyph;
-		this.stats = {};
-		this.setStats( style );
+		this.stats = (new bmoor.Model())._bind( this );
 		this.limits = limits;
 		this.shiftOn = false;
+		
+		this.setStats( style );
 		
 		if ( $root ){
 			$root.append( $glyph );
@@ -42,10 +44,6 @@ bMoor.constructor.define({
 	onReady : function(){
 		$(document.body).on('mouseenter','.glyphing-glyph', function( event ){
 			$(this).addClass('glyph-active');
-		});
-		
-		$(document.body).on('mouseleave','.glyphing-glyph', function( event ){
-			$(this).removeClass('glyph-active').find(':input').blur();
 		});
 	},
 	statics : {
@@ -176,26 +174,11 @@ bMoor.constructor.define({
 			this.stats.angle = angle;
 			return this;
 		},
-		redraw : function(){
-			var
-				rotate = 'rotate('+this.stats.angle+'deg)';
-			
-			this.$.css( {
-				top     : this.stats.top - this.stats.gap.top,
-				left    : this.stats.left - this.stats.gap.left,
-				width   : this.stats.width,
-				height  : this.stats.height,
-				opacity : this.stats.opacity,
-				'-webkit-transform' : rotate,
-				'-moz-transform'    : rotate,
-				'-ms-transform'     : rotate,
-				'trasnform'         : rotate
-			});
-			
-			return this;
-		},
 		// glyph info
 		isGlyph : true,
+		getModel : function(){
+			return this.stats;
+		},
 		getClass : function(){
 			return 'glyphing-glyph';
 		},
@@ -250,16 +233,36 @@ bMoor.constructor.define({
 					dis.setHeight( stats.height );
 					dis.setTop( stats.top );
 					dis.setLeft( stats.left );
-					
-					dis.redraw();
 				}
 			};
 			
 			$(document.body).mouseup( onMouseup );
 			$(document.body).mousemove( onMove );
 		},
+		redraw : function(){
+			if ( this.stats ){
+				var
+					rotate = 'rotate('+this.stats.angle+'deg)';
+				
+				this.$.css( {
+					top     : this.stats.top - this.stats.gap.top,
+					left    : this.stats.left - this.stats.gap.left,
+					width   : this.stats.width,
+					height  : this.stats.height,
+					opacity : this.stats.opacity,
+					'-webkit-transform' : rotate,
+					'-moz-transform'    : rotate,
+					'-ms-transform'     : rotate,
+					'trasnform'         : rotate
+				});
+			}
+			
+			return this;
+		},
+		notify : function(){
+			this.redraw();
+		},
 		_toJson : function( obj ){
-			console.log( obj );
 			return 'top:'   + obj.top
 				+ ',left:'    + obj.left
 				+ ',height:'  + obj.height

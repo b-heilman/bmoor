@@ -73,14 +73,20 @@ bMoor.constructor.define({
 	},
 	publics : {
 		setGlyph: function( glyph ){
+			var 
+				model;
+			
+			if ( this.glyph ){
+				this.glyph.getModel()._stop();
+			}
+			
 			this.glyph = glyph;
 			
-			this.updateInfo();
-		},
-		updateInfo : function(){
-			var
-				data = this.glyph.toObject();
+			model = this.glyph.getModel();
 			
+			model._bind( this )._start();
+		},
+		notify : function( data ){
 			this.$height.val( data.height );
 			this.$width.val( data.width );
 			this.$top.val( data.top );
@@ -89,6 +95,10 @@ bMoor.constructor.define({
 			this.$angle.val( data.angle );
 		},
 		clearGlyph : function( ){
+			if ( this.glyph ){
+				this.glyph.getModel()._stop();
+			}
+			
 			this.glyph = null;
 			
 			this.$height.val('');

@@ -214,9 +214,7 @@
 	(function(){
 		// A multi level hash that allows for different libraries to be located in different locations
 		var
-			libRoots = {
-				
-			};
+			libRoots = {};
 			
 		FileLoader.reset = function(){
 			libRoots = {
@@ -225,6 +223,10 @@
 				},
 				'/' : environmentSettings.jsRoot
 			};
+		};
+		
+		FileLoader.setRoot = function( path ){
+			libRoots['/'] = path;
 		};
 		
 		/** 
