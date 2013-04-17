@@ -15,6 +15,7 @@ bMoor.constructor.define({
 		settings = this.settings = $.extend( true, {}, this.__static.settings, settings );
 		
 		this.glyph = null;
+		this.model = null;
 		
 		this.$top = $el.find('.top');
 		this.$left = $el.find('.left');
@@ -24,27 +25,27 @@ bMoor.constructor.define({
 		this.$opacity = $el.find('.opacity');
 		
 		onAlter( this.$top, function(){
-			dis.glyph.setTop( dis.$top.val() );
+			dis.model.top = dis.$top.val();
 		});
 		
 		onAlter( this.$left, function(){
-			dis.glyph.setLeft( dis.$left.val() );
+			dis.model.left = dis.$left.val();
 		});
 		
 		onAlter( this.$width, function(){
-			dis.glyph.setWidth( dis.$width.val() );
+			dis.model.width = dis.$width.val();
 		});
 		
 		onAlter( this.$height, function(){
-			dis.glyph.setHeight( dis.$height.val() );
+			dis.model.height = dis.$height.val();
 		});
 		
 		onAlter( this.$opacity, function(){
-			dis.glyph.setOpacity( dis.$opacity.val() );
+			dis.model.opacity = dis.$opacity.val();
 		});
 		
 		onAlter( this.$angle, function(){
-			dis.glyph.setAngle( dis.$angle.val() );
+			dis.model.angle = dis.$angle.val();
 		});
 		
 		function onAlter( $el, callback ){
@@ -73,32 +74,27 @@ bMoor.constructor.define({
 	},
 	publics : {
 		setGlyph: function( glyph ){
-			var 
-				model;
-			
-			if ( this.glyph ){
-				this.glyph.getModel()._stop();
+			if ( this.model ){
+				this.model._stop();
 			}
 			
 			this.glyph = glyph;
-			
-			model = this.glyph.getModel();
-			
-			model._bind( this )._start();
+			this.model = this.glyph.getModel()._bind( this )._start();
 		},
-		notify : function( data ){
-			this.$height.val( data.height );
-			this.$width.val( data.width );
-			this.$top.val( data.top );
-			this.$left.val( data.left );
-			this.$opacity.val( data.opacity );
-			this.$angle.val( data.angle );
+		modelUpdate : function(){
+			this.$height.val( this.model.height );
+			this.$width.val( this.model.width );
+			this.$top.val( this.model.top );
+			this.$left.val( this.model.left );
+			this.$opacity.val( this.model.opacity );
+			this.$angle.val( this.model.angle );
 		},
 		clearGlyph : function( ){
-			if ( this.glyph ){
-				this.glyph.getModel()._stop();
+			if ( this.model ){
+				this.model._stop();
 			}
 			
+			this.model = null;
 			this.glyph = null;
 			
 			this.$height.val('');

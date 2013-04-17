@@ -174,20 +174,22 @@
 			var 
 				curSpace = global;
 			
-			space = this.parse( space );
-			
-			for( var i = 0; i < space.length; i++ ){
-				var
-					nextSpace = space[i];
+			if ( space ){
+				space = this.parse( space );
+				
+				for( var i = 0; i < space.length; i++ ){
+					var
+						nextSpace = space[i];
+						
+					if ( !curSpace[nextSpace] ){
+						curSpace[nextSpace] = {};
+					}
 					
-				if ( !curSpace[nextSpace] ){
-					curSpace[nextSpace] = {};
+					curSpace = curSpace[nextSpace];
 				}
 				
-				curSpace = curSpace[nextSpace];
-			}
-			
-			return curSpace;
+				return curSpace;
+			}else return null;
 		},
 		exists : function( space ){
 			var 
@@ -327,34 +329,27 @@
 				var
 					info = this.getLibrary( classPath ),
 					success = function( script, textStatus ){
-						var 
-							obj = Namespace.get(classPath);
-						
-						if ( obj ){
-							// obj can be delayed installed
-							var
-								whenReady = function (){
-									if ( callback ){
-										if ( target == undefined ){
-											target = {};
-										}
-									
-										if ( args == undefined ){
-											args = [];
-										}
-									
-										callback.apply( target, args );
-									}
-								};
+						function validate(){
+							var 
+								t = Namespace.get( classPath );
 							
-							// is this an object that is getting loaded via bMoor or just a different class?
-							// wait to call the callback until the class is really loaded, so store this request up
-							if ( obj.prototype && obj.prototype.__delayedInstall ){
-								obj.prototype.__delayedInstall( whenReady );
-							}else{
-								whenReady();
+							if ( t instanceof PlaceHolder ){
+								setTimeout( validate, 50 );
+							}else if ( callback ){
+								if ( target == undefined ){
+									target = {};
+								}
+							
+								if ( args == undefined ){
+									args = [];
+								}
+							
+								callback.apply( target, args );
 							}
-							
+						}
+					
+						if ( Namespace.exists(classPath) ){
+							validate();
 						}else{
 							error( 'loaded file : '+script+"\n but no class : "+classPath.join('.') );
 						}
@@ -408,7 +403,7 @@
 			for( var i = 0, req = requirements, len = req ? req.length : 0; i < len; i++ ){
 				var
 					namespace = Namespace.parse( req[i] );
-
+				
 				// if namespace does not exist, load it
 				if ( !Namespace.exists(namespace) ){
 					reqCount++;
@@ -421,8 +416,13 @@
 	}());
 	FileLoader.reset();
 	
+	function PlaceHolder(){}
+	
 	function Constructor(){}
 	(function(){
+		var 
+			initializing = false;
+			
 		/**
 		 * 
 		 * @param settings 
@@ -443,16 +443,22 @@
 			var
 				dis = this,
 				requests = settings.require,
-				namespace = ( settings.namespace ? Namespace.get(settings.namespace) : global ),
-				obj  = namespace[ settings.name ] = function(){
-					this.__construct.apply( this, arguments );
+				ns = ( settings.namespace ? Namespace.parse(settings.namespace) : [] ),
+				namespace = ( settings.namespace ? Namespace.get(ns) : global ),
+				obj = function(){
+					if ( !initializing ){
+						this.__construct.apply( this, arguments );
+					}
 				}; 
 			
-			// callback used each time a new class is pulled in
-			obj.prototype.__construct = settings.construct ? settings.construct : function(){};
+			if ( !settings.name ){
+				throw 'Need name for class';
+			}
+				
+			namespace[ settings.name ] = new PlaceHolder();
 			
 			if ( !requests ){
-				 requests = [];
+				requests = [];
 			}
 			
 			if ( settings.parent ){
@@ -463,34 +469,52 @@
 				for( var namespace in settings.aliases ){ requests.push( namespace ); }
 			}
 			
-			FileLoader.require( requests, function(){
-				define.call( dis, settings, obj );
-				
-				if ( settings.onDefine ){
-					settings.onDefine( obj );
+			function def(){
+				var
+					parent = Namespace.get( settings.parent );
+					
+				if ( parent && parent.prototype.__defining ){
+					setTimeout( def, 10 );
+				}else{
+					define.call( dis, settings, obj );
+					
+					if ( settings.onDefine ){
+						settings.onDefine( obj );
+					}
+					
+					if ( settings.onReady ){
+						$(document).ready(function(){
+							settings.onReady( obj );
+						});
+					}
+					
+					delete obj.prototype.__defining;
 				}
-				
-				if ( settings.onReady ){
-					$(document).ready(function(){
-						settings.onReady( obj );
-					});
-				}
-			}, [], this);
+			};
+			
+			FileLoader.require( requests, def, [], this);
 		};
 		
 		// passing in obj as later I might configure it to allow you to run this against an already defined class
 		function define( settings, obj ){
 			var
-				parent = ( settings.parent ? Namespace.get(settings.parent) : null );
+				parent = ( settings.parent ? Namespace.get(settings.parent) : null ),
+				ns = ( settings.namespace ? Namespace.parse(settings.namespace) : [] ),
+				namespace = ( settings.namespace ? Namespace.get(ns) : global );
 			
-			if ( !settings.name ){
-				throw 'Need name for class';
-			}
 			
 			// inheret from the parent
 			if ( parent ){
 				this.extend( obj, parent );
 			}
+			
+			obj.prototype.__construct = settings.construct ? settings.construct : function(){};
+			obj.prototype.__defining = true;
+			
+			namespace[ settings.name ] = obj;
+			
+			ns.push( settings.name );
+			obj.prototype._name = ns.join('.');
 			
 			// define any aliases
 			if ( settings.aliases ){
@@ -530,20 +554,12 @@
 		
 		// used to extend a child instance using the parent's prototype
 		Constructor.prototype.extend = function( child, parent ){
-			var 
-				proto = child.prototype,
-				_proto = parent.prototype,
-				_parent = { constructor : parent.prototype.constructor };
+			initializing = true;
 			
-			child.prototype.__parent = _proto;
+			child.prototype = new parent();
+			child.prototype.constructor = child;
 			
-			for( var attr in _proto ){
-				if ( proto[attr] ){
-					_parent[attr] = _proto[attr];
-				}else{
-					proto[attr] = _proto[attr];
-				}
-			}
+			initializing = false;
 		};
 	}());
 	

@@ -1,15 +1,14 @@
 ;(function( $, global, undefined ){
 
-var // statics
-	// rads = 2 * Math.PI,
-	activeGlyph = null,
-	lastPosition = null;	
+var 
+	activeGlyph = null;	
 	
 bMoor.constructor.define({
 	name : 'Container',
 	namespace : ['bmoor','glyphing'],
 	require: [
-		['bmoor','glyphing','Glyph']
+		['bmoor','glyphing','Glyph'],
+		['bmoor','Collection']
 	],
 	construct: function( el, settings ){
 		var 
@@ -22,7 +21,8 @@ bMoor.constructor.define({
 		$el.data( 'self', this );  // for external reference
 		$this.data( 'self', this ).insertBefore( $el ).append( $el ); // for trigger reference
 		
-		this.glyphs = [];
+		this.glyphs = new bmoor.Collection();
+		console.log( this.glyphs );
 		this.locked = false;
 		this.$ = $this;
 		this.$el = $el;
@@ -62,30 +62,6 @@ bMoor.constructor.define({
 				}
 			}
 		});
-	
-		// mouse down is triggering the creation of a glyph to be added
-		$(document.body).on('mousedown', '.glyphing-container', function( event ){
-			var 
-				dis = $(this).data('self');
-			
-			if ( !dis.locked ){
-				dis.addGlyph({
-					left : lastPosition.x - dis.$.offset().left,
-					top  : lastPosition.y - dis.$.offset().top
-				}).startTrace( lastPosition );
-			
-				event.stopPropagation();
-				event.preventDefault();
-			}
-		});
-		
-		// track the mouse position, may be not be neccisary?
-		$(document.body).on('mousemove', function( event ){
-			lastPosition = {
-				x : event.pageX,
-				y : event.pageY
-			};
-		});
 	},
 	onDefine : function( inst ){
 		$.fn.glyphing = function( settings ){
@@ -101,6 +77,9 @@ bMoor.constructor.define({
 			this.locked = true;
 			
 			return this;
+		},
+		isLocked : function(){
+			return this.locked;
 		},
 		setGlyphClass : function( className ){
 			this.settings.glyphClass = className;
@@ -128,6 +107,9 @@ bMoor.constructor.define({
 			} else{
 				return this.addGlyph( new this.settings.glyphClass($.extend(true, {}, this.settings.glyphSettings, info), this.box, this.$) );
 			}
+		},
+		collectionUpdate : function(){
+			console.log( 'yay' );
 		},
 		toJson : function(){
 			var

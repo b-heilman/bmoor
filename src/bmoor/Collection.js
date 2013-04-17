@@ -1,18 +1,21 @@
 ;(function( global, undefined ){
+	// TODO : allow traits, so I can pull in functionality from Model.js
 	bMoor.constructor.define({
-		name : 'Model',
+		name : 'Collection',
+		parent : 'Array',
 		namespace : ['bmoor'],
 		construct : function( obj ){
-			this._old = {};
+			this._old;
 			this._listeners = [];
 			this._interval = null;
 			
 			if ( obj ){
-				for( var key in obj ) if ( obj.hasOwnProperty(key) ){
-					this.key = obj[key];
-					this._old[key] = obj[key];
+				for( var i = 0, c = obj.length; i < c; i++ ){
+					this.push( obj[i] );
 				}
 			}
+			
+			this._old = this.length;
 		},
 		publics : {
 			_stop : function(){
@@ -27,18 +30,8 @@
 				
 				if ( !this._interval ){
 					this._interval = setInterval(function(){
-						var
-							notify = false,
-							old = dis._old;
-						
-						for( var key in dis ) if ( dis.hasOwnProperty(key) && key[0] != '_' ){
-							if ( dis[key] != old[key] ){
-								notify = true;
-								old[key] = dis[key];
-							}
-						}
-						
-						if ( notify ){
+						if ( dis._old != dis.length ){
+							dis._old = dis.length;
 							dis._notify();
 						}
 					}, 50);
@@ -47,16 +40,16 @@
 				return this;
 			},
 			_bind : function( target ){
-				if ( target.modelUpdate ){
+				if ( target.collectionUpdate ){
 					this._listeners.push( target );
-					target.modelUpdate();
+					target.collectionUpdate();
 					
 					return this;
-				}else throw 'to call _bind, object must have modelUpdate() as attribute';
+				}else throw 'to call _bind, object must have collectionUpdate() as attribute';
 			},
 			_notify : function(){
 				for( var i = 0, list = this._listeners; i < list.length; i++ ){
-					list[i].modelUpdate( model );
+					list[i].collectionUpdate();
 				}
 				
 				return this;

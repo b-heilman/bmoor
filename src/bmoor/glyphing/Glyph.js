@@ -16,11 +16,8 @@ bMoor.constructor.define({
 		$glyph = this.makeNode( style );
 		
 		this.$ = $glyph;
-		this.stats = (new bmoor.Model())._bind( this );
-		this.limits = limits;
-		this.shiftOn = false;
-		
-		this.setStats( style );
+		this.model = (new bmoor.Model())._bind( this );
+		this.setModel( style );
 		
 		if ( $root ){
 			$root.append( $glyph );
@@ -30,13 +27,11 @@ bMoor.constructor.define({
 			$( document.body ).append( $glyph );
 		}
 		
-		this.stats.gap = {
+		this.model.gap = {
 			left : parseInt( $glyph.css('padding-left') ) + parseInt( $glyph.css('border-left-width') ),
 			top  : parseInt( $glyph.css('padding-top') ) + parseInt( $glyph.css('border-top-width') )
 		};
 			
-		// we need to adjust the positioning of the node now that we know the gaps
-		
 		this.redraw();
 		
 		$glyph.data( 'self', this );
@@ -61,10 +56,6 @@ bMoor.constructor.define({
 				border    : '1px solid black',
 				rotation  : 0,
 				opacity   : 1
-			},
-			minimums : {
-				width : 5,
-				height : 5
 			}
 		}
 	},
@@ -108,76 +99,53 @@ bMoor.constructor.define({
 			
 			return settings;
 		},
-		setStats : function( stats ){
-			if ( stats.top ){
-				this.setTop( stats.top );
-			}else if ( this.stats.top == undefined ){
-				this.setTop( this.$.position().top );
+		setModel : function( style ){
+			if ( style.top ){
+				this.model.top = style.top;
+			}else if ( this.model.top == undefined ){
+				this.model.top = this.$.position().top;
 			}
 			
-			if ( stats.left ){
-				this.setLeft( stats.left );
-			}else if ( this.stats.left == undefined ){
-				this.setLeft( this.$.position().left );
+			if ( style.left ){
+				this.model.left = style.left;
+			}else if ( this.model.left == undefined ){
+				this.model.left = this.$.position().left;
 			}
 			
-			if ( stats.width ){
-				this.setWidth( stats.width );
-			}else if ( this.stats.width == undefined ){
-				this.setWidth( this.$.width() );
+			if ( style.width ){
+				this.model.width = parseInt( style.width );
+			}else if ( this.model.width == undefined ){
+				this.model.width = parseInt( this.$.width() );
 			}
 			
-			if ( stats.height ){
-				this.setHeight( stats.height );
-			}else if ( this.stats.height == undefined ){
-				this.setHeight( this.$.height() );
+			if ( style.height ){
+				this.model.height = parseInt( style.height );
+			}else if ( this.model.height == undefined ){
+				this.model.height = parseInt( this.$.height() );
 			}
 			
-			if ( stats.opacity ){
-				this.setOpacity( stats.opacity );
-			}else if ( this.stats.opacity == undefined ){
-				this.setOpacity( 100 );
+			if ( style.opacity ){
+				this.model.opacity = style.opacity;
+			}else if ( this.model.opacity == undefined ){
+				this.model.opacity = 100;
 			}
 			
-			if ( stats.angle ){
-				this.setAngle( stats.angle );
-			}else if ( this.stats.angle == undefined ){
-				this.setAngle( 0 );
+			if ( style.angle ){
+				this.model.angle = style.angle;
+			}else if ( this.model.angle == undefined ){
+				this.model.angle = 0;
 			}
 		},
 		setCenter : function( x, y ){
-			this.setLeft( x - this.stats.width / 2 );
-			this.setTop( y - this.stats.height / 2 );
-			return this;
-		},
-		setLeft : function ( left ){
-			this.stats.left = parseInt(left);
-			return this;
-		},
-		setTop : function( top ){
-			this.stats.top = parseInt(top);
-			return this;
-		},
-		setWidth : function ( width ){
-			this.stats.width = parseInt(width);
-			return this;
-		},
-		setHeight : function ( height ){
-			this.stats.height = parseInt(height);
-			return this;
-		},
-		setOpacity : function ( opacity ){
-			this.stats.opacity = opacity;
-			return this;
-		},
-		setAngle : function ( angle ){
-			this.stats.angle = angle;
+			this.model.left = ( x - this.model.width / 2 );
+			this.model.top = ( y - this.model.height / 2 );
+			
 			return this;
 		},
 		// glyph info
 		isGlyph : true,
 		getModel : function(){
-			return this.stats;
+			return this.model;
 		},
 		getClass : function(){
 			return 'glyphing-glyph';
@@ -191,65 +159,17 @@ bMoor.constructor.define({
 		getTemplate : function(){
 			return $( '#'+this.settings.template.id ).jqote( this.settings.template.settings );
 		},
-		startTrace : function( startPos ){
-			var 
-				dis = this,
-				onStart = {
-					width  : this.$.width(),
-					height : this.$.height(),
-					top    : this.$.position().top,
-					left   : this.$.position().left
-				},
-				onMove = null,
-				onMouseup = null;
-				
-			onMouseup = function(){
-				if ( parseInt(dis.stats.width) <= dis.__static.settings.minimums.width
-					|| parseInt(dis.stats.height) <= dis.__static.settings.minimums.height ){
-					dis.$.trigger('note-undersized', [dis]);
-				}
-				
-				$(document.body).unbind( 'mousemove', onMove );
-				$(document.body).unbind( 'mouseup', onMouseup );
-			};
-			
-			onMove = function( event ){
-				var
-					xDiff = Math.abs( startPos.x - event.pageX ),
-					yDiff = Math.abs( startPos.y - event.pageY ),
-					stats = {
-						left     : onStart.left - xDiff,
-						top      : onStart.top - yDiff,
-						width    : onStart.width + xDiff + xDiff,
-						height   : onStart.height + yDiff + yDiff,
-					};
-					
-				if ( !dis.limits
-					|| (dis.limits.left < stats.left 
-						&& dis.limits.top < stats.top
-						&& dis.limits.right > stats.left + stats.width
-						&& dis.limits.bottom > stats.top + stats.height) ){
-					dis.setWidth( stats.width );
-					dis.setHeight( stats.height );
-					dis.setTop( stats.top );
-					dis.setLeft( stats.left );
-				}
-			};
-			
-			$(document.body).mouseup( onMouseup );
-			$(document.body).mousemove( onMove );
-		},
 		redraw : function(){
-			if ( this.stats ){
+			if ( this.model ){
 				var
-					rotate = 'rotate('+this.stats.angle+'deg)';
+					rotate = 'rotate('+this.model.angle+'deg)';
 				
 				this.$.css( {
-					top     : this.stats.top - this.stats.gap.top,
-					left    : this.stats.left - this.stats.gap.left,
-					width   : this.stats.width,
-					height  : this.stats.height,
-					opacity : this.stats.opacity,
+					top     : (this.model.top - this.model.gap.top)+'px',
+					left    : (this.model.left - this.model.gap.left)+'px',
+					width   : this.model.width+'px',
+					height  : this.model.height+'px',
+					opacity : this.model.opacity,
 					'-webkit-transform' : rotate,
 					'-moz-transform'    : rotate,
 					'-ms-transform'     : rotate,
@@ -259,7 +179,7 @@ bMoor.constructor.define({
 			
 			return this;
 		},
-		notify : function(){
+		modelUpdate : function(){
 			this.redraw();
 		},
 		_toJson : function( obj ){
@@ -275,10 +195,10 @@ bMoor.constructor.define({
 		},
 		toObject : function(){
 			return {
-				top     : parseInt(this.stats.top) + this.stats.gap.top,
-				left    : parseInt(this.stats.left) + this.stats.gap.left,
-				height  : parseInt(this.stats.height),
-				width   : parseInt(this.stats.width),
+				top     : this.stats.top,
+				left    : this.stats.left,
+				height  : this.stats.height,
+				width   : this.stats.width,
 				opacity : this.stats.opacity,
 				angle   : this.stats.angle
 			};

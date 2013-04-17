@@ -1,0 +1,30 @@
+<html>
+<head>
+	<style>
+		.noteable-note textarea{
+			display: none;
+		}
+		
+		.note-active textarea{
+			display: block;
+		}
+	</style>
+	
+	<script src='../src/jquery.min.js'></script>
+	<script src='../src/bMoor.js'></script>
+	<script src='../src/bmoor/Collection.js'></script>
+</head>
+<body>
+	<script>
+		var
+			collection = new bmoor.Collection([2,4,6,8]);
+		
+		collection._start();
+		collection._bind( { collectionUpdate : function(){console.log(collection);} } );
+		
+		setTimeout( function(){ console.log('pushing'); collection.push(10); }, 500 );
+		setTimeout( function(){ console.log('shifting'); collection.shift(); }, 2000);
+	</script>
+</body>
+</html>
+

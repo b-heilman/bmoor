@@ -20,11 +20,10 @@
 			model = new bmoor.Model( { foo : 1, bar : 2 } );
 		
 		model._start();
-		model._bind( { notify : function( obj ){console.log(obj);} } );
+		model._bind( { modelUpdate : function(){console.log(model);} } );
 		
-		setTimeout( function(){ model.foo = 3; }, 500 );
-		setTimeout( function(){ model.tmp = 1; }, 1000 );
-		setTimeout( function(){ console.log( model._object() ); }, 2000);
+		setTimeout( function(){ console.log( 'foo = 3' ); model.foo = 3; }, 500 );
+		setTimeout( function(){ console.log( 'tmp = 1' ); model.tmp = 1; }, 2000 );
 	</script>
 </body>
 </html>
