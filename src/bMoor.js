@@ -202,13 +202,13 @@
 					nextSpace = space[i];
 					
 				if ( !curSpace[nextSpace] ){
-					return false;
+					return null;
 				}
 				
 				curSpace = curSpace[nextSpace];
 			}
 			
-			return true;
+			return curSpace;
 		}
 	};
 	
@@ -321,41 +321,56 @@
 				: { root : masterLib['/'], path : masterPath, name : name, settings : masterLib['.'] };
 		};
 		
-		FileLoader.loadSpace = function( className, callback, args, target ){
-			var
-				classPath = Namespace.parse( className );
-
-			if ( !Namespace.exists(classPath) ){
+		FileLoader.loadSpace = function( namespace, group, callback, args, target ){
+			function fireCallback(){
+				if ( target == undefined ){
+					target = {};
+				}
+			
+				if ( args == undefined ){
+					args = [];
+				}
+			
+				callback.apply( target, args );
+			}
+			
+			function waitForIt(){
+				var 
+					t = Namespace.get( namespace );
+				
+				if ( t instanceof PlaceHolder ){
+					setTimeout( waitForIt, 50 );
+				}else if ( callback ){
+					fireCallback();
+				}
+			}
+			
+			var 
+				space;
+			
+			namespace = Namespace.parse( namespace );
+			
+			if ( typeof(group) == 'function' ){
+				target = args;
+				args = callback;
+				callback = group;
+				group = namespace;
+			}
+			
+			space = Namespace.exists(namespace);
+			
+			if ( !space ){
 				var
-					info = this.getLibrary( classPath ),
-					success = function( script, textStatus ){
-						function validate(){
-							var 
-								t = Namespace.get( classPath );
-							
-							if ( t instanceof PlaceHolder ){
-								setTimeout( validate, 50 );
-							}else if ( callback ){
-								if ( target == undefined ){
-									target = {};
-								}
-							
-								if ( args == undefined ){
-									args = [];
-								}
-							
-								callback.apply( target, args );
-							}
-						}
-					
-						if ( Namespace.exists(classPath) ){
-							validate();
-						}else{
-							error( 'loaded file : '+script+"\n but no class : "+classPath.join('.') );
-						}
-					},
+					info = this.getLibrary( group ),
 					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' ) 
-						+ '/' + ( info.settings.fullName ? classPath.join('.') : info.name );
+						+ '/' + ( info.settings.fullName ? group.join('.') : info.name ),
+					success = function( script, textStatus ){
+						if ( Namespace.exists(namespace) ){
+							waitForIt();
+						}else{
+							error( 'loaded file : '+script+"\n but no class : "+namespace.join('.') );
+						}
+					};
 						
 				$.getScript( path+'.js' )
 					.done( success )
@@ -370,45 +385,68 @@
 							error( 'failed to load file : '+path+"\nError : "+exception );
 						}
 					});
+			}else if ( space instanceof PlaceHolder ){
+				waitForIt();
+			}else{
+				fireCallback();
 			}
 		};
 		
-		FileLoader.require = function( requirements, callback, reference ){
+		FileLoader.require = function( requirements, callback, scope ){
 			var
-				reqCount = 1;
+				reqCount = 1,
+				references = null,
+				classes = null,
+				aliases = null;
 			
 			function cb(){
 				reqCount--;
 				
 				if ( reqCount == 0 ){
 					var
-						aliases = [];
+						aliasi = [];
 					// now all requirements are loaded
 					
 					reqCount--; // locks any double calls, requests to -1
 					
-					for( var i = 0, req = requirements, len = req ? req.length : 0; i < len; i++ ){
-						aliases.push( Namespace.get(req[i]) );
+					for( var i = 0, req = aliases, len = req ? req.length : 0; i < len; i++ ){
+						aliasi.push( Namespace.get(req[i]) );
 					}
 					
-					callback.apply( reference, aliases );
+					callback.apply( scope, aliasi );
 				}
 			}
 			
-			if ( !reference ){
-				reference = {};
+			if ( requirements.length ){
+				classes = aliases = requirements;
+				references = {};
+			}else{
+				references = ( requirements.references ? requirements.references : {} );
+				classes = ( requirements.classes ? requirements.classes : [] );
+				aliases = ( requirements.aliases ? requirements.aliases : [] );
+			}
+			
+			if ( !scope ){
+				scope = {};
 			}
 			
 			// build up the request stack
-			for( var i = 0, req = requirements, len = req ? req.length : 0; i < len; i++ ){
+			for( var i = 0, req = classes, len = req ? req.length : 0; i < len; i++ ){
 				var
 					namespace = Namespace.parse( req[i] );
 				
 				// if namespace does not exist, load it
-				if ( !Namespace.exists(namespace) ){
-					reqCount++;
-					this.loadSpace( namespace, cb );
-				}
+				reqCount++;
+				this.loadSpace( namespace, cb );
+			}
+			
+			// build up the request stack
+			for( var reference in references ){
+				var
+					namespace = Namespace.parse( reference );
+				
+				reqCount++;
+				this.loadSpace( namespace, references[reference], cb );
 			}
 			
 			cb();
@@ -536,7 +574,9 @@
 		};
 		
 		Constructor.prototype.statics = function( child, statics ){
-			if ( statics ){
+			if ( child.prototype.__static ){
+				$.extend( child.prototype.__static, statics );
+			}else if ( statics ){
 				child.prototype.__static = statics;
 			}else{
 				child.prototype.__static = {};
@@ -558,14 +598,17 @@
 			
 			child.prototype = new parent();
 			child.prototype.constructor = child;
-			
+			child.prototype.__parent = parent.prototype;
 			initializing = false;
 		};
 	}());
 	
 	global.bMoor = {
+		require     : function(){
+			FileLoader.require.apply( FileLoader, arguments );
+		},
 		settings    : environmentSettings,
-		fileloader  : FileLoader,
+		loader      : FileLoader,
 		constructor : new Constructor()
 	};
 	

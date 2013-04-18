@@ -4,14 +4,13 @@
 <script src="../src/bMoor.js"></script>
 
 <script>
-bMoor.settings.jsRoot = 'js';
-bMoor.fileloader.reset();
+bMoor.loader.setRoot( 'js' );
 </script>
 
 </head>
 <body>
 <script>
-bMoor.fileloader.require([
+bMoor.require([
 		'bmoor.Test2', 
 		['bmoor','test','Test3']
 	], function(){

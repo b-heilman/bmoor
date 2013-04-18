@@ -2,10 +2,10 @@
 bMoor.constructor.define({
 	name : 'Glyph',
 	namespace : ['bmoor','glyphing'],
-	require: [
-		['jquery','jqote2'], // TODO : this is not technically the namespace...
-		['bmoor','Model']
-	],
+	require: {
+		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] }, // TODO : this is not technically the namespace...
+		classes : [ ['bmoor','Model'] ]
+	},
 	construct : function( settings, limits, $root ){
 		var
 			style = null,

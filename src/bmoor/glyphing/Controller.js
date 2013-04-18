@@ -79,7 +79,8 @@ bMoor.constructor.define({
 			}
 			
 			this.glyph = glyph;
-			this.model = this.glyph.getModel()._bind( this )._start();
+			this.model = this.glyph.getModel();
+			this.model._bind( this )._start();
 		},
 		modelUpdate : function(){
 			this.$height.val( this.model.height );

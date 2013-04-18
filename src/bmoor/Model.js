@@ -56,7 +56,7 @@
 			},
 			_notify : function(){
 				for( var i = 0, list = this._listeners; i < list.length; i++ ){
-					list[i].modelUpdate( model );
+					list[i].modelUpdate();
 				}
 				
 				return this;
