@@ -10,12 +10,13 @@
 			if ( obj ){
 				for( var key in obj ) if ( obj.hasOwnProperty(key) ){
 					this.key = obj[key];
-					this._old[key] = obj[key];
 				}
 			}
 		},
 		publics : {
 			_stop : function(){
+				this._notify(); // one last update, make sure all is flushed
+				
 				clearInterval( this._interval );
 				this._interval = null;
 				
@@ -26,6 +27,10 @@
 					dis = this;
 				
 				if ( !this._interval ){
+					for( var key in this ) if ( this.hasOwnProperty(key) ){
+						this._old[key] = this[key];
+					}
+				
 					this._interval = setInterval(function(){
 						var
 							notify = false,
@@ -47,6 +52,10 @@
 				return this;
 			},
 			_bind : function( target ){
+				if ( typeof(target) == 'function' ){
+					target = { modelUpdate : target }; // convert
+				}
+				
 				if ( target.modelUpdate ){
 					this._listeners.push( target );
 					target.modelUpdate();

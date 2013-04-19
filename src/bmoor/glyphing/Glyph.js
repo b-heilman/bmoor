@@ -3,7 +3,7 @@ bMoor.constructor.define({
 	name : 'Glyph',
 	namespace : ['bmoor','glyphing'],
 	require: {
-		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] }, // TODO : this is not technically the namespace...
+		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] },
 		classes : [ ['bmoor','Model'] ]
 	},
 	construct : function( settings, limits, $root ){
@@ -11,12 +11,17 @@ bMoor.constructor.define({
 			style = null,
 			$glyph;
 		
+		this.active = false;
 		this.settings = this.parseSettings( settings );
+		this.template = this.settings.template;
+		
+		delete this.settings.template;
+		
 		style = $.extend( {},this.__static.settings.style, this.settings.style );
 		$glyph = this.makeNode( style );
 		
 		this.$ = $glyph;
-		this.model = (new bmoor.Model())._bind( this );
+		this.model = new bmoor.Model();
 		this.setModel( style );
 		
 		if ( $root ){
@@ -32,14 +37,18 @@ bMoor.constructor.define({
 			top  : parseInt( $glyph.css('padding-top') ) + parseInt( $glyph.css('border-top-width') )
 		};
 			
-		this.redraw();
+		this.model._bind( this );
 		
 		$glyph.data( 'self', this );
 	},
 	onReady : function(){
-		$(document.body).on('mouseenter','.glyphing-glyph', function( event ){
-			$(this).addClass('glyph-active');
-		});
+		$(document.body)
+			.on('mouseenter','.glyphing-glyph', function( event ){
+				$(this).addClass('glyph-active');
+			})
+			.on('mouseleave','.glyphing-glyph', function( event ){
+				$(this).removeClass('glyph-active');
+			});
 	},
 	statics : {
 		settings : {
@@ -157,29 +166,37 @@ bMoor.constructor.define({
 			return $( '<div class="'+this.getClass()+'" style="' + this.makeStyle( style ) + '"/>' ).append( this.getTemplate() );
 		},
 		getTemplate : function(){
-			return $( '#'+this.settings.template.id ).jqote( this.settings.template.settings );
+			return $( '#'+this.template.id ).jqote( this.template.settings );
 		},
 		redraw : function(){
-			if ( this.model ){
-				var
-					rotate = 'rotate('+this.model.angle+'deg)';
+			var
+				rotate = 'rotate('+this.model.angle+'deg)';
 				
-				this.$.css( {
-					top     : (this.model.top - this.model.gap.top)+'px',
-					left    : (this.model.left - this.model.gap.left)+'px',
-					width   : this.model.width+'px',
-					height  : this.model.height+'px',
-					opacity : this.model.opacity,
-					'-webkit-transform' : rotate,
-					'-moz-transform'    : rotate,
-					'-ms-transform'     : rotate,
-					'trasnform'         : rotate
-				});
-			}
+			this.$.css( {
+				top     : (this.model.top - this.model.gap.top)+'px',
+				left    : (this.model.left - this.model.gap.left)+'px',
+				width   : this.model.width+'px',
+				height  : this.model.height+'px',
+				opacity : this.model.opacity,
+				'-webkit-transform' : rotate,
+				'-moz-transform'    : rotate,
+				'-ms-transform'     : rotate,
+				'trasnform'         : rotate
+			});
 			
 			return this;
 		},
 		modelUpdate : function(){
+			if ( this.active !== this.model.active ){
+				if ( this.model.active ){
+					this.$.addClass('active-glyph');
+				}else{
+					this.$.removeClass('active-glyph');
+				}
+				
+				this.active = this.model.active;
+			}
+			
 			this.redraw();
 		},
 		_toJson : function( obj ){
@@ -195,12 +212,12 @@ bMoor.constructor.define({
 		},
 		toObject : function(){
 			return {
-				top     : this.stats.top,
-				left    : this.stats.left,
-				height  : this.stats.height,
-				width   : this.stats.width,
-				opacity : this.stats.opacity,
-				angle   : this.stats.angle
+				top     : this.model.top,
+				left    : this.model.left,
+				height  : this.model.height,
+				width   : this.model.width,
+				opacity : this.model.opacity,
+				angle   : this.model.angle
 			};
 		}
 	}

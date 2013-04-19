@@ -6,16 +6,18 @@ bMoor.constructor.define({
 	require: [
 		['bmoor','glyphing','Glyph']
 	],
-	construct: function( el, settings ){
+	construct: function( el, container ){
 		var 
 			$el = $(el),
 			dis = this;
 		
 		this.$ = $el;
-		settings = this.settings = $.extend( true, {}, this.__static.settings, settings );
 		
 		this.glyph = null;
 		this.model = null;
+		
+		this.collection = container.getCollection();
+		this.collection._bind(this);
 		
 		this.$top = $el.find('.top');
 		this.$left = $el.find('.left');
@@ -68,27 +70,42 @@ bMoor.constructor.define({
 			});
 		}
 	},
-	statics : {
-		settings : {
-		}
-	},
-	publics : {
-		setGlyph: function( glyph ){
-			if ( this.model ){
-				this.model._stop();
-			}
+	publics : { 
+		addGlyph: function( glyph ){
+			var 
+				dis = this,
+				model = glyph.getModel();
 			
-			this.glyph = glyph;
-			this.model = this.glyph.getModel();
-			this.model._bind( this )._start();
+			model._bind( function(){
+				if ( model.active ){
+					dis.model = model;
+					dis.update( model );
+				}
+			});
 		},
-		modelUpdate : function(){
-			this.$height.val( this.model.height );
-			this.$width.val( this.model.width );
-			this.$top.val( this.model.top );
-			this.$left.val( this.model.left );
-			this.$opacity.val( this.model.opacity );
-			this.$angle.val( this.model.angle );
+		collectionUpdate : function( changes ){
+			var
+				collection = this.collection;
+				
+			if ( changes == null ){
+				for( var i = 0, c = collection.length; i < c; i++ ){
+					this.addGlyph( collection[i] );
+				}
+			}else{
+				if ( changes.additions ){
+					for( var i = 0, c = changes.additions.length; i < c; i++ ){
+						this.addGlyph( collection[changes.additions[i]] );
+					}
+				}
+			}
+		},
+		update : function( model ){
+			this.$height.val( model.height );
+			this.$width.val( model.width );
+			this.$top.val( model.top );
+			this.$left.val( model.left );
+			this.$opacity.val( model.opacity );
+			this.$angle.val( model.angle );
 		},
 		clearGlyph : function( ){
 			if ( this.model ){

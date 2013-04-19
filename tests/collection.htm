@@ -12,18 +12,23 @@
 	
 	<script src='../src/jquery.min.js'></script>
 	<script src='../src/bMoor.js'></script>
+	<script src='../src/bmoor/Model.js'></script>
 	<script src='../src/bmoor/Collection.js'></script>
 </head>
 <body>
 	<script>
 		var
-			collection = new bmoor.Collection([2,4,6,8]);
+			collection = new bmoor.Collection([{x:2},{x:4},{x:6}]),
+			hold = {x:8};
+		
 		
 		collection._start();
 		collection._bind( { collectionUpdate : function(){console.log(collection);} } );
 		
-		setTimeout( function(){ console.log('pushing'); collection.push(10); }, 500 );
+		setTimeout( function(){ console.log('pushing'); collection.push(hold); }, 500 );
+		setTimeout( function(){ console.log('pushing'); collection.push({x:10}); }, 1000 );
 		setTimeout( function(){ console.log('shifting'); collection.shift(); }, 2000);
+		setTimeout( function(){ console.log('remove'); collection.remove(hold); }, 3000);
 	</script>
 </body>
 </html>

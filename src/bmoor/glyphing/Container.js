@@ -18,18 +18,19 @@ bMoor.constructor.define({
 		
 		settings = this.settings = $.extend( true, {}, this.__static.settings, settings );
 		
-		$el.data( 'self', this );  // for external reference
-		$this.data( 'self', this ).insertBefore( $el ).append( $el ); // for trigger reference
-		
 		this.glyphs = new bmoor.Collection();
-		console.log( this.glyphs );
-		this.locked = false;
+		this.glyphs._bind( this )._start();
+		this.locked = true;
 		this.$ = $this;
 		this.$el = $el;
 		this.controller = null;
 		
 		left = dis.$.offset().left;
 		top  = dis.$.offset().top;
+		
+		this.$.data( 'self', this );
+		this.$.addClass( 'glyphing-container' );
+		$this.insertBefore( $el ).append( $el ); // for trigger reference
 		
 		if ( settings.keepBoxed ){
 			this.box = {
@@ -50,17 +51,82 @@ bMoor.constructor.define({
 		}
 	},
 	onReady : function(){
-		// listen for a request to delete a glyph.  Glyphs generate these themselves, container has to put them out of their misery
-		$(document.body).on('glyph-undersized delete-request', '.glyphing-container', function( event, glyph ){
-			var 
-				dis = $(this).data('self');
+		var 
+			lastPosition = {},
+			activeModel;
 				
-			for( var i = 0; i < dis.glyphs.length; i++ ){
-				if ( dis.glyphs[i] == glyph ){
-					glyph.$.remove();
-					dis.glyphs.splice( i, 1 );
-				}
+		$(document.body).on( 'keydown', function(event){
+			if( !$(event.target).is(':input') ){
+				console.log( event );
 			}
+		});
+		
+		$(document.body).on( 'mousedown', '.glyphing-container .glyphing-glyph', function( event ){
+			var
+				$this = $(this),
+				dis = $this.closest('.glyphing-container').data( 'self' );
+			
+			dis.setActive( $this.data('self') );
+			
+			event.stopPropagation();
+			event.preventDefault();
+		});
+			
+		function creationDrag(){
+			var 
+				limits = null;
+				startPos = lastPosition,
+				onStart = {
+					width  : activeModel.width,
+					height : activeModel.height,
+					top    : activeModel.top,
+					left   : activeModel.left
+				},
+				onMove = null,
+				onMouseup = null;
+					
+			onMouseup = function(){
+				$(document.body).unbind( 'mousemove', onMove );
+				$(document.body).unbind( 'mouseup', onMouseup );
+			};
+			
+			onMove = function( event ){
+				var
+					xDiff = Math.abs( startPos.x - event.pageX ),
+					yDiff = Math.abs( startPos.y - event.pageY );
+				
+				activeModel.width = onStart.width + xDiff + xDiff;
+				activeModel.height = onStart.height + yDiff + yDiff;
+				activeModel.top = onStart.top - yDiff;
+				activeModel.left = onStart.left - xDiff;
+			};
+				
+			$(document.body).mouseup( onMouseup );
+			$(document.body).mousemove( onMove );
+		}
+		// mouse down is triggering the creation of a glyph to be added
+		$(document.body).on('mousedown', '.glyphing-container', function( event ){
+			var container = $(this).data( 'self' );
+			
+			if ( !container.isLocked() ){
+				activeModel = container.addGlyph({
+					left : lastPosition.x - container.$.offset().left,
+					top  : lastPosition.y - container.$.offset().top
+				}).getModel();
+			
+				event.stopPropagation();
+				event.preventDefault();
+				
+				creationDrag();
+			}
+		});
+		
+		// Make this something better... reusable module
+		$(document.body).on('mousemove', function( event ){
+			lastPosition = {
+				x : event.pageX,
+				y : event.pageY
+			};
 		});
 	},
 	onDefine : function( inst ){
@@ -78,14 +144,22 @@ bMoor.constructor.define({
 			
 			return this;
 		},
+		unlock : function(){
+			this.locked = false
+			
+			return this;
+		},
 		isLocked : function(){
 			return this.locked;
+		},
+		getCollection : function(){
+			return this.glyphs;
 		},
 		setGlyphClass : function( className ){
 			this.settings.glyphClass = className;
 		},
 		setGlyphSettings : function( settings ){
-			this.settings.glyphSettings = $.extend( this.settings.glyphSettings, settings );
+			this.settings.glyphSettings = $.extend( true, this.settings.glyphSettings, settings );
 		},
 		getClass : function(){
 			return 'glyphing-container';
@@ -96,9 +170,22 @@ bMoor.constructor.define({
 		makeNode : function( $el ){
 			return $( '<div  class="'+this.getClass()+'" style="'+this.makeStyle($el)+'" />' );
 		},
+		setActive : function( glyph ){
+			// TODO : check to see if the glyph is in the container... ideally
+			
+			if ( activeGlyph ){	
+				var	t = activeGlyph.getModel();
+				t.active = false;
+				t._stop();
+			}
+			
+			activeGlyph = glyph;
+			
+			activeGlyph.getModel()._start().active = true;
+		},
 		addGlyph : function( info ){
 			if ( info.isGlyph ){
-				activeGlyph = info;
+				this.setActive( info );
 
 				this.glyphs.push( activeGlyph );
 				this.$el.trigger( 'new-glyph', [activeGlyph] );
@@ -109,7 +196,6 @@ bMoor.constructor.define({
 			}
 		},
 		collectionUpdate : function(){
-			console.log( 'yay' );
 		},
 		toJson : function(){
 			var
