@@ -86,8 +86,6 @@ bMoor.constructor.define({
 					event.stopPropagation();
 					event.preventDefault();
 				}
-				
-				console.log( event );
 			}
 		});
 		
