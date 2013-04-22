@@ -55,7 +55,7 @@ bMoor.constructor.define({
 				
 		$(document.body).on( 'keydown', function(event){
 			if( !$(event.target).is(':input') ){
-				if ( event.keyCode == 8 ){
+				if ( event.keyCode == 8 || event.keyCode == 46 ){
 					$('.glyphing-container').each(function(){
 						var dis = $(this).data('self');
 						
