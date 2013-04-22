@@ -187,7 +187,9 @@ bMoor.constructor.define({
 			return this;
 		},
 		modelUpdate : function(){
-			if ( this.active !== this.model.active ){
+			if ( this.model.remove ){
+				this.$.remove();
+			}else if ( this.active !== this.model.active ){
 				if ( this.model.active ){
 					this.$.addClass('active-glyph');
 				}else{

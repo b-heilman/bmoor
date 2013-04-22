@@ -1,8 +1,5 @@
 ;(function( $, global, undefined ){
 
-var 
-	activeGlyph = null;	
-	
 bMoor.constructor.define({
 	name : 'Container',
 	namespace : ['bmoor','glyphing'],
@@ -18,6 +15,7 @@ bMoor.constructor.define({
 		
 		settings = this.settings = $.extend( true, {}, this.__static.settings, settings );
 		
+		this.activeGlyph = null;
 		this.glyphs = new bmoor.Collection();
 		this.glyphs._bind( this )._start();
 		this.locked = true;
@@ -57,6 +55,38 @@ bMoor.constructor.define({
 				
 		$(document.body).on( 'keydown', function(event){
 			if( !$(event.target).is(':input') ){
+				if ( event.keyCode == 8 ){
+					$('.glyphing-container').each(function(){
+						var dis = $(this).data('self');
+						
+						if ( dis.activeGlyph ){
+							dis.activeGlyph.getModel().remove = true;
+						}
+					});
+					
+					event.stopPropagation();
+					event.preventDefault();
+				}else if ( event.keyCode == 16 ){
+					$('.glyphing-container').each(function(){
+						var dis = $(this).data('self');
+						
+						if ( dis.activeGlyph ){
+							var pos = dis.glyphs.find( dis.activeGlyph );
+							
+							if ( pos == -1 || pos == dis.glyphs.length - 1 ){
+								dis.setActive( dis.glyphs[0] );
+							}else{
+								dis.setActive( dis.glyphs[pos + 1] );
+							}
+						}else{
+							dis.setActive( dis.glyphs[0] );
+						}
+					});
+					
+					event.stopPropagation();
+					event.preventDefault();
+				}
+				
 				console.log( event );
 			}
 		});
@@ -173,24 +203,40 @@ bMoor.constructor.define({
 		setActive : function( glyph ){
 			// TODO : check to see if the glyph is in the container... ideally
 			
-			if ( activeGlyph ){	
-				var	t = activeGlyph.getModel();
+			if ( this.activeGlyph ){	
+				var	t = this.activeGlyph.getModel();
 				t.active = false;
 				t._stop();
 			}
 			
-			activeGlyph = glyph;
+			if ( glyph ){
+				this.activeGlyph = glyph;
 			
-			activeGlyph.getModel()._start().active = true;
+				this.activeGlyph.getModel()._start().active = true;
+			}else{
+				this.activeGlyph = null;
+			}
 		},
 		addGlyph : function( info ){
 			if ( info.isGlyph ){
+				var 
+					model = info.getModel(),
+					dis = this;
+				
 				this.setActive( info );
 
-				this.glyphs.push( activeGlyph );
-				this.$el.trigger( 'new-glyph', [activeGlyph] );
+				this.glyphs.push( info );
 				
-				return activeGlyph;
+				model._bind(function(){
+					if ( info.remove ){
+						dis.glyphs.remove( info );
+						if ( dis.activeGlyph == info ){
+							dis.setActive( null );
+						}
+					}
+				});
+				
+				return info;
 			} else{
 				return this.addGlyph( new this.settings.glyphClass($.extend(true, {}, this.settings.glyphSettings, info), this.box, this.$) );
 			}
