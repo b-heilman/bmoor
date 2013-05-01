@@ -11,6 +11,7 @@ bMoor.constructor.define({
 			style = null,
 			$glyph;
 		
+		this.limits = limits;
 		this.active = false;
 		this.settings = this.parseSettings( settings );
 		this.template = this.settings.template;
@@ -22,7 +23,7 @@ bMoor.constructor.define({
 		
 		this.$ = $glyph;
 		this.model = new bmoor.Model();
-		this.setModel( style );
+		this.setModelValues( this.makeModelValues(style, settings, this.template) );
 		
 		if ( $root ){
 			$root.append( $glyph );
@@ -62,7 +63,6 @@ bMoor.constructor.define({
 				top       : '-999999px',
 				left      : '-999999px',
 				position  : 'absolute',
-				border    : '1px solid black',
 				rotation  : 0,
 				opacity   : 1
 			}
@@ -70,6 +70,59 @@ bMoor.constructor.define({
 	},
 	publics : {
 		// glyphing setters
+		makeModelCleanses : function(){
+			return {
+				top : parseInt,
+				left : parseInt,
+				width: parseInt,
+				height : parseInt
+			}
+		},
+		makeModelValues : function( style, settings, template ){
+			return {
+				width   : style.width,
+				height  : style.height,
+				top     : style.top,
+				left    : style.left,
+				opacity : style.opacity,
+				angle   : style.angle
+			};
+		},
+		makeModelDefaults : function(){
+			return {
+				top     : this.$.position().top,
+				left    : this.$.position().left,
+				width   : this.$.width(),
+				height  : this.$.height(),
+				opacity : 1,
+				angle   : 0
+			}
+		},
+		setModelValues : function( values ){
+			var 
+				defaults = this.makeModelDefaults(),
+				cleanses = this.makeModelCleanses();
+			
+			for( var dex in values ){
+				if ( values[dex] !== undefined && values[dex] !== null ){
+					if ( cleanses[dex] ){
+						this.model[dex] = cleanses[dex]( values[dex] );
+					}else{
+						this.model[dex] = values[dex];
+					}
+					
+					delete defaults[dex];
+				}
+			}
+			
+			for( var dex in defaults ){
+				if ( cleanses[dex] ){
+					this.model[dex] = cleanses[dex]( defaults[dex] );
+				}else{
+					this.model[dex] = defaults[dex];
+				}
+			}
+		},
 		parseSettings : function( settings ){
 			if ( !settings.style ){
 				settings.style = {};
@@ -107,43 +160,6 @@ bMoor.constructor.define({
 			}
 			
 			return settings;
-		},
-		setModel : function( style ){
-			if ( style.top ){
-				this.model.top = style.top;
-			}else if ( this.model.top == undefined ){
-				this.model.top = this.$.position().top;
-			}
-			
-			if ( style.left ){
-				this.model.left = style.left;
-			}else if ( this.model.left == undefined ){
-				this.model.left = this.$.position().left;
-			}
-			
-			if ( style.width ){
-				this.model.width = parseInt( style.width );
-			}else if ( this.model.width == undefined ){
-				this.model.width = parseInt( this.$.width() );
-			}
-			
-			if ( style.height ){
-				this.model.height = parseInt( style.height );
-			}else if ( this.model.height == undefined ){
-				this.model.height = parseInt( this.$.height() );
-			}
-			
-			if ( style.opacity ){
-				this.model.opacity = style.opacity;
-			}else if ( this.model.opacity == undefined ){
-				this.model.opacity = 100;
-			}
-			
-			if ( style.angle ){
-				this.model.angle = style.angle;
-			}else if ( this.model.angle == undefined ){
-				this.model.angle = 0;
-			}
 		},
 		setCenter : function( x, y ){
 			this.model.left = ( x - this.model.width / 2 );
@@ -205,8 +221,8 @@ bMoor.constructor.define({
 			return 'top:'   + obj.top
 				+ ',left:'    + obj.left
 				+ ',height:'  + obj.height
-				+ ',width:'   + obj.width,
-				+ ',opacity:' + obj.opacity,
+				+ ',width:'   + obj.width
+				+ ',opacity:' + obj.opacity
 				+ ',angle:'   + obj.angle;
 		},
 		toJson : function(){

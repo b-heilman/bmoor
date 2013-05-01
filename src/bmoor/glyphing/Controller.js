@@ -6,7 +6,7 @@ bMoor.constructor.define({
 	require: [
 		['bmoor','glyphing','Glyph']
 	],
-	construct: function( el, container ){
+	construct: function( el, container, fields ){
 		var 
 			$el = $(el),
 			dis = this;
@@ -15,41 +15,30 @@ bMoor.constructor.define({
 		
 		this.glyph = null;
 		this.model = null;
+		this.fields = fields;
 		
 		this.collection = container.getCollection();
 		this.collection._bind(this);
 		
+		for( var k in fields ){
+			(function( field ){
+				var 
+					$input = $el.find('.'+field);
+				
+				dis['$'+field] = $input;
+				onAlter( $input, function(){
+					dis.model[field] = $input.val();
+				});
+			}( fields[k] ));
+		}
+		/*
 		this.$top = $el.find('.top');
 		this.$left = $el.find('.left');
 		this.$angle = $el.find('.angle');
 		this.$width = $el.find('.width');
 		this.$height = $el.find('.height');
 		this.$opacity = $el.find('.opacity');
-		
-		onAlter( this.$top, function(){
-			dis.model.top = dis.$top.val();
-		});
-		
-		onAlter( this.$left, function(){
-			dis.model.left = dis.$left.val();
-		});
-		
-		onAlter( this.$width, function(){
-			dis.model.width = dis.$width.val();
-		});
-		
-		onAlter( this.$height, function(){
-			dis.model.height = dis.$height.val();
-		});
-		
-		onAlter( this.$opacity, function(){
-			dis.model.opacity = dis.$opacity.val();
-		});
-		
-		onAlter( this.$angle, function(){
-			dis.model.angle = dis.$angle.val();
-		});
-		
+		*/
 		function onAlter( $el, callback ){
 			var
 				wait = null;
@@ -59,13 +48,13 @@ bMoor.constructor.define({
 					clearTimeout( wait );
 				}
 				
-				wait = setTimeout( function(){ $el.blur(); }, 500 );
+				wait = setTimeout( function(){ $el.change(); }, 500 );
 			});
 			
-			$el.blur( function(){
-				if ( dis.glyph != null ){
-					callback(); 
-					dis.glyph.redraw();
+			$el.on('change', function(){
+				console.log
+				if ( dis.model != null ){
+					callback();
 				}
 			});
 		}
@@ -100,12 +89,12 @@ bMoor.constructor.define({
 			}
 		},
 		update : function( model ){
-			this.$height.val( model.height );
-			this.$width.val( model.width );
-			this.$top.val( model.top );
-			this.$left.val( model.left );
-			this.$opacity.val( model.opacity );
-			this.$angle.val( model.angle );
+			for( var k in this.fields ){
+				var 
+					field = this.fields[k];
+				
+				this['$'+field].val( this.model[field] );
+			}
 		},
 		clearGlyph : function( ){
 			if ( this.model ){
@@ -115,12 +104,12 @@ bMoor.constructor.define({
 			this.model = null;
 			this.glyph = null;
 			
-			this.$height.val('');
-			this.$width.val('');
-			this.$top.val('');
-			this.$left.val('');
-			this.$opacity.val('');
-			this.$angle.val('');
+			for( var k in this.fields ){
+				var 
+					field = this.fields[k];
+				
+				this['$'+field].val( '' );
+			}
 		}
 	}
 });
