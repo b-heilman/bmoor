@@ -550,8 +550,10 @@
 			var
 				dis = this,
 				requests = settings.require,
-				ns = ( settings.namespace ? Namespace.parse(settings.namespace) : [] ),
-				namespace = ( settings.namespace ? Namespace.get(ns) : global ),
+				namespace = ( settings.namespace 
+					? Namespace.get(settings.namespace ? Namespace.parse(settings.namespace) : []) 
+					: global 
+				),
 				obj = function(){
 					if ( !initializing ){
 						this.__construct.apply( this, arguments );
@@ -573,7 +575,7 @@
 			}
 			
 			if ( settings.aliases ){
-				for( var namespace in settings.aliases ){ requests.push( namespace ); }
+				for( var ns in settings.aliases ){ requests.push( ns ); }
 			}
 			
 			function def(){
@@ -585,21 +587,29 @@
 				}else{
 					define.call( dis, settings, obj );
 					
+					delete obj.prototype.__defining;
+					
 					if ( settings.onDefine ){
-						settings.onDefine( obj );
+						settings.onDefine( obj, namespace, settings.name );
 					}
 					
 					if ( settings.onReady ){
 						$(document).ready(function(){
-							settings.onReady( obj );
+							settings.onReady( namespace[settings.name] );
 						});
 					}
-					
-					delete obj.prototype.__defining;
 				}
 			};
 			
 			FileLoader.require( requests, def, [], this);
+		};
+		
+		Constructor.prototype.singleton = function( settings ){
+			settings.onDefine = function( obj, namespace, name ){
+				namespace[name] =  new obj;
+			};
+			
+			this.define( settings );
 		};
 		
 		// passing in obj as later I might configure it to allow you to run this against an already defined class

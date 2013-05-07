@@ -1,18 +1,14 @@
 // I should use this as an excuse to write a singleton pattern
 ;(function( global, undefined ){
-	bMoor.constructor.define({
+	bMoor.constructor.singleton({
 		name : 'MouseTracker',
 		namespace : ['bmoor'],
-		onDefine : function( inst ){
-			var
-				lastPosition = {};
-				
+		onReady : function( obj ){
 			$(document.body).on('mousemove', function( event ){
-				lastPosition.x = event.pageX;
-				lastPosition.y = event.pageY;
+				obj.x = event.pageX;
+				obj.y = event.pageY;
+				console.log( obj );
 			});
-			
-			bmoor.MouseTracker = lastPosition;
 		}
 	});
 }( this ));
