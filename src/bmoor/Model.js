@@ -13,7 +13,7 @@
 				}
 			}
 		},
-		publics : {
+		properties : {
 			_stop : function(){
 				this._notify(); // one last update, make sure all is flushed
 				

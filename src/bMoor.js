@@ -216,8 +216,22 @@
 	(function(){
 		// A multi level hash that allows for different libraries to be located in different locations
 		var
+			templates = {},
+			loadedScripts = {},
 			libRoots = {};
 			
+		$.ready(function(){
+			var scripts = document.getElementsByTagName('script');
+			
+			for( var i = 0, c = scripts.length; i < c; i++ ){
+				var script = scripts[i];
+				
+				if ( script.src ){
+					loadedScripts[ script.src ] = script.id;
+				}
+			}
+		});
+		
 		FileLoader.reset = function(){
 			libRoots = {
 				'.' : { 
@@ -321,7 +335,62 @@
 				: { root : masterLib['/'], path : masterPath, name : name, settings : masterLib['.'] };
 		};
 		
-		FileLoader.loadSpace = function( namespace, group, callback, args, target ){
+		FileLoader.loadScript = function( src, cb ){
+			$.ajax({ url : src, dataType : 'script', success : cb });
+		};
+		
+		FileLoader.loadStyle = function( src, cb ){
+			var
+				css,
+				style,
+				sheet,
+				interval = null;
+			
+			style = document.createElement( 'link' );
+			style.setAttribute( 'href', path );
+			style.setAttribute( 'rel', 'stylesheet' );
+			style.setAttribute( 'type', 'text/css' );
+			
+			if ( style.sheet ){
+				sheet = 'sheet';
+				css = 'cssRules';
+				
+				interval = setInterval( function(){
+					try{
+					//	console.log( style[sheet] );
+						if ( style[sheet] && style[sheet][css] && style[sheet][css].length ){
+							clearInterval( interval );
+							cb();
+						}
+					}catch( ex ){ /* I feel dirty */ }
+				},10 );
+			}else{
+				// IE specific
+				$( style ).bind( 'load', cb );
+			}
+			
+			$('head').append( style );
+		};
+		/*
+		 * TODO
+		 
+		FileLoader.loadTemplate = function( id, src, cb ){
+			if ( loadedScripts[src] ){
+				// script already was loaded
+				
+			}else{
+				
+			}
+		};
+		*/
+		/**
+		 * @param namespace The namespace to be loading
+		 * @param reference [Optional] A reference to build the request url, defaults to the namespace
+		 * @param callback  Call back for once loaded
+		 * @param args      Arguments to pass to the callback
+		 * @param target    Context to call against
+		 */
+		FileLoader.loadSpace = function( namespace, reference, callback, args, target ){
 			function fireCallback(){
 				if ( target == undefined ){
 					target = {};
@@ -350,20 +419,20 @@
 			
 			namespace = Namespace.parse( namespace );
 			
-			if ( typeof(group) == 'function' ){
+			if ( typeof(reference) == 'function' ){
 				target = args;
 				args = callback;
-				callback = group;
-				group = namespace;
+				callback = reference;
+				reference = namespace;
 			}
 			
 			space = Namespace.exists(namespace);
 			
 			if ( !space ){
 				var
-					info = this.getLibrary( group ),
+					info = this.getLibrary( reference ),
 					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' ) 
-						+ '/' + ( info.settings.fullName ? group.join('.') : info.name ),
+						+ '/' + ( info.settings.fullName ? reference.join('.') : info.name ),
 					success = function( script, textStatus ){
 						if ( Namespace.exists(namespace) ){
 							waitForIt();
@@ -471,7 +540,7 @@
 		 *   parent      : the parent to extend the prototype of, added to require
 		 *   aliases     : the local renaming of classes prototypes for faster access
 		 *   construct   : the constructor for the class, called automatically
-		 *   publics     : the public interface for the class
+		 *   attributes  : the public interface for the class
 		 *   statics     : variables to be shared between class instances
 		 *   onReady     : function to call when DOM is ready, instance passed in
 		 *   onDefine    : function to call when class has been defined
@@ -562,14 +631,14 @@
 			// right now, i am making it static on the prototype level, so __parent.__static might be neccisary
 			this.statics( obj, settings.statics );
 			
-			if ( settings.publics ){
-				this.publics( obj, settings.publics );
+			if ( settings.properties ){
+				this.properties( obj, settings.properties );
 			}
 		};
 		
-		Constructor.prototype.publics = function( child, publics ){
-			for( var name in publics ){
-				child.prototype[name] = publics[name];
+		Constructor.prototype.properties = function( child, properties ){
+			for( var name in properties ){
+				child.prototype[name] = properties[name];
 			}
 		};
 		

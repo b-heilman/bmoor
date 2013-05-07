@@ -23,7 +23,7 @@
 			
 			this._old = this.slice(0);
 		},
-		publics : {
+		properties : {
 			remove : function( obj ){
 				var index = this.find( obj );
 				

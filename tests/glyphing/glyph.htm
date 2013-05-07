@@ -10,19 +10,19 @@
 		}
 	</style>
 	
-	<script src='../src/jquery.min.js'></script>
-	<script src='../src/bMoor.js'></script>
+	<script src='../../src/jquery.min.js'></script>
+	<script src='../../src/bMoor.js'></script>
 	
 	<script>
-		bMoor.loader.setRoot('../src');
-		bMoor.loader.setLibrary( ['jquery'], '../src/jquery', {fullName : true} );
+		bMoor.loader.setRoot('../../src');
+		bMoor.loader.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
 	</script>
 	
-	<script src='../src/bmoor/Model.js'></script>
-	<script src='../src/bmoor/Collection.js'></script>
-	<script src='../src/bmoor/glyphing/Glyph.js'></script>
-	<script src='../src/bmoor/glyphing/Container.js'></script>
-	<script src='../src/bmoor/glyphing/Controller.js'></script>
+	<script src='../../src/bmoor/Model.js'></script>
+	<script src='../../src/bmoor/Collection.js'></script>
+	<script src='../../src/bmoor/glyphing/Glyph.js'></script>
+	<script src='../../src/bmoor/glyphing/Container.js'></script>
+	<script src='../../src/bmoor/glyphing/Controller.js'></script>
 </head>
 <body>
 	<div id='glyph_control'>
@@ -38,7 +38,7 @@
 		<div id="count">0</div>
 		<button onclick="alert( $('#target_space').data('self').toJson() );">To Json</button>
 		<button onclick="console.log( $('#target_space').data('self').toObject() );">To Object</button>
-		<button onclick="$('#target_space').data('self').addGlyph({left:20,top:20,width:50,height:50,angle:45});">Add Glyph 1</button>
+		<button onclick="$('#target_space').data('self').addGlyph({left:20,top:20,width:50,height:50,angle:2});">Add Glyph 1</button>
 		<button onclick="$('#target_space').data('self').addGlyph({left:70,top:20,width:50,height:50,opacity:.5});">Add Glyph 2</button>
 		<button onclick="$('#target_space').data('self').addGlyph({left:20,top:70,width:50,height:50})">Add Glyph 3</button>
 	</div>

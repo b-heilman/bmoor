@@ -89,6 +89,13 @@ bMoor.constructor.define({
 					
 					event.stopPropagation();
 					event.preventDefault();
+				}else if ( event.keyCode == 27 ){
+					$('.glyphing-container').each(function(){
+						$(this).data('self').setActive( null );
+					});
+					
+					event.stopPropagation();
+					event.preventDefault();
 				}
 			}
 		});
@@ -104,10 +111,13 @@ bMoor.constructor.define({
 			event.preventDefault();
 		});
 			
-		function creationDrag(){
+		function creationDrag( glyph ){
 			var 
 				limits = null;
-				startPos = lastPosition,
+				startPos = {
+					x : lastPosition.x,
+					y : lastPosition.y
+				},
 				onStart = {
 					width  : activeModel.width,
 					height : activeModel.height,
@@ -125,12 +135,19 @@ bMoor.constructor.define({
 			onMove = function( event ){
 				var
 					xDiff = Math.abs( startPos.x - event.pageX ),
-					yDiff = Math.abs( startPos.y - event.pageY );
+					yDiff = Math.abs( startPos.y - event.pageY ),
+					width = onStart.width + xDiff + xDiff,
+					height = onStart.height + yDiff + yDiff;
 				
-				activeModel.width = onStart.width + xDiff + xDiff;
-				activeModel.height = onStart.height + yDiff + yDiff;
-				activeModel.top = onStart.top - yDiff;
-				activeModel.left = onStart.left - xDiff;
+				if ( width > glyph.settings.minWidth ){
+					activeModel.width = width;
+					activeModel.left = onStart.left - xDiff;
+				}
+				
+				if ( height > glyph.settings.minHeight ){
+					activeModel.height = height;
+					activeModel.top = onStart.top - yDiff;
+				}
 			};
 				
 			$(document.body).mouseup( onMouseup );
@@ -139,18 +156,21 @@ bMoor.constructor.define({
 		
 		// mouse down is triggering the creation of a glyph to be added
 		$(document.body).on('mousedown', '.glyphing-container', function( event ){
-			var container = $(this).data( 'self' );
+			var 
+				glyph,
+				dis = $(this).data( 'self' );
 			
-			if ( !container.locked ){
-				activeModel = container.addGlyph({
-					left : lastPosition.x - container.$.offset().left,
-					top  : lastPosition.y - container.$.offset().top
-				}).getModel();
+			if ( !dis.locked ){
+				glyph = dis.addGlyph({
+					centerLeft : lastPosition.x - dis.$.offset().left,
+					centerTop  : lastPosition.y - dis.$.offset().top
+				});
+				activeModel = glyph.getModel();
 			
 				event.stopPropagation();
 				event.preventDefault();
 				
-				creationDrag();
+				creationDrag( glyph );
 			}
 		});
 	},
@@ -163,7 +183,7 @@ bMoor.constructor.define({
 			return this;
 		};
 	},
-	publics : {
+	properties : {
 		locked : true,
 		lock : function(){
 			this.locked = true;
@@ -226,7 +246,6 @@ bMoor.constructor.define({
 				
 				return info;
 			} else{
-				console.log( $.extend(true, {}, this.settings.glyphSettings, info) );
 				return this.addGlyph( new this.settings.glyphClass($.extend(true, {}, this.settings.glyphSettings, info), this.box, this.$) );
 			}
 		},

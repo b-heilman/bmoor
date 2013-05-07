@@ -27,6 +27,7 @@ bMoor.constructor.define({
 				
 				dis['$'+field] = $input;
 				onAlter( $input, function(){
+					console.log( field, $input.val() );
 					dis.model[field] = $input.val();
 				});
 			}( fields[k] ));
@@ -43,23 +44,32 @@ bMoor.constructor.define({
 			var
 				wait = null;
 			
-			$el.keydown(function(){
-				if ( wait ){
-					clearTimeout( wait );
-				}
+			if ( $el.is('button') ){
+				var t = $el.attr('value');
+				$el.on('click', function(){
+					if ( dis.model != null ){
+						$el.val( t ); // make sure to reset it
+						callback();
+					}
+				});
+			}else{
+				$el.keydown(function(){
+					if ( wait ){
+						clearTimeout( wait );
+					}
+					
+					wait = setTimeout( function(){ $el.change(); }, 500 );
+				});
 				
-				wait = setTimeout( function(){ $el.change(); }, 500 );
-			});
-			
-			$el.on('change', function(){
-				console.log
-				if ( dis.model != null ){
-					callback();
-				}
-			});
+				$el.on('change', function(){
+					if ( dis.model != null ){
+						callback();
+					}
+				});
+			}
 		}
 	},
-	publics : { 
+	properties : { 
 		addGlyph: function( glyph ){
 			var 
 				dis = this,

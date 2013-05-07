@@ -8,27 +8,27 @@ bMoor.constructor.define({
 	},
 	construct : function( settings, limits, $root ){
 		var
-			style = null,
 			$glyph;
 		
 		this.limits = limits;
 		this.active = false;
-		this.settings = this.parseSettings( settings );
+		this.settings = $.extend( true, {}, this.__static.settings, settings );
 		this.template = this.settings.template;
+		this.style = this.settings.style;
 		
 		delete this.settings.template;
-		
-		style = $.extend( {},this.__static.settings.style, this.settings.style );
-		$glyph = this.makeNode( style );
+		delete this.settings.style;
+
+		$glyph = this.makeNode( this.settings );
 		
 		this.$ = $glyph;
 		this.model = new bmoor.Model();
-		this.setModelValues( this.makeModelValues(style, settings, this.template) );
+		this.setModelValues( this.makeModelValues(this.settings, this.template) );
 		
 		if ( $root ){
 			$root.append( $glyph );
-		}else if ( this.__static.settings.root ){
-			$( this.__static.settings.root ).append( $glyph );
+		}else if ( this.__static.root ){
+			$( this.__static.root ).append( $glyph );
 		}else{
 			$( document.body ).append( $glyph );
 		}
@@ -53,50 +53,65 @@ bMoor.constructor.define({
 	},
 	statics : {
 		settings : {
-			template : {
-				id : '',
-				settings : {}
-			},
+			minWidth  : 0,
+			minHeight : 0,
 			style : {
-				width     : '0px',
-				height    : '0px',
-				top       : '-999999px',
-				left      : '-999999px',
 				position  : 'absolute',
 				rotation  : 0,
 				opacity   : 1
 			}
 		}
 	},
-	publics : {
+	properties : {
 		// glyphing setters
 		makeModelCleanses : function(){
 			return {
-				top : parseInt,
-				left : parseInt,
-				width: parseInt,
+				top    : parseInt,
+				left   : parseInt,
+				width  : parseInt,
 				height : parseInt
-			}
+			};
 		},
-		makeModelValues : function( style, settings, template ){
+		makeModelValues : function( settings, template ){
+			console.log( settings );
+			if ( settings.centerTop ){
+				if ( settings.height ){
+					settings.top = settings.centerTop 
+						- settings.height / 2;
+				}else{
+					settings.top = settings.centerTop 
+						- this.settings.minHeight / 2;
+				}
+			}
+			
+			if ( settings.centerLeft ){
+				if ( settings.height ){
+					settings.left = settings.centerLeft 
+						- settings.width / 2;
+				}else{
+					settings.left = settings.centerLeft
+						- this.settings.minWidth / 2;
+				}
+			}
+			
 			return {
-				width   : style.width,
-				height  : style.height,
-				top     : style.top,
-				left    : style.left,
-				opacity : style.opacity,
-				angle   : style.angle
+				width   : settings.width,
+				height  : settings.height,
+				top     : settings.top,
+				left    : settings.left,
+				opacity : settings.opacity,
+				angle   : settings.angle
 			};
 		},
 		makeModelDefaults : function(){
 			return {
 				top     : this.$.position().top,
 				left    : this.$.position().left,
-				width   : this.$.width(),
-				height  : this.$.height(),
+				width   : this.settings.minWidth,
+				height  : this.settings.minHeight,
 				opacity : 1,
 				angle   : 0
-			}
+			};
 		},
 		setModelValues : function( values ){
 			var 
