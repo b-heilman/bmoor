@@ -371,6 +371,22 @@
 			
 			$('head').append( style );
 		};
+		
+		FileLoader.loadImage = function( src, cb ){
+			if ( src[0] == '#' ){
+				// reference to existing image
+				$( src ).one( 'load', function(){
+					setTimeout( cb, 10 ); // Chrome can be so silly
+				}).each(function(){
+					// got this idea from Nick Craver on stackoverflow ... thanks
+					if( this.complete ){ $( this ).load(); }
+				});
+			}else{
+				var img = new Image();
+				img.onload = cb;
+				img.src = src;
+			}
+		};
 		/*
 		 * TODO
 		 

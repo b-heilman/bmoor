@@ -4,7 +4,7 @@ bMoor.constructor.define({
 	namespace : ['bmoor','glyphing'],
 	require: {
 		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] },
-		classes : [ ['bmoor','Model'] ]
+		classes : [ ['bmoor','model','Map'] ]
 	},
 	construct : function( settings, limits, $root ){
 		var
@@ -22,7 +22,7 @@ bMoor.constructor.define({
 		$glyph = this.makeNode( this.settings );
 		
 		this.$ = $glyph;
-		this.model = new bmoor.Model();
+		this.model = new bmoor.Map();
 		this.setModelValues( this.makeModelValues(this.settings, this.template) );
 		
 		if ( $root ){
@@ -73,7 +73,6 @@ bMoor.constructor.define({
 			};
 		},
 		makeModelValues : function( settings, template ){
-			console.log( settings );
 			if ( settings.centerTop ){
 				if ( settings.height ){
 					settings.top = settings.centerTop 

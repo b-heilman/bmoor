@@ -27,7 +27,6 @@ bMoor.constructor.define({
 				
 				dis['$'+field] = $input;
 				onAlter( $input, function(){
-					console.log( field, $input.val() );
 					dis.model[field] = $input.val();
 				});
 			}( fields[k] ));

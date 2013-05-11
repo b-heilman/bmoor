@@ -4,9 +4,9 @@ bMoor.constructor.define({
 	name : 'Container',
 	namespace : ['bmoor','glyphing'],
 	require: [
-		['bmoor','MouseTracker'],
+		['bmoor','lib','MouseTracker'],
 		['bmoor','glyphing','Glyph'],
-		['bmoor','Collection']
+		['bmoor','model','Collection']
 	],
 	construct: function( el, settings ){
 		var 
@@ -19,10 +19,11 @@ bMoor.constructor.define({
 		this.activeGlyph = null;
 		this.glyphs = new bmoor.Collection();
 		this.glyphs._bind( this )._start();
-		this.locked = true;
 		this.$ = $this;
 		this.$el = $el;
 		this.controller = null;
+		
+		this.lock();
 		
 		left = dis.$.offset().left;
 		top  = dis.$.offset().top;
@@ -186,11 +187,13 @@ bMoor.constructor.define({
 	properties : {
 		locked : true,
 		lock : function(){
+			this.$.removeClass( 'unlocked' );
 			this.locked = true;
 			
 			return this;
 		},
 		unlock : function(){
+			this.$.addClass( 'unlocked' );
 			this.locked = false
 			
 			return this;

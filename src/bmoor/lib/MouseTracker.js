@@ -2,12 +2,11 @@
 ;(function( global, undefined ){
 	bMoor.constructor.singleton({
 		name : 'MouseTracker',
-		namespace : ['bmoor'],
+		namespace : ['bmoor', 'lib'],
 		onReady : function( obj ){
 			$(document.body).on('mousemove', function( event ){
 				obj.x = event.pageX;
 				obj.y = event.pageY;
-				console.log( obj );
 			});
 		}
 	});
