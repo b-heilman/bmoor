@@ -5,6 +5,7 @@
 	
 	var
 		environmentSettings = {
+			templator : ['bmoor','templating','JQote'],
 			runWindow : 300,       // 0 implies to run everything immediately
 			runPause  : 30,        // how long to pause between intervals to prevent the window from locking up
 			jsRoot    : ''
@@ -214,20 +215,25 @@
 	
 	var FileLoader = {};
 	(function(){
-		// A multi level hash that allows for different libraries to be located in different locations
 		var
 			templates = {},
 			loadedScripts = {},
-			libRoots = {};
+			libRoots = {}; // A multi level hash that allows for different libraries to be located in different locations
 			
-		$.ready(function(){
+		$(document).ready(function(){
 			var scripts = document.getElementsByTagName('script');
 			
 			for( var i = 0, c = scripts.length; i < c; i++ ){
 				var script = scripts[i];
 				
-				if ( script.src ){
-					loadedScripts[ script.src ] = script.id;
+				if ( script.id ){
+					if ( script.src ){
+						loadedScripts[ script.src ] = script.id;
+					}
+					
+					if ( script.getAttribute('type') == "text/html" ){
+						FileLoader.setTemplate( script.id, script.innerHTML );
+					}
 				}
 			}
 		});
@@ -387,18 +393,43 @@
 				img.src = src;
 			}
 		};
-		/*
-		 * TODO
-		 
+		
 		FileLoader.loadTemplate = function( id, src, cb ){
-			if ( loadedScripts[src] ){
+			if ( typeof(src) == 'function' ){
+				cb = src;
+				src = null;
+			}
+			
+			if ( templates[id] ){
+				// we already have the template, good to go
+				cb( templates[id] );
+			}else if ( loadedScripts[src] ){
 				// script already was loaded
+				var node = document.getElementById( loadedScript[src] );
 				
+				this.setTemplate( templates[id] );
+					
+				cb( templates[id] );
+			}else if ( src == null ){
+				throw id+' requested, and not found, but src is null';
 			}else{
+				var dis = this;
 				
+				$.ajax( src, {
+					// TODO
+					success : function( res ){
+						dis.setTemplate( res );
+						
+						cb( templates[id] );
+					}
+				});
 			}
 		};
-		*/
+		
+		FileLoader.setTemplate = function( id, template ){
+			templates[ id ] = template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' );
+		};
+		
 		/**
 		 * @param namespace The namespace to be loading
 		 * @param reference [Optional] A reference to build the request url, defaults to the namespace
@@ -698,10 +729,35 @@
 		};
 	}());
 	
+	var Templating = {};
+	(function(){
+		Templating.run = function( id, src, data, cb ){
+			if ( typeof(src) != 'string' ){
+				cb = data;
+				data = src;
+				src = null;
+			}
+			
+			if ( !environmentSettings.templator.run ){
+				FileLoader.require( [environmentSettings.templator], function( inst ){
+					environmentSettings.templator = new inst();
+					FileLoader.loadTemplate( id, src, function( template ){
+						cb( environmentSettings.templator.run(template,data) );
+					});
+				});
+			}else{
+				FileLoader.loadTemplate( id, src, function( template ){
+					cb( environmentSettings.templator.run(template,data) );
+				});
+			}
+		};
+	}());
+	
 	global.bMoor = {
 		require     : function(){
 			FileLoader.require.apply( FileLoader, arguments );
 		},
+		template    : Templating,
 		settings    : environmentSettings,
 		loader      : FileLoader,
 		constructor : new Constructor()

@@ -2,7 +2,7 @@
 ;(function( global, undefined ){
 	bMoor.constructor.singleton({
 		name : 'MouseTracker',
-		namespace : ['bmoor', 'lib'],
+		namespace : ['bmoor','lib'],
 		onReady : function( obj ){
 			$(document.body).on('mousemove', function( event ){
 				obj.x = event.pageX;

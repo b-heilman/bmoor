@@ -22,7 +22,7 @@ bMoor.constructor.define({
 		$glyph = this.makeNode( this.settings );
 		
 		this.$ = $glyph;
-		this.model = new bmoor.Map();
+		this.model = new bmoor.model.Map();
 		this.setModelValues( this.makeModelValues(this.settings, this.template) );
 		
 		if ( $root ){

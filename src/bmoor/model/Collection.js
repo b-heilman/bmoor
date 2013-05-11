@@ -3,14 +3,14 @@
 	bMoor.constructor.define({
 		name : 'Collection',
 		parent : 'Array',
-		namespace : ['bmoor'],
+		namespace : ['bmoor','model'],
 		require: [
-			['bmoor','Model']
+			['bmoor','model','Map']
 		],
 		construct : function( obj ){
 			this._listeners = [];
 			this._interval = null;
-			this._attributes = new bmoor.Model();
+			this._attributes = new bmoor.model.Map();
 			
 			if ( obj ){
 				for( var i = 0, c = obj.length; i < c; i++ ){

@@ -1,7 +1,7 @@
 ;(function( global, undefined ){
 	bMoor.constructor.define({
 		name : 'Map',
-		namespace : ['bmoor'],
+		namespace : ['bmoor','model'],
 		construct : function( obj ){
 			this._old = {};
 			this._listeners = [];

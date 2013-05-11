@@ -17,7 +17,7 @@ bMoor.constructor.define({
 		settings = this.settings = $.extend( true, {}, this.__static.settings, settings );
 		
 		this.activeGlyph = null;
-		this.glyphs = new bmoor.Collection();
+		this.glyphs = new bmoor.model.Collection();
 		this.glyphs._bind( this )._start();
 		this.$ = $this;
 		this.$el = $el;
@@ -55,7 +55,7 @@ bMoor.constructor.define({
 	},
 	onReady : function(){
 		var 
-			lastPosition = bmoor.MouseTracker,
+			lastPosition = bmoor.lib.MouseTracker,
 			activeModel;
 				
 		$(document.body).on( 'keydown', function(event){
