@@ -2,10 +2,13 @@
 	bMoor.constructor.define({
 		name : 'Map',
 		namespace : ['bmoor','model'],
-		construct : function( obj ){
+		construct : function( obj, cleanser, cleanseInterval ){
 			this._old = {};
 			this._listeners = [];
 			this._interval = null;
+			this._cleanse = cleanser 
+				? { cleanser : cleanser, timeout : (cleanseInterval ? cleanseInterval : 5), interval : null }
+				: null;
 			
 			if ( obj ){
 				for( var key in obj ) if ( obj.hasOwnProperty(key) ){
@@ -16,6 +19,11 @@
 		properties : {
 			_stop : function(){
 				this._notify(); // one last update, make sure all is flushed
+				
+				if ( this._cleanse ){
+					clearInterval( this._cleanse.interval );
+					this._cleanse.interval = null;
+				}
 				
 				clearInterval( this._interval );
 				this._interval = null;
@@ -31,25 +39,36 @@
 						this._old[key] = this[key];
 					}
 				
-					this._interval = setInterval(function(){
-						var
-							notify = false,
-							old = dis._old;
-						
-						for( var key in dis ) if ( dis.hasOwnProperty(key) && key[0] != '_' ){
-							if ( dis[key] != old[key] ){
-								notify = true;
-								old[key] = dis[key];
-							}
-						}
-						
-						if ( notify ){
-							dis._notify();
-						}
-					}, 50);
+					if ( this._cleanse ){
+						this._cleanse.interval = setInterval( function(){
+							dis._cleanse.cleanser( dis );
+						}, this._cleanse.timeout );
+					}
+					
+					this._interval = setInterval(function(){ dis._flush(); }, 50);
 				}
 				
 				return this;
+			},
+			_flush : function(){
+				var
+					notify = false,
+					old = this._old;
+				
+				if ( this._cleanse ){
+					this._cleanse.cleanser( this );
+				}
+			
+				for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' ){
+					if ( this[key] != old[key] ){
+						notify = true;
+						old[key] = this[key];
+					}
+				}
+				
+				if ( notify ){
+					this._notify();
+				}
 			},
 			_bind : function( target ){
 				if ( typeof(target) == 'function' ){

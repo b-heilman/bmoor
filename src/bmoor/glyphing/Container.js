@@ -33,8 +33,7 @@ bMoor.constructor.define({
 		$this.insertBefore( $el ).append( $el ); // for trigger reference
 		
 		if ( settings.keepBoxed ){
-			var
-				offset = $this.offset()
+			var offset = $this.offset();
 			
 			this.box = {
 				top    : offset.top,
@@ -56,7 +55,7 @@ bMoor.constructor.define({
 	onReady : function(){
 		var 
 			lastPosition = bmoor.lib.MouseTracker,
-			activeModel;
+			activeModel = null;
 				
 		$(document.body).on( 'keydown', function(event){
 			if( !($(event.target).is(':input') ) ){
@@ -114,7 +113,6 @@ bMoor.constructor.define({
 			
 		function creationDrag( glyph ){
 			var 
-				limits = null;
 				startPos = {
 					x : lastPosition.x,
 					y : lastPosition.y
@@ -126,11 +124,19 @@ bMoor.constructor.define({
 					left   : activeModel.left
 				},
 				onMove = null,
-				onMouseup = null;
+				onMouseup = null,
+				onMouseout = null;
 					
 			onMouseup = function(){
 				$(document.body).unbind( 'mousemove', onMove );
 				$(document.body).unbind( 'mouseup', onMouseup );
+				$(document.body).unbind( 'mouseout', onMouseout );
+			};
+			
+			onMouseout = function( event ){
+				if ( event.relatedTarget == null || event.relatedTarget.tagName.toUpperCase() == 'HTML' ){
+					onMouseup();
+				}
 			};
 			
 			onMove = function( event ){
@@ -151,8 +157,9 @@ bMoor.constructor.define({
 				}
 			};
 				
-			$(document.body).mouseup( onMouseup );
 			$(document.body).mousemove( onMove );
+			$(document.body).mouseup( onMouseup );
+			$(document.body).mouseout( onMouseout );
 		}
 		
 		// mouse down is triggering the creation of a glyph to be added
@@ -274,14 +281,7 @@ bMoor.constructor.define({
 		collectionUpdate : function(){
 		},
 		toJson : function(){
-			var
-				temp = [];
-				
-			for( var i = 0; i < this.glyphs.length; i++ ){
-				temp[i] = this.glyphs[i].toJson();
-			}
-			
-			return '['+temp.join(',')+']';
+			return JSON.stringify( this.toObject() );
 		},
 		toObject : function(){
 			var

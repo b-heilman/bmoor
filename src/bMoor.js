@@ -394,36 +394,59 @@
 			}
 		};
 		
+		
 		FileLoader.loadTemplate = function( id, src, cb ){
-			if ( typeof(src) == 'function' ){
+			var 
+				node,
+				dis = null;
+			
+			if ( cb == undefined && typeof(src) != 'string' ){
 				cb = src;
 				src = null;
 			}
 			
-			if ( templates[id] ){
-				// we already have the template, good to go
-				cb( templates[id] );
-			}else if ( loadedScripts[src] ){
-				// script already was loaded
-				var node = document.getElementById( loadedScript[src] );
-				
-				this.setTemplate( templates[id] );
-					
-				cb( templates[id] );
-			}else if ( src == null ){
-				throw id+' requested, and not found, but src is null';
-			}else{
-				var dis = this;
-				
-				$.ajax( src, {
-					// TODO
-					success : function( res ){
-						dis.setTemplate( res );
-						
-						cb( templates[id] );
-					}
-				});
+			if ( id[0] == '#' ){
+				// TODO : is this right?
+				id = id.substring(1);
 			}
+			
+			if ( !templates[id] ){
+				if ( loadedScripts[src] ){
+					// script already was loaded
+					var sid = loadedScript[src];
+					
+					if ( templates[sid] ){
+						templates[id] = templates[sid];
+					}else{
+						this.setTemplate( id, document.getElementById(sid).innerHTML );
+					}
+				}else if ( node = document.getElementById(id) ){
+					this.setTemplate( id, node.innerHTML );
+				}else if ( src == null ){
+					throw id+' requested, and not found, but src is null';
+				}else{
+					dis = this;
+					
+					$.ajax( src, {
+						// TODO
+						success : function( res ){
+							dis.setTemplate( res );
+							
+							cb( templates[id] );
+						}
+					});
+				}
+			}
+			
+			if ( dis == null ) {
+				if ( cb ){
+					cb( templates[id] );
+				}else{
+					return templates[id];
+				}
+			}
+			
+			return null;
 		};
 		
 		FileLoader.setTemplate = function( id, template ){
@@ -731,26 +754,80 @@
 	
 	var Templating = {};
 	(function(){
-		Templating.run = function( id, src, data, cb ){
-			if ( typeof(src) != 'string' ){
-				cb = data;
+		// To make life easier, I presume loadTemplate doesn't need the call back
+		Templating.getDefaultTemplator = function(){
+			if ( environmentSettings.templator.length ){
+				environmentSettings.templator = Namespace.get( environmentSettings.templator );
+			}
+			
+			return environmentSettings.templator;
+		};
+		
+		Templating.get = function( id, src, data, templator, cb ){
+			if ( cb == undefined && typeof(src) != 'string' ){
+				cb = templator;
+				templator = data;
 				data = src;
 				src = null;
 			}
 			
-			if ( !environmentSettings.templator.run ){
-				FileLoader.require( [environmentSettings.templator], function( inst ){
-					environmentSettings.templator = new inst();
-					FileLoader.loadTemplate( id, src, function( template ){
-						cb( environmentSettings.templator.run(template,data) );
-					});
+			if ( !templator || !templator.prepare ){
+				templator = this.getDefaultTemplator();
+			}
+			
+			if ( cb ){
+				this.prepare( id, src, templator, function( prepared ){
+					cb( templator.run(prepared,data) );
 				});
+				
+				return null;
 			}else{
-				FileLoader.loadTemplate( id, src, function( template ){
-					cb( environmentSettings.templator.run(template,data) );
-				});
+				return templator.run( this.prepare(id,src,templator),data );
 			}
 		};
+		
+		Templating.prepare = function( id, src, templator, cb ){
+			if ( cb == undefined && typeof(src) != 'string' ){
+				cb = templator;
+				templator = src;
+				src = null;
+			}
+			
+			if ( !templator || !templator.prepare ){
+				templator = this.getDefaultTemplator();
+			}
+			
+			if ( !templator._prepared ){
+				templator._prepared = {};
+			}
+			
+			if ( cb ){
+				FileLoader.loadTemplate( id, src, function( content ){
+					if ( !templator._prepared[id] ){
+						templator._prepared[id] = templator.prepare( content );
+					}
+					
+					cb( templator._prepared[id] );
+				});
+				
+				return null;
+			}else{
+				if ( !templator._prepared[id] ){
+					templator._prepared[id] = templator.prepare( FileLoader.loadTemplate(id,src) );
+				}
+				
+				return templator._prepared[id];
+			}
+		};
+		
+		/*
+		FileLoader.require( [environmentSettings.templator], function( inst ){
+			environmentSettings.templator = inst;
+			templates[ id ] = environmentSettings.templator.prepare(
+				template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' )
+			);
+		});
+		*/
 	}());
 	
 	global.bMoor = {

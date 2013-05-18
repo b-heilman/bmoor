@@ -22,7 +22,7 @@ bMoor.constructor.define({
 		$glyph = this.makeNode( this.settings );
 		
 		this.$ = $glyph;
-		this.model = new bmoor.model.Map();
+		this.model = this.makeModel();
 		this.setModelValues( this.makeModelValues(this.settings, this.template) );
 		
 		if ( $root ){
@@ -64,6 +64,9 @@ bMoor.constructor.define({
 	},
 	properties : {
 		// glyphing setters
+		makeModel : function(){
+			return new bmoor.model.Map();
+		},
 		makeModelCleanses : function(){
 			return {
 				top    : parseInt,
@@ -231,16 +234,8 @@ bMoor.constructor.define({
 			
 			this.redraw();
 		},
-		_toJson : function( obj ){
-			return 'top:'   + obj.top
-				+ ',left:'    + obj.left
-				+ ',height:'  + obj.height
-				+ ',width:'   + obj.width
-				+ ',opacity:' + obj.opacity
-				+ ',angle:'   + obj.angle;
-		},
 		toJson : function(){
-			return '{' + this._toJson( this.toObject() ) + '}';
+			return JSON.stringify( this.toObject() );
 		},
 		toObject : function(){
 			return {

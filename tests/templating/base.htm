@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../../src/jquery.min.js"></script>
+<script src="../../src/bMoor.js"></script>
+<script src='../../src/jquery/jquery.jqote2.js'></script>
+<script>
+	$.jqotetag('#');
+	bMoor.loader.setRoot('../../src');
+	bMoor.loader.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
+</script>
+<script src="../../src/bmoor/templating/Snap.js"></script>
+<script src="../../src/bmoor/templating/JQote.js"></script>
+<script src="../../src/bmoor/snap/Node.js"></script>
+</head>
+<body>
+<script type="text/html" id="template1">
+<![CDATA[
+	<b><#= this.foo #></b>
+	this._append( new bmoor.snap.Node('span', 'template2', this.bar) );
+]]>
+</script>
+<script type="text/html" id="template2">
+<![CDATA[
+	<i><#= this.uh #></i>
+]]>
+</script>
+<script>
+bMoor.template.get( 'template1',{foo:'foot',bar:{uh:'yay'}}, bmoor.templating.Snap, function( node ){
+	console.log( node );
+	document.body.innerHTML = node;
+} );
+</script>
+</body>
+</html>

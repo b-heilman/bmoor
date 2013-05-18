@@ -1,6 +1,6 @@
 ;(function( $, global, undefined ){
 
-bMoor.constructor.define({
+bMoor.constructor.singleton({
 	name : 'JQote',
 	namespace : ['bmoor','templating'],
 	require: {
@@ -8,8 +8,14 @@ bMoor.constructor.define({
 	},
 	construct: function(){},
 	properties: {
-		run : function( template, data ){
-			return $.jqote( $.jqotec(template), data );
+		get : function( template, data, node ){
+			return this.run( this.prepare(template), data, node );
+		},
+		prepare : function( content ){
+			return $.jqotec( content );
+		},
+		run : function( prepared, data, node ){
+			return $.jqote( prepared, data );
 		}
 	}
 });
