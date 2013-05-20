@@ -3,6 +3,35 @@
 bMoor.constructor.singleton({
 	name : 'Snap',
 	namespace : ['bmoor','templating'],
+	onReady : function(){
+		var checking = false;
+		setInterval(function(){
+			if ( !checking ){
+				checking = true;
+				for( var nodes = document.body.getElementsByTagName("snap"), i = 0, c = nodes.length; i < c; i++ ){
+					var
+						node = nodes[i],
+						data = node._snapContext ? node._snapContext : global,
+						create = node.hasAttribute('snap-class') ? node.getAttribute('snap-class') : null;
+						
+					if ( create ){
+						var creator = bMoor.get( create );
+						
+						node.parentNode.insertBefore( (new creator(
+							node.hasAttribute('snap-tag') ? node.getAttribute('snap-tag') : 'div', 
+							node.hasAttribute('snap-template') ? node.getAttribute('snap-template') : null, 
+							node.hasAttribute('snap-data') ? eval( node.getAttribute('snap-data').replace('this','data') ) : {}, 
+							node
+						)).getElement(), node );
+						node.parentNode.removeChild( node );
+					}else{
+						throw 'snap node declared without snap-class attribute';
+					}
+				}
+				checking = false;
+			}
+		}, 25);
+	},
 	properties: {
 		get : function( template, data, node ){
 			return this.run( this.prepare(template), data, node );
@@ -13,37 +42,18 @@ bMoor.constructor.singleton({
 		 * @returns {}
 		 */
 		prepare : function( content ){
-			var 
-				tokens = -1,
-				ops = 'var n, t;',
-				sub = bMoor.template.getDefaultTemplator();
-			
-			// I want to allow more actions
-			content = content.replace(/this\._(append)\(([^;]*);/g,function( match, action, command ){
-				tokens++;
-				command = command.substring( 0, command.length - 1 ); // prune the trailing ')'
-				ops += ' n = '+command+'; t = template.getElementsByTagName("tElement'+tokens+'")[0];'
-					+ 't.parentNode.insertBefore( n.getElement(), t );'
-					+ 't.parentNode.removeChild( t );';
-				
-				return '<tElement'+tokens+'></tElement'+tokens+'>';
-			});
-			
-			return {
-				'sub'   : sub,
-				'cache' : sub.prepare( content ),
-				'ops'   : new Function( 'template', ops )
-			};
+			return bMoor.template.getDefaultTemplator().prepare( content );
 		},
-		run : function( prepared, data, node ){
-			var 
-				template = document.createElement( node ? node : 'div'),
-				sub = prepared.sub.run( prepared.cache, data );
+		run : function( prepared, data, inTag ){
+			// TODO : I really don't think I need this anymore
+			var template = document.createElement( inTag );
 
-			template.innerHTML = sub;
-			prepared.ops.call( data, template );
+			template.innerHTML = bMoor.template.getDefaultTemplator().run( prepared, data );
+			for( var nodes = template.getElementsByTagName("snap"), i = 0, c = nodes.length; i < c; i++ ){
+				nodes[i]._snapContext = data;
+			}
 			
-			return node ? template : template.innerHTML;
+			return template;
 		}
 	}
 });

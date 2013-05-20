@@ -15,22 +15,18 @@
 <script src="../../src/bmoor/snap/Node.js"></script>
 </head>
 <body>
+<script>dataSet = {foo:'foot',bar:{uh:'yay'}};</script>
+<snap snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"/>
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	this._append( new bmoor.snap.Node('span', 'template2', this.bar) );
+	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-data="this.bar"/>
 ]]>
 </script>
 <script type="text/html" id="template2">
 <![CDATA[
 	<i><#= this.uh #></i>
 ]]>
-</script>
-<script>
-bMoor.template.get( 'template1',{foo:'foot',bar:{uh:'yay'}}, bmoor.templating.Snap, function( node ){
-	console.log( node );
-	document.body.innerHTML = node;
-} );
 </script>
 </body>
 </html>

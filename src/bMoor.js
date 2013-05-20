@@ -423,7 +423,7 @@
 				}else if ( node = document.getElementById(id) ){
 					this.setTemplate( id, node.innerHTML );
 				}else if ( src == null ){
-					throw id+' requested, and not found, but src is null';
+					throw 'loadTemplate : '+id+' requested, and not found, while src is null';
 				}else{
 					dis = this;
 					
@@ -675,8 +675,11 @@
 		};
 		
 		Constructor.prototype.singleton = function( settings ){
+			var old = settings.onDefine ? settings.onDefine : function(){};
+			
 			settings.onDefine = function( obj, namespace, name ){
 				namespace[name] =  new obj;
+				old( obj, namespace, name );
 			};
 			
 			this.define( settings );
@@ -833,6 +836,9 @@
 	global.bMoor = {
 		require     : function(){
 			FileLoader.require.apply( FileLoader, arguments );
+		},
+		get         : function( space ){
+			return Namespace.exists( space );
 		},
 		template    : Templating,
 		settings    : environmentSettings,

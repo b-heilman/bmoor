@@ -28,7 +28,8 @@ bMoor.constructor.define({
 				out = element;
 			}
 			
-			out.className = this.baseClass;
+			out.className = this.baseClass+' '+out.className;
+			
 			return out;
 		},
 		baseClass : 'snap-node'
