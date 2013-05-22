@@ -5,7 +5,7 @@
 	
 	var
 		environmentSettings = {
-			templator : ['bmoor','templating','JQote'],
+			templator : ['bmoor','templating','templator','JQote'],
 			runWindow : 300,       // 0 implies to run everything immediately
 			runPause  : 30,        // how long to pause between intervals to prevent the window from locking up
 			jsRoot    : ''

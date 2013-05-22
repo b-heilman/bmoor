@@ -2,7 +2,7 @@
 
 bMoor.constructor.singleton({
 	name : 'JQote',
-	namespace : ['bmoor','templating'],
+	namespace : ['bmoor','templating','templator'],
 	require: {
 		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] }
 	},

@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
@@ -10,22 +10,29 @@
 	bMoor.loader.setRoot('../../src');
 	bMoor.loader.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
 </script>
-<script src="../../src/bmoor/templating/Snap.js"></script>
-<script src="../../src/bmoor/templating/JQote.js"></script>
+<script src="../../src/bmoor/templating/templator/JQote.js"></script>
+<script src="../../src/bmoor/templating/Builder.js"></script>
 <script src="../../src/bmoor/snap/Node.js"></script>
+<script src="../../src/bmoor/snap/List.js"></script>
 </head>
 <body>
-<script>dataSet = {foo:'foot',bar:{uh:'yay'}};</script>
-<snap snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"/>
+<snap snap-class="bmoor.snap.List" snap-template="list1" snap-data="dataSet.list"></snap>
+<snap snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"></snap>
+<script>dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-data="this.bar"/>
+	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-data="this.bar"></snap>
 ]]>
 </script>
 <script type="text/html" id="template2">
 <![CDATA[
 	<i><#= this.uh #></i>
+]]>
+</script>
+<script type="text/html" id="list1">
+<![CDATA[
+	<i><#= this.x #></i>
 ]]>
 </script>
 </body>
