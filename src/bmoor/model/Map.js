@@ -12,14 +12,14 @@
 			
 			if ( obj ){
 				for( var key in obj ) if ( obj.hasOwnProperty(key) ){
-					this.key = obj[key];
+					this[key] = obj[key];
 				}
 			}
+			
+			this._start();
 		},
 		properties : {
 			_stop : function(){
-				this._notify(); // one last update, make sure all is flushed
-				
 				if ( this._cleanse ){
 					clearInterval( this._cleanse.interval );
 					this._cleanse.interval = null;
@@ -35,10 +35,10 @@
 					dis = this;
 				
 				if ( !this._interval ){
-					for( var key in this ) if ( this.hasOwnProperty(key) ){
+					for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' ){
 						this._old[key] = this[key];
 					}
-				
+					
 					if ( this._cleanse ){
 						this._cleanse.interval = setInterval( function(){
 							dis._cleanse.cleanser( dis );
@@ -70,21 +70,20 @@
 					this._notify();
 				}
 			},
-			_bind : function( target ){
-				if ( typeof(target) == 'function' ){
-					target = { modelUpdate : target }; // convert
+			_bind : function( func ){
+				this._listeners.push( func );
+				
+				// if we are running, then we should make a call back
+				if ( this._interval ){
+					func.call( this._old );
 				}
 				
-				if ( target.modelUpdate ){
-					this._listeners.push( target );
-					target.modelUpdate();
-					
-					return this;
-				}else throw 'to call _bind, object must have modelUpdate() as attribute';
+				return this;
 			},
 			_notify : function(){
 				for( var i = 0, list = this._listeners; i < list.length; i++ ){
-					list[i].modelUpdate();
+					// this._old will be the last cleaned and parsed data for the model
+					list[i].call( this._old );
 				}
 				
 				return this;

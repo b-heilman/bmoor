@@ -6,9 +6,8 @@
 <script src="../../src/bMoor.js"></script>
 <script src='../../src/jquery/jquery.jqote2.js'></script>
 <script>
-	$.jqotetag('#');
-	bMoor.loader.setRoot('../../src');
-	bMoor.loader.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
+	bMoor.autoload.setRoot('../../src');
+	bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
 </script>
 <script src="../../src/bmoor/templating/templator/JQote.js"></script>
 <script src="../../src/bmoor/templating/Builder.js"></script>
@@ -16,8 +15,8 @@
 <script src="../../src/bmoor/snap/List.js"></script>
 </head>
 <body>
-<snap snap-class="bmoor.snap.List" snap-template="list1" snap-data="dataSet.list"></snap>
-<snap snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"></snap>
+<ul snap-class="bmoor.snap.List" snap-template="list1" snap-data="dataSet.list"></ul>
+<div snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"></div>
 <script>dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
 <script type="text/html" id="template1">
 <![CDATA[

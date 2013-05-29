@@ -4,50 +4,103 @@ var installed = false;
 bMoor.constructor.singleton({
 	name : 'Builder',
 	namespace : ['bmoor','templating'],
+	require : [ ['bmoor','lib','WaitFor'] ],
 	onReady : function(){
 		if ( !installed ){
-			var checking = false;
+			var builder = bmoor.templating.Builder;
 			
 			installed = true;
 			
+			builder.check();
+			
 			setInterval(function(){
-				if ( !checking ){
-					checking = true;
-					
-					bmoor.templating.Builder.build( document.body );
-					
-					checking = false;
-				}
-			}, 20);
+				builder.check();
+			}, 25);
 		}
 	},
 	construct: function(){},
 	properties: {
-		build : function( element ){
-			for( var nodes = document.body.getElementsByTagName("snap"); nodes.length; ){
-				var
-					node = nodes[0],
-					data = node._snapContext ? node._snapContext : global,
-					create = node.hasAttribute('snap-class') ? node.getAttribute('snap-class') : null;
-				
-				if ( create ){
-					var creator = bMoor.get( create );
-					
-					node.parentNode.insertBefore( (new creator(
-						node.hasAttribute('snap-tag') ? node.getAttribute('snap-tag') : null, 
-						node.hasAttribute('snap-template') ? node.getAttribute('snap-template') : null, 
-						node.hasAttribute('snap-data') ? eval( node.getAttribute('snap-data').replace('this','data') ) : {}, 
-						node
-					)).getElement(), node );
-					
-					node.parentNode.removeChild( node );
-				}else{
-					throw 'snap node declared without snap-class attribute';
-				}
+		_stopped : false,
+		_checking : false,
+		_render : null,
+		onRender : function( cb ){
+			this._render = cb;
+		},
+		stop : function(){
+			this._stopped = true;
+		},
+		start : function(){
+			this._stopped = false;
+			this.check();
+		},
+		check : function(){
+			if ( !this._stopped && !this._checking){
+				this._checking = true;
+				this.build( document.body );
+				this._checking = false;
 			}
 		},
+		_build : function( waiting, node, cb ){
+			var
+				context = node._snapContext ? node._snapContext : global,
+				create = node.getAttribute('snap-class');
+			
+			// up here, so the require loop doesn't become infinite
+			node.removeAttribute('snap-class');
+			
+			if ( !waiting ){
+				waiting = new bmoor.lib.WaitFor();
+			}
+			
+			waiting.require( create, function(){
+				var 
+					creator = bMoor.get( create ),
+					data = node.hasAttribute('snap-data') 
+						? eval( node.getAttribute('snap-data').replace('this','context') ) 
+						: null,
+					el = new creator(
+						node,
+						node.hasAttribute('snap-template') ? node.getAttribute('snap-template') : null, 
+						data
+					);
+				
+				if ( node.hasAttribute('snap-publish') ){
+					eval( node.getAttribute('snap-publish').replace('this','context') + ' = el;' )
+				}
+				
+				if ( cb ){
+					cb();
+				}
+			});
+		},
+		build : function( element ){
+			var 
+				waiting = new bmoor.lib.WaitFor(),
+				others = [];
+			
+			for( var nodes = $('[snap-class]'), i = 0, c = nodes.length; i < c; i++){
+				var node = nodes[i];
+				
+				if ( node.hasAttribute('snap-publish') ){
+					this._build( waiting, node );
+				}else{
+					others.push( node );
+				}
+			}
+			
+			for( var i = 0, c = others.length; i < c; i++ ){
+				this._build( waiting, others[i] );
+			}
+			
+			waiting.done(function(){
+				if ( this._render ){
+					this._render();
+					this._render = null;
+				}
+			});
+		},
 		setContext : function( element, data ){
-			for( var nodes = element.getElementsByTagName("snap"), i = 0, c = nodes.length; i < c; i++ ){
+			for( var nodes = $(element).find('[snap-class]'), i = 0, c = nodes.length; i < c; i++){
 				nodes[i]._snapContext = data;
 			}
 		}

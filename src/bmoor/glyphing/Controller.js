@@ -6,104 +6,42 @@ bMoor.constructor.define({
 	require: [
 		['bmoor','glyphing','Glyph']
 	],
-	construct: function( el, container, fields ){
-		var 
-			$el = $(el),
-			dis = this;
-		
-		this.$ = $el;
-		
-		this.glyph = null;
-		this.model = null;
-		this.fields = fields;
-		
-		this.collection = container.getCollection();
-		this.collection._bind(this);
-		
-		for( var k in fields ){
-			(function( field ){
-				var 
-					$input = $el.find('.'+field);
-				
-				dis['$'+field] = $input;
-				onAlter( $input, function(){
-					dis.model[field] = $input.val();
-				});
-			}( fields[k] ));
-		}
-		/*
-		this.$top = $el.find('.top');
-		this.$left = $el.find('.left');
-		this.$angle = $el.find('.angle');
-		this.$width = $el.find('.width');
-		this.$height = $el.find('.height');
-		this.$opacity = $el.find('.opacity');
-		*/
-		function onAlter( $el, callback ){
-			var
-				wait = null;
-			
-			if ( $el.is('button') ){
-				var t = $el.attr('value');
-				$el.on('click', function(){
-					if ( dis.model != null ){
-						$el.val( t ); // make sure to reset it
-						callback();
-					}
-				});
-			}else{
-				$el.keydown(function(){
-					if ( wait ){
-						clearTimeout( wait );
-					}
-					
-					wait = setTimeout( function(){ $el.change(); }, 500 );
-				});
-				
-				$el.on('change', function(){
-					if ( dis.model != null ){
-						callback();
-					}
-				});
-			}
-		}
-	},
+	parent : ['bmoor','snap','Form'],
 	properties : { 
+		_data : function( data ){
+			this.collection = data.getCollection();
+			this.data = null;
+		},
+		_binding : function(){
+			var dis = this;
+			
+			this.collection._bind(function( changes ){
+				var collection = dis.collection;
+					
+				if ( changes == null ){
+					for( var i = 0, c = collection.length; i < c; i++ ){
+						dis.addGlyph( collection[i] );
+					}
+				}else{
+					if ( changes.additions ){
+						for( var i = 0, c = changes.additions.length; i < c; i++ ){
+							dis.addGlyph( collection[changes.additions[i]] );
+						}
+					}
+				}
+			});
+		},
 		addGlyph: function( glyph ){
 			var 
 				dis = this,
 				model = glyph.getModel();
 			
-			model._bind( function(){
+			model._bind(function(){
 				if ( model.active ){
-					dis.model = model;
-					dis.update( model );
+					dis.data = model;
+					dis._mapUpdate( this );
 				}
 			});
-		},
-		collectionUpdate : function( changes ){
-			var
-				collection = this.collection;
-				
-			if ( changes == null ){
-				for( var i = 0, c = collection.length; i < c; i++ ){
-					this.addGlyph( collection[i] );
-				}
-			}else{
-				if ( changes.additions ){
-					for( var i = 0, c = changes.additions.length; i < c; i++ ){
-						this.addGlyph( collection[changes.additions[i]] );
-					}
-				}
-			}
-		},
-		update : function( model ){
-			for( var k in this.fields ){
-				var 
-					field = this.fields[k];
-				
-				this['$'+field].val( this.model[field] );
-			}
 		},
 		clearGlyph : function( ){
 			if ( this.model ){
@@ -114,8 +52,7 @@ bMoor.constructor.define({
 			this.glyph = null;
 			
 			for( var k in this.fields ){
-				var 
-					field = this.fields[k];
+				var field = this.fields[k];
 				
 				this['$'+field].val( '' );
 			}

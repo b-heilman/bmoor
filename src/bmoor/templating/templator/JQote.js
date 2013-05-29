@@ -6,7 +6,9 @@ bMoor.constructor.singleton({
 	require: {
 		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] }
 	},
-	construct: function(){},
+	construct: function(){
+		$.jqotetag( bMoor.settings.templatorTag );
+	},
 	properties: {
 		get : function( template, data, node ){
 			return this.run( this.prepare(template), data, node );

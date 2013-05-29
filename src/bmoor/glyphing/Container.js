@@ -3,48 +3,12 @@
 bMoor.constructor.define({
 	name : 'Container',
 	namespace : ['bmoor','glyphing'],
+	parent : ['bmoor','snap','Node'],
 	require: [
 		['bmoor','lib','MouseTracker'],
 		['bmoor','glyphing','Glyph'],
 		['bmoor','model','Collection']
 	],
-	construct: function( el, settings ){
-		var 
-			$el = $(el),
-			$this = this.makeNode( $el ),
-			dis = this;
-		
-		settings = this.settings = $.extend( true, {}, this.__static.settings, settings );
-		
-		this.activeGlyph = null;
-		this.glyphs = new bmoor.model.Collection();
-		this.glyphs._bind( this )._start();
-		this.$ = $this;
-		this.$el = $el;
-		this.controller = null;
-		
-		this.lock();
-		
-		left = dis.$.offset().left;
-		top  = dis.$.offset().top;
-		
-		this.$.data( 'self', this );
-		this.$.addClass( 'glyphing-container' );
-		$this.insertBefore( $el ).append( $el ); // for trigger reference
-		
-		if ( settings.keepBoxed ){
-			var offset = $this.offset();
-			
-			this.box = {
-				top    : offset.top,
-				right  : offset.left + $this.width(),
-				bottom : offset.top + $this.height(),
-				left   : offset.left
-			};
-		}else{
-			this.box = null;
-		}
-	},
 	statics : {
 		settings : {
 			glyphClass : bmoor.glyphing.Glyph,
@@ -61,7 +25,7 @@ bMoor.constructor.define({
 			if( !($(event.target).is(':input') ) ){
 				if ( (event.keyCode == 8 || event.keyCode == 46) ){
 					$('.glyphing-container').each(function(){
-						var dis = $(this).data('self');
+						var dis = $(this).data('node');
 						
 						if ( !dis.locked && dis.activeGlyph ){
 							dis.activeGlyph.getModel().remove = true;
@@ -72,7 +36,7 @@ bMoor.constructor.define({
 					event.preventDefault();
 				}else if ( event.keyCode == 16 ){
 					$('.glyphing-container').each(function(){
-						var dis = $(this).data('self');
+						var dis = $(this).data('node');
 						
 						if ( dis.activeGlyph ){
 							var pos = dis.glyphs.find( dis.activeGlyph );
@@ -91,7 +55,7 @@ bMoor.constructor.define({
 					event.preventDefault();
 				}else if ( event.keyCode == 27 ){
 					$('.glyphing-container').each(function(){
-						$(this).data('self').setActive( null );
+						$(this).data('node').setActive( null );
 					});
 					
 					event.stopPropagation();
@@ -103,9 +67,9 @@ bMoor.constructor.define({
 		$(document.body).on( 'mousedown', '.glyphing-container .glyphing-glyph', function( event ){
 			var
 				$this = $(this),
-				dis = $this.closest('.glyphing-container').data( 'self' );
+				dis = $this.closest('.glyphing-container').data( 'node' );
 			
-			dis.setActive( $this.data('self') );
+			dis.setActive( $this.data('node') );
 		
 			event.stopPropagation();
 			event.preventDefault();
@@ -166,7 +130,7 @@ bMoor.constructor.define({
 		$(document.body).on('mousedown', '.glyphing-container', function( event ){
 			var 
 				glyph,
-				dis = $(this).data( 'self' );
+				dis = $(this).data( 'node' );
 			
 			if ( !dis.locked ){
 				glyph = dis.addGlyph({
@@ -182,16 +146,44 @@ bMoor.constructor.define({
 			}
 		});
 	},
-	onDefine : function( inst ){
-		$.fn.glyphing = function( settings ){
-			this.each(function(){
-				new inst( this, settings );
+	properties : {
+		baseClass : 'glyphing-container',
+		_element : function( element ){
+			var 
+				$this = $( element ),
+				$img = $this.find('img'),
+				dis = this;
+				
+			this.__Node._element.call( this, element );
+			
+			this.activeGlyph = null;
+			this.glyphs = new bmoor.model.Collection();
+			this.glyphs._start();
+			this.controller = null;
+			this.settings = $.extend( true, {}, this.__static.settings, element.hasAttribute('snap-settings')
+				? this._getVariable(element.getAttribute('snap-settings')) : {} );
+				
+			this.lock();
+			
+			this.$.css({
+				position : 'relative',
+				width    : $img.innerWidth(),
+				height   : $img.innerHeight()
 			});
 			
-			return this;
-		};
-	},
-	properties : {
+			if ( this.settings.keepBoxed ){
+				var offset = $this.offset();
+				
+				this.box = {
+					top    : offset.top,
+					right  : offset.left + $this.width(),
+					bottom : offset.top + $this.height(),
+					left   : offset.left
+				};
+			}else{
+				this.box = null;
+			};
+		},
 		locked : true,
 		lock : function(){
 			this.$.removeClass( 'unlocked' );
@@ -214,15 +206,6 @@ bMoor.constructor.define({
 		setGlyphSettings : function( settings ){
 			this.settings.glyphSettings = $.extend( true, this.settings.glyphSettings, settings );
 		},
-		getClass : function(){
-			return 'glyphing-container';
-		},
-		makeStyle : function( $el ){
-			return 'position: relative; width:'+$el.innerWidth()+'px; height:'+$el.innerHeight()+'px';
-		},
-		makeNode : function( $el ){
-			return $( '<div  class="'+this.getClass()+'" style="'+this.makeStyle($el)+'" />' );
-		},
 		setActive : function( glyph ){
 			// TODO : check to see if the glyph is in the container... ideally
 			
@@ -230,11 +213,11 @@ bMoor.constructor.define({
 				var	t = this.activeGlyph.getModel();
 				t.active = false;
 				t._stop();
+				t._flush();
 			}
 			
 			if ( glyph ){
 				this.activeGlyph = glyph;
-			
 				this.activeGlyph.getModel()._start().active = true;
 			}else{
 				this.activeGlyph = null;
@@ -271,14 +254,15 @@ bMoor.constructor.define({
 			this.setActive(null);
 		},
 		glyphValidation : function( info ){
-			if ( info.remove ){
-				this.glyphs.remove( info );
+			if ( info.getModel().remove ){
+				info.getModel()._stop();
+				
 				if ( this.activeGlyph == info ){
 					this.setActive( null );
 				}
+				
+				this.glyphs.remove( info );
 			}
-		},
-		collectionUpdate : function(){
 		},
 		toJson : function(){
 			return JSON.stringify( this.toObject() );

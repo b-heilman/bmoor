@@ -1,11 +1,10 @@
-
-
-(function( $, global, undefined ){
+;(function( $, global, undefined ){
 	"use strict";
 	
 	var
 		environmentSettings = {
 			templator : ['bmoor','templating','templator','JQote'],
+			templatorTag : '#',
 			runWindow : 300,       // 0 implies to run everything immediately
 			runPause  : 30,        // how long to pause between intervals to prevent the window from locking up
 			jsRoot    : ''
@@ -213,32 +212,12 @@
 		}
 	};
 	
-	var FileLoader = {};
+	var ClassLoader = {};
 	(function(){
-		var
-			templates = {},
-			loadedScripts = {},
-			libRoots = {}; // A multi level hash that allows for different libraries to be located in different locations
-			
-		$(document).ready(function(){
-			var scripts = document.getElementsByTagName('script');
-			
-			for( var i = 0, c = scripts.length; i < c; i++ ){
-				var script = scripts[i];
-				
-				if ( script.id ){
-					if ( script.src ){
-						loadedScripts[ script.src ] = script.id;
-					}
-					
-					if ( script.getAttribute('type') == "text/html" ){
-						FileLoader.setTemplate( script.id, script.innerHTML );
-					}
-				}
-			}
-		});
+		var libRoots = {}; // A multi level hash that allows for different libraries 
+			               // to be located in different locations
 		
-		FileLoader.reset = function(){
+		ClassLoader.reset = function(){
 			libRoots = {
 				'.' : { 
 					fullName : false 
@@ -247,7 +226,7 @@
 			};
 		};
 		
-		FileLoader.setRoot = function( path ){
+		ClassLoader.setRoot = function( path ){
 			libRoots['/'] = path;
 		};
 		
@@ -257,7 +236,7 @@
 		 * @var {array,string} className The class to set up a path to
 		 * @var {string} path The URL path to the library's base
 		 */
-		FileLoader.setLibrary = function( className, path, settings, catchAll ){
+		ClassLoader.setLibrary = function( className, path, settings, catchAll ){
 			var
 				lib = libRoots,
 				classPath = Namespace.parse( className );
@@ -281,7 +260,7 @@
 			lib['*'] = catchAll == true; // type caste
 		};
 		
-		FileLoader.delLibrary = function( className ){
+		ClassLoader.delLibrary = function( className ){
 			var
 				lib = libRoots,
 				prevLib = null,
@@ -312,7 +291,7 @@
 		 * @param className
 		 * @returns
 		 */
-		FileLoader.getLibrary = function( className ){
+		ClassLoader.getLibrary = function( className ){
 			var
 				lib = libRoots,
 				masterLib = libRoots, 
@@ -341,118 +320,6 @@
 				: { root : masterLib['/'], path : masterPath, name : name, settings : masterLib['.'] };
 		};
 		
-		FileLoader.loadScript = function( src, cb ){
-			$.ajax({ url : src, dataType : 'script', success : cb });
-		};
-		
-		FileLoader.loadStyle = function( src, cb ){
-			var
-				css,
-				style,
-				sheet,
-				interval = null;
-			
-			style = document.createElement( 'link' );
-			style.setAttribute( 'href', path );
-			style.setAttribute( 'rel', 'stylesheet' );
-			style.setAttribute( 'type', 'text/css' );
-			
-			if ( style.sheet ){
-				sheet = 'sheet';
-				css = 'cssRules';
-				
-				interval = setInterval( function(){
-					try{
-					//	console.log( style[sheet] );
-						if ( style[sheet] && style[sheet][css] && style[sheet][css].length ){
-							clearInterval( interval );
-							cb();
-						}
-					}catch( ex ){ /* I feel dirty */ }
-				},10 );
-			}else{
-				// IE specific
-				$( style ).bind( 'load', cb );
-			}
-			
-			$('head').append( style );
-		};
-		
-		FileLoader.loadImage = function( src, cb ){
-			if ( src[0] == '#' ){
-				// reference to existing image
-				$( src ).one( 'load', function(){
-					setTimeout( cb, 10 ); // Chrome can be so silly
-				}).each(function(){
-					// got this idea from Nick Craver on stackoverflow ... thanks
-					if( this.complete ){ $( this ).load(); }
-				});
-			}else{
-				var img = new Image();
-				img.onload = cb;
-				img.src = src;
-			}
-		};
-		
-		
-		FileLoader.loadTemplate = function( id, src, cb ){
-			var 
-				node,
-				dis = null;
-			
-			if ( cb == undefined && typeof(src) != 'string' ){
-				cb = src;
-				src = null;
-			}
-			
-			if ( id[0] == '#' ){
-				// TODO : is this right?
-				id = id.substring(1);
-			}
-			
-			if ( !templates[id] ){
-				if ( loadedScripts[src] ){
-					// script already was loaded
-					var sid = loadedScript[src];
-					
-					if ( templates[sid] ){
-						templates[id] = templates[sid];
-					}else{
-						this.setTemplate( id, document.getElementById(sid).innerHTML );
-					}
-				}else if ( node = document.getElementById(id) ){
-					this.setTemplate( id, node.innerHTML );
-				}else if ( src == null ){
-					throw 'loadTemplate : '+id+' requested, and not found, while src is null';
-				}else{
-					dis = this;
-					
-					$.ajax( src, {
-						// TODO
-						success : function( res ){
-							dis.setTemplate( res );
-							
-							cb( templates[id] );
-						}
-					});
-				}
-			}
-			
-			if ( dis == null ) {
-				if ( cb ){
-					cb( templates[id] );
-				}else{
-					return templates[id];
-				}
-			}
-			
-			return null;
-		};
-		
-		FileLoader.setTemplate = function( id, template ){
-			templates[ id ] = template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' );
-		};
-		
 		/**
 		 * @param namespace The namespace to be loading
 		 * @param reference [Optional] A reference to build the request url, defaults to the namespace
@@ -460,7 +327,7 @@
 		 * @param args      Arguments to pass to the callback
 		 * @param target    Context to call against
 		 */
-		FileLoader.loadSpace = function( namespace, reference, callback, args, target ){
+		ClassLoader.loadSpace = function( namespace, reference, callback, args, target ){
 			function fireCallback(){
 				if ( target == undefined ){
 					target = {};
@@ -531,7 +398,7 @@
 			}
 		};
 		
-		FileLoader.require = function( requirements, callback, scope ){
+		ClassLoader.require = function( requirements, callback, scope ){
 			var
 				reqCount = 1,
 				references = null,
@@ -556,7 +423,10 @@
 				}
 			}
 			
-			if ( requirements.length ){
+			if ( requirements.substring ){
+				classes = aliases = [ requirements ];
+				references = {};
+			}else if ( requirements.length ){
 				classes = aliases = requirements;
 				references = {};
 			}else{
@@ -591,14 +461,148 @@
 			cb();
 		};
 	}());
-	FileLoader.reset();
+	ClassLoader.reset();
 	
+	var ResourceLoader = {};
+	(function(){
+		var
+			templates = {},
+			loadedScripts = {};
+		
+		$(document).ready(function(){
+			var scripts = document.getElementsByTagName('script');
+			
+			for( var i = 0, c = scripts.length; i < c; i++ ){
+				var script = scripts[i];
+				
+				if ( script.id ){
+					if ( script.src ){
+						loadedScripts[ script.src ] = script.id;
+					}
+					
+					if ( script.getAttribute('type') == "text/html" ){
+						ResourceLoader.setTemplate( script.id, script.innerHTML );
+					}
+				}
+			}
+		});
+		
+		ResourceLoader.loadScript = function( src, cb ){
+			$.ajax({ url : src, dataType : 'script', success : cb });
+		};
+		
+		ResourceLoader.loadStyle = function( src, cb ){
+			var
+				css,
+				style,
+				sheet,
+				interval = null;
+			
+			style = document.createElement( 'link' );
+			style.setAttribute( 'href', path );
+			style.setAttribute( 'rel', 'stylesheet' );
+			style.setAttribute( 'type', 'text/css' );
+			
+			if ( style.sheet ){
+				sheet = 'sheet';
+				css = 'cssRules';
+				
+				interval = setInterval( function(){
+					try{
+					//	console.log( style[sheet] );
+						if ( style[sheet] && style[sheet][css] && style[sheet][css].length ){
+							clearInterval( interval );
+							cb();
+						}
+					}catch( ex ){ /* I feel dirty */ }
+				},10 );
+			}else{
+				// IE specific
+				$( style ).bind( 'load', cb );
+			}
+			
+			$('head').append( style );
+		};
+		
+		ResourceLoader.loadImage = function( src, cb ){
+			var img = new Image();
+			
+			if ( src[0] == '#' ){
+				src = $( src )[0].src;
+			}else{
+				img.onload = cb;
+				img.src = src;
+			}
+		};
+		
+		ResourceLoader.loadTemplate = function( id, src, cb ){
+			var 
+				node,
+				dis = null;
+			
+			if ( cb == undefined && typeof(src) != 'string' ){
+				cb = src;
+				src = null;
+			}
+			
+			if ( id[0] == '#' ){
+				// TODO : is this right?
+				id = id.substring(1);
+			}
+			
+			if ( !templates[id] ){
+				if ( loadedScripts[src] ){
+					// script already was loaded
+					var sid = loadedScript[src];
+					
+					if ( templates[sid] ){
+						templates[id] = templates[sid];
+					}else{
+						this.setTemplate( id, document.getElementById(sid).innerHTML );
+					}
+				}else if ( node = document.getElementById(id) ){
+					this.setTemplate( id, node.innerHTML );
+				}else if ( src == null ){
+					throw 'loadTemplate : '+id+' requested, and not found, while src is null';
+				}else{
+					dis = this;
+					
+					$.ajax( src, {
+						// TODO
+						success : function( res ){
+							dis.setTemplate( res );
+							
+							cb( templates[id] );
+						}
+					});
+				}
+			}
+			
+			if ( dis == null ) {
+				if ( cb ){
+					cb( templates[id] );
+				}else{
+					return templates[id];
+				}
+			}
+			
+			return null;
+		};
+		
+		ResourceLoader.setTemplate = function( id, template ){
+			templates[ id ] = template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' );
+		};
+	}());
+	
+	// Used to help in the creation of classes below, just used as named stub
 	function PlaceHolder(){}
 	
 	function Constructor(){}
 	(function(){
 		var 
-			initializing = false;
+			onLoaded = [],
+			initializing = false,
+			loading = 0;
 			
 		/**
 		 * 
@@ -617,6 +621,8 @@
 		 * }
 		 */
 		Constructor.prototype.define = function( settings ){
+			loading++;
+			
 			var
 				dis = this,
 				requests = settings.require,
@@ -641,11 +647,28 @@
 			}
 			
 			if ( settings.parent ){
-				requests.push( settings.parent );
+				if ( requests.length != undefined ){
+					requests.push( settings.parent );
+				}else{
+					if ( requests.classes ){
+						requests.classes.push( settings.parent );
+					}else{
+						requests.classes = [ settings.parent ];
+					}
+				}
 			}
 			
 			if ( settings.aliases ){
-				for( var ns in settings.aliases ){ requests.push( ns ); }
+				var r;
+				
+				if ( requests.length != undefined ){
+					requests = {
+						classes : requests, // I can't think of when this isn't true?
+						aliases : settings.aliases
+					};
+				}else{
+					requests.aliases = settings.aliases;
+				}
 			}
 			
 			function def(){
@@ -668,10 +691,26 @@
 							settings.onReady( namespace[settings.name] );
 						});
 					}
+					
+					loading--;
+					if ( loading == 0 ){
+						while( onLoaded.length ){
+							var cb = onLoaded.pop();
+							cb( $, global );
+						}
+					}
 				}
 			};
 			
-			FileLoader.require( requests, def, [], this);
+			ClassLoader.require( requests, def, [], this);
+		};
+		
+		Constructor.prototype.loaded = function( cb ){
+			if ( loading ){
+				onLoaded.push( cb );
+			}else{
+				cb();
+			}
 		};
 		
 		Constructor.prototype.singleton = function( settings ){
@@ -698,13 +737,20 @@
 				this.extend( obj, parent );
 			}
 			
-			obj.prototype.__construct = settings.construct ? settings.construct : function(){};
+			obj.prototype.__construct = settings.construct 
+				? settings.construct // if you have it, use your constructor
+				: parent 
+					? parent.prototype.__construct // if not, use the parent
+					: function(){}; // well you need one no matter what
+					
 			obj.prototype.__defining = true;
 			
 			namespace[ settings.name ] = obj;
 			
 			ns.push( settings.name );
-			obj.prototype._name = ns.join('.');
+			
+			obj.prototype.__class = ns.join('.');
+			obj.prototype.__name = ns.pop();
 			
 			// define any aliases
 			if ( settings.aliases ){
@@ -750,7 +796,8 @@
 			
 			child.prototype = new parent();
 			child.prototype.constructor = child;
-			child.prototype.__parent = parent.prototype;
+			// right now, I think this will suffice
+			child.prototype['__'+parent.prototype.__name] = parent.prototype;
 			initializing = false;
 		};
 	}());
@@ -767,7 +814,7 @@
 		};
 		
 		Templating.get = function( id, src, data, templator, cb ){
-			if ( cb == undefined && typeof(src) != 'string' ){
+			if ( cb == undefined && src !== null && typeof(src) != 'string' ){
 				cb = templator;
 				templator = data;
 				data = src;
@@ -775,6 +822,7 @@
 			}
 			
 			if ( !templator || !templator.prepare ){
+				cb = templator;
 				templator = this.getDefaultTemplator();
 			}
 			
@@ -790,7 +838,7 @@
 		};
 		
 		Templating.prepare = function( id, src, templator, cb ){
-			if ( cb == undefined && typeof(src) != 'string' ){
+			if ( cb == undefined && src !== null && typeof(src) != 'string' ){
 				cb = templator;
 				templator = src;
 				src = null;
@@ -805,7 +853,7 @@
 			}
 			
 			if ( cb ){
-				FileLoader.loadTemplate( id, src, function( content ){
+				ResourceLoader.loadTemplate( id, src, function( content ){
 					if ( !templator._prepared[id] ){
 						templator._prepared[id] = templator.prepare( content );
 					}
@@ -816,33 +864,25 @@
 				return null;
 			}else{
 				if ( !templator._prepared[id] ){
-					templator._prepared[id] = templator.prepare( FileLoader.loadTemplate(id,src) );
+					templator._prepared[id] = templator.prepare( ResourceLoader.loadTemplate(id,src) );
 				}
 				
 				return templator._prepared[id];
 			}
 		};
-		
-		/*
-		FileLoader.require( [environmentSettings.templator], function( inst ){
-			environmentSettings.templator = inst;
-			templates[ id ] = environmentSettings.templator.prepare(
-				template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' )
-			);
-		});
-		*/
 	}());
 	
 	global.bMoor = {
 		require     : function(){
-			FileLoader.require.apply( FileLoader, arguments );
+			ClassLoader.require.apply( ClassLoader, arguments );
 		},
 		get         : function( space ){
 			return Namespace.exists( space );
 		},
-		template    : Templating,
 		settings    : environmentSettings,
-		loader      : FileLoader,
+		template    : Templating,
+		autoload    : ClassLoader,
+		resource    : ResourceLoader,
 		constructor : new Constructor()
 	};
 	

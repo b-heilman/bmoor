@@ -85,27 +85,24 @@
 							t.__bmoor = i;
 						}
 						
+						dis._old = dis.slice(0);
+						
 						if ( dirty ){
 							dis._notify( { additions : additions, changes : changes } );
 						}
-						
-						dis._old = dis.slice(0);
 					}, 50);
 				}
 				
 				return this;
 			},
-			_bind : function( target ){
-				if ( target.collectionUpdate ){
-					this._listeners.push( target );
-					target.collectionUpdate( null );
-					
-					return this;
-				}else throw 'to call _bind, object must have collectionUpdate() as attribute';
+			_bind : function( cb ){
+				this._listeners.push( cb );
+				
+				cb.call( this._old, null );
 			},
 			_notify : function( changes ){
 				for( var i = 0, list = this._listeners; i < list.length; i++ ){
-					list[i].collectionUpdate( changes );
+					list[i].call( this._old, changes );
 				}
 				
 				return this;

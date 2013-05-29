@@ -8,6 +8,7 @@ bMoor.constructor.define({
 	},
 	construct : function( settings, limits, $root ){
 		var
+			dis = this,
 			$glyph;
 		
 		this.limits = limits;
@@ -38,9 +39,23 @@ bMoor.constructor.define({
 			top  : parseInt( $glyph.css('padding-top') ) + parseInt( $glyph.css('border-top-width') )
 		};
 			
-		this.model._bind( this );
+		this.model._bind(function(){
+			if ( this.remove ){
+				dis.$.remove();
+			}else if ( dis.active !== this.active ){
+				if ( this.active ){
+					dis.$.addClass('active-glyph');
+				}else{
+					dis.$.removeClass('active-glyph');
+				}
+				
+				dis.active = this.active;
+			}
+			
+			dis.draw();
+		});
 		
-		$glyph.data( 'self', this );
+		$glyph.data( 'node', this );
 	},
 	onReady : function(){
 		$(document.body)
@@ -201,7 +216,7 @@ bMoor.constructor.define({
 		getTemplate : function(){
 			return $( '#'+this.template.id ).jqote( this.template.settings );
 		},
-		redraw : function(){
+		draw : function(){
 			var
 				rotate = 'rotate('+this.model.angle+'deg)';
 				
@@ -218,21 +233,6 @@ bMoor.constructor.define({
 			});
 			
 			return this;
-		},
-		modelUpdate : function(){
-			if ( this.model.remove ){
-				this.$.remove();
-			}else if ( this.active !== this.model.active ){
-				if ( this.model.active ){
-					this.$.addClass('active-glyph');
-				}else{
-					this.$.removeClass('active-glyph');
-				}
-				
-				this.active = this.model.active;
-			}
-			
-			this.redraw();
 		},
 		toJson : function(){
 			return JSON.stringify( this.toObject() );

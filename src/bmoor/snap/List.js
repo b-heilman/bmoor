@@ -4,25 +4,66 @@ bMoor.constructor.define({
 	name : 'List',
 	namespace : ['bmoor','snap'],
 	parent : ['bmoor','snap','Node'],
-	construct: function( tag, template, data, node ){
-		this.__parent.__construct.call( this, tag, template, data, node );
-		
-		this.childTag = node.hasAttribute('snap-child') ? node.getAttribute('snap-child') : this.childClass;
-	},
 	properties: {
-		getElement : function(){
-			var element = document.createElement( this.tag );
-			
-			for( var i = 0, c = this.data.length; i < c; i++ ){
-				element.appendChild( this.makeNode(this.data[i],this.childTag) );
-			}
-			
-			element.className = this.baseClass;
-			
-			return element;
+		_element : function( element ){
+			this.__Node._element.call( this, element );
+			this.childTag = element.hasAttribute('snap-child') ? element.getAttribute('snap-child') : this.childTag;
 		},
-		baseTag    : 'ol',
-		childClass : 'li',
+		_makeContent : function(){
+			if ( this.data ){
+				for( var i = 0, c = this.data.length; i < c; i++ ){
+					this.append( this.data[i] );
+				}
+			}
+		},
+		_makeChild : function( data, tag, attributes, asString ){
+			if ( asString ){
+				var attrs = '';
+					
+				for( var attr in attributes ){
+					attrs += attr+'="'+attributes[attr]+'" ';
+				}
+					
+				if ( this.prepared ){
+					return '<'+tag+' class="'+this.childClass+'" '+attrs+'>'
+						+ bMoor.template.getDefaultTemplator().run( this.prepared, data )
+						+ '</'+tag+'>';
+				}else return '<'+tag+' class="'+this.childClass+'" '+attrs+'>'+ '</'+tag+'>';
+			}else{
+				if ( this.prepared ){
+					var 
+						template = bMoor.template.getDefaultTemplator().run( this.prepared, data ),
+						element = document.createElement( tag );
+						
+					element.innerHTML = template;
+					element.className = this.childClass;
+					
+					for( var attr in attributes ){
+						element.setAttribute( attr, attributes[attr] );
+					}
+					
+					bmoor.templating.Builder.setContext( element, data );
+					
+					return element;
+				}else{
+					return document.createElement( tag );
+				}
+			}
+		},
+		append : function( data ){
+			var el = this._makeChild(data,this.childTag);
+			this.$.append( el );
+			
+			return el;
+		},
+		prepend : function( data ){
+			var el = this._makeChild(data,this.childTag);
+			this.$.prepend( el );
+			
+			return el;
+		},
+		childTag : 'li',
+		childClass : 'snap-li',
 		baseClass  : 'snap-list'
 	}
 });

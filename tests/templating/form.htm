@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../../src/jquery.min.js"></script>
+<script src="../../src/bMoor.js"></script>
+<script src='../../src/jquery/jquery.jqote2.js'></script>
+<script>
+	bMoor.autoload.setRoot('../../src');
+	bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
+</script>
+<script src="../../src/bmoor/templating/templator/JQote.js"></script>
+<script src="../../src/bmoor/templating/Builder.js"></script>
+<script src="../../src/bmoor/model/Map.js"></script>
+<script src="../../src/bmoor/snap/Node.js"></script>
+<script src="../../src/bmoor/snap/Form.js"></script>
+<script src="../../src/bmoor/snap/Debug.js"></script>
+</head>
+<body>
+<script>
+	var daMap = new bmoor.model.Map({
+		text : 'woot',
+		radio : 2,
+		checkbox : 1
+	});
+</script>
+<form snap-class="bmoor.snap.Form" snap-data="daMap">
+	<label>text<input type='text' name='text' /></label>
+	<label>radio 1<input type='radio' name='radio' value='1' /></label>
+	<label>radio 2<input type='radio' name='radio' value='2' /></label>
+	<label>radio 3<input type='radio' name='radio' value='3' /></label>
+	<label>checkbox 1<input type='checkbox' name='checkbox[]' value='1' /></label>
+	<label>checkbox 2<input type='checkbox' name='checkbox[]' value='2' /></label>
+	<label>checkbox 3<input type='checkbox' name='checkbox[]' value='3' /></label>
+</form>
+<div snap-class="bmoor.snap.Debug" snap-data="daMap"></div>
+<form snap-class="bmoor.snap.Form" snap-data="daMap">
+	<label>text<input type='text' name='text' /></label>
+	<label>radio 1<input type='radio' name='radio' value='1' /></label>
+	<label>radio 2<input type='radio' name='radio' value='2' /></label>
+	<label>radio 3<input type='radio' name='radio' value='3' /></label>
+	<label>checkbox 1<input type='checkbox' name='checkbox[]' value='1' /></label>
+	<label>checkbox 2<input type='checkbox' name='checkbox[]' value='2' /></label>
+	<label>checkbox 3<input type='checkbox' name='checkbox[]' value='3' /></label>
+</form>
+</body>
+</html>
