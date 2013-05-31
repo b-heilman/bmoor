@@ -25,18 +25,18 @@ bMoor.constructor.define({
 		require : function( requirements, cb ){
 			var dis = this;
 			
-			this.waiting++;
+			this._waiting++;
 			
-			bMoor.autoload.require( requirements, function(){ if ( cb ){ cb(); } dis._return() } );
+			bMoor.autoload.require( requirements, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		},
 		loadScript : function( src, cb ){
 			var dis = this;
 			
-			this.waiting++;
+			this._waiting++;
 			
-			bMoor.resource.loadScript( src, function(){ if ( cb ){ cb(); } dis._return() } );
+			bMoor.resource.loadScript( src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		},
@@ -45,25 +45,25 @@ bMoor.constructor.define({
 			
 			this.waiting++;
 			
-			bMoor.resource.loadStyle( src, function(){ if ( cb ){ cb(); } dis._return() } );
+			bMoor.resource.loadStyle( src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		},
 		loadImage : function( src, cb ){
 			var dis = this;
 			
-			this.waiting++;
+			this._waiting++;
 			
-			bMoor.resource.loadImage( src, function(){ if ( cb ){ cb(); } dis._return() } );
+			bMoor.resource.loadImage( src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		},
 		loadTemplate : function( id, src, cb ){
 			var dis = this;
 			
-			this.waiting++;
+			this._waiting++;
 			
-			bMoor.resource.loadTemplate( id, src, function(){ if ( cb ){ cb(); } dis._return() } );
+			bMoor.resource.loadTemplate( id, src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		}

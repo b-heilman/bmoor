@@ -529,10 +529,10 @@
 			
 			if ( src[0] == '#' ){
 				src = $( src )[0].src;
-			}else{
-				img.onload = cb;
-				img.src = src;
 			}
+			
+			img.onload = cb;
+			img.src = src;
 		};
 		
 		ResourceLoader.loadTemplate = function( id, src, cb ){
@@ -709,7 +709,7 @@
 			if ( loading ){
 				onLoaded.push( cb );
 			}else{
-				cb();
+				cb( $, global );
 			}
 		};
 		

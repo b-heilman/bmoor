@@ -18,12 +18,17 @@ bMoor.constructor.singleton({
 			}, 25);
 		}
 	},
-	construct: function(){},
+	construct: function(){
+		this._render = function(){
+			document.body.className += ' snap-ready';
+		};
+	},
 	properties: {
 		_stopped : false,
 		_checking : false,
 		_render : null,
-		onRender : function( cb ){
+		render : function( cb ){
+			// I don't need to call right away, because it will get cycled and run anyway
 			this._render = cb;
 		},
 		stop : function(){
@@ -75,6 +80,7 @@ bMoor.constructor.singleton({
 		},
 		build : function( element ){
 			var 
+				dis = this,
 				waiting = new bmoor.lib.WaitFor(),
 				others = [];
 			
@@ -93,9 +99,9 @@ bMoor.constructor.singleton({
 			}
 			
 			waiting.done(function(){
-				if ( this._render ){
-					this._render();
-					this._render = null;
+				if ( dis._render ){
+					dis._render();
+					dis._render = null;
 				}
 			});
 		},
