@@ -11,21 +11,21 @@ bMoor.constructor.define({
 	],
 	parent : ['bmoor','snap','Node'],
 	properties : {
-		_element : function( element ){
+		_finalize : function(){
 			var 
 				dis = this,
 				fields = [],
-				elements;
+				element = this.element;
 			
-			this.__Node._element.call( this, element );
+			this.__Node._finalize.call( this );
 			
-			elements = this.element.elements;
+			elements = element.elements;
 			
 			for ( var name in elements ) if ( elements.hasOwnProperty(name) ){
 				var 
 					el,
-					$input,
-					field = element.elements[ name ];
+					input,
+					field = elements[ name ];
 				
 				if ( field instanceof NodeList 
 					|| (field instanceof HTMLElement && name == field.name) ){
@@ -56,7 +56,7 @@ bMoor.constructor.define({
 						}
 					}
 					
-					dis['$'+name] = input;
+					dis['#'+name] = input;
 					
 					(function(name, input){
 						input.alter(function(){
@@ -73,7 +73,7 @@ bMoor.constructor.define({
 		_mapUpdate : function( map ){
 			for( var i = 0, c = this.fields.length; i < c; i++ ){
 				var field = this.fields[ i ];
-				this[ '$'+field ].val( map[field] );
+				this[ '#'+field ].val( map[field] );
 			}
 		}
 	}

@@ -48,7 +48,10 @@ bMoor.constructor.singleton({
 		_build : function( waiting, node, cb ){
 			var
 				context = node._snapContext ? node._snapContext : global,
-				create = node.getAttribute('snap-class');
+				create = node.getAttribute('snap-class'),
+				data = node.hasAttribute('snap-data') 
+					? eval( node.getAttribute('snap-data').replace('this','context') ) 
+					: null;
 			
 			// up here, so the require loop doesn't become infinite
 			node.removeAttribute('snap-class');
@@ -57,12 +60,11 @@ bMoor.constructor.singleton({
 				waiting = new bmoor.lib.WaitFor();
 			}
 			
+			this.setContext( node, data );
+			
 			waiting.require( create, function(){
 				var 
 					creator = bMoor.get( create ),
-					data = node.hasAttribute('snap-data') 
-						? eval( node.getAttribute('snap-data').replace('this','context') ) 
-						: null,
 					el = new creator(
 						node,
 						node.hasAttribute('snap-template') ? node.getAttribute('snap-template') : null, 

@@ -8,6 +8,11 @@ bMoor.constructor.define({
 		this._element( element );
 		this._template( template );
 		this._data( data );
+		
+		if ( !this.prepared ){
+			this._finalize();
+		}
+		
 		this._binding();
 	},
 	properties: {
@@ -16,6 +21,8 @@ bMoor.constructor.define({
 			this.$ = $( element );
 			this.element = element;
 			this.$.data( 'node', this );
+			
+			this.variable = element.hasAttribute('snap-variable') ? element.getAttribute('snap-variable') : null;
 			
 			element.className += ' '+this.baseClass;
 		},
@@ -41,11 +48,19 @@ bMoor.constructor.define({
 			}
 		},
 		_makeContent : function(){
-			this.element.innerHTML = bMoor.template.getDefaultTemplator().run( this.prepared, this.data ),
+			this.element.innerHTML = bMoor.template.getDefaultTemplator().run( this.prepared, this.data );
 			bmoor.templating.Builder.setContext( this.element, this.data );
+			this._finalize();
+			
 		},
 		_mapUpdate : function( map ){
+			if ( this.prepared ){
+				this._makeContent();
+			}else if ( this.variable ){
+				this.element.innerHTML = this.data[ this.variable ];
+			}
 		},
+		_finalize : function(){},
 		_getVariable : function( variable ){
 			return eval( 'global.' + variable );
 		}
