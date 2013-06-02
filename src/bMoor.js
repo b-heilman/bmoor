@@ -718,7 +718,7 @@
 			
 			settings.onDefine = function( obj, namespace, name ){
 				namespace[name] =  new obj;
-				old( obj, namespace, name );
+				old( namespace[name], namespace, name );
 			};
 			
 			this.define( settings );

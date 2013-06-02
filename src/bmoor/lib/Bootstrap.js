@@ -2,12 +2,12 @@
 var installed = false;
 
 bMoor.constructor.singleton({
-	name : 'Builder',
-	namespace : ['bmoor','templating'],
+	name : 'Bootstrap',
+	namespace : ['bmoor','lib'],
 	require : [ ['bmoor','lib','WaitFor'] ],
-	onReady : function(){
+	onReady : function( self ){
 		if ( !installed ){
-			var builder = bmoor.templating.Builder;
+			var builder = self;
 			
 			installed = true;
 			
@@ -86,7 +86,7 @@ bMoor.constructor.singleton({
 				waiting = new bmoor.lib.WaitFor(),
 				others = [];
 			
-			for( var nodes = $('[snap-class]'), i = 0, c = nodes.length; i < c; i++){
+			for( var nodes = element.querySelectorAll('[snap-class]'), i = 0, c = nodes.length; i < c; i++){
 				var node = nodes[i];
 				
 				if ( node.hasAttribute('snap-publish') ){
@@ -108,7 +108,7 @@ bMoor.constructor.singleton({
 			});
 		},
 		setContext : function( element, data ){
-			for( var nodes = $(element).find('[snap-class]'), i = 0, c = nodes.length; i < c; i++){
+			for( var nodes = element.querySelectorAll('[snap-class]'), i = 0, c = nodes.length; i < c; i++){
 				nodes[i]._snapContext = data;
 			}
 		}

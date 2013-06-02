@@ -3,7 +3,7 @@
 bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
-	require : [ ['bmoor','templating','Builder'] ],
+	require : [ ['bmoor','lib','Bootstrap'] ],
 	construct: function( element, template, data ){
 		this._element( element );
 		this._template( template );
