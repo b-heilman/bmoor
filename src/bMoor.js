@@ -3,165 +3,16 @@
 	
 	var
 		environmentSettings = {
-			templator : ['bmoor','templating','templator','JQote'],
+			templator : ['bmoor','templating','JQote'],
 			templatorTag : '#',
-			runWindow : 300,       // 0 implies to run everything immediately
-			runPause  : 30,        // how long to pause between intervals to prevent the window from locking up
 			jsRoot    : ''
 		};
-	
-	function time(){
-		return ( new Date() ).getTime();
-	}
 	
 	function error( str ){
 		if ( console && console.log ){
 			console.log( str );
 		}
 	}
-	
-	// Defines 
-	var Bouncer = {
-		stacks      : {},
-		readyStacks : {},
-		locks       : {},
-		pauseAfter  : {},
-		onEmpty     : {},
-		fullEmpty   : null
-	};
-	
-	(function(){
-		// set up some private static variables
-		var
-			stacks = [],
-			pauseAfter = null,
-			activeStack = null;
-		
-		// set up some private functions
-		function resetTime(){
-			pauseAfter = time() + environmentSettings.runWindow;
-		}
-		
-		function releaseLock( stack ){
-			// this means you were the first lock to return, so adjust the next pause position
-			if ( this.locks[stack] == pauseAfter ){
-				resetTime();
-			}
-			
-			delete this.locks[stack];
-			this.run( stack );
-		}
-		
-		Bouncer.add = function( stack, op, front ){
-			// action, arguments, target, delay
-			if ( !this.stacks[stack] ){
-				stacks++;
-				this.stacks[stack] = [];
-			}
-			
-			this.stacks[(front ? 'unshift' : 'push')]({
-				action    : ( typeof(op) == 'function' ? op : op.action ),
-				arguments : ( op.arguments ? op.arguments : [] ),
-				target    : ( op.target ? op.target : (typeof(op) == 'function' ? op : op.action) ),
-				delay     : ( op.delay ? op.delay : false )
-			});
-		};
-		
-		Bouncer.onEmpty = function( stack, func, args ){
-			if ( stack ){
-				if ( this.stacks[stack] && this.stacks[stack].length > 0 ){
-					this.onEmpty[stack] = function(){
-						func( args );
-					};
-				}else{
-					func( args );
-				}
-			}else{
-				if ( stacks.length > 0 ){
-					this.fullEmpty = function(){
-						func( args );
-					};
-				}else{
-					func( args );
-				}
-			}
-		};
-		
-		// run a stack if it is not already locked
-		Bouncer.run = function(){
-			var
-				dis = this,
-				stack;
-		
-			if ( activeStack == null ){
-				if ( stacks.length == 0 ){
-					return;
-				}else{
-					activeStack = stacks.shift();
-				}
-			}
-			
-			stack = activeStack;
-			
-			if ( this.stacks[stack] && this.stacks[stack].length && this.locks[stack] == undefined ){
-				if ( environmentSettings.runWindow == 0 ){
-					// if no run window, just run everything as it comes in
-					var
-						op = this.stacks[stack].shift();
-					
-					op.action.apply( op.target, op.arguments );
-					releaseLock.call( dis, stack );
-				}else{
-					var
-						op = this.stacks[stack].shift();
-					
-					if ( pauseAfter == null ){
-						resetTime();
-					}
-					
-					this.pauseAfter[stack] = pauseAfter;
-					this.locks[stack] = true;
-					
-					op.target.runNext = function(){
-						op.target.runNext = function(){}; // no double taps
-						// TODO : I could do something that if runNext never gets called I force it, but maybe for v2
-						if ( time() > dis.pauseAfter[stack] ){
-							setTimeout( function(){
-								releaseLock.call( dis, stack );
-							}, environmentSettings.runPause );
-						}else{
-							releaseLock.call( dis, stack );
-						}
-					};
-					
-					op.action.apply( op.target, op.arguments );
-					
-					if ( !op.delay ){
-						op.target.runNext();
-					}
-				}
-			}else if ( !this.stacks[stack] || this.stacks[stack].length == 0 ){
-				// handle when a stack runs out
-				delete this.stacks[stack];
-				
-				if ( this.onEmpty[stack] ){
-					this.onEmpty[stack]();
-					delete this.onEmpty[stack];
-				}
-				
-				if ( stacks.length == 0 ){
-					if ( this.fullEmpty ){
-						this.fullEmpty();
-						delete this.fullEmpty;
-					}
-					
-					activeStack = null;
-				}else{
-					activeStack = stacks.shift();
-				}
-			}
-		};
-	}());
 	
 	var Namespace = {
 		// TODO I would love to be able to cache the last search
