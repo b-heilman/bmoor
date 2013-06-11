@@ -19,7 +19,12 @@
 		parse : function( space ){
 			if ( typeof(space) == 'string' ){
 				return space.split('.'); // turn strings into an array
-			}else return space.slice(0);
+			}else if ( space ){
+				return space.slice(0);
+			}else{
+				console.trace();
+				return [];
+			}
 		},
 		get : function( space ){
 			var 
@@ -211,6 +216,8 @@
 				target = args;
 				args = callback;
 				callback = reference;
+				reference = namespace;
+			}else if ( !reference ){
 				reference = namespace;
 			}
 			
@@ -624,6 +631,7 @@
 		
 		Constructor.prototype.statics = function( child, statics ){
 			if ( child.prototype.__static ){
+				child.prototype.__static = {};
 				$.extend( child.prototype.__static, statics );
 			}else if ( statics ){
 				child.prototype.__static = statics;

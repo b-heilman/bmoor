@@ -5,7 +5,7 @@ bMoor.constructor.define({
 	statics : {
 		message : 'Test 2 is active'
 	},
-	publics : {
+	properties : {
 		hello : function(){
 			console.log( this.__static.message );
 		}

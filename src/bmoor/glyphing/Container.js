@@ -152,16 +152,18 @@ bMoor.constructor.define({
 			var 
 				$this = $( element ),
 				$img = $this.find('img'),
-				dis = this;
-				
+				dis = this,
+				baseSettings = {};
+			
 			this.__Node._element.call( this, element );
 			
 			this.activeGlyph = null;
 			this.glyphs = new bmoor.model.Collection();
 			this.glyphs._start();
 			this.controller = null;
+			
 			this.settings = $.extend( true, {}, this.__static.settings, element.hasAttribute('snap-settings')
-				? this._getVariable(element.getAttribute('snap-settings')) : {} );
+				? this._getVariable(element.getAttribute('snap-settings')) : baseSettings );
 				
 			this.lock();
 			
@@ -183,6 +185,15 @@ bMoor.constructor.define({
 			}else{
 				this.box = null;
 			};
+		},
+		_template : function( template ){
+			if ( template ){
+				if ( !this.settings.glyphSettings.template ){
+					this.settings.glyphSettings.template = {};
+				}
+				
+				this.settings.glyphSettings.template.id = template;
+			}
 		},
 		locked : true,
 		lock : function(){

@@ -213,8 +213,11 @@ bMoor.constructor.define({
 		makeNode : function( style ){
 			return $( '<div class="'+this.getClass()+'" style="' + this.makeStyle( style ) + '"/>' ).append( this.getTemplate() );
 		},
+		// TODO : need to fix this
 		getTemplate : function(){
-			return $( '#'+this.template.id ).jqote( this.template.settings );
+			if ( this.template ){
+				return $( '#'+this.template.id ).jqote( this.template.settings );
+			}else return '';
 		},
 		draw : function(){
 			var

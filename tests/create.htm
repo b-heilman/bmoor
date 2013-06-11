@@ -1,19 +1,19 @@
 <html>
 <head>
-<script> var jQuery = {}; </script>
-<script src="../bMoor.js"></script>
+<script src="../src/jquery.min.js"></script>
+<script src="../src/bMoor.js"></script>
 
 </head>
 <body>
 <script>
-bMoor.constructor.create({
+bMoor.constructor.define({
 	name : 'HelloWorld',
 	statics : {
 		message : 'Hello World'
 	},
-	publics : {
+	properties : {
 		hello : function(){
-			console.log( this.__statics.message );
+			console.log( this.__static.message );
 		}
 	}
 });
@@ -24,7 +24,7 @@ var
 hw.hello();
 </script>
 <script>
-bMoor.constructor.create({
+bMoor.constructor.define({
 	name : 'HelloWorld2',
 	parent : 'HelloWorld',
 	statics : {
@@ -39,7 +39,7 @@ hw.hello();
 </script>
 
 <script>
-bMoor.constructor.create({
+bMoor.constructor.define({
 	name : 'HelloWorld3',
 	namespace : 'foo.bar',
 	parent : 'HelloWorld',
@@ -48,7 +48,7 @@ bMoor.constructor.create({
 	},
 	publics : {
 		hello : function(){
-			this.__parent.hello.call( this );
+			this.__HelloWorld.hello.call( this );
 		}
 	}
 });

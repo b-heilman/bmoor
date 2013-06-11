@@ -2,7 +2,7 @@
 
 bMoor.constructor.define({
 	name : 'Select',
-	namespace : ['bmoor','form'],
+	namespace : ['bmoor','snap','form'],
 	construct: function( element ){
 		this.element = element;
 	},

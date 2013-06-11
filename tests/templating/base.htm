@@ -9,15 +9,19 @@
 	bMoor.autoload.setRoot('../../src');
 	bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
 </script>
-<script src="../../src/bmoor/templating/templator/JQote.js"></script>
-<script src="../../src/bmoor/templating/Builder.js"></script>
+<script src='../../src/bmoor/lib/WaitFor.js'></script>
+<script src='../../src/bmoor/lib/MouseTracker.js'></script>
+<script src='../../src/bmoor/lib/Bootstrap.js'></script>
+<script src='../../src/bmoor/templating/JQote.js'></script>
+<script src='../../src/bmoor/model/Map.js'></script>
+	
 <script src="../../src/bmoor/snap/Node.js"></script>
 <script src="../../src/bmoor/snap/List.js"></script>
 </head>
 <body>
 <ul snap-class="bmoor.snap.List" snap-template="list1" snap-data="dataSet.list"></ul>
 <div snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"></div>
-<script>dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
+<script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>

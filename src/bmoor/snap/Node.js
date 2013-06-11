@@ -11,6 +11,8 @@ bMoor.constructor.define({
 		
 		if ( !this.prepared ){
 			this._finalize();
+		}else{
+			this._makeContent();
 		}
 		
 		this._binding();
@@ -33,10 +35,6 @@ bMoor.constructor.define({
 			this.prepared = template 
 				? bMoor.template.getDefaultTemplator().prepare( bMoor.resource.loadTemplate(template,null) )
 				: null;
-				
-			if ( this.prepared ){
-				this._makeContent();
-			}
 		},
 		_binding : function(){
 			var dis = this;
@@ -48,19 +46,23 @@ bMoor.constructor.define({
 			}
 		},
 		_makeContent : function(){
-			this.element.innerHTML = bMoor.template.getDefaultTemplator().run( this.prepared, this.data );
-			bmoor.templating.Builder.setContext( this.element, this.data );
+			this._setContent( bMoor.template.getDefaultTemplator().run(this.prepared,this.data) );
+			bmoor.lib.Bootstrap.setContext( this.element, this.data );
 			this._finalize();
 			
+		},
+		_setContent : function( content ){
+			this.element.innerHTML = content;
 		},
 		_mapUpdate : function( map ){
 			if ( this.prepared ){
 				this._makeContent();
 			}else if ( this.variable ){
-				this.element.innerHTML = this.data[ this.variable ];
+				this._setContent( this.data[this.variable] );
 			}
 		},
 		_finalize : function(){},
+		// TODO : this should be renamed
 		_getVariable : function( variable ){
 			return eval( 'global.' + variable );
 		}

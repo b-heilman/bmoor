@@ -10,17 +10,17 @@
 		}
 	</style>
 	
-	<script src='../src/jquery.min.js'></script>
-	<script src='../src/bMoor.js'></script>
-	<script src='../src/bmoor/Model.js'></script>
+	<script src='../../src/jquery.min.js'></script>
+	<script src='../../src/bMoor.js'></script>
+	<script src='../../src/bmoor/model/Map.js'></script>
 </head>
 <body>
 	<script>
 		var
-			model = new bmoor.Model( { foo : 1, bar : 2 } );
+			model = new bmoor.model.Map( { foo : 1, bar : 2 } );
 		
 		model._start();
-		model._bind( { modelUpdate : function(){console.log(model);} } );
+		model._bind( function(){console.log(model);} );
 		
 		setTimeout( function(){ console.log( 'foo = 3' ); model.foo = 3; }, 500 );
 		setTimeout( function(){ console.log( 'tmp = 1' ); model.tmp = 1; }, 2000 );

@@ -10,19 +10,19 @@
 		}
 	</style>
 	
-	<script src='../src/jquery.min.js'></script>
-	<script src='../src/bMoor.js'></script>
-	<script src='../src/bmoor/Model.js'></script>
-	<script src='../src/bmoor/Collection.js'></script>
+	<script src='../../src/jquery.min.js'></script>
+	<script src='../../src/bMoor.js'></script>
+	<script src='../../src/bmoor/model/Map.js'></script>
+	<script src='../../src/bmoor/model/Collection.js'></script>
 </head>
 <body>
 	<script>
 		var
-			collection = new bmoor.Collection([{x:2},{x:4},{x:6}]),
+			collection = new bmoor.model.Collection( [{x:2},{x:4},{x:6}] ),
 			hold = {x:8};
 		
 		collection._start();
-		collection._bind( { collectionUpdate : function(){console.log(collection);} } );
+		collection._bind( function(){console.log(collection);} );
 		
 		setTimeout( function(){ console.log('pushing'); collection.push(hold); }, 500 );
 		setTimeout( function(){ console.log('pushing'); collection.push({x:10}); }, 1000 );

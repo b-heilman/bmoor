@@ -42,7 +42,7 @@ bMoor.constructor.define({
 						element.setAttribute( attr, attributes[attr] );
 					}
 					
-					bmoor.templating.Builder.setContext( element, data );
+					bmoor.lib.Bootstrap.setContext( element, data );
 					
 					return element;
 				}else{

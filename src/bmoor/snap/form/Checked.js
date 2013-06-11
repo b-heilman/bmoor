@@ -2,7 +2,7 @@
 
 bMoor.constructor.define({
 	name : 'Checked',
-	namespace : ['bmoor','form'],
+	namespace : ['bmoor','snap','form'],
 	construct: function( element ){
 		this.map = {};
 		this.multi = false;

@@ -1,16 +1,15 @@
 <html>
 <head>
-<script src="../jquery.min.js"></script>
+<script src="../src/jquery.min.js"></script>
 <script src="../src/bMoor.js"></script>
 <script>
-bMoor.settings.jsRoot = 'js';
-bMoor.fileloader.reset();
+bMoor.autoload.setRoot('js');
 </script>
 
 </head>
 <body>
 <script>
-bMoor.fileloader.require([
+bMoor.require([
 		'bmoor.Test2', 
 		['bmoor','test','Test3']
 	], function( test2, test3 ){
@@ -25,7 +24,7 @@ bMoor.fileloader.require([
 	}
 );
 
-bMoor.constructor.onLoaded(function(){
+bMoor.constructor.loaded(function(){
 	console.log( 'onloaded' );
 	//(new bmoor.Test1()).hello();
 });
