@@ -4,11 +4,12 @@ bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
 	require : [ ['bmoor','lib','Bootstrap'] ],
-	construct: function( element, template, data ){
+	construct: function( element, template, data, attributes ){
+		this._attributes = attributes;
 		this._element( element );
 		this._template( template );
 		this._data( data );
-		
+	
 		if ( !this.prepared ){
 			this._finalize();
 		}else{
@@ -24,7 +25,7 @@ bMoor.constructor.define({
 			this.element = element;
 			this.$.data( 'node', this );
 			
-			this.variable = element.hasAttribute('snap-variable') ? element.getAttribute('snap-variable') : null;
+			this.variable = this._getAttribute( 'variable', null );
 			
 			element.className += ' '+this.baseClass;
 		},
@@ -62,6 +63,21 @@ bMoor.constructor.define({
 			}
 		},
 		_finalize : function(){},
+		_getAttribute : function( attribute, otherwise, adjustment ){
+			var attr;
+			
+			if ( this._attributes && this._attributes[attribute] ){
+				attr = this._attributes[attribute];
+			}else{
+				attribute = 'snap-'+attribute;
+				
+				if ( this.element.hasAttribute(attribute) ){
+					attr = this.element.getAttribute( attribute );
+				}else return otherwise;
+			}
+			
+			return adjustment ? adjustment( attr ) : attr;
+		},
 		// TODO : this should be renamed
 		_getVariable : function( variable ){
 			return eval( 'global.' + variable );

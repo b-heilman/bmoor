@@ -94,6 +94,28 @@ bMoor.constructor.define({
 			
 			this.ctx.closePath();
 		},
+		save : function(){
+			return this.ctx.toDataURL();
+		},
+		load : function( dataURL, cb ){
+			var 
+				ctx = this.ctx,
+				img = new Image();
+			
+			img.onload = function(){
+				ctx.clear();
+				ctx.drawImage(this, 0, 0);
+				
+				if ( cb ){
+					cb();
+				}
+			};
+			
+			img.src = dataURL;
+		},
+		resize : function(){
+			this.ctx.calcSize();
+		},
 		locked : true,
 		lock : function(){
 			this.$.removeClass( 'unlocked' );

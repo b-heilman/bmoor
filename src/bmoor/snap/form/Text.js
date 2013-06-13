@@ -11,11 +11,9 @@ bMoor.constructor.define({
 		_binding : function(){
 			var dis = this;
 			
-			if ( this.data && this.data._bind && this.variable ){
-				this.data._bind(function(){
-					dis._mapUpdate( this );
-				});
-				
+			this.__Node._binding.call( this );
+			
+			if ( this.data && this.variable ){
 				this.alter(function( value ){
 					if ( dis.data ){
 						dis.data[ dis.variable ] = value;

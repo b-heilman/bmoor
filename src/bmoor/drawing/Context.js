@@ -396,6 +396,10 @@ bMoor.constructor.define({
 			return this;
 		},
 		
+		toDataURL : function(){
+			return this.element.toDataURL();
+		},
+		
 		measureText : function( text ){
 			return this.ctx.measureText(text);
 		},

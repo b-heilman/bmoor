@@ -7,7 +7,7 @@ bMoor.constructor.define({
 	properties: {
 		_element : function( element ){
 			this.__Node._element.call( this, element );
-			this.childTag = element.hasAttribute('snap-child') ? element.getAttribute('snap-child') : this.childTag;
+			this.childTag = this._getAttribute( 'child', this.childTag );
 		},
 		_makeContent : function(){
 			if ( this.data ){

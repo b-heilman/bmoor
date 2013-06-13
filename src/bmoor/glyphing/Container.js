@@ -162,8 +162,11 @@ bMoor.constructor.define({
 			this.glyphs._start();
 			this.controller = null;
 			
-			this.settings = $.extend( true, {}, this.__static.settings, element.hasAttribute('snap-settings')
-				? this._getVariable(element.getAttribute('snap-settings')) : baseSettings );
+			this.settings = $.extend( true, {}, this.__static.settings, 
+				this._getAttribute(
+					'settings', {}, function(val){ return this._getVariable(val); }
+				)
+			);
 				
 			this.lock();
 			

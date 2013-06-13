@@ -448,7 +448,22 @@
 		};
 		
 		ResourceLoader.setTemplate = function( id, template ){
-			templates[ id ] = template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' );
+			switch( typeof(template) ){
+				case 'string' :
+					templates[ id ] = template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' );
+					break;
+					
+				case 'function' :
+					// assumes formatting like : 
+					// function(){/*
+					//   ... the template code ...
+					// */}
+					templates[ id ] = template.toString().split(/\n/).slice(1, -1).join('\n'); 
+					break;
+					
+				default :
+					break;
+			}
 		};
 	}());
 	
