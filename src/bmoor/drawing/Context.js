@@ -39,7 +39,20 @@ bMoor.constructor.define({
 		 * @access public
 		 */
 		clear : function(){
-			this.ctx.clearRect( 0, 0, this.element.width, this.element.height );
+			this.ctx.clearRect( 0, 0, this.element.width * this.ratio, this.element.height * this.ratio );
+		},
+		clearRect : function( x0, y0, width, height ){
+			x0 *= this.ratio;
+			y0 *= this.ratio;
+			width *= this.ratio;
+			height *= this.ratio;
+			
+			if ( this.offset ){
+				x0 += this.offset;
+				y0 += this.offset;
+			}
+			
+			this.ctx.clearRect( x0, y0, width, height );
 		},
 		/**
 		 * Set the margin of the canvas object, an offset for all elements drawn

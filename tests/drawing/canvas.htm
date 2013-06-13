@@ -14,8 +14,15 @@
 	<script src='../../src/bmoor/lib/MouseTracker.js'></script>
 	<script src='../../src/bmoor/snap/Node.js'></script>
 	<script src='../../src/bmoor/drawing/Context.js'></script>
+	<script src='../../src/bmoor/drawing/stroke/Brush.js'></script>
+	<script src='../../src/bmoor/drawing/stroke/Erase.js'></script>
 	<script src='../../src/bmoor/drawing/Sketch.js'></script>
 	<script src='../../src/bmoor/snap/form/Button.js'></script>
+<style>
+canvas {
+	cursor: pointer;
+}
+</style>
 </head>
 <body>
 	<canvas snap-class='bmoor.drawing.Sketch' snap-publish='this.sketch' style='width: 500px; height: 500px; border: 1px solid black;'></canvas>
@@ -23,11 +30,18 @@
 		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='width' value='1'>1</button>
 		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='width' value='2'>2</button>
 		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='width' value='3'>3</button>
+		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='width' value='5'>5</button>
+		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='width' value='7'>7</button>
+		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='width' value='9'>9</button>
 	</div>
 	<div>
 		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='color' value='black'>Black</button>
 		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='color' value='red'>Red</button>
 		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='color' value='green'>Green</button>
+	</div>
+	<div>
+		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='stroke' value='bmoor.drawing.stroke.Brush'>Brush</button>
+		<button snap-class='bmoor.snap.form.Button' snap-data='this.sketch.data' snap-variable='stroke' value='bmoor.drawing.stroke.Erase'>Erase</button>
 	</div>
 </body>
 </html>
