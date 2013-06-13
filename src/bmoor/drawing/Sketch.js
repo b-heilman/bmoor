@@ -9,7 +9,8 @@ bMoor.constructor.define({
 	require: [ 
 		['bmoor','lib','MouseTracker'],
 		['bmoor','model','Map'],
-		['bmoor','drawing','Context']
+		['bmoor','drawing','Context'],
+		['bmoor','drawing','stroke','Brush']
 	],
 	onReady : function(){
 		lastPosition = bmoor.lib.MouseTracker;
@@ -19,24 +20,28 @@ bMoor.constructor.define({
 				$this = $(this),
 				offset = $this.offset(),
 				node = $this.data('node'),
+				stroke = new (bMoor.get( node.data.stroke ))( node.ctx, node.data ),
 				onMove = function( event ){
-					node._continueStroke( event.pageX - offset.left, event.pageY - offset.top );
+					stroke.move( event.pageX - offset.left, event.pageY - offset.top );
 				},
 				onUp = function(){
-					node._endStroke( lastPosition.x - offset.left, lastPosition.y - offset.top );
 					onOut();
 				},
 				onOut = function(){
+					stroke.end( lastPosition.x - offset.left, lastPosition.y - offset.top );
+					
 					$(document.body).unbind( 'mousemove', onMove );
 					$(document.body).unbind( 'mouseup', onUp );
 					$(document.body).unbind( 'mouseout', onOut );
 				};
 			
-			node._startStroke( lastPosition.x - offset.left, lastPosition.y - offset.top );
+			stroke.start( lastPosition.x - offset.left, lastPosition.y - offset.top );
 			
 			$(document.body).bind( 'mousemove', onMove );
 			$(document.body).bind( 'mouseup', onUp );
 			$(document.body).bind( 'mouseout', onOut );
+			
+			return false;
 		});
 	},
 	properties : {
@@ -59,6 +64,10 @@ bMoor.constructor.define({
 			this.__Node._element.call( this, element );
 			
 			this.ctx = new bmoor.drawing.Context( this.element, 3 );
+			
+			element.style.cssText += '-moz-user-select: none; -khtml-user-select: none; -webkit-user-select: none; user-select: none;';
+			element.setAttribute('unselectable', 'on');
+			element.onselectstart = function() { if (dragging) return false; };
 		},
 		_data : function( settings ){
 			if ( !settings ){
@@ -75,24 +84,11 @@ bMoor.constructor.define({
 				settings.width = 1;
 			}
 			
+			if ( !settings.stroke ){
+				settings.stroke = 'bmoor.drawing.stroke.Brush';
+			}
+			
 			this.__Node._data.call( this, settings );
-		},
-		_startStroke: function( x, y ){
-			this.ctx.strokeStyle( this.data.color );
-			this.ctx.lineWidth( this.data.width );
-			
-			this.ctx.moveTo( x, y );
-			this.ctx.beginPath();
-		},
-		_continueStroke: function( x, y ){
-			this.ctx.lineTo( x, y );
-			this.ctx.stroke();
-		},
-		_endStroke: function( x, y ){
-			this.ctx.lineTo( x, y );
-			this.ctx.stroke();
-			
-			this.ctx.closePath();
 		},
 		save : function(){
 			return this.ctx.toDataURL();
