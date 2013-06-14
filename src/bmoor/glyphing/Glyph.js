@@ -6,6 +6,9 @@ bMoor.constructor.define({
 		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] },
 		classes : [ ['bmoor','model','Map'] ]
 	},
+	// element, template, data, settings
+	// settings { templat info }
+	// data     {  }
 	construct : function( settings, limits, $root ){
 		var
 			dis = this,
