@@ -20,6 +20,21 @@ bMoor.constructor.define({
 	},
 	properties: {
 		baseClass : 'snap-node',
+		getModel : function(){
+			if ( this.data && this.data._bind ){
+				return this.data;
+			}else return null;
+		},
+		__warn : function( warning ){
+			this__log( 'warn', warning );
+		},
+		__error : function( error ){
+			this.__log( 'error', error );
+			throw error;
+		},
+		__log : function(){
+			console.log.apply( this, arguments );
+		},
 		_element : function( element ){
 			this.$ = $( element );
 			this.element = element;
@@ -80,7 +95,11 @@ bMoor.constructor.define({
 		},
 		// TODO : this should be renamed
 		_getVariable : function( variable ){
-			return eval( 'global.' + variable );
+			if ( typeof(variable) != 'string' ){
+				return variable;
+			}else if ( variable[0] == '{' || variable[0] == '[' ){
+				return eval( variable );
+			}else return eval( 'global.' + variable );
 		}
 	}
 });

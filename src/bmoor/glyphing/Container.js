@@ -110,12 +110,12 @@ bMoor.constructor.define({
 					width = onStart.width + xDiff + xDiff,
 					height = onStart.height + yDiff + yDiff;
 				
-				if ( width > glyph.settings.minWidth ){
+				if ( width > glyph.minWidth ){
 					activeModel.width = width;
 					activeModel.left = onStart.left - xDiff;
 				}
 				
-				if ( height > glyph.settings.minHeight ){
+				if ( height > glyph.minHeight ){
 					activeModel.height = height;
 					activeModel.top = onStart.top - yDiff;
 				}
@@ -164,7 +164,7 @@ bMoor.constructor.define({
 			
 			this.settings = $.extend( true, {}, this.__static.settings, 
 				this._getAttribute(
-					'settings', {}, function(val){ return this._getVariable(val); }
+					'settings', {}, function(val){ return dis._getVariable(val); }
 				)
 			);
 				
@@ -190,13 +190,7 @@ bMoor.constructor.define({
 			};
 		},
 		_template : function( template ){
-			if ( template ){
-				if ( !this.settings.glyphSettings.template ){
-					this.settings.glyphSettings.template = {};
-				}
-				
-				this.settings.glyphSettings.template.id = template;
-			}
+			this.settings.template = template;
 		},
 		locked : true,
 		lock : function(){
@@ -218,7 +212,8 @@ bMoor.constructor.define({
 			this.settings.glyphClass = className;
 		},
 		setGlyphSettings : function( settings ){
-			this.settings.glyphSettings = $.extend( true, this.settings.glyphSettings, settings );
+			console.log( settings );
+			this.settings.glyphSettings = settings;
 		},
 		setActive : function( glyph ){
 			// TODO : check to see if the glyph is in the container... ideally
@@ -238,6 +233,9 @@ bMoor.constructor.define({
 			}
 		},
 		addGlyph : function( info ){
+			var el;
+			
+			// TODO : should become a instanceof
 			if ( info.isGlyph ){
 				var 
 					model = info.getModel(),
@@ -253,7 +251,19 @@ bMoor.constructor.define({
 				
 				return info;
 			} else{
-				return this.addGlyph( new this.settings.glyphClass($.extend(true, {}, this.settings.glyphSettings, info), this.box, this.$) );
+				el = document.createElement('div');
+				this.element.appendChild( el );
+				
+				return this.addGlyph( 
+					new this.settings.glyphClass(
+						el, 
+						this.settings.template,
+						$.extend(true, {}, this.settings.glyphSettings, info), 
+						{
+							limits : this.box
+						}
+					)
+				);
 			}
 		},
 		addGlyphs : function( glyphs ){

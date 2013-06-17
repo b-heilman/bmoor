@@ -5,7 +5,7 @@
 		construct : function( ctx, settings ){
 			this.ctx = ctx;
 			
-			ctx.globalCompositeOperation = 'source-over';
+			ctx.lineCap( 'round' );
 			ctx.strokeStyle( settings.color );
 			ctx.lineWidth( settings.width );
 		},

@@ -392,6 +392,11 @@ bMoor.constructor.define({
 			return this;
 		},
 		
+		lineCap : function( cap ){
+			this.ctx.lineCap = cap;
+			return this;
+		},
+		
 		drawImage : function( image, x0, y0, width, height ){
 			x0 *= this.ratio;
 			y0 *= this.ratio;

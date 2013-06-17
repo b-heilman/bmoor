@@ -74,7 +74,7 @@ bMoor.constructor.define({
 		_mapUpdate : function( map ){
 			for( var i = 0, c = this.fields.length; i < c; i++ ){
 				var field = this.fields[ i ];
-				this[ '#'+field ].val( map[field] );
+				this[ '#'+field ].val( map[field] == undefined ? '' : map[field] );
 			}
 		}
 	}
