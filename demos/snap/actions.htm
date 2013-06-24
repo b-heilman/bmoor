@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../../src/jquery.min.js"></script>
+<script src="../../src/bMoor.js"></script>
+<script src='../../src/jquery/jquery.jqote2.js'></script>
+<script>
+	bMoor.autoload.setRoot('../../src');
+	bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
+</script>
+<script src='../../src/bmoor/lib/WaitFor.js'></script>
+<script src='../../src/bmoor/lib/MouseTracker.js'></script>
+<script src='../../src/bmoor/lib/Bootstrap.js'></script>
+<script src='../../src/bmoor/templating/JQote.js'></script>
+<script src='../../src/bmoor/model/Map.js'></script>
+	
+<script src="../../src/bmoor/snap/Node.js"></script>
+<script src="../../src/bmoor/snap/List.js"></script>
+</head>
+<body>
+
+<script>
+bMoor.constructor.define({
+	name : 'Tester',
+	namespace : ['test'],
+	parent: ['bmoor','snap','Node'],
+	node : {
+		className : 'tester',
+		actions : {
+			'mouseover' : function(){
+				console.log( 'mouseover' );
+			},
+			'click' : {
+				'' : function(){
+					alert('ouch');
+				},
+				'b' : function( event ){
+					alert('bold');
+					event.stopPropagation();
+				},
+				'.snap-node' : function( event, node, helpers ){
+					if ( !helpers.count ){
+						helpers.count = 1;
+					}else{
+						helpers.count++;
+					}
+					
+					console.log( helpers.count, node );
+				}
+			}
+		}
+	}
+});
+</script>
+<div snap-class="test.Tester" snap-template="template1" snap-data="dataSet"></div>
+<script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
+<script type="text/html" id="template1">
+<![CDATA[
+	<b><#= this.foo #></b>
+	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-data="this.bar"></snap>
+]]>
+</script>
+<script type="text/html" id="template2">
+<![CDATA[
+	<i><#= this.uh #></i>
+]]>
+</script>
+<script type="text/html" id="list1">
+<![CDATA[
+	<i><#= this.x #></i>
+]]>
+</script>
+</body>
+</html>
