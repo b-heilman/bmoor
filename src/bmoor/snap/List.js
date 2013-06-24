@@ -4,10 +4,14 @@ bMoor.constructor.define({
 	name : 'List',
 	namespace : ['bmoor','snap'],
 	parent : ['bmoor','snap','Node'],
+	node : {
+		className : 'snap-list'
+	},
 	properties: {
 		_element : function( element ){
 			this.__Node._element.call( this, element );
 			this.childTag = this._getAttribute( 'child', this.childTag );
+			this.childClass = this._getAttribute( 'childClass', this.childClass );
 		},
 		_makeContent : function(){
 			if ( this.data ){
@@ -63,8 +67,7 @@ bMoor.constructor.define({
 			return el;
 		},
 		childTag : 'li',
-		childClass : 'snap-li',
-		baseClass  : 'snap-list'
+		childClass : 'snap-li'
 	}
 });
 

@@ -16,138 +16,137 @@ bMoor.constructor.define({
 			glyphSettings : {}
 		}
 	},
-	onReady : function(){
-		var 
-			lastPosition = bmoor.lib.MouseTracker,
-			activeModel = null;
+	node : {
+		className : 'glyphing-container',
+		helpers : {
+			lastPosition : bmoor.lib.MouseTracker,
+			activeModel : null,
+			creationDrag : function( glyph ){
+				var 
+					activeModel = this.activeModel,
+					startPos = {
+						x : this.lastPosition.x,
+						y : this.lastPosition.y
+					},
+					onStart = {
+						width  : activeModel.width,
+						height : activeModel.height,
+						top    : activeModel.top,
+						left   : activeModel.left
+					},
+					onMove = null,
+					onMouseup = null,
+					onMouseout = null;
+						
+				onMouseup = function(){
+					$(document.body).unbind( 'mousemove', onMove );
+					$(document.body).unbind( 'mouseup', onMouseup );
+					$(document.body).unbind( 'mouseout', onMouseout );
+				};
 				
-		$(document.body).on( 'keydown', function(event){
-			if( !($(event.target).is(':input') ) ){
-				if ( (event.keyCode == 8 || event.keyCode == 46) ){
-					$('.glyphing-container').each(function(){
-						var dis = $(this).data('node');
-						
-						if ( !dis.locked && dis.activeGlyph ){
-							dis.activeGlyph.getModel().remove = true;
-						}
-					});
+				onMouseout = function( event ){
+					if ( event.relatedTarget == null || event.relatedTarget.tagName.toUpperCase() == 'HTML' ){
+						onMouseup();
+					}
+				};
+				
+				onMove = function( event ){
+					var
+						xDiff = Math.abs( startPos.x - event.pageX ),
+						yDiff = Math.abs( startPos.y - event.pageY ),
+						width = onStart.width + xDiff + xDiff,
+						height = onStart.height + yDiff + yDiff;
 					
-					event.stopPropagation();
-					event.preventDefault();
-				}else if ( event.keyCode == 16 ){
-					$('.glyphing-container').each(function(){
-						var dis = $(this).data('node');
-						
-						if ( dis.activeGlyph ){
-							var pos = dis.glyphs.find( dis.activeGlyph );
+					if ( width > glyph.minWidth ){
+						activeModel.width = width;
+						activeModel.left = onStart.left - xDiff;
+					}
+					
+					if ( height > glyph.minHeight ){
+						activeModel.height = height;
+						activeModel.top = onStart.top - yDiff;
+					}
+				};
+					
+				$(document.body).mousemove( onMove );
+				$(document.body).mouseup( onMouseup );
+				$(document.body).mouseout( onMouseout );
+			}
+		},
+		globals : {
+			'keydown' : function( event, $instances, helpers ){
+				if( !($(event.target).is(':input') ) ){
+					if ( (event.keyCode == 8 || event.keyCode == 46) ){
+						$instances.each(function(){
+							var dis = $(this).data('node');
 							
-							if ( pos == -1 || pos == dis.glyphs.length - 1 ){
-								dis.setActive( dis.glyphs[0] );
-							}else{
-								dis.setActive( dis.glyphs[pos + 1] );
+							if ( !dis.locked && dis.activeGlyph ){
+								dis.activeGlyph.getModel().remove = true;
 							}
-						}else{
-							dis.setActive( dis.glyphs[0] );
-						}
-					});
-					
-					event.stopPropagation();
-					event.preventDefault();
-				}else if ( event.keyCode == 27 ){
-					$('.glyphing-container').each(function(){
-						$(this).data('node').setActive( null );
-					});
-					
-					event.stopPropagation();
-					event.preventDefault();
+						});
+						
+						event.stopPropagation();
+						event.preventDefault();
+					}else if ( event.keyCode == 16 ){
+						$instances.each(function(){
+							var dis = $(this).data('node');
+							
+							if ( dis.activeGlyph ){
+								var pos = dis.glyphs.find( dis.activeGlyph );
+								
+								if ( pos == -1 || pos == dis.glyphs.length - 1 ){
+									dis.setActive( dis.glyphs[0] );
+								}else{
+									dis.setActive( dis.glyphs[pos + 1] );
+								}
+							}else{
+								dis.setActive( dis.glyphs[0] );
+							}
+						});
+						
+						event.stopPropagation();
+						event.preventDefault();
+					}else if ( event.keyCode == 27 ){
+						$instances.each(function(){
+							$(this).data('node').setActive( null );
+						});
+						
+						event.stopPropagation();
+						event.preventDefault();
+					}
 				}
 			}
-		});
-		
-		$(document.body).on( 'mousedown', '.glyphing-container .glyphing-glyph', function( event ){
-			var
-				$this = $(this),
-				dis = $this.closest('.glyphing-container').data( 'node' );
-			
-			dis.setActive( $this.data('node') );
-		
-			event.stopPropagation();
-			event.preventDefault();
-		});
-			
-		function creationDrag( glyph ){
-			var 
-				startPos = {
-					x : lastPosition.x,
-					y : lastPosition.y
-				},
-				onStart = {
-					width  : activeModel.width,
-					height : activeModel.height,
-					top    : activeModel.top,
-					left   : activeModel.left
-				},
-				onMove = null,
-				onMouseup = null,
-				onMouseout = null;
+		},
+		actions : {
+			'mousedown' : {
+				'.glyphing-glyph' : function( event, node ){
+					var $this = $(this);
 					
-			onMouseup = function(){
-				$(document.body).unbind( 'mousemove', onMove );
-				$(document.body).unbind( 'mouseup', onMouseup );
-				$(document.body).unbind( 'mouseout', onMouseout );
-			};
-			
-			onMouseout = function( event ){
-				if ( event.relatedTarget == null || event.relatedTarget.tagName.toUpperCase() == 'HTML' ){
-					onMouseup();
-				}
-			};
-			
-			onMove = function( event ){
-				var
-					xDiff = Math.abs( startPos.x - event.pageX ),
-					yDiff = Math.abs( startPos.y - event.pageY ),
-					width = onStart.width + xDiff + xDiff,
-					height = onStart.height + yDiff + yDiff;
+					node.setActive( $this.data('node') );
 				
-				if ( width > glyph.minWidth ){
-					activeModel.width = width;
-					activeModel.left = onStart.left - xDiff;
+					event.stopPropagation();
+					event.preventDefault();
+				},
+				'' : function( event, node, helpers ){
+					var glyph;
+					
+					if ( !node.locked ){
+						glyph = node.addGlyph({
+							centerLeft : helpers.lastPosition.x - node.$.offset().left,
+							centerTop  : helpers.lastPosition.y - node.$.offset().top
+						});
+						helpers.activeModel = glyph.getModel();
+					
+						event.stopPropagation();
+						event.preventDefault();
+						
+						helpers.creationDrag( glyph );
+					}
 				}
-				
-				if ( height > glyph.minHeight ){
-					activeModel.height = height;
-					activeModel.top = onStart.top - yDiff;
-				}
-			};
-				
-			$(document.body).mousemove( onMove );
-			$(document.body).mouseup( onMouseup );
-			$(document.body).mouseout( onMouseout );
+			}
 		}
-		
-		// mouse down is triggering the creation of a glyph to be added
-		$(document.body).on('mousedown', '.glyphing-container', function( event ){
-			var 
-				glyph,
-				dis = $(this).data( 'node' );
-			
-			if ( !dis.locked ){
-				glyph = dis.addGlyph({
-					centerLeft : lastPosition.x - dis.$.offset().left,
-					centerTop  : lastPosition.y - dis.$.offset().top
-				});
-				activeModel = glyph.getModel();
-			
-				event.stopPropagation();
-				event.preventDefault();
-				
-				creationDrag( glyph );
-			}
-		});
 	},
 	properties : {
-		baseClass : 'glyphing-container',
 		_element : function( element ){
 			var 
 				$this = $( element ),

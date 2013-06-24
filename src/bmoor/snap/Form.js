@@ -10,6 +10,9 @@ bMoor.constructor.define({
 		['bmoor','snap','form','Select']
 	],
 	parent : ['bmoor','snap','Node'],
+	node : {
+		className : 'snap-form'
+	},
 	properties : {
 		_finalize : function(){
 			var 

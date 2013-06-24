@@ -4,7 +4,78 @@ bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
 	require : [ ['bmoor','lib','Bootstrap'] ],
-	construct: function( element, template, data, attributes ){
+	onDefine : function( definition ){
+		var node;
+		// define object is the context
+		// assume no singletons are getting called into this, can't think why they would...
+		
+		if ( this.node ){
+			node = this.node;
+			
+			if ( node.className ){
+				definition.prototype.className = node.className;
+				
+				if ( definition.prototype.baseClass ){
+					if ( node.singleClass ){
+						definition.prototype.baseClass = node.className;
+					}else{
+						definition.prototype.baseClass += ' ' + node.className;
+					}
+				}else{
+					definition.prototype.baseClass = node.className;
+				}
+			}
+			
+			$(document).ready(function(){
+				var 
+					act,
+					className = '.'+definition.prototype.className,
+					helpers = node.helpers ? node.helpers : {},
+					makeGlobal = function( action, func ){
+						// this seems highly inefficient, is there a better way?
+						// -> maybe have the contructor build a list of all instances, keep it somewhere?
+						$(document.body).on( action, function(event){
+							func( event, $(className), helpers );
+						});
+					},
+					makeSplitAction = function( action, subselect, func ){
+						if ( subselect == '' ){
+							$(document.body).on( action, className, function( event ){
+								func.call( this, event, $(this).data('node'), helpers );
+							});
+						}else{
+							$(document.body).on( action, className+' '+subselect, function( event ){
+								func.call( this, event, $(this).closest(className).data('node'), helpers );
+							});
+						}
+					}, 
+					makeAction = function( action, func ){
+						if ( typeof(func) == 'function' ){
+							$(document.body).on( action, className, function( event ){
+								func.call( this, event, $(this).data('node'), helpers );
+							});
+						}else{
+							for( var a in func ){
+								makeSplitAction( action, a, func[a] );
+							}
+						}
+					};
+				
+				// TODO : should prolly just make these an each
+				for( var action in node.globals ){
+					makeGlobal( action, node.globals[action] );
+				}
+				
+				for( var action in node.actions ){
+					makeAction( action, node.actions[action] );
+				}
+			});
+		}
+	},
+	node : {
+		className : 'snap-node'
+	},
+	construct : function( element, template, data, attributes ){
 		this._attributes = attributes;
 		this._element( element );
 		this._template( template );
@@ -18,8 +89,7 @@ bMoor.constructor.define({
 		
 		this._binding();
 	},
-	properties: {
-		baseClass : 'snap-node',
+	properties : {
 		getModel : function(){
 			if ( this.data && this.data._bind ){
 				return this.data;

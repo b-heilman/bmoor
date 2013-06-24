@@ -487,10 +487,10 @@
 		 *   parent      : the parent to extend the prototype of, added to require
 		 *   aliases     : the local renaming of classes prototypes for faster access
 		 *   construct   : the constructor for the class, called automatically
-		 *   attributes  : the public interface for the class
+		 *   properties  : the public interface for the class
 		 *   statics     : variables to be shared between class instances
-		 *   onReady     : function to call when DOM is ready, instance passed in
-		 *   onDefine    : function to call when class has been defined
+		 *   onReady     : ( definition ) function to call when DOM is ready, instance passed in
+		 *   onDefine    : ( definition, namespace, name ) function to call when class has been defined
 		 * }
 		 */
 		Constructor.prototype.define = function( settings ){
@@ -589,8 +589,8 @@
 		Constructor.prototype.singleton = function( settings ){
 			var old = settings.onDefine ? settings.onDefine : function(){};
 			
-			settings.onDefine = function( obj, namespace, name ){
-				namespace[name] =  new obj;
+			settings.onDefine = function( definition, namespace, name ){
+				namespace[name] =  new definition;
 				old( namespace[name], namespace, name );
 			};
 			
@@ -608,6 +608,19 @@
 			// inheret from the parent
 			if ( parent ){
 				this.extend( obj, parent );
+				
+				if ( parent.prototype.__onDefine ){
+					if ( settings.onDefine ){
+						var t = settings.onDefine;
+						
+						settings.onDefine = function( definition, namespace, name ){
+							parent.prototype.__onDefine.call( settings, defintion, namespace, name );
+							t.call( settings, definition, namespace, name );
+						};
+					}else{
+						settings.onDefine = parent.prototype.__onDefine;
+					}
+				}
 			}
 			
 			obj.prototype.__construct = settings.construct 
@@ -624,6 +637,10 @@
 			
 			obj.prototype.__class = ns.join('.');
 			obj.prototype.__name = ns.pop();
+			
+			if ( settings.onDefine ){
+				obj.prototype.__onDefine = settings.onDefine;
+			}
 			
 			// define any aliases
 			if ( settings.aliases ){

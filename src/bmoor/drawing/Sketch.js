@@ -1,51 +1,51 @@
 ;(function( $, global, undefined ){
 
-var lastPosition;
-
 bMoor.constructor.define({
 	name : 'Sketch',
 	namespace : ['bmoor','drawing'],
 	parent : ['bmoor','snap','Node'],
-	require: [ 
+	require: [
 		['bmoor','lib','MouseTracker'],
 		['bmoor','model','Map'],
 		['bmoor','drawing','Context'],
 		['bmoor','drawing','stroke','Brush']
 	],
-	onReady : function(){
-		lastPosition = bmoor.lib.MouseTracker;
+	node : {
+		className : 'drawing-sketch',
+		helpers : {
+			lastPosition : bmoor.lib.MouseTracker
+		},
+		actions : {
+			'mousedown' : function ( event, node, helpers ) {
+				var 
+					lastPosition = helpers.lastPosition,
+					offset = node.$.offset(),
+					stroke = new (bMoor.get( node.data.stroke ))( node.ctx, node.data ),
+					onMove = function( event ){
+						stroke.move( event.pageX - offset.left, event.pageY - offset.top );
+					},
+					onUp = function(){
+						onOut();
+					},
+					onOut = function(){
+						stroke.end( lastPosition.x - offset.left, lastPosition.y - offset.top );
+						
+						$(document.body).unbind( 'mousemove', onMove );
+						$(document.body).unbind( 'mouseup', onUp );
+						$(document.body).unbind( 'mouseout', onOut );
+					};
 				
-		$( document.body ).on('mousedown', '.drawing-sketch', function (event) {
-			var 
-				$this = $(this),
-				offset = $this.offset(),
-				node = $this.data('node'),
-				stroke = new (bMoor.get( node.data.stroke ))( node.ctx, node.data ),
-				onMove = function( event ){
-					stroke.move( event.pageX - offset.left, event.pageY - offset.top );
-				},
-				onUp = function(){
-					onOut();
-				},
-				onOut = function(){
-					stroke.end( lastPosition.x - offset.left, lastPosition.y - offset.top );
-					
-					$(document.body).unbind( 'mousemove', onMove );
-					$(document.body).unbind( 'mouseup', onUp );
-					$(document.body).unbind( 'mouseout', onOut );
-				};
-			
-			stroke.start( lastPosition.x - offset.left, lastPosition.y - offset.top );
-			
-			$(document.body).bind( 'mousemove', onMove );
-			$(document.body).bind( 'mouseup', onUp );
-			$(document.body).bind( 'mouseout', onOut );
-			
-			return false;
-		});
+				stroke.start( lastPosition.x - offset.left, lastPosition.y - offset.top );
+				
+				$(document.body).bind( 'mousemove', onMove );
+				$(document.body).bind( 'mouseup', onUp );
+				$(document.body).bind( 'mouseout', onOut );
+				
+				return false;
+			}
+		}
 	},
 	properties : {
-		baseClass : 'drawing-sketch',
 		_element : function( element ){
 			if ( element.nodeName != 'CANVAS' ){
 				var canvas = document.createElement('canvas');

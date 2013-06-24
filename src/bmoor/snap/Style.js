@@ -4,6 +4,10 @@ bMoor.constructor.define({
 	name : 'Style',
 	namespace : ['bmoor','snap'],
 	parent : ['bmoor','snap','Node'],
+	node : {
+		singleClass : true,
+		className : 'snap-style'
+	},
 	properties: {
 		_setContent : function( content ){
 			if ( this.element.styleSheet ){
@@ -12,8 +16,7 @@ bMoor.constructor.define({
 				this.element.innerHTML = '';
 				this.element.appendChild(document.createTextNode( content ));
 			}
-		},
-		baseClass  : 'snap-style'
+		}
 	}
 });
 

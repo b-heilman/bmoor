@@ -7,14 +7,16 @@ bMoor.constructor.define({
 		classes : [ ['bmoor','model','Map'] ]
 	},
 	parent : ['bmoor','snap','Node'],
-	onReady : function(){
-		$(document.body)
-			.on('mouseenter','.glyphing-glyph', function( event ){
-				$(this).addClass('glyph-active');
-			})
-			.on('mouseleave','.glyphing-glyph', function( event ){
-				$(this).removeClass('glyph-active');
-			});
+	node : {
+		className : 'glyphing-glyph',
+		actions : {
+			'mouseenter' : function( event, node ){
+				node.$.addClass('glyph-active');
+			},
+			'mouseleave' : function( event, node ){
+				node.$.removeClass('glyph-active');
+			}
+		}
 	},
 	statics : {
 		minWidth  : 0,
@@ -149,7 +151,6 @@ bMoor.constructor.define({
 		},
 		// glyph info
 		isGlyph : true,
-		baseClass : 'glyphing-glyph',
 		// TODO : need to fix this
 		getTemplate : function(){
 			if ( this.template ){

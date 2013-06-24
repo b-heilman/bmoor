@@ -4,6 +4,10 @@ bMoor.constructor.define({
 	name : 'Script',
 	namespace : ['bmoor','snap'],
 	parent : ['bmoor','snap','Node'],
+	node : {
+		singleClass : true,
+		className : 'snap-script'
+	},
 	properties: {
 		_setContent : function( content ){
 			var script = document.createElement('script');
@@ -13,8 +17,7 @@ bMoor.constructor.define({
 			this.element.parentNode.removeChild( this.element );
 			
 			this.element = script;
-		},
-		baseClass  : 'snap-script'
+		}
 	}
 });
 

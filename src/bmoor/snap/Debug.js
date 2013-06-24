@@ -4,8 +4,11 @@ bMoor.constructor.define({
 	name : 'Debug',
 	namespace : ['bmoor','snap'],
 	parent : ['bmoor','snap','Node'],
+	node : {
+		singleClass : true,
+		className : 'snap-debug'
+	},
 	properties: {
-		baseClass : 'snap-debug',
 		_element : function( element ){
 			this.__Node._element.call( this, element );
 			
