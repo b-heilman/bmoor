@@ -1,0 +1,50 @@
+<style>
+.main {
+	border: 1px solid black;
+	position: relative;
+}
+
+.content {
+	background-color: #ccc;
+}
+
+.input-wrapper {
+	display: block;
+}
+
+.input-wrapper .label-content,
+.input-wrapper input {
+	display: inline-block;
+}
+
+.input-wrapper.side-by-side {
+	display: inline-block;
+	width: 50%;
+}
+
+.centered {
+	width: 75%;
+	margin: 0px auto;
+	text-align: center;
+}
+</style>
+<h1>Form 1</h1>
+<div class='main'>
+	<form>
+		<label class='input-wrapper'>
+			<span class='label-content'>Label #1</span><input type='text'/>
+		</label>
+		<label  class='input-wrapper side-by-side'>
+			<span class='label-content'>Label #2</span><input type='text'/>
+		</label><!--
+		--><label  class='input-wrapper side-by-side'>
+			<span class='label-content'>Label #3</span><input type='text'/>
+		</label>
+		<label  class='input-wrapper centered'>
+			<span class='label-content'>Label #4</span><input type='text'/>
+		</label>
+		<span class='input-wrapper'>
+			<label for='click'>Label #5</label><input id='click' type='text' />
+		</span>
+	</form>
+</div>

@@ -1,0 +1,30 @@
+<style>
+.derp {
+	text-decoration : underline;
+}
+</style>
+<script>
+var templateList = [
+	{ pos : 'one', echo : 'hello', derp : 'uh', show : 2 },
+	{ pos : 'two', echo : 'world', derp : 'ok', show : 0 },
+	{ pos : 'three', echo : 'foo', derp : 'bar', show : 1 }
+];
+
+setTimeout( function(){
+
+
+	var target = document.getElementById('target');
+	
+	for( var i = 0, c = templateList.length; i < c; i++ ){
+		var t = templateList[i];
+		
+		target.innerHTML += '<li><span>'
+			+t.pos+' : '+t.echo+' ... '
+			+( t.show ? '<span class="derp">'+t.derp+'</span>' : '' );
+	}
+
+	
+}, 200 );
+</script>
+<h1>Templating - how it is now</h1>
+<ol id='target'></ol>

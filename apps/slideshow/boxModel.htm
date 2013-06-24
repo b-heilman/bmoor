@@ -1,0 +1,69 @@
+<style>
+.main {
+	border: 1px solid black;
+	position: relative;
+}
+
+.content {
+	background-color: #ccc;
+	width: 400px;
+	margin: 0px auto;
+}
+
+.filler {
+	display: block;
+	height: 100%;
+	width: 100%;
+	border: 1px solid black;
+}
+
+.box1 {
+	display: block;
+	margin: 10px;
+	padding: 10px;
+	border: 10px solid black;
+	height: 50px;
+	background-color: #fcc;
+}
+
+.box2 {
+	display: block;
+	margin: 10px;
+	padding: 10px;
+	border: 10px solid black;
+	height: 50px;
+	background-color: #fcc;
+	width: 100%;
+}
+
+.box3 {
+	-moz-box-sizing: border-box;
+	display: block;
+	margin: 10px;
+	padding: 10px;
+	border: 10px solid black;
+	height: 50px;
+	background-color: #fcc;
+	width: 100%;
+}
+
+.box4 {
+	-moz-box-sizing: border-box;
+	display: block;
+	margin: 10px 0px;
+	padding: 10px;
+	border: 10px solid black;
+	height: 50px;
+	background-color: #fcc;
+	width: 100%;
+}
+</style>
+<h1>Box Model</h1>
+<div class='main'>
+	<div class='content'>
+		<span class='box1'><span class='filler'></span></span>
+		<span class='box2'><span class='filler'></span></span>
+		<span class='box3'><span class='filler'></span></span>
+		<span class='box4'><span class='filler'></span></span>
+	</div>
+</div>

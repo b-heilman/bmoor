@@ -1,0 +1,48 @@
+<style>
+.main {
+	border: 1px solid black;
+	position: relative;
+}
+
+.content {
+	background-color: #ccc;
+	margin: 5px 0px;
+}
+
+ul.first {
+	border-color: red;
+	margin: 10px;
+	padding: 5px;
+}
+
+.first {
+	display: block;
+	border-color: green;
+}
+
+[derp] + * {
+	background-color: #cfc;
+}
+
+.second > *:first-child ~ * {
+	background-color: #ffc;
+}
+
+</style>
+<h1>Selectors</h1>
+<div class="main">
+	<div class="content">
+		<ul class='first'>
+			<li>1</li>
+			<li derp>2</li>
+			<li>3</li>
+		<ul>
+	</div>
+	<div class="content">
+		<ul class='second'>
+			<li>1</li>
+			<li>2</li>
+			<li>3</li>
+		<ul>
+	</div>
+</div>

@@ -1,0 +1,36 @@
+<style>
+.main {
+	border: 1px solid black;
+	position: relative;
+}
+
+.content {
+	background-color: #ccc;
+	position: relative;
+	margin-top: 20px;
+}
+
+.clicker {
+	position: absolute;
+	bottom: 100%;
+}
+
+li {
+	background-color: #fcc;
+}
+
+.clicker:hover + ul li:first-child {
+	background-color: #cfc;
+}
+
+</style>
+<h1>Position Around 5 - Outside the lines</h1>
+<div class='main'>
+	<div class="content">
+		<span class='clicker'>Click</span>
+		<ul>
+			<li>This is inside the element</li>
+			<li>As is this</li>
+		</ul>
+	</div>
+</div>

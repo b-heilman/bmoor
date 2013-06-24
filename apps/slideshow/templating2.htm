@@ -1,0 +1,27 @@
+<style>
+.derp {
+	text-decoration : underline;
+}
+</style>
+
+<script>
+var templateList = [
+	{ pos : 'one', echo : 'hello', derp : 'uh', show : 2 },
+	{ pos : 'two', echo : 'world', derp : 'ok', show : 0 },
+	{ pos : 'three', echo : 'foo', derp : 'bar', show : 1 }
+];
+
+bMoor.resource.setTemplate('listTemplate',function(){/*
+	<span><#= this.pos #> : <#= this.echo #> ... 
+	<# if ( this.show ){
+		#><span class='derp'><#= this.derp #></span><#
+	} #>
+	</span>
+*/});
+</script>
+
+<h1>Templating - how to</h1>
+
+<ol snap-class="bmoor.snap.List" 
+	snap-data="templateList" 
+	snap-template="listTemplate"></ol>

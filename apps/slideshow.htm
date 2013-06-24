@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../src/jquery.min.js"></script>
+<script src="../src/bMoor.js"></script>
+<script src='../src/jquery/jquery.jqote2.js'></script>
+<script>
+	bMoor.autoload.setRoot('../src');
+	bMoor.autoload.setLibrary( ['jquery'], '../src/jquery', {fullName : true} );
+</script>
+<script src="../src/bmoor/templating/JQote.js"></script>
+<script src="../src/bmoor/lib/WaitFor.js"></script>
+<script src="../src/bmoor/lib/Bootstrap.js"></script>
+<script src="../src/bmoor/model/Map.js"></script>
+<script src="../src/bmoor/snap/Node.js"></script>
+<script src="../src/bmoor/snap/List.js"></script>
+<script src="../src/bmoor/snap/Text.js"></script>
+<script src="../src/bmoor/snap/Script.js"></script>
+<script src="../src/bmoor/snap/Style.js"></script>
+<script src="../src/bmoor/snap/form/Text.js"></script>
+
+<link rel="stylesheet" type="text/css" href="slideshow/reset.css">
+
+</head>
+<body>
+<script>
+	var daMap = new bmoor.model.Map({
+		script : '',
+		style  : '',
+		html   : ''
+	});
+</script>
+<script snap-class="bmoor.snap.Script" snap-data="daMap" snap-variable="script"></script>
+<style snap-class="bmoor.snap.Style" snap-data="daMap" snap-variable="style"></style>
+
+<script>
+
+bMoor.constructor.define({
+	name : 'Navigation',
+	namespace : ['editor'],
+	parent : ['bmoor','snap','Node'],
+	properties : {
+		baseClass : 'nav',
+		_element : function( element ){
+			this.__Node._element.call( this, element );
+			
+			this.nav = this._getVariable( element.getAttribute('snap-nav') );
+		},
+		_finalize : function(){
+			var 
+				dis = this,
+				nav = this.nav,
+				links = this.$.find('a'),
+				content = this.$.find('.nav-content'),
+				$prev = $( links[0] ),
+				$next = $( links[1] );
+			
+			$next.on('click', function(){
+				dis.focus( dis.pos + 1 );
+			});
+			
+			$prev.on('click', function(){
+				dis.focus( dis.pos - 1 );
+			});
+			
+			this.$content = content;
+			this.$next = $next;
+			this.$prev = $prev;
+			
+			this.focus( this.pos );
+		},
+		pos : 0,
+		focus : function( pos ){
+			var dis = this;
+			
+			if ( this.nav[pos] ){
+				this.pos = pos;
+				
+				if ( pos == 0 ){
+					this.$prev.addClass( 'inactive' );
+				}else{
+					this.$prev.removeClass('inactive');
+				}
+				
+				if ( pos + 1 >= this.nav.length ){
+					this.$next.addClass( 'inactive' );
+				}else{
+					this.$next.removeClass('inactive');
+				}
+				
+				this.$content.html('Loading...');
+				
+				$.ajax( this.nav[pos].src, {dataType: 'html'} )
+					.done(function( content ){
+						var 
+							el = document.createElement('div'),
+							h1,
+							script,
+							style;
+						
+						el.innerHTML = content;
+						
+						h1 = el.getElementsByTagName('h1')[0];
+						if ( h1 ){
+							h1.parentNode.removeChild( h1 );
+							dis.$content.html( h1.innerHTML );
+						}else{
+							dis.$content.html( '' );
+						}
+						
+						script = el.getElementsByTagName('script')[0];
+						if ( script ){
+							script.parentNode.removeChild( script );
+							dis.data.script = script.innerHTML;
+						}else{
+							dis.data.script = '';
+						}
+						
+						style = el.getElementsByTagName('style')[0];
+						if ( style ){
+							style.parentNode.removeChild( style );
+							dis.data.style = style.innerHTML;
+						}else{
+							dis.data.style = '';
+						}
+						
+						dis.data.html = el.innerHTML;
+					})
+					.fail(function(){ console.log(arguments); })
+					.always(function(){  });
+			}
+		}
+	}
+});
+
+bMoor.constructor.define({
+	name : 'Text',
+	namespace : ['editor'],
+	parent : ['bmoor','snap','form','Text'],
+	properties : {
+		baseClass : 'text-input',
+		_setContent : function( content ){
+			if ( content ){
+				this.element.value = content;
+				this.element.style.display = 'block';
+			}else{
+				this.element.value = '';
+				this.element.style.display = 'none';
+			}
+		},
+		alter : function( cb ){
+			var 
+				dis = this,
+				el = this.element;
+			
+			el.onchange = function(){
+				cb( dis.val() );
+			};
+		}
+	}
+})
+</script>
+<style>
+.page-content {
+	width: 600px;
+	margin: 0px auto;
+}
+
+.nav {
+	text-align: center;
+}
+
+.nav .nav-content {
+	font-weight: bold;
+}
+
+.nav .next, 
+.nav .prev {
+	cursor: pointer;
+}
+
+.nav .prev {
+	float: left;
+}
+
+.nav .next {
+	float: right;
+}
+
+.nav .next.inactive, 
+.nav .prev.inactive {
+	display: none;
+}
+
+.snap-text,
+textarea {
+	display: block;
+	padding: 5px;
+	margin: 5px auto;
+	border: 1px solid black;
+	height: 10em;
+	width: 580px;
+	background-color: #999;
+}
+
+.snap-text {
+	overflow: scroll;
+}
+</style>
+<div class='page-content'>
+	<div snap-class="editor.Navigation" snap-data="daMap" snap-nav="navSet">
+		<a class='prev'>Prev</a>
+		<span class='nav-content'></span>
+		<a class='next'>Next</a>
+	</div>
+	<textarea snap-class="editor.Text" snap-data="daMap" snap-variable="html"/></textarea>
+	<textarea snap-class="editor.Text" snap-data="daMap" snap-variable="script"/></textarea>
+	<textarea snap-class="editor.Text" snap-data="daMap" snap-variable="style"/></textarea>
+
+	<div snap-class="bmoor.snap.Node" snap-data="daMap" snap-variable="html"></div>
+</div>
+
+<script>
+var navSet = [
+	{ src : 'slideshow/boxModel.htm' },
+	{ src : 'slideshow/display1.htm' },
+	{ src : 'slideshow/selectors.htm' },
+	{ src : 'slideshow/floating1.htm' },
+	{ src : 'slideshow/position1.htm' },
+	{ src : 'slideshow/position2.htm' },
+	{ src : 'slideshow/position3.htm' },
+	{ src : 'slideshow/position4.htm' },
+	{ src : 'slideshow/floating2.htm' },
+	{ src : 'slideshow/floating3.htm' },
+	{ src : 'slideshow/form1.htm' },
+	{ src : 'slideshow/form2.htm' },
+	{ src : 'slideshow/position5.htm' },
+	{ src : 'slideshow/templating1.htm' },
+	{ src : 'slideshow/templating2.htm' }
+];
+/*
+setTimeout( function(){
+	daMap.script = "alert(t); alert(2);";
+	daMap.style = "body{ background-color:blue; }";
+}, 2000 );
+*/
+</script>
+</body>
+</html>
