@@ -476,7 +476,7 @@
 			onLoaded = [],
 			initializing = false,
 			loading = 0;
-			
+		
 		/**
 		 * 
 		 * @param settings 
@@ -577,15 +577,7 @@
 			
 			ClassLoader.require( requests, def, [], this);
 		};
-		
-		Constructor.prototype.loaded = function( cb ){
-			if ( loading ){
-				onLoaded.push( cb );
-			}else{
-				cb( $, global );
-			}
-		};
-		
+
 		Constructor.prototype.singleton = function( settings ){
 			var old = settings.onDefine ? settings.onDefine : function(){};
 			
@@ -593,6 +585,77 @@
 				namespace[name] =  new definition;
 				old( namespace[name], namespace, name );
 			};
+			
+			this.define( settings );
+		};
+		
+		function decoratorOverride( key, el, override ){
+			var 
+				type = typeof(override),
+				old = el[key];
+			
+			if (  type == 'function' ){
+				el[key] = function(){
+					old.apply( this, arguments );
+					override( this, arguments );
+				};
+			}else if ( type == 'string' ){
+				// for now, I am just going to append the strings with a white space between...
+				el[key] += ' ' + override;
+			}
+		};
+		
+		// the constructor will not be copied over
+		Constructor.prototype.decorator = function( settings ){
+			if ( !settings.properties ){
+				settings.properties = {};
+			}
+			
+			settings.properties._decorate = function( el ){
+				var key;
+				
+				for( key in this ){
+					if ( key === '__construct' || key === '_decorator'){
+						// TODO : if it is already created, it should be run against it...  how to tell?
+						continue;
+					}else if ( el[key] ){
+						decoratorOverride( key, el, this[key] );
+					}else{
+						el[key] = this[key];
+					}
+				}
+				
+				return el;
+			};
+			
+			this.singleton( settings );
+		};
+		
+		Constructor.prototype.mutate = function( settings ){
+			var 
+				i,
+				decorators,
+				old = settings.onDefine ? settings.onDefine : function(){};
+			
+			if ( settings.decorators ){
+				decorators = typeof(settings.decorators) == 'string' ? decorators.split(',') : settings.decorators;
+				
+				if ( !settings.require ){
+					settings.require = { classes : [] };
+				}
+				
+				for( i = 0; i < decorators.length; i++ ){
+					settings.require.classes.push( decorators[i] );
+				}
+					
+				settings.onDefine = function( definition, namespace, name ){
+					old( definition, namespace, name );
+					
+					for( i = 0; i < decorators.length; i++ ){
+						Namespace.get( decorators[i] )._decorate( definition.prototype );
+					}
+				};
+			}
 			
 			this.define( settings );
 		};
@@ -690,6 +753,14 @@
 			// right now, I think this will suffice
 			child.prototype['__'+parent.prototype.__name] = parent.prototype;
 			initializing = false;
+		};
+		
+		Constructor.prototype.loaded = function( cb ){
+			if ( loading ){
+				onLoaded.push( cb );
+			}else{
+				cb( $, global );
+			}
 		};
 	}());
 	

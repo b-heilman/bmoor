@@ -215,21 +215,23 @@ bMoor.constructor.define({
 			this.settings.glyphSettings = settings;
 		},
 		setActive : function( glyph ){
-			// TODO : check to see if the glyph is in the container... ideally
-			
-			if ( this.activeGlyph ){	
-				var	t = this.activeGlyph.getModel();
-				t.active = false;
-				t._stop();
-				t._flush();
-			}
-			
-			if ( glyph ){
-				this.activeGlyph = glyph;
-				this.activeGlyph.getModel()._start().active = true;
-			}else{
-				this.activeGlyph = null;
-			}
+			if ( this.activeGlyph != glyph ){
+				if ( this.activeGlyph ){	
+					var	t = this.activeGlyph.getModel();
+					t.active = false;
+					t._stop();
+					t._flush();
+				}
+				
+				if ( glyph ){
+					this.activeGlyph = glyph;
+					this.activeGlyph.getModel()._start().active = true;
+				}else{
+					this.activeGlyph = null;
+				}
+				
+				return true;
+			}else return false;
 		},
 		addGlyph : function( info ){
 			var el;
