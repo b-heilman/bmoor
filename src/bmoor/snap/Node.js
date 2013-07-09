@@ -3,7 +3,10 @@
 bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
-	require : [ ['bmoor','lib','Bootstrap'] ],
+	require : {
+		classes : [ ['bmoor','lib','Bootstrap'] ],
+		references : { 'bMoor.module.Template' : ['bmoor','templating','JQote'] }
+	},
 	onDefine : function( definition ){
 		var node;
 		// define object is the context
@@ -119,7 +122,7 @@ bMoor.constructor.define({
 		},
 		_template : function( template ){
 			this.prepared = template 
-				? bMoor.template.getDefaultTemplator().prepare( bMoor.resource.loadTemplate(template,null) )
+				? bMoor.module.Templator.prepare( template )
 				: null;
 		},
 		_binding : function(){
@@ -132,7 +135,7 @@ bMoor.constructor.define({
 			}
 		},
 		_makeContent : function(){
-			this._setContent( bMoor.template.getDefaultTemplator().run(this.prepared,this.data) );
+			this._setContent( bMoor.module.Templator.run(this.prepared,this.data) );
 			bmoor.lib.Bootstrap.setContext( this.element, this.data );
 			this._finalize();
 			

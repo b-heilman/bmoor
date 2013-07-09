@@ -1,11 +1,16 @@
 ;(function( $, global, undefined ){
 	"use strict";
-	
+
 	var
+		scripts = document.getElementsByTagName( 'script' ),
+		scriptTag = scripts[ scripts.length - 1 ],
+		modules = {},
 		environmentSettings = {
 			templator : ['bmoor','templating','JQote'],
 			templatorTag : '#',
-			jsRoot    : ''
+			jsRoot : scriptTag.hasAttribute('root')
+				? scriptTag.getAttribute('root')
+				: scriptTag.getAttribute('src').match(/^(.*)\/bMoor.js/)[1]
 		};
 	
 	function error( str ){
@@ -22,7 +27,6 @@
 			}else if ( space ){
 				return space.slice(0);
 			}else{
-				console.trace();
 				return [];
 			}
 		},
@@ -78,7 +82,13 @@
 				'.' : { 
 					fullName : false 
 				},
-				'/' : environmentSettings.jsRoot
+				'/' : environmentSettings.jsRoot,
+				'jquery' : {
+					'/' : environmentSettings.jsRoot + '/jquery',
+					'.' : {
+						fullName : true
+					}
+				}
 			};
 		};
 		
@@ -229,9 +239,9 @@
 					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' ) 
 						+ '/' + ( info.settings.fullName ? reference.join('.') : info.name ),
 					success = function( script, textStatus ){
-						if ( Namespace.exists(namespace) ){
-							waitForIt();
-						}else{
+						waitForIt();
+
+						if ( !Namespace.exists(namespace) ){
 							error( 'loaded file : '+script+"\n but no class : "+namespace.join('.') );
 						}
 					};
@@ -367,7 +377,6 @@
 				
 				interval = setInterval( function(){
 					try{
-					//	console.log( style[sheet] );
 						if ( style[sheet] && style[sheet][css] && style[sheet][css].length ){
 							clearInterval( interval );
 							cb();
@@ -582,22 +591,42 @@
 			var old = settings.onDefine ? settings.onDefine : function(){};
 			
 			settings.onDefine = function( definition, namespace, name ){
-				namespace[name] =  new definition;
-				old( namespace[name], namespace, name );
+				var 
+					def = new definition,
+					module;
+
+				namespace[ name ] = def;
+				old( def, namespace, name );
+
+				if ( settings.module ){
+					module = settings.module;
+					module = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
+					modules[ module ] = def;
+				}
 			};
 			
 			this.define( settings );
 		};
 		
-		function decoratorOverride( key, el, override ){
+		// decorators will reserve _wrapped
+		function override( key, el, override ){
 			var 
 				type = typeof(override),
 				old = el[key];
 			
 			if (  type == 'function' ){
 				el[key] = function(){
-					old.apply( this, arguments );
-					override( this, arguments );
+					var 
+						backup = this._wrapped,
+						rtn;
+
+					this._wrapped = old;
+
+					rtn = override.apply( this, arguments );
+
+					this._wrapped = backup;
+
+					return rtn;
 				};
 			}else if ( type == 'string' ){
 				// for now, I am just going to append the strings with a white space between...
@@ -605,33 +634,55 @@
 			}
 		};
 		
-		// the constructor will not be copied over
 		Constructor.prototype.decorator = function( settings ){
+			var 
+				old,
+				construct;
+
 			if ( !settings.properties ){
 				settings.properties = {};
 			}
 			
+			old = settings.properties._decorate;
+			construct = settings.properties.__construct;
+
+			delete settings.properties._decorate;
+			delete settings.properties.__construct;
+
 			settings.properties._decorate = function( el ){
 				var key;
 				
+				if ( construct ){
+					// TODO : if it is already created, it should be run against it...  how to tell?
+					override( '__construct', el, construct );
+				}
+
 				for( key in this ){
-					if ( key === '__construct' || key === '_decorator'){
-						// TODO : if it is already created, it should be run against it...  how to tell?
+					if ( key === '__construct' ){
+						// __construct will get nuked during the define process, so cache it here in case of override
+						continue;
+					}else if ( key === '_decorator' ){
+						// throw this out, we are automatically defining it and always called later if defined in settings
 						continue;
 					}else if ( el[key] ){
-						decoratorOverride( key, el, this[key] );
+						// the default override is post
+						override( key, el, this[key] );
 					}else{
 						el[key] = this[key];
 					}
 				}
-				
+
+				if ( old ){
+					old.call( el );
+				} 
+
 				return el;
 			};
 			
 			this.singleton( settings );
 		};
 		
-		Constructor.prototype.mutate = function( settings ){
+		Constructor.prototype.mutate = function( settings, singleton ){
 			var 
 				i,
 				decorators,
@@ -641,23 +692,34 @@
 				decorators = typeof(settings.decorators) == 'string' ? decorators.split(',') : settings.decorators;
 				
 				if ( !settings.require ){
-					settings.require = { classes : [] };
+					settings.require = {};
 				}
-				
+			
+				if ( !settings.require.classes ){
+					settings.require.classes = [];
+				}	
+
 				for( i = 0; i < decorators.length; i++ ){
 					settings.require.classes.push( decorators[i] );
 				}
 					
 				settings.onDefine = function( definition, namespace, name ){
+					// it can either be a class (define) or an instance (singleton)
+					var obj = definition.prototype ? definition.prototype : definition;
+
 					old( definition, namespace, name );
 					
 					for( i = 0; i < decorators.length; i++ ){
-						Namespace.get( decorators[i] )._decorate( definition.prototype );
+						Namespace.get( decorators[i] )._decorate( obj );
 					}
 				};
 			}
 			
-			this.define( settings );
+			if ( singleton ){
+				this.singleton( settings );
+			}else{
+				this.define( settings );
+			}
 		};
 		
 		// passing in obj as later I might configure it to allow you to run this against an already defined class
@@ -677,7 +739,7 @@
 						var t = settings.onDefine;
 						
 						settings.onDefine = function( definition, namespace, name ){
-							parent.prototype.__onDefine.call( settings, defintion, namespace, name );
+							parent.prototype.__onDefine.call( settings, definition, namespace, name );
 							t.call( settings, definition, namespace, name );
 						};
 					}else{
@@ -764,85 +826,11 @@
 		};
 	}());
 	
-	var Templating = {};
-	(function(){
-		// To make life easier, I presume loadTemplate doesn't need the call back
-		Templating.getDefaultTemplator = function(){
-			if ( environmentSettings.templator.length ){
-				environmentSettings.templator = Namespace.get( environmentSettings.templator );
-			}
-			
-			return environmentSettings.templator;
-		};
-		
-		Templating.get = function( id, src, data, templator, cb ){
-			if ( cb == undefined && src !== null && typeof(src) != 'string' ){
-				cb = templator;
-				templator = data;
-				data = src;
-				src = null;
-			}
-			
-			if ( !templator || !templator.prepare ){
-				cb = templator;
-				templator = this.getDefaultTemplator();
-			}
-			
-			if ( cb ){
-				this.prepare( id, src, templator, function( prepared ){
-					cb( templator.run(prepared,data) );
-				});
-				
-				return null;
-			}else{
-				return templator.run( this.prepare(id,src,templator),data );
-			}
-		};
-		
-		Templating.prepare = function( id, src, templator, cb ){
-			if ( cb == undefined && src !== null && typeof(src) != 'string' ){
-				cb = templator;
-				templator = src;
-				src = null;
-			}
-			
-			if ( !templator || !templator.prepare ){
-				templator = this.getDefaultTemplator();
-			}
-			
-			if ( !templator._prepared ){
-				templator._prepared = {};
-			}
-			
-			if ( cb ){
-				ResourceLoader.loadTemplate( id, src, function( content ){
-					if ( !templator._prepared[id] ){
-						templator._prepared[id] = templator.prepare( content );
-					}
-					
-					cb( templator._prepared[id] );
-				});
-				
-				return null;
-			}else{
-				if ( !templator._prepared[id] ){
-					templator._prepared[id] = templator.prepare( ResourceLoader.loadTemplate(id,src) );
-				}
-				
-				return templator._prepared[id];
-			}
-		};
-	}());
-	
 	global.bMoor = {
-		require     : function(){
-			ClassLoader.require.apply( ClassLoader, arguments );
-		},
-		get         : function( space ){
-			return Namespace.exists( space );
-		},
+		module      : modules,
+		require     : function(){ ClassLoader.require.apply( ClassLoader, arguments ); },
+		get         : function( space ){ return Namespace.exists( space ); },
 		settings    : environmentSettings,
-		template    : Templating,
 		autoload    : ClassLoader,
 		resource    : ResourceLoader,
 		constructor : new Constructor()

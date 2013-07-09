@@ -30,13 +30,13 @@ bMoor.constructor.define({
 					
 				if ( this.prepared ){
 					return '<'+tag+' class="'+this.childClass+'" '+attrs+'>'
-						+ bMoor.template.getDefaultTemplator().run( this.prepared, data )
+						+ bMoor.module.Templator.run( this.prepared, data )
 						+ '</'+tag+'>';
 				}else return '<'+tag+' class="'+this.childClass+'" '+attrs+'>'+ '</'+tag+'>';
 			}else{
 				if ( this.prepared ){
 					var 
-						template = bMoor.template.getDefaultTemplator().run( this.prepared, data ),
+						template = bMoor.module.Templator.run( this.prepared, data ),
 						element = document.createElement( tag );
 						
 					element.innerHTML = template;

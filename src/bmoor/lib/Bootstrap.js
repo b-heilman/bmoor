@@ -51,7 +51,9 @@ bMoor.constructor.singleton({
 				create = node.getAttribute('snap-class'),
 				data = node.hasAttribute('snap-data') 
 					? eval( node.getAttribute('snap-data').replace('this','context') ) 
-					: null;
+					: null,
+				requirements = [],
+				decorators = [];
 			
 			// up here, so the require loop doesn't become infinite
 			node.removeAttribute('snap-class');
@@ -62,8 +64,16 @@ bMoor.constructor.singleton({
 			
 			this.setContext( node, data );
 			
-			waiting.require( create, function(){
+			if ( node.hasAttribute('snap-decorator') ){
+				decorators = node.getAttribute('snap-decorator').split(',');
+				requirements = decorators.slice(0);
+			}
+
+			requirements.push( create );
+			
+			waiting.require( requirements, function(){
 				var 
+					i,
 					creator = bMoor.get( create ),
 					el = new creator(
 						node,
@@ -71,6 +81,10 @@ bMoor.constructor.singleton({
 						data
 					);
 				
+				for( i = 0; i < decorators.length; i++ ){
+					bMoor.get( decorators[i] )._decorate( el );
+				}
+
 				if ( node.hasAttribute('snap-publish') ){
 					eval( node.getAttribute('snap-publish').replace('this','context') + ' = el;' )
 				}

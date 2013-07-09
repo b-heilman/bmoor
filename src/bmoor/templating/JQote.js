@@ -1,15 +1,19 @@
 ;(function( $, global, undefined ){
 
-bMoor.constructor.singleton({
+bMoor.constructor.mutate({
 	name : 'JQote',
 	namespace : ['bmoor','templating'],
-	require: {
+	require : {
 		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] }
 	},
-	construct: function(){
+	module : 'Templator',
+	decorators : [
+		[ 'bmoor','templating','Decorator' ]
+	],
+	construct : function(){
 		$.jqotetag( bMoor.settings.templatorTag );
 	},
-	properties: {
+	properties : {
 		get : function( template, data, node ){
 			return this.run( this.prepare(template), data, node );
 		},
@@ -20,6 +24,6 @@ bMoor.constructor.singleton({
 			return $.jqote( prepared, data );
 		}
 	}
-});
+}, true);
 
 }( jQuery, this ));

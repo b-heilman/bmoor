@@ -1,0 +1,24 @@
+<html>
+<head>
+
+<script src="../../src/jquery.min.js"></script>
+<script src="../../src/bMoor.js"></script>
+
+</head>
+<body>
+<script>
+bMoor.constructor.singleton({
+	name : 'HelloWorld',
+	module : 'hello',
+	properties : {
+		message : '-- Hello World --',
+		world : function(){
+			console.log( this.message );
+		}
+	}
+});
+
+bMoor.module.Hello.world();
+</script>
+</body>
+</html>
