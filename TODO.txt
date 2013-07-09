@@ -1,17 +1,3 @@
-Form Validator
-	- form node should become a decorator
-	- form validation should also be a decorator
-
-* Decorators
-*	- create in bMoor
-*	- allow classes from mutation of decorators
-*	- lib.Bootstrap needs to automatically add decorators
-
-Remotely binded models
-	- create a resource hash
-	- function for defining resources and assigning variables
-	- allow attributes to map to url variables
-
 Modules
 *	- Singletons can define what bMoor.module they publish to
 *	- Idea is that all modules have same interface
@@ -19,11 +5,20 @@ Modules
 	- modules
 *		- template : existing JQote would go here, and default templator would be this
 		- resource : Allows for pulling down scripts, styles, POST, GET, etc...  Move code out of bMoor core...
-
+		
 Templates
 	- for an element that doesn't have a template, its content becomes the template content
-
-* Bootup script for bMoor
-*	- preload particular modules : references : { '.. module .. ' : '.. class ..' }
-*	- default locations for code based on bMoor location
+	- allow for prepoped content and dynamic content inserted in between in lists
+	
+Remotely binded models
+	- use a controller pattern that binds to the models to push updates
+	- rejecting the idea of allowing a model to push itself
+	- have nodes subscribe to controller, and the .data attribute gets binded to
+	- create a resource hash
+	- function for defining resources and assigning variables
+	- allow attributes to map to url variables : should be function of the controller
+	
+Form Validator
+	- form node should become a decorator
+	- form validation should also be a decorator
 	
