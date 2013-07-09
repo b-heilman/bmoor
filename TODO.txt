@@ -1,14 +1,3 @@
-Modules
-*	- Singletons can define what bMoor.module they publish to
-*	- Idea is that all modules have same interface
-*	- can be used globally then, for instance 'bMoor.module.Resource', 'bMoor.module.Template', etc
-*	- modules
-*		- template : existing JQote would go here, and default templator would be this
-*		- resource : Allows for pulling down scripts, styles, POST, GET, etc...  Move code out of bMoor core...
-		
-Templates
-	- for an element that doesn't have a template, its content becomes the template content
-	- allow for prepoped content and dynamic content inserted in between in lists
 	
 Remotely binded models
 	- use a controller pattern that binds to the models to push updates
@@ -21,4 +10,8 @@ Remotely binded models
 Form Validator
 	- form node should become a decorator
 	- form validation should also be a decorator
+
+List dynamics improved
+	- lists aren't really very dynamic
+	- they need to key rows, so a key attribute needs to be passed in
 	

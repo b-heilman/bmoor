@@ -14,13 +14,13 @@ bMoor.constructor.mutate({
 		$.jqotetag( bMoor.settings.templatorTag );
 	},
 	properties : {
-		get : function( template, data, node ){
-			return this.run( this.prepare(template), data, node );
+		get : function( content, data ){
+			return this.run( this.prepare(content), data );
 		},
 		prepare : function( content ){
 			return $.jqotec( content );
 		},
-		run : function( prepared, data, node ){
+		run : function( prepared, data ){
 			return $.jqote( prepared, data );
 		}
 	}

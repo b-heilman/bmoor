@@ -1,7 +1,7 @@
 ;(function( $, global, undefined ){
 
 //TODO : move where this is used over to bMoor.module.Wait
-bMoor.constructor.define({
+bMoor.constructor.singleton({
 	name : 'WaitFor',
 	namespace : ['bmoor','lib'],
 	construct: function(){},

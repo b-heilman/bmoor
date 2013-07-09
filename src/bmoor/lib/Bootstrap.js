@@ -4,7 +4,10 @@ var installed = false;
 bMoor.constructor.singleton({
 	name : 'Bootstrap',
 	namespace : ['bmoor','lib'],
-	require : [ ['bmoor','lib','WaitFor'] ],
+	require : {
+		references : { 'bMoor.module.Wait' : ['bmoor','lib','WaitFor'] }
+	},
+	module : 'Bootstrap',
 	onReady : function( self ){
 		if ( !installed ){
 			var builder = self;
@@ -58,10 +61,6 @@ bMoor.constructor.singleton({
 			// up here, so the require loop doesn't become infinite
 			node.removeAttribute('snap-class');
 			
-			if ( !waiting ){
-				waiting = new bmoor.lib.WaitFor();
-			}
-			
 			this.setContext( node, data );
 			
 			if ( node.hasAttribute('snap-decorator') ){
@@ -75,11 +74,7 @@ bMoor.constructor.singleton({
 				var 
 					i,
 					creator = bMoor.get( create ),
-					el = new creator(
-						node,
-						node.hasAttribute('snap-template') ? node.getAttribute('snap-template') : null, 
-						data
-					);
+					el = new creator( node, data );
 				
 				for( i = 0; i < decorators.length; i++ ){
 					bMoor.get( decorators[i] )._decorate( el );
@@ -97,7 +92,7 @@ bMoor.constructor.singleton({
 		build : function( element ){
 			var 
 				dis = this,
-				waiting = new bmoor.lib.WaitFor(),
+				waiting = bMoor.module.Wait,
 				others = [];
 			
 			for( var nodes = this.select(element,'[snap-class]'), i = 0, c = nodes.length; i < c; i++){

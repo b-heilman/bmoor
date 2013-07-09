@@ -21,9 +21,17 @@
 <script src="../../src/bmoor/snap/List.js"></script>
 </head>
 <body>
+	
 <ul snap-class="bmoor.snap.List" snap-template="list1" snap-data="dataSet.list"></ul>
-<div snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"></div>
+<ul snap-class="bmoor.snap.List" snap-template="list1" snap-data="dataSet.list" snap-mount='this'>
+	<li>This is a pre existing thing</li>
+	<mount></mount>
+	<li>This should be the footer</li>
+</ul>
+<div snap-class="bmoor.snap.Node" snap-template="template1" snap-data="dataSet"> Loading... </div>
+
 <script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
+
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>

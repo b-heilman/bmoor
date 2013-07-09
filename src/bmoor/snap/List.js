@@ -12,6 +12,22 @@ bMoor.constructor.define({
 			this.__Node._element.call( this, element );
 			this.childTag = this._getAttribute( 'child', this.childTag );
 			this.childClass = this._getAttribute( 'childClass', this.childClass );
+			this.mountPoint = null;
+		},
+		_template : function(){
+			var 
+				mount = this._getAttribute('mount'),
+				mountPoint;
+
+			if ( mount == 'this' ){
+				mountPoint = this.element.getElementsByTagName('mount')[0];
+				if ( mountPoint ){
+					this.mountPoint = mountPoint.previousSibling;
+				}
+				mountPoint.parentNode.removeChild( mountPoint );
+			}
+
+			this.__Node._template.call( this );
 		},
 		_makeContent : function(){
 			if ( this.data ){
@@ -56,13 +72,32 @@ bMoor.constructor.define({
 		},
 		append : function( data ){
 			var el = this._makeChild(data,this.childTag);
-			this.$.append( el );
+
+			if ( this.mountPoint ){
+				if ( this.mountPoint.nextSibling ){
+					this.mountPoint.parentNode.insertBefore( el, this.mountPoint.nextSibling );
+				}else{
+					this.mountPoint.parentNode.appendChild( el );
+				}
+
+				this.mountPoint = el;
+			}else{
+				this.$.append( el );
+				this.mountPoint = el;
+			}
 			
 			return el;
 		},
 		prepend : function( data ){
 			var el = this._makeChild(data,this.childTag);
-			this.$.prepend( el );
+
+			if ( this.mountPoint ){
+				this.mountPoint.parentNode.insertBefore( el, this.mountPoint );
+				this.mountPoint = el;
+			}else{
+				this.$.prepend( el );
+				this.mountPoint = el;
+			}
 			
 			return el;
 		},

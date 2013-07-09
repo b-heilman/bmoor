@@ -78,10 +78,10 @@ bMoor.constructor.define({
 	node : {
 		className : 'snap-node'
 	},
-	construct : function( element, template, data, attributes ){
+	construct : function( element, data, attributes ){
 		this._attributes = attributes;
 		this._element( element );
-		this._template( template );
+		this._template();
 		this._data( data );
 	
 		if ( !this.prepared ){
@@ -120,10 +120,12 @@ bMoor.constructor.define({
 		_data : function( data ){
 			this.data = data;
 		},
-		_template : function( template ){
-			this.prepared = template 
-				? bMoor.module.Templator.prepare( template )
-				: null;
+		_template : function(){
+			var template = this._getAttribute('template');
+
+			if ( template ){
+				this.prepared = bMoor.module.Templator.prepare( template );
+			} else this.prepared = null;
 		},
 		_binding : function(){
 			var dis = this;
@@ -138,7 +140,6 @@ bMoor.constructor.define({
 			this._setContent( bMoor.module.Templator.run(this.prepared,this.data) );
 			bmoor.lib.Bootstrap.setContext( this.element, this.data );
 			this._finalize();
-			
 		},
 		_setContent : function( content ){
 			this.element.innerHTML = content;
