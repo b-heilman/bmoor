@@ -11,7 +11,7 @@ var templateList = [
 	{ pos : 'three', echo : 'foo', derp : 'bar', show : 1 }
 ];
 
-bMoor.resource.setTemplate('listTemplate',function(){/*
+bMoor.module.Resource.setTemplate('listTemplate',function(){/*
 	<span><#= this.pos #> : <#= this.echo #> ... 
 	<# if ( this.show ){
 		#><span class='derp'><#= this.derp #></span><#

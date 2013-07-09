@@ -92,6 +92,8 @@
 			};
 		};
 		
+		ClassLoader.reset();
+
 		ClassLoader.setRoot = function( path ){
 			libRoots['/'] = path;
 		};
@@ -327,152 +329,6 @@
 			}
 			
 			cb();
-		};
-	}());
-	ClassLoader.reset();
-	
-	var ResourceLoader = {};
-	(function(){
-		var
-			templates = {},
-			loadedScripts = {};
-		
-		$(document).ready(function(){
-			var scripts = document.getElementsByTagName('script');
-			
-			for( var i = 0, c = scripts.length; i < c; i++ ){
-				var script = scripts[i];
-				
-				if ( script.id ){
-					if ( script.src ){
-						loadedScripts[ script.src ] = script.id;
-					}
-					
-					if ( script.getAttribute('type') == "text/html" ){
-						ResourceLoader.setTemplate( script.id, script.innerHTML );
-					}
-				}
-			}
-		});
-		
-		ResourceLoader.loadScript = function( src, cb ){
-			$.ajax({ url : src, dataType : 'script', success : cb });
-		};
-		
-		ResourceLoader.loadStyle = function( src, cb ){
-			var
-				css,
-				style,
-				sheet,
-				interval = null;
-			
-			style = document.createElement( 'link' );
-			style.setAttribute( 'href', path );
-			style.setAttribute( 'rel', 'stylesheet' );
-			style.setAttribute( 'type', 'text/css' );
-			
-			if ( style.sheet ){
-				sheet = 'sheet';
-				css = 'cssRules';
-				
-				interval = setInterval( function(){
-					try{
-						if ( style[sheet] && style[sheet][css] && style[sheet][css].length ){
-							clearInterval( interval );
-							cb();
-						}
-					}catch( ex ){ /* I feel dirty */ }
-				},10 );
-			}else{
-				// IE specific
-				$( style ).bind( 'load', cb );
-			}
-			
-			$('head').append( style );
-		};
-		
-		ResourceLoader.loadImage = function( src, cb ){
-			var img = new Image();
-			
-			if ( src[0] == '#' ){
-				src = $( src )[0].src;
-			}
-			
-			img.onload = cb;
-			img.src = src;
-		};
-		
-		ResourceLoader.loadTemplate = function( id, src, cb ){
-			var 
-				node,
-				dis = null;
-			
-			if ( cb == undefined && typeof(src) != 'string' ){
-				cb = src;
-				src = null;
-			}
-			
-			if ( id[0] == '#' ){
-				// TODO : is this right?
-				id = id.substring(1);
-			}
-			
-			if ( !templates[id] ){
-				if ( loadedScripts[src] ){
-					// script already was loaded
-					var sid = loadedScript[src];
-					
-					if ( templates[sid] ){
-						templates[id] = templates[sid];
-					}else{
-						this.setTemplate( id, document.getElementById(sid).innerHTML );
-					}
-				}else if ( node = document.getElementById(id) ){
-					this.setTemplate( id, node.innerHTML );
-				}else if ( src == null ){
-					throw 'loadTemplate : '+id+' requested, and not found, while src is null';
-				}else{
-					dis = this;
-					
-					$.ajax( src, {
-						// TODO
-						success : function( res ){
-							dis.setTemplate( res );
-							
-							cb( templates[id] );
-						}
-					});
-				}
-			}
-			
-			if ( dis == null ) {
-				if ( cb ){
-					cb( templates[id] );
-				}else{
-					return templates[id];
-				}
-			}
-			
-			return null;
-		};
-		
-		ResourceLoader.setTemplate = function( id, template ){
-			switch( typeof(template) ){
-				case 'string' :
-					templates[ id ] = template.replace( /\s*<!\[CDATA\[\s*|\s*\]\]>\s*|[\r\n\t]/g, '' );
-					break;
-					
-				case 'function' :
-					// assumes formatting like : 
-					// function(){/*
-					//   ... the template code ...
-					// */}
-					templates[ id ] = template.toString().split(/\n/).slice(1, -1).join('\n'); 
-					break;
-					
-				default :
-					break;
-			}
 		};
 	}());
 	
@@ -832,7 +688,6 @@
 		get         : function( space ){ return Namespace.exists( space ); },
 		settings    : environmentSettings,
 		autoload    : ClassLoader,
-		resource    : ResourceLoader,
 		constructor : new Constructor()
 	};
 	

@@ -3,6 +3,9 @@
 bMoor.constructor.decorator({
 	name : 'Decorator',
 	namespace : ['bmoor','templating'],
+	require : {
+		references : { 'bMoor.module.Resource' : ['bmoor','lib','Resource'] }
+	},
 	properties : {
 		prepared : {},
 		get : function( id, src, data, cb ){
@@ -34,7 +37,7 @@ bMoor.constructor.decorator({
 			}
 
 			if ( cb ){
-				bMoor.resource.loadTemplate( id, src, function( content ){
+				bMoor.module.Resource.loadTemplate( id, src, function( content ){
 					if ( !dis.prepared[id] ){
 						dis.prepared[id] = dis._wrapped( content );
 					}
@@ -45,7 +48,7 @@ bMoor.constructor.decorator({
 				return null;
 			}else{
 				if ( !this.prepared[id] ){
-					this.prepared[id] = this._wrapped( bMoor.resource.loadTemplate(id,src) );
+					this.prepared[id] = this._wrapped( bMoor.module.Resource.loadTemplate(id,src) );
 				}
 				
 				return this.prepared[id];

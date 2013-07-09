@@ -2,9 +2,9 @@ Modules
 *	- Singletons can define what bMoor.module they publish to
 *	- Idea is that all modules have same interface
 *	- can be used globally then, for instance 'bMoor.module.Resource', 'bMoor.module.Template', etc
-	- modules
+*	- modules
 *		- template : existing JQote would go here, and default templator would be this
-		- resource : Allows for pulling down scripts, styles, POST, GET, etc...  Move code out of bMoor core...
+*		- resource : Allows for pulling down scripts, styles, POST, GET, etc...  Move code out of bMoor core...
 		
 Templates
 	- for an element that doesn't have a template, its content becomes the template content

@@ -1,9 +1,14 @@
 ;(function( $, global, undefined ){
 
+//TODO : move where this is used over to bMoor.module.Wait
 bMoor.constructor.define({
 	name : 'WaitFor',
 	namespace : ['bmoor','lib'],
 	construct: function(){},
+	require : {
+		references : { 'bMoor.module.Resource' : ['bmoor','lib','Resource'] }
+	},
+	module : 'Wait',
 	properties : {
 		_waiting : 0,
 		_done : null,
@@ -36,7 +41,7 @@ bMoor.constructor.define({
 			
 			this._waiting++;
 			
-			bMoor.resource.loadScript( src, function(){ if ( cb ){ cb(); } dis._return(); } );
+			bMoor.module.Resource.loadScript( src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		},
@@ -45,7 +50,7 @@ bMoor.constructor.define({
 			
 			this.waiting++;
 			
-			bMoor.resource.loadStyle( src, function(){ if ( cb ){ cb(); } dis._return(); } );
+			bMoor.module.Resource.loadStyle( src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		},
@@ -54,7 +59,7 @@ bMoor.constructor.define({
 			
 			this._waiting++;
 			
-			bMoor.resource.loadImage( src, function(){ if ( cb ){ cb(); } dis._return(); } );
+			bMoor.module.Resource.loadImage( src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		},
@@ -63,7 +68,7 @@ bMoor.constructor.define({
 			
 			this._waiting++;
 			
-			bMoor.resource.loadTemplate( id, src, function(){ if ( cb ){ cb(); } dis._return(); } );
+			bMoor.module.Resource.loadTemplate( id, src, function(){ if ( cb ){ cb(); } dis._return(); } );
 			
 			return this;
 		}
