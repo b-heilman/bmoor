@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<script src="../../src/jquery.min.js"></script>
+	<script src="../../src/bMoor.js"></script>
+	<script>
+		var lowData;
+
+		bMoor.require( ['bmoor.lib.Bootstrap', 'bmoor.snap.List'], function(){
+			bMoor.module.Bootstrap.preRender(function(){
+				lowData = new bmoor.model.Collection([ {
+					description: 'derp',
+					label : 1,
+					display : 2
+				}, {
+					description: 'derp2',
+					label : 3,
+					display : 4
+				} ]);
+			});
+		});
+	</script>
+</head>
+<body>
+	<table snap-class="bmoor.snap.List" snap-data="lowData" snap-child="tr" snap-mount="mount" snap-template="low">
+		<tbody>
+			<tr class='mount'>
+	            <th style="text-align:left;">Description</th>
+	            <th>Label</th>
+	            <th>Display</th>
+        	</tr>
+        </tbody>
+	</table>
+
+	<script id='low' type='text/html'>
+		<td style="text-align:left;">
+			<input snap-class='bmoor.snap.form.Text' type='text' name='description'/>
+		</td>
+        <td><input snap-class='bmoor.snap.form.Text'  type='text' name='label'/></td>
+        <td><input snap-class='bmoor.snap.form.Text'  type='text' name='display'/></td>
+	</script>
+</body>
+
+</html>

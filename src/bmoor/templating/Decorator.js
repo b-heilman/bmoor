@@ -13,7 +13,6 @@ bMoor.constructor.decorator({
 		},
 		prepare : function( id, raw ){
 			if ( raw ){
-				console.log( id );
 				return this._wrapped( id );
 			}else{
 				if ( !this.prepared[id] ){

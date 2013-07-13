@@ -5,6 +5,14 @@ bMoor.constructor.define({
 	namespace : ['bmoor','snap','form'],
 	parent : ['bmoor','snap','Node'],
 	properties: {
+		_element : function( element ){
+			this.__Node._element.call( this, element );
+
+			if ( !this.variable ){
+				this.variable = this.element.name;
+			}
+		},
+		// gets called by the data bind
 		_setContent : function( content ){
 			this.element.value = content;
 		},

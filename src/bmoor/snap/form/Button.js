@@ -5,6 +5,13 @@ bMoor.constructor.define({
 	namespace : ['bmoor','snap','form'],
 	parent : ['bmoor','snap','Node'],
 	properties: {
+		_element : function( element ){
+			this.__Node._element.call( this, element );
+
+			if ( !this.variable ){
+				this.variable = this.element.name;
+			}
+		},
 		_setContent : function( content ){
 			if ( this.element.value == content ){
 				this.$.addClass('active');

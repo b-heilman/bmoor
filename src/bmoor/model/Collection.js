@@ -22,6 +22,8 @@
 			}
 			
 			this._old = this.slice(0);
+
+			this._start();
 		},
 		properties : {
 			remove : function( obj ){
@@ -49,6 +51,7 @@
 			},
 			_stop : function(){
 				clearInterval( this._interval );
+
 				this._interval = null;
 				this._attributes._stop();
 				
@@ -62,38 +65,41 @@
 				
 				if ( !this._interval ){
 					this._interval = setInterval(function(){
-						var
-							dirty = false,
-							additions = [],
-							changes = dis._old;
-						
-						for( var i = dis.length - 1; i >= 0; i-- ){
-							var t = dis[i];
-							
-							if ( t.__bmoor == undefined ){
-								additions.push( i );
-								dirty = true;
-							}else if ( t.__bmoor != i ){
-								changes[ t.__bmoor ] = i;
-								dirty = true;
-							}else if ( i == t.__bmoor ){
-								changes.splice( i );
-							}else{
-								dirty = true;
-							}
-							
-							t.__bmoor = i;
-						}
-						
-						dis._old = dis.slice(0);
-						
-						if ( dirty ){
-							dis._notify( { additions : additions, changes : changes } );
-						}
+						dis._run();
 					}, 50);
 				}
 				
 				return this;
+			},
+			_run: function(){
+				var
+					additions = [],
+					changes = this._old,
+					dirty = ( this.length != changes.length );
+				
+				for( var i = this.length - 1; i >= 0; i-- ){
+					var t = this[i];
+					
+					if ( t.__bmoor == undefined ){
+						additions.push( i );
+						dirty = true;
+					}else if ( t.__bmoor != i ){
+						changes[ t.__bmoor ] = i;
+						dirty = true;
+					}else if ( i == t.__bmoor ){
+						changes.splice( i, 1 );
+					}else{
+						dirty = true;
+					}
+					
+					t.__bmoor = i;
+				}
+				
+				this._old = this.slice(0);
+				
+				if ( dirty ){
+					this._notify( { additions : additions, changes : changes } );
+				}
 			},
 			_bind : function( cb ){
 				this._listeners.push( cb );

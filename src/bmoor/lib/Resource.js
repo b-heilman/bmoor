@@ -29,9 +29,6 @@ bMoor.constructor.singleton({
 		templates : {},
 		loadedScripts : {}
 	},
-	construct : function(){
-		$.jqotetag( bMoor.settings.templatorTag );
-	},
 	properties : {
 		loadScript : function( src, cb ){
 			$.ajax({ url : src, dataType : 'script', success : cb });

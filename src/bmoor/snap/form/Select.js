@@ -3,10 +3,32 @@
 bMoor.constructor.define({
 	name : 'Select',
 	namespace : ['bmoor','snap','form'],
-	construct: function( element ){
-		this.element = element;
-	},
+	parent : ['bmoor','snap','Node'],
 	properties: {
+		_element : function( element ){
+			this.__Node._element.call( this, element );
+
+			if ( !this.variable ){
+				this.variable = this.element.name;
+			}
+		},
+		// gets called by the data bind
+		_setContent : function( content ){
+			this.val( content );
+		},
+		_binding : function(){
+			var dis = this;
+			
+			this.__Node._binding.call( this );
+			
+			if ( this.data && this.variable ){
+				this.alter(function( value ){
+					if ( dis.data ){
+						dis.data[ dis.variable ] = value;
+					}
+				});
+			}
+		},
 		val : function( value ){
 			if ( value ){
 				var dex;

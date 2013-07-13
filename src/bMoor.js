@@ -16,6 +16,7 @@
 	function error( str ){
 		if ( console && console.log ){
 			console.log( str );
+			console.trace();
 		}
 	}
 	
@@ -30,6 +31,9 @@
 				return [];
 			}
 		},
+		/*
+			This will create an object in place if it doesn't exist
+		*/
 		get : function( space ){
 			var 
 				curSpace = global;
@@ -51,6 +55,9 @@
 				return curSpace;
 			}else return null;
 		},
+		/*
+			returns back the space or null
+		*/
 		exists : function( space ){
 			var 
 				curSpace = global;
@@ -72,9 +79,14 @@
 		}
 	};
 	
-	var ClassLoader = {};
+	var ClassLoader = {
+		requests : 0,
+		onReady  : []
+	};
 	(function(){
-		var libRoots = {}; // A multi level hash that allows for different libraries 
+		var 
+			loading = {},
+			libRoots = {}; // A multi level hash that allows for different libraries 
 			               // to be located in different locations
 		
 		ClassLoader.reset = function(){
@@ -196,6 +208,9 @@
 		 * @param target    Context to call against
 		 */
 		ClassLoader.loadSpace = function( namespace, reference, callback, args, target ){
+			var 
+				space;
+
 			function fireCallback(){
 				if ( target == undefined ){
 					target = {};
@@ -204,23 +219,22 @@
 				if ( args == undefined ){
 					args = [];
 				}
-			
+				
 				callback.apply( target, args );
 			}
 			
-			function waitForIt(){
-				var 
-					t = Namespace.get( namespace );
+			function waitForIt( timeout ){
+				var t = Namespace.exists( namespace );
 				
-				if ( t instanceof PlaceHolder ){
-					setTimeout( waitForIt, 50 );
+				if ( !t || t instanceof PlaceHolder || (t.prototype && t.prototype.__defining) ){
+					setTimeout( waitForIt, 10 );
 				}else if ( callback ){
+					clearTimeout( timeout );
 					fireCallback();
+				}else{
+					clearTimeout( timeout );
 				}
 			}
-			
-			var 
-				space;
 			
 			namespace = Namespace.parse( namespace );
 			
@@ -237,30 +251,55 @@
 			
 			if ( !space ){
 				var
+					timeout,
 					info = this.getLibrary( reference ),
 					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' ) 
 						+ '/' + ( info.settings.fullName ? reference.join('.') : info.name ),
 					success = function( script, textStatus ){
-						waitForIt();
+						var 
+							timeout,
+							calls = loading[path],
+							i, 
+							c;
 
-						if ( !Namespace.exists(namespace) ){
-							error( 'loaded file : '+script+"\n but no class : "+namespace.join('.') );
+						// I will give you 5 seconds to wait, more than that... you got issues
+						timeout = setTimeout(function(){
+							if ( !Namespace.exists(namespace) ){
+								error( 'loaded file : '+script+"\n but no class : "+namespace.join('.') );
+							}
+						}, 5000);
+
+						for( i = 0, c = calls.length; i < c; i++ ){
+							calls[i]( timeout );
 						}
+
+						loading[path] = true;
 					};
-						
-				$.getScript( path+'.js' )
-					.done( success )
-					.fail( function( jqxhr, settings, exception ){
-						if ( exception == 'Not Found' ){
-							$.getScript( path+'.min.js' )
-								.done( success )
-								.fail( function( jqxhr, settings, exception ){
-									error( 'failed to load file : '+path+"\nError : "+exception );
-								});
-						}else{
-							error( 'failed to load file : '+path+"\nError : "+exception );
-						}
-					});
+				
+				// loading is a class global
+				if ( !loading[path] ){
+					loading[path] = [ waitForIt ];
+
+					$.getScript( path+'.js' )
+						.done( success )
+						.fail( function( jqxhr, settings, exception ){
+							if ( exception == 'Not Found' ){
+								$.getScript( path+'.min.js' )
+									.done( success )
+									.fail( function( jqxhr, settings, exception ){
+										error( 'failed to load file : '+path+"\nError : "+exception );
+									});
+							}else{
+								error( 'failed to load file : '+path+"\nError : "+exception );
+							}
+						});
+				}else if ( typeof(loading[path]) == 'boolean' ){
+					waitForIt(); // shouldn't ever happen, but you never know
+				}else{
+					loading[path].push( waitForIt );
+				}
+
+				
 			}else if ( space instanceof PlaceHolder ){
 				waitForIt();
 			}else{
@@ -268,28 +307,52 @@
 			}
 		};
 		
+		ClassLoader.ready = function( callback ){
+			if ( this.requests == 0 ){
+				callback();
+			}else{
+				this.onReady.push( callback );
+			}
+		};
+
 		ClassLoader.require = function( requirements, callback, scope ){
 			var
+				dis = this,
 				reqCount = 1,
 				references = null,
 				classes = null,
 				aliases = null;
 			
 			function cb(){
+				var t;
+
 				reqCount--;
 				
 				if ( reqCount == 0 ){
 					var
-						aliasi = [];
+						aliasi = [],
+						i,
+						c;
+
+					dis.requests--;
+
 					// now all requirements are loaded
-					
 					reqCount--; // locks any double calls, requests to -1
 					
-					for( var i = 0, req = aliases, len = req ? req.length : 0; i < len; i++ ){
+					for( var i = 0, req = aliases, c = req ? req.length : 0; i < c; i++ ){
 						aliasi.push( Namespace.get(req[i]) );
 					}
 					
 					callback.apply( scope, aliasi );
+					
+					if ( dis.requests == 0 ){
+						while( dis.onReady.length ){
+							t = dis.onReady.shift();
+							t();
+						}
+
+						dis.onReady = [];
+					}
 				}
 			}
 			
@@ -309,6 +372,8 @@
 				scope = {};
 			}
 			
+			this.requests++;
+
 			// build up the request stack
 			for( var i = 0, req = classes, len = req ? req.length : 0; i < len; i++ ){
 				var
@@ -418,18 +483,21 @@
 				}else{
 					define.call( dis, settings, obj );
 					
-					delete obj.prototype.__defining;
-					
 					if ( settings.onDefine ){
 						settings.onDefine( obj, namespace, settings.name );
 					}
 					
 					if ( settings.onReady ){
 						$(document).ready(function(){
-							settings.onReady( namespace[settings.name] );
+							// make sure all requests have been completed as well
+							ClassLoader.ready( function(){
+								settings.onReady( namespace[settings.name] );
+							});
 						});
 					}
 					
+					delete obj.prototype.__defining;
+
 					loading--;
 					if ( loading == 0 ){
 						while( onLoaded.length ){
@@ -453,7 +521,7 @@
 
 				namespace[ name ] = def;
 				old( def, namespace, name );
-
+				
 				if ( settings.module ){
 					module = settings.module;
 					module = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();

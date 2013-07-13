@@ -21,13 +21,15 @@
 			collection = new bmoor.model.Collection( [{x:2},{x:4},{x:6}] ),
 			hold = {x:8};
 		
-		collection._start();
-		collection._bind( function(){console.log(collection);} );
+		collection._stop();
+		collection._bind( function(){console.log('collection', collection);} );
 		
-		setTimeout( function(){ console.log('pushing'); collection.push(hold); }, 500 );
-		setTimeout( function(){ console.log('pushing'); collection.push({x:10}); }, 1000 );
-		setTimeout( function(){ console.log('shifting'); collection.shift(); }, 2000);
-		setTimeout( function(){ console.log('remove'); collection.remove(hold); }, 3000);
+		setTimeout( function(){ console.log('pushing'); collection.push(hold); collection._run(); }, 500 );
+		setTimeout( function(){ console.log('pushing'); collection.push({x:10}); collection._run(); }, 1000 );
+		setTimeout( function(){ console.log('shifting'); collection.shift(); collection._run(); }, 2000);
+		setTimeout( function(){ console.log('remove'); collection.remove(hold); collection._run(); }, 3000);
+		setTimeout( function(){ console.log('popping'); collection.pop(); collection._run(); }, 4000);
+		setTimeout( function(){ console.log( 'end', collection ); collection._run(); }, 4500);
 	</script>
 </body>
 </html>

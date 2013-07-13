@@ -73,11 +73,17 @@ bMoor.constructor.define({
 			}
 			
 			this.fields = fields;
+
+			this.data._notify(); // force a notify push so _dataUpdate is called naturally
 		},
-		_mapUpdate : function( map ){
+		_make : function( data ){
+			if ( !this.fields ){
+				this.__Node._make.call( this, data );
+			}
+
 			for( var i = 0, c = this.fields.length; i < c; i++ ){
 				var field = this.fields[ i ];
-				this[ '#'+field ].val( map[field] == undefined ? '' : map[field] );
+				this[ '#'+field ].val( data[field] == undefined ? '' : data[field] );
 			}
 		}
 	}

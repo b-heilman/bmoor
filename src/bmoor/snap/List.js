@@ -4,6 +4,9 @@ bMoor.constructor.define({
 	name : 'List',
 	namespace : ['bmoor','snap'],
 	parent : ['bmoor','snap','Node'],
+	require : [
+		['bmoor','model','Collection']
+	],
 	node : {
 		className : 'snap-list'
 	},
@@ -15,25 +18,63 @@ bMoor.constructor.define({
 			this.mountPoint = null;
 		},
 		_template : function(){
-			var 
-				mount = this._getAttribute('mount'),
-				mountPoint;
+			var mount = this._getAttribute('mount');
 
-			if ( mount == 'this' ){
-				mountPoint = this.element.getElementsByTagName('mount')[0];
-				if ( mountPoint ){
-					this.mountPoint = mountPoint.previousSibling;
-				}
-				mountPoint.parentNode.removeChild( mountPoint );
+			if ( mount ){
+				this.mountPoint = this.$.find('[mount]')[0];
 			}
 
 			this.__Node._template.call( this );
 		},
-		_makeContent : function(){
-			if ( this.data ){
-				for( var i = 0, c = this.data.length; i < c; i++ ){
-					this.append( this.data[i] );
+		_make : function( data, alterations ){
+			var
+				additions,
+				changes,
+				row;
+
+			if ( alterations ){
+				additions = alterations.additions;
+				changes = alterations.changes;
+
+				for( var i = 0, c = additions.length; i < c; i++ ){
+					this.append( data[ additions[i] ] );
 				}
+
+				for( var i = 0, c = changes.length; i < c; i++ ){
+					row = changes[ i ];
+					
+					if ( typeof(row) == 'object' ){
+						// this means it was removed, otherwise it would be a number
+						row = row._row; // reference the row element
+
+						if ( this.mountPoint == row ){
+							this.mountPoint =  row.previousSibling;
+						}
+
+						if ( row.parentNode ){
+							row.parentNode.removeChild( row );
+						}
+					}else{
+						// TODO : we change positions
+					}
+				}
+			} else if ( data ){
+				for( var i = 0, c = data.length; i < c; i++ ){
+					this.append( data[i] );
+				}
+			}
+		},
+		_wrapData : function( data ){
+			return new bmoor.model.Collection( data );
+		},
+		_binding : function(){
+			var dis = this;
+			
+			if ( this.data._bind ){
+				this.binded = true;
+				this.data._bind( function( alterations ){
+					dis._make( this, alterations );
+				});
 			}
 		},
 		_makeChild : function( data, tag, attributes, asString ){
@@ -62,7 +103,7 @@ bMoor.constructor.define({
 						element.setAttribute( attr, attributes[attr] );
 					}
 					
-					bmoor.lib.Bootstrap.setContext( element, data );
+					bMoor.module.Bootstrap.setContext( element, data );
 					
 					return element;
 				}else{
@@ -71,7 +112,7 @@ bMoor.constructor.define({
 			}
 		},
 		append : function( data ){
-			var el = this._makeChild(data,this.childTag);
+			var el = this._makeChild( data,this.childTag );
 
 			if ( this.mountPoint ){
 				if ( this.mountPoint.nextSibling ){
@@ -86,19 +127,8 @@ bMoor.constructor.define({
 				this.mountPoint = el;
 			}
 			
-			return el;
-		},
-		prepend : function( data ){
-			var el = this._makeChild(data,this.childTag);
+			data._row = el;
 
-			if ( this.mountPoint ){
-				this.mountPoint.parentNode.insertBefore( el, this.mountPoint );
-				this.mountPoint = el;
-			}else{
-				this.$.prepend( el );
-				this.mountPoint = el;
-			}
-			
 			return el;
 		},
 		childTag : 'li',

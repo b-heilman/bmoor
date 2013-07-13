@@ -4,8 +4,11 @@ bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
 	require : {
-		classes : [ ['bmoor','lib','Bootstrap'] ],
-		references : { 'bMoor.module.Template' : ['bmoor','templating','JQote'] }
+		classes : [ ['bmoor','model','Map'] ],
+		references : { 
+			'bMoor.module.Templator' : ['bmoor','templating','JQote'],
+			'bMoor.module.Bootstrap' : ['bmoor','lib','Bootstrap']
+ 		}
 	},
 	onDefine : function( definition ){
 		var node;
@@ -79,18 +82,17 @@ bMoor.constructor.define({
 		className : 'snap-node'
 	},
 	construct : function( element, data, attributes ){
+		this.binded = false;
+		
 		this._attributes = attributes;
 		this._element( element );
 		this._template();
 		this._data( data );
-	
-		if ( !this.prepared ){
-			this._finalize();
-		}else{
-			this._makeContent();
-		}
 		
 		this._binding();
+		if ( !this.binded ){
+			this._make( this.data ); // binding will cause it to run otherwise
+		}
 	},
 	properties : {
 		getModel : function(){
@@ -106,7 +108,7 @@ bMoor.constructor.define({
 			throw error;
 		},
 		__log : function(){
-			console.log.apply( this, arguments );
+			console.log.apply( console, arguments );
 		},
 		_element : function( element ){
 			this.$ = $( element );
@@ -117,8 +119,15 @@ bMoor.constructor.define({
 			
 			element.className += ' '+this.baseClass;
 		},
+		_wrapData : function( data ){
+			return new bmoor.model.Map( data );
+		},
 		_data : function( data ){
-			this.data = data;
+			if ( !data || (typeof(data) == 'object' && !data._bind) ){
+				this.data = this._wrapData( data );
+			}else{
+				this.data = data;
+			}
 		},
 		_template : function(){
 			var template = this._getAttribute('template');
@@ -130,26 +139,28 @@ bMoor.constructor.define({
 		_binding : function(){
 			var dis = this;
 			
-			if ( this.data && this.data._bind ){
+			if ( this.data._bind ){
+				this.binded = true;
 				this.data._bind( function(){
-					dis._mapUpdate( this );
+					dis._make( this );
 				});
 			}
 		},
-		_makeContent : function(){
-			this._setContent( bMoor.module.Templator.run(this.prepared,this.data) );
-			bmoor.lib.Bootstrap.setContext( this.element, this.data );
+		_make : function( data ){
+			// cleanse the data
+			data = this.variable ? ( data ? data[this.variable] : null ) : data;
+
+			if ( this.prepared ){
+				this._setContent( bMoor.module.Templator.run(this.prepared,data) );
+				bmoor.lib.Bootstrap.setContext( this.element, data );
+			}else if ( this.variable ){
+				this._setContent( data );
+			}
+
 			this._finalize();
 		},
 		_setContent : function( content ){
 			this.element.innerHTML = content;
-		},
-		_mapUpdate : function( map ){
-			if ( this.prepared ){
-				this._makeContent();
-			}else if ( this.variable ){
-				this._setContent( this.data[this.variable] );
-			}
 		},
 		_finalize : function(){},
 		_getAttribute : function( attribute, otherwise, adjustment ){

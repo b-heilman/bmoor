@@ -211,7 +211,6 @@ bMoor.constructor.define({
 			this.settings.glyphClass = className;
 		},
 		setGlyphSettings : function( settings ){
-			console.log( settings );
 			this.settings.glyphSettings = settings;
 		},
 		setActive : function( glyph ){

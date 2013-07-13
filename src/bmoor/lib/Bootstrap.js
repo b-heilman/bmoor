@@ -30,6 +30,10 @@ bMoor.constructor.singleton({
 		_stopped : false,
 		_checking : false,
 		_render : null,
+		_preRender : null,
+		preRender : function( cb ){
+			this._preRender = cb;
+		},
 		render : function( cb ){
 			// I don't need to call right away, because it will get cycled and run anyway
 			this._render = cb;
@@ -54,7 +58,7 @@ bMoor.constructor.singleton({
 				create = node.getAttribute('snap-class'),
 				data = node.hasAttribute('snap-data') 
 					? eval( node.getAttribute('snap-data').replace('this','context') ) 
-					: null,
+					: context,
 				requirements = [],
 				decorators = [];
 			
@@ -94,7 +98,12 @@ bMoor.constructor.singleton({
 				dis = this,
 				waiting = bMoor.module.Wait,
 				others = [];
-			
+
+			if ( dis._preRender ){
+				dis._preRender();
+				dis._preRender = null;
+			}
+
 			for( var nodes = this.select(element,'[snap-class]'), i = 0, c = nodes.length; i < c; i++){
 				var node = nodes[i];
 				
