@@ -16,6 +16,7 @@ bMoor.constructor.define({
 			this.childTag = this._getAttribute( 'child', this.childTag );
 			this.childClass = this._getAttribute( 'childClass', this.childClass );
 			this.mountPoint = null;
+			this.origin = null;
 		},
 		_template : function(){
 			var mount = this._getAttribute('mount');
@@ -29,39 +30,33 @@ bMoor.constructor.define({
 		_make : function( data, alterations ){
 			var
 				additions,
+				removals,
 				changes,
 				row;
 
-			if ( alterations ){
-				additions = alterations.additions;
-				changes = alterations.changes;
+			additions = alterations.additions;
+			removals = alterations.removals;
 
-				for( var i = 0, c = additions.length; i < c; i++ ){
-					this.append( data[ additions[i] ] );
-				}
+			for( var i in removals ){
+				row = removals[ i ];
+				
+				if ( typeof(row) == 'object' ){
+					// this means it was removed, otherwise it would be a number
+					row = row._row; // reference the row element
 
-				for( var i = 0, c = changes.length; i < c; i++ ){
-					row = changes[ i ];
-					
-					if ( typeof(row) == 'object' ){
-						// this means it was removed, otherwise it would be a number
-						row = row._row; // reference the row element
+					if ( this.mountPoint == row ){
+						this.mountPoint =  row.previousSibling;
+					}
 
-						if ( this.mountPoint == row ){
-							this.mountPoint =  row.previousSibling;
-						}
-
-						if ( row.parentNode ){
-							row.parentNode.removeChild( row );
-						}
-					}else{
-						// TODO : we change positions
+					if ( row.parentNode ){
+						row.parentNode.removeChild( row );
 					}
 				}
-			} else if ( data ){
-				for( var i = 0, c = data.length; i < c; i++ ){
-					this.append( data[i] );
-				}
+			}
+
+			for( var i in additions ){
+				// TODO : put them in the right place
+				this.append( additions[i] );
 			}
 		},
 		_wrapData : function( data ){

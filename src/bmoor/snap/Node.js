@@ -123,10 +123,20 @@ bMoor.constructor.define({
 			return new bmoor.model.Map( data );
 		},
 		_data : function( data ){
+			var controller;
+
 			if ( !data || (typeof(data) == 'object' && !data._bind) ){
 				this.data = this._wrapData( data );
 			}else{
 				this.data = data;
+			}
+
+			controller = this._getAttribute( 'controller' );
+			if ( controller ){
+				controller = bMoor.get( controller );
+				this.controller = new controller( this.data );
+			}else{
+				this.controller = null;
 			}
 		},
 		_template : function(){
@@ -185,6 +195,9 @@ bMoor.constructor.define({
 			}else if ( variable[0] == '{' || variable[0] == '[' ){
 				return eval( variable );
 			}else return eval( 'global.' + variable );
+		},
+		_select : function( selector ){
+			return bmoor.lib.Bootstrap.select( this.element, selector );
 		}
 	}
 });

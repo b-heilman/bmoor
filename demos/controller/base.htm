@@ -9,10 +9,12 @@
 	<script>
 		var lowData = [{
 			description: 'derp',
+			key : 1,
 			label : 1,
 			display : 2
-		},{
+		}, {
 			description: 'derp2',
+			key : 2,
 			label : 3,
 			display : 4
 		}];
@@ -27,12 +29,29 @@
 			});
 		});
 
-		
+		bMoor.constructor.define({
+			name : 'Tester',
+			namespace : [ 'test' ],
+			parent : [ 'bmoor','controller','Abstract' ],
+			properties : {
+				_key : 'key',
+				_create : function( model ){
+					console.log( 'creating', model );
+					this._register( model );
+				},
+				_post : function( model ){
+					console.log( 'changing', model );
+				},
+				_remove : function( model ){
+					console.log( 'removing', model );
+				}
+			}
+		});
 	</script>
 </head>
 <body>
 	<table snap-class="bmoor.snap.List" snap-data="lowData" snap-child="tr" snap-mount="mount" 
-		snap-template="temp" snap-publish="lowView">
+		snap-template="temp" snap-publish="lowView" snap-controller="test.Tester">
 		<tbody>
 			<tr class='mount'>
 	            <th>Description</th>

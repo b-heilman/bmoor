@@ -22,7 +22,10 @@
 			hold = {x:8};
 		
 		collection._stop();
-		collection._bind( function(){console.log('collection', collection);} );
+		collection._bind( function( changes ){
+			console.log( 'collection', this );
+			console.log( 'changes', changes );
+		} );
 		
 		setTimeout( function(){ console.log('pushing'); collection.push(hold); collection._run(); }, 500 );
 		setTimeout( function(){ console.log('pushing'); collection.push({x:10}); collection._run(); }, 1000 );

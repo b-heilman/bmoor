@@ -70,11 +70,11 @@
 					this._notify();
 				}
 			},
-			_bind : function( func ){
+			_bind : function( func, noFlush ){
 				this._listeners.push( func );
 				
 				// if we are running, then we should make a call back
-				if ( this._interval ){
+				if ( this._interval && !noFlush ){
 					func.call( this._old );
 				}
 				

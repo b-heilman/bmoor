@@ -10,14 +10,10 @@
 		construct : function( obj ){
 			this._listeners = [];
 			this._interval = null;
-			this._attributes = new bmoor.model.Map();
 			
 			if ( obj ){
 				for( var i = 0, c = obj.length; i < c; i++ ){
-					var t = obj[i];
-					
-					t.__bmoor = i;
-					this.push( t );
+					this.push( obj[i] );
 				}
 			}
 			
@@ -42,10 +38,12 @@
 					} else if (fromIndex < 0) {
 						fromIndex = Math.max(0, this.length + fromIndex);
 					}
+
 					for (var i = fromIndex, j = this.length; i < j; i++) {
 						if (this[i] === obj)
 							return i;
 					}
+
 					return -1;
 				}
 			},
@@ -53,7 +51,6 @@
 				clearInterval( this._interval );
 
 				this._interval = null;
-				this._attributes._stop();
 				
 				return this;
 			},
@@ -61,9 +58,10 @@
 				var 
 					dis = this;
 				
-				this._attributes._start();
 				
 				if ( !this._interval ){
+					dis._run();
+
 					this._interval = setInterval(function(){
 						dis._run();
 					}, 50);
@@ -73,38 +71,54 @@
 			},
 			_run: function(){
 				var
-					additions = [],
-					changes = this._old,
-					dirty = ( this.length != changes.length );
+					moves = {},
+					removals = this._old,
+					dirty = ( this.length != removals.length ),
+					additions = {};
 				
 				for( var i = this.length - 1; i >= 0; i-- ){
 					var t = this[i];
 					
-					if ( t.__bmoor == undefined ){
-						additions.push( i );
+					if ( t._remove ){
+						// allow for a model to force its own removal
+						this.splice( i, 1 );
 						dirty = true;
-					}else if ( t.__bmoor != i ){
-						changes[ t.__bmoor ] = i;
+
+						continue;
+					}else if ( t._index == undefined ){
+						if ( !t._bind ){ // this isn't a model, make it one
+							// I assume it should be a map
+							t = new bmoor.model.Map( t );
+						}
+
+						this[i] = additions[ i ] = t;
+						removals.splice( i, 1 );
 						dirty = true;
-					}else if ( i == t.__bmoor ){
-						changes.splice( i, 1 );
+					}else if ( t._index != i ){
+						moves[ i ] = t;
+						removals.splice( i, 1 );
+						dirty = true;
+					}else if ( i == t._index ){
+						removals.splice( i, 1 );
 					}else{
 						dirty = true;
 					}
 					
-					t.__bmoor = i;
+					t._index = i;
 				}
 				
 				this._old = this.slice(0);
 				
 				if ( dirty ){
-					this._notify( { additions : additions, changes : changes } );
+					this._notify( { additions : additions, removals : removals, moves : moves } );
 				}
 			},
-			_bind : function( cb ){
-				this._listeners.push( cb );
+			_bind : function( func, noFlush ){
+				this._listeners.push( func );
 				
-				cb.call( this._old, null );
+				if ( this._interval && !noFlush ){
+					func.call( this._old, { additions : this._old } );
+				}
 			},
 			_notify : function( changes ){
 				for( var i = 0, list = this._listeners; i < list.length; i++ ){

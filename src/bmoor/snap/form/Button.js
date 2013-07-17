@@ -24,7 +24,7 @@ bMoor.constructor.define({
 			
 			if ( this.data && this.data._bind && this.variable ){
 				this.data._bind(function(){
-					dis._mapUpdate( this );
+					dis._make( this );
 				});
 				
 				this.alter(function( value ){
