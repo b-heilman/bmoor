@@ -3,33 +3,74 @@
 bMoor.constructor.define({
 	name : 'Checked',
 	namespace : ['bmoor','snap','form'],
-	construct: function( element ){
-		this.map = {};
-		this.multi = false;
-		this.checked = [];
-		this.element = element;
-		
-		if ( element.length ){
-			var name = element[0].name;
-				
-			if ( element[0].type.toLowerCase() == 'checkbox'  && name[name.length-1] == ']' ){
-				this.multi = true;
-			}
-			
-			for( var i = 0; i < element.length; i++ ){
-				var e = element[i];
-				
-				this.map[ e.value ] = e;
-				if ( e.checked ){
-					this.checked.push( e );
+	parent : ['bmoor','snap','Node'],
+	properties: {
+		_element : function( element ){
+			var 
+				name = element.nodeName ? element.name : element[0].name,
+				e,
+				i;
+
+			this.__Node._element.call( this, element );
+
+			this.checked = [];
+			this.map = {};
+			this.multi = false;
+
+			if ( name[name.length-1] == ']' ){
+				name = name.substring(0, name.length-2);
+
+				if ( element[0].type.toLowerCase() == 'checkbox' ){
+					this.multi = true;
 				}
 			}
-		}
-	},
-	properties: {
+
+			this.name = name;
+
+			if ( !element.nodeName ){
+				for( i = 0; i < element.length; i++ ){
+					e = element[i];
+					
+					this.map[ e.value ] = e;
+
+					if ( e.checked ){
+						this.checked.push( e );
+					}
+				}
+			}
+		},
+		_model : function( context ){
+			var name;
+
+			this.__Node._model.call( this, context );
+
+			if ( !this.variable ){
+				this.variable = this.name;
+			}
+		},
+		_setContent : function( content ){
+			this.val( content );
+		},
+		_binding : function(){
+			var dis = this;
+			
+			this.__Node._binding.call( this );
+
+			if ( this.model && this.variable ){
+				this.alter(function( value ){
+					dis.scope[ dis.name ] = value;
+				});
+			}
+		},
 		val : function( value ){
 			if ( value ){
-				if ( this.element.length ){
+				if ( this.element.nodeName ){
+					if ( element.value == value ){
+						element.checked = true;
+					}else{
+						element.checked = false;
+					}
+				}else{
 					var checked = this.checked;
 						
 					this.checked = [];
@@ -61,15 +102,15 @@ bMoor.constructor.define({
 							e.checked = true;
 						}
 					}
-				}else{
-					if ( element.value == value ){
-						element.checked = true;
-					}else{
-						element.checked = false;
-					}
 				}
 			}else{
-				if ( this.element.length ){
+				if ( this.element.nodeName ){
+					if ( this.element.checked ){
+						return this.element.value;
+					}else{
+						return null;
+					}
+				}else{
 					if ( this.multi ){
 						var rtn = [];
 						
@@ -91,29 +132,23 @@ bMoor.constructor.define({
 						
 						return null;
 					}
-				}else{
-					if ( this.element.checked ){
-						return this.element.value;
-					}else{
-						return null;
-					}
 				}
 			}
 		},
 		alter : function( cb ){
 			var dis = this;
 			
-			if ( this.element.length ){
+			if ( this.element.nodeName ){
+				this.element.onchange = function(){
+					cb( dis.val() );
+				};
+			}else{
 				for( var i = 0, c = this.element.length; i < c; i++ ){
 					// TODO : can I limit this to one call for radio?
 					this.element[i].onchange = function(){
 						cb( dis.val() );
 					};
 				}
-			}else{
-				this.element.onchange = function(){
-					cb( dis.val() );
-				};
 			}
 		}
 	}

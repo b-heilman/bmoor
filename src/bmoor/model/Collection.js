@@ -8,8 +8,14 @@
 			['bmoor','model','Map']
 		],
 		construct : function( obj ){
-			this._listeners = [];
-			this._interval = null;
+			this._ = {
+				// place to put variables that should be ignored
+				listeners : [],
+				interval  : null,
+				old       : this.slice(0)
+			}; 
+			
+			this._.old._ = this._; // circular reference, but needed
 			
 			if ( obj ){
 				for( var i = 0, c = obj.length; i < c; i++ ){
@@ -17,8 +23,6 @@
 				}
 			}
 			
-			this._old = this.slice(0);
-
 			this._start();
 		},
 		properties : {
@@ -48,7 +52,7 @@
 				}
 			},
 			_stop : function(){
-				clearInterval( this._interval );
+				clearInterval( this._.interval );
 
 				this._interval = null;
 				
@@ -59,10 +63,10 @@
 					dis = this;
 				
 				
-				if ( !this._interval ){
+				if ( !this._.interval ){
 					dis._run();
 
-					this._interval = setInterval(function(){
+					this._.interval = setInterval(function(){
 						dis._run();
 					}, 50);
 				}
@@ -72,57 +76,56 @@
 			_run: function(){
 				var
 					moves = {},
-					removals = this._old,
+					removals = this._.old,
 					dirty = ( this.length != removals.length ),
 					additions = {};
 				
 				for( var i = this.length - 1; i >= 0; i-- ){
 					var t = this[i];
 					
-					if ( t._remove ){
+					if ( !t._ ){
+						this[i] = t = new bmoor.model.Map( t );
+					}
+
+					if ( t._.remove ){
 						// allow for a model to force its own removal
 						this.splice( i, 1 );
 						dirty = true;
 
 						continue;
-					}else if ( t._index == undefined ){
-						if ( !t._bind ){ // this isn't a model, make it one
-							// I assume it should be a map
-							t = new bmoor.model.Map( t );
-						}
-
-						this[i] = additions[ i ] = t;
+					}else if ( t._.index == undefined ){
+						additions[ i ] = t;
 						removals.splice( i, 1 );
 						dirty = true;
-					}else if ( t._index != i ){
+					}else if ( t._.index != i ){
 						moves[ i ] = t;
 						removals.splice( i, 1 );
 						dirty = true;
-					}else if ( i == t._index ){
+					}else if ( i == t._.index ){
 						removals.splice( i, 1 );
 					}else{
 						dirty = true;
 					}
 					
-					t._index = i;
+					t._.index = i;
 				}
 				
-				this._old = this.slice(0);
+				this._.old = this.slice(0);
 				
 				if ( dirty ){
 					this._notify( { additions : additions, removals : removals, moves : moves } );
 				}
 			},
 			_bind : function( func, noFlush ){
-				this._listeners.push( func );
+				this._.listeners.push( func );
 				
-				if ( this._interval && !noFlush ){
-					func.call( this._old, { additions : this._old } );
+				if ( this._.interval && !noFlush ){
+					func.call( this._.old, { additions : this._.old } );
 				}
 			},
 			_notify : function( changes ){
-				for( var i = 0, list = this._listeners; i < list.length; i++ ){
-					list[i].call( this._old, changes );
+				for( var i = 0, list = this._.listeners; i < list.length; i++ ){
+					list[i].call( this._.old, changes );
 				}
 				
 				return this;

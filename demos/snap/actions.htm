@@ -53,12 +53,12 @@ bMoor.constructor.define({
 	}
 });
 </script>
-<div snap-class="test.Tester" snap-template="template1" snap-data="dataSet"></div>
+<div snap-class="test.Tester" snap-template="template1" snap-model="dataSet"></div>
 <script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-data="this.bar"></snap>
+	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-model="bar"></snap>
 ]]>
 </script>
 <script type="text/html" id="template2">

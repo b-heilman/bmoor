@@ -4,6 +4,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	<script src="../../src/jquery.min.js"></script>
 	<script src="../../src/bMoor.js"></script>
+	<script src="../../src/bmoor/controller/Abstract.js"></script>
 	<script src="../../src/bmoor/snap/List.js"></script>
 
 	<script>
@@ -33,16 +34,18 @@
 			name : 'Tester',
 			namespace : [ 'test' ],
 			parent : [ 'bmoor','controller','Abstract' ],
+			actions : {
+				sum : function(){ return 999; }
+			},
 			properties : {
 				_key : 'key',
-				_create : function( model ){
+				_sendCreate : function( model ){
 					console.log( 'creating', model );
-					this._register( model );
 				},
-				_post : function( model ){
+				_sendUpdate : function( model ){
 					console.log( 'changing', model );
 				},
-				_remove : function( model ){
+				_sendRemove : function( model ){
 					console.log( 'removing', model );
 				}
 			}
@@ -63,9 +66,9 @@
 	</table>
 	<button id="addButton"> Add Row </button>
 	<script id='temp' type='text/html'>
-		<td><input snap-class='bmoor.snap.form.Text' type='text' name='description'/></td>
-        <td><input snap-class='bmoor.snap.form.Text'  type='text' name='label'/></td>
-        <td><input snap-class='bmoor.snap.form.Text'  type='text' name='display'/></td>
+		<td><input snap-class='bmoor.snap.form.Text' snap-variable="_.sum()" type='text' name='description'/></td>
+        <td><input snap-class='bmoor.snap.form.Text' type='text' name='label'/></td>
+        <td><input snap-class='bmoor.snap.form.Text' type='text' name='display'/></td>
         <td><button snap-class='bmoor.snap.form.Button' type='button' name='_remove' value="1">Remove</button></td>
 	</script>
 </body>

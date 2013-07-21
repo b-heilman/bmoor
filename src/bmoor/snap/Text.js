@@ -9,7 +9,8 @@ bMoor.constructor.define({
 	},
 	properties: {
 		_setContent : function( content ){
-			this.element.innerHTML = String(content).replace(/&/g, '&amp;')
+			this.element.innerHTML = String(content)
+				.replace(/&/g, '&amp;')
 				.replace(/"/g, '&quot;')
 				.replace(/'/g, '&#39;')
 				.replace(/</g, '&lt;')

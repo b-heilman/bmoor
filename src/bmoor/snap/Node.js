@@ -81,23 +81,23 @@ bMoor.constructor.define({
 	node : {
 		className : 'snap-node'
 	},
-	construct : function( element, data, attributes ){
+	construct : function( element, attributes ){
 		this.binded = false;
 		
 		this._attributes = attributes;
 		this._element( element );
 		this._template();
-		this._data( data );
+		this._model( attributes ? attributes.context : undefined );
 		
 		this._binding();
 		if ( !this.binded ){
-			this._make( this.data ); // binding will cause it to run otherwise
+			this._make( this.scope ); // binding will cause it to run otherwise
 		}
 	},
 	properties : {
 		getModel : function(){
-			if ( this.data && this.data._bind ){
-				return this.data;
+			if ( this.model && this.model._bind ){
+				return this.model;
 			}else return null;
 		},
 		__warn : function( warning ){
@@ -115,26 +115,68 @@ bMoor.constructor.define({
 			this.element = element;
 			this.$.data( 'node', this );
 			
-			this.variable = this._getAttribute( 'variable', null );
-			
 			element.className += ' '+this.baseClass;
 		},
 		_wrapData : function( data ){
 			return new bmoor.model.Map( data );
 		},
-		_data : function( data ){
-			var controller;
+		_model : function( context ){
+			var 
+				data,
+				scope,
+				variable,
+				controller,
+				publishPath,
+				publishName;
 
-			if ( !data || (typeof(data) == 'object' && !data._bind) ){
-				this.data = this._wrapData( data );
+			context = this.element.context || context || global;
+
+			// TODO : make this model rather than data
+			model = this._getAttribute( 'model' );
+			if ( model ){
+				if ( typeof(model) == 'string' ){
+					model = this._unwrapVar( context, model );
+				}
 			}else{
-				this.data = data;
+				model = context;
+			}
+
+			variable = this._getAttribute( 'variable', this.element.name );
+
+			if ( variable && typeof(variable) == 'string' ){
+				scope = variable.split('.');
+				variable = scope.pop();
+
+				scope = this._unwrapVar( model, scope );
+			}else{
+				scope = model;
+				variable = null;
+			}
+
+			// so now lets assign everything
+			if ( !model || (typeof(model) == 'object' && !model._bind) ){
+				this.model = this._wrapData( model );
+			}else{
+				this.model = model;
+			}
+
+			this.scope = scope;
+			this.variable = variable;
+
+			// publish any reference back to the context
+			publishPath = this._getAttribute( 'publish' );
+			if ( publishPath ){
+				publishPath = publishPath.split('.');
+				publishName = publishPath.pop();
+
+				publishPath = this._unwrapVar( context, publishPath );
+				publishPath[ publishName ] = this;
 			}
 
 			controller = this._getAttribute( 'controller' );
 			if ( controller ){
 				controller = bMoor.get( controller );
-				this.controller = new controller( this.data );
+				this.controller = new controller( this.model );
 			}else{
 				this.controller = null;
 			}
@@ -149,23 +191,24 @@ bMoor.constructor.define({
 		_binding : function(){
 			var dis = this;
 			
-			if ( this.data._bind ){
+			if ( this.model._bind ){
 				this.binded = true;
-				this.data._bind( function(){
+				this.model._bind( function(){
 					dis._make( this );
 				});
 			}
 		},
 		_make : function( data ){
 			// cleanse the data
-			data = this.variable ? ( data ? data[this.variable] : null ) : data;
+			data = this.variable ? ( data ? this.scope[this.variable] : null ) : data;
 
 			if ( this.prepared ){
 				this._setContent( bMoor.module.Templator.run(this.prepared,data) );
-				bmoor.lib.Bootstrap.setContext( this.element, data );
 			}else if ( this.variable ){
 				this._setContent( data );
 			}
+
+			this._pushContext();
 
 			this._finalize();
 		},
@@ -181,23 +224,62 @@ bMoor.constructor.define({
 			}else{
 				attribute = 'snap-'+attribute;
 				
-				if ( this.element.hasAttribute(attribute) ){
+				if ( this.element.hasAttribute && this.element.hasAttribute(attribute) ){
 					attr = this.element.getAttribute( attribute );
 				}else return otherwise;
 			}
 			
 			return adjustment ? adjustment( attr ) : attr;
 		},
+		_unwrapVar : function( context, variable ){
+			var 
+				path = typeof(variable) == 'string' ? variable.split('.') : variable,
+				i,
+				c;
+
+			for( i = 0, c = path.length; i < c; i++ ){
+				if ( context[path[i]] ){
+					context = context[ path[i] ];
+				}else return undefined;
+			}
+
+			return context;
+		},
+		_decodeData : function( variable ) {
+			// TODO : prolly inline this
+			return this._unwrapVar( this.model, variable );
+		},
 		// TODO : this should be renamed
-		_getVariable : function( variable ){
+		_decode : function( variable ){
 			if ( typeof(variable) != 'string' ){
 				return variable;
 			}else if ( variable[0] == '{' || variable[0] == '[' ){
 				return eval( variable );
 			}else return eval( 'global.' + variable );
 		},
-		_select : function( selector ){
-			return bmoor.lib.Bootstrap.select( this.element, selector );
+		_select : function( selector, element ){
+			if ( !element ){
+				element = this.element;
+			}
+
+			if ( element.querySelectorAll ){
+				return element.querySelectorAll( selector );
+			}else{
+				return $( element ).find( selector );
+			}
+		},
+		_pushContext : function( element, model ){
+			if ( !element ){
+				element = this.element;
+			}
+
+			if ( !model ){
+				model = this.model;
+			}
+
+			for( var nodes = this._select('[snap-class]', element), i = 0, c = nodes.length; i < c; i++){
+				nodes[i].context = model;
+			}
 		}
 	}
 });

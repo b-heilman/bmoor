@@ -29,8 +29,8 @@
 		checkbox : 1
 	});
 </script>
-<form snap-class="bmoor.snap.Form" snap-data="daMap">
-	<span snap-class="bmoor.snap.Node" snap-data="this" snap-variable="text"></span>
+<form snap-class="bmoor.snap.Form" snap-model="daMap">
+	<span snap-class="bmoor.snap.Node" snap-variable="text"></span>
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
 	<label>radio 2<input type='radio' name='radio' value='2' /></label>
@@ -38,9 +38,15 @@
 	<label>checkbox 1<input type='checkbox' name='checkbox[]' value='1' /></label>
 	<label>checkbox 2<input type='checkbox' name='checkbox[]' value='2' /></label>
 	<label>checkbox 3<input type='checkbox' name='checkbox[]' value='3' /></label>
+	<select name='derpy'>
+		<option>derp 1</option>
+		<option>derp 2</option>
+		<option>derp 3</option>
+		<option>derp 4</option>
+	</select>
 </form>
-<div snap-class="bmoor.snap.Debug" snap-data="daMap"></div>
-<form snap-class="bmoor.snap.Form" snap-data="daMap">
+<div snap-class="bmoor.snap.Debug" snap-model="daMap"></div>
+<form snap-class="bmoor.snap.Form" snap-model="daMap">
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
 	<label>radio 2<input type='radio' name='radio' value='2' /></label>
@@ -48,6 +54,12 @@
 	<label>checkbox 1<input type='checkbox' name='checkbox[]' value='1' /></label>
 	<label>checkbox 2<input type='checkbox' name='checkbox[]' value='2' /></label>
 	<label>checkbox 3<input type='checkbox' name='checkbox[]' value='3' /></label>
+	<select name='derpy'>
+		<option>derp 1</option>
+		<option>derp 2</option>
+		<option>derp 3</option>
+		<option>derp 4</option>
+	</select>
 </form>
 </body>
 </html>

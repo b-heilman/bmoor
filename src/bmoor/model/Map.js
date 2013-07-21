@@ -1,15 +1,23 @@
 ;(function( global, undefined ){
+	var uuid = 0;
+
 	bMoor.constructor.define({
 		name : 'Map',
 		namespace : ['bmoor','model'],
 		construct : function( obj, cleanser, cleanseInterval ){
-			this._old = {};
-			this._listeners = [];
-			this._interval = null;
-			this._cleanse = cleanser 
-				? { cleanser : cleanser, timeout : (cleanseInterval ? cleanseInterval : 5), interval : null }
-				: null;
+			this._ = {
+				old : {},
+				uuid : uuid++,
+				listeners : [],
+				interval : null,
+				cleanse : ( cleanser 
+					? { cleanser : cleanser, timeout : (cleanseInterval ? cleanseInterval : 5), interval : null }
+					: null
+				)
+			};
 			
+			this._.old._ = this._; // circular reference, but needed
+
 			if ( obj ){
 				for( var key in obj ) if ( obj.hasOwnProperty(key) ){
 					this[key] = obj[key];
@@ -20,13 +28,13 @@
 		},
 		properties : {
 			_stop : function(){
-				if ( this._cleanse ){
-					clearInterval( this._cleanse.interval );
-					this._cleanse.interval = null;
+				if ( this._.cleanse ){
+					clearInterval( this._.cleanse.interval );
+					this._.cleanse.interval = null;
 				}
 				
-				clearInterval( this._interval );
-				this._interval = null;
+				clearInterval( this._.interval );
+				this._.interval = null;
 				
 				return this;
 			},
@@ -34,18 +42,18 @@
 				var 
 					dis = this;
 				
-				if ( !this._interval ){
+				if ( !this._.interval ){
 					for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' ){
-						this._old[key] = this[key];
+						this._.old[key] = this[key];
 					}
 					
-					if ( this._cleanse ){
-						this._cleanse.interval = setInterval( function(){
-							dis._cleanse.cleanser( dis );
-						}, this._cleanse.timeout );
+					if ( this._.cleanse ){
+						this._.cleanse.interval = setInterval( function(){
+							dis._.cleanse.cleanser( dis );
+						}, this._.cleanse.timeout );
 					}
 					
-					this._interval = setInterval(function(){ dis._flush(); }, 50);
+					this._.interval = setInterval(function(){ dis._flush(); }, 50);
 				}
 				
 				return this;
@@ -53,10 +61,10 @@
 			_flush : function(){
 				var
 					notify = false,
-					old = this._old;
+					old = this._.old;
 				
-				if ( this._cleanse ){
-					this._cleanse.cleanser( this );
+				if ( this._.cleanse ){
+					this._.cleanse.cleanser( this );
 				}
 			
 				for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' ){
@@ -70,20 +78,25 @@
 					this._notify();
 				}
 			},
+			_call : function( func ){
+				func.call( this._.old );
+
+				return this;
+			},
 			_bind : function( func, noFlush ){
-				this._listeners.push( func );
+				this._.listeners.push( func );
 				
 				// if we are running, then we should make a call back
-				if ( this._interval && !noFlush ){
-					func.call( this._old );
+				if ( this._.interval && !noFlush ){
+					func.call( this._.old );
 				}
 				
 				return this;
 			},
 			_notify : function(){
-				for( var i = 0, list = this._listeners; i < list.length; i++ ){
+				for( var i = 0, list = this._.listeners; i < list.length; i++ ){
 					// this._old will be the last cleaned and parsed data for the model
-					list[i].call( this._old );
+					list[i].call( this._.old );
 				}
 				
 				return this;

@@ -5,13 +5,6 @@ bMoor.constructor.define({
 	namespace : ['bmoor','snap','form'],
 	parent : ['bmoor','snap','Node'],
 	properties: {
-		_element : function( element ){
-			this.__Node._element.call( this, element );
-
-			if ( !this.variable ){
-				this.variable = this.element.name;
-			}
-		},
 		// gets called by the data bind
 		_setContent : function( content ){
 			this.val( content );
@@ -21,11 +14,9 @@ bMoor.constructor.define({
 			
 			this.__Node._binding.call( this );
 			
-			if ( this.data && this.variable ){
+			if ( this.model && this.variable ){
 				this.alter(function( value ){
-					if ( dis.data ){
-						dis.data[ dis.variable ] = value;
-					}
+					dis.scope[ dis.element.name ] = value;
 				});
 			}
 		},
@@ -52,17 +43,18 @@ bMoor.constructor.define({
 		alter : function( cb ){
 			var dis = this;
 			
-			if ( this.element.length ){
+			if ( this.element.nodeName ){
+				this.element.onchange = function(){
+					cb( dis.val() );
+				};
+			}else{
+				// otherwise I assume it's a set
 				for( var i = 0, c = this.element.length; i < c; i++ ){
 					// TODO : can I limit this to one call for radio?
 					this.element[i].onchange = function(){
 						cb( dis.val() );
 					};
 				}
-			}else{
-				this.element.onchange = function(){
-					cb( dis.val() );
-				};
 			}
 		}
 	}

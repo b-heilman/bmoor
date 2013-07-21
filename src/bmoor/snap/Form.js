@@ -48,42 +48,18 @@ bMoor.constructor.define({
 				}
 				
 				if ( el.nodeName == 'BUTTON' ){
-					input = new bmoor.snap.form.Button( field );
+					input = new bmoor.snap.form.Button( field, {model : this.model} );
 				}else if ( el.nodeName == 'SELECT' ){
-					input = new bmoor.snap.form.Select( field );
+					input = new bmoor.snap.form.Select( field, {model : this.model} );
 				}else{
 					if ( el.type == 'checkbox' || el.type == 'radio' ){
-						input = new bmoor.snap.form.Checked( field );
+						input = new bmoor.snap.form.Checked( field, {model : this.model} );
 					}else if (el.type == 'button' ){
-						input = new bmoor.snap.form.Button( field );
+						input = new bmoor.snap.form.Button( field, {model : this.model} );
 					}else{
-						input = new bmoor.snap.form.Text( field );
+						input = new bmoor.snap.form.Text( field, {model : this.model} );
 					}
 				}
-				
-				dis['#'+name] = input;
-				
-				(function(name, input){
-					input.alter(function(){
-						if ( dis.data ){
-							dis.data[ name ] = input.val();
-						}
-					});
-				}( name, input ));
-			}
-			
-			this.fields = fields;
-
-			this.data._notify(); // force a notify push so _dataUpdate is called naturally
-		},
-		_make : function( data ){
-			if ( !this.fields ){
-				this.__Node._make.call( this, data );
-			}
-
-			for( var i = 0, c = this.fields.length; i < c; i++ ){
-				var field = this.fields[ i ];
-				this[ '#'+field ].val( data[field] == undefined ? '' : data[field] );
 			}
 		}
 	}

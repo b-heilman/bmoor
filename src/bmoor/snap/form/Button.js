@@ -5,13 +5,6 @@ bMoor.constructor.define({
 	namespace : ['bmoor','snap','form'],
 	parent : ['bmoor','snap','Node'],
 	properties: {
-		_element : function( element ){
-			this.__Node._element.call( this, element );
-
-			if ( !this.variable ){
-				this.variable = this.element.name;
-			}
-		},
 		_setContent : function( content ){
 			if ( this.element.value == content ){
 				this.$.addClass('active');
@@ -22,15 +15,14 @@ bMoor.constructor.define({
 		_binding : function(){
 			var dis = this;
 			
-			if ( this.data && this.data._bind && this.variable ){
-				this.data._bind(function(){
+			if ( this.model && this.variable ){
+				this.model._bind(function(){
 					dis._make( this );
 				});
 				
 				this.alter(function( value ){
-					if ( dis.data ){
-						dis.data[ dis.variable ] = value;
-					}
+					console.log( dis.scope, dis.element.name );
+					dis.scope[ dis.element.name ] = value;
 				});
 			}
 		},

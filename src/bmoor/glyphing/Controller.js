@@ -8,9 +8,9 @@ bMoor.constructor.define({
 	],
 	parent : ['bmoor','snap','Form'],
 	properties : { 
-		_data : function( data ){
+		_model : function(){
 			this.collection = data.getCollection();
-			this.data = null;
+			this.model = null;
 		},
 		_binding : function(){
 			var dis = this;
@@ -38,7 +38,7 @@ bMoor.constructor.define({
 			
 			model._bind(function(){
 				if ( model.active ){
-					dis.data = model;
+					dis.model = model;
 					dis._mapUpdate( this );
 				}
 			});

@@ -163,7 +163,7 @@ bMoor.constructor.define({
 			
 			this.settings = $.extend( true, {}, this.__static.settings, 
 				this._getAttribute(
-					'settings', {}, function(val){ return dis._getVariable(val); }
+					'settings', {}, function(val){ return dis._decode(val); }
 				)
 			);
 				

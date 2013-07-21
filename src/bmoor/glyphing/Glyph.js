@@ -28,7 +28,7 @@ bMoor.constructor.define({
 			this.__Node._element.call( this, element );
 			
 			this.active = false;
-			this.limits = this._getVariable( this._getAttribute('limits') );
+			this.limits = this._decode( this._getAttribute('limits') );
 			this.minWidth = parseInt( this._getAttribute('minWidth', this.__static.minWidth) );
 			this.minHeight = parseInt( this._getAttribute('minHeight', this.__static.minHeight) );
 			
@@ -38,24 +38,15 @@ bMoor.constructor.define({
 				this.__warn( 'element has no parent, it really should' );
 			}
 		},
-		_data : function( data ){
-			var dis = this;
+		_model : function(){
+			this.__Node._model.call( this );
 			
-			if ( data._bind ){
-				this.data = data;
-			}else{
-				this.data = this._makeMap( data );
-			}
+			this.setModelValues( this.makeModelValues(this.model) );
 			
-			this.setModelValues( this.makeModelValues(data) );
-			
-			this.data.gap = {
+			this.model.gap = {
 				left : parseInt( this.$.css('padding-left') ) + parseInt( this.$.css('border-left-width') ),
 				top  : parseInt( this.$.css('padding-top') ) + parseInt( this.$.css('border-top-width') )
 			};
-		},
-		_makeMap : function( data ){
-			return new bmoor.model.Map( data );
 		},
 		_mapUpdate : function( data ){
 			if ( data.remove ){
@@ -126,9 +117,9 @@ bMoor.constructor.define({
 			for( var dex in values ){
 				if ( values[dex] !== undefined && values[dex] !== null ){
 					if ( cleanses[dex] ){
-						this.data[dex] = cleanses[dex]( values[dex] );
+						this.model[dex] = cleanses[dex]( values[dex] );
 					}else{
-						this.data[dex] = values[dex];
+						this.model[dex] = values[dex];
 					}
 					
 					delete defaults[dex];
@@ -137,15 +128,15 @@ bMoor.constructor.define({
 			
 			for( var dex in defaults ){
 				if ( cleanses[dex] ){
-					this.data[dex] = cleanses[dex]( defaults[dex] );
+					this.model[dex] = cleanses[dex]( defaults[dex] );
 				}else{
-					this.data[dex] = defaults[dex];
+					this.model[dex] = defaults[dex];
 				}
 			}
 		},
 		setCenter : function( x, y ){
-			this.data.left = ( x - this.data.width / 2 );
-			this.data.top = ( y - this.data.height / 2 );
+			this.model.left = ( x - this.model.width / 2 );
+			this.model.top = ( y - this.model.height / 2 );
 			
 			return this;
 		},
@@ -159,14 +150,14 @@ bMoor.constructor.define({
 		},
 		draw : function(){
 			var
-				rotate = 'rotate('+this.data.angle+'deg)';
+				rotate = 'rotate('+this.model.angle+'deg)';
 				
 			this.$.css( {
-				top     : (this.data.top - this.data.gap.top)+'px',
-				left    : (this.data.left - this.data.gap.left)+'px',
-				width   : this.data.width+'px',
-				height  : this.data.height+'px',
-				opacity : this.data.opacity,
+				top     : (this.model.top - this.model.gap.top)+'px',
+				left    : (this.model.left - this.model.gap.left)+'px',
+				width   : this.model.width+'px',
+				height  : this.model.height+'px',
+				opacity : this.model.opacity,
 				'-webkit-transform' : rotate,
 				'-moz-transform'    : rotate,
 				'-ms-transform'     : rotate,
@@ -180,12 +171,12 @@ bMoor.constructor.define({
 		},
 		toObject : function(){
 			return {
-				top     : this.data.top,
-				left    : this.data.left,
-				height  : this.data.height,
-				width   : this.data.width,
-				opacity : this.data.opacity,
-				angle   : this.data.angle
+				top     : this.model.top,
+				left    : this.model.left,
+				height  : this.model.height,
+				width   : this.model.width,
+				opacity : this.model.opacity,
+				angle   : this.model.angle
 			};
 		}
 	}

@@ -20,7 +20,7 @@ bMoor.constructor.define({
 				var 
 					lastPosition = helpers.lastPosition,
 					offset = node.$.offset(),
-					stroke = new (bMoor.get( node.data.stroke ))( node.ctx, node.data ),
+					stroke = new (bMoor.get( node.model.stroke ))( node.ctx, node.model ),
 					onMove = function( event ){
 						stroke.move( event.pageX - offset.left, event.pageY - offset.top );
 					},
@@ -69,26 +69,20 @@ bMoor.constructor.define({
 			element.setAttribute('unselectable', 'on');
 			element.onselectstart = function() { if (dragging) return false; };
 		},
-		_data : function( settings ){
-			if ( !settings ){
-				settings = new bmoor.model.Map();
-			}else if( !settings._bind ){
-				settings = new bmoor.model.Map( map );
+		_model : function(){
+			this.__Node._model.call( this );
+
+			if ( !this.model.color ){
+				this.model.color = 'black';
 			}
 			
-			if ( !settings.color ){
-				settings.color = 'black';
+			if ( !this.model.width ){
+				this.model.width = 1;
 			}
 			
-			if ( !settings.width ){
-				settings.width = 1;
+			if ( !this.model.stroke ){
+				this.model.stroke = 'bmoor.drawing.stroke.Brush';
 			}
-			
-			if ( !settings.stroke ){
-				settings.stroke = 'bmoor.drawing.stroke.Brush';
-			}
-			
-			this.__Node._data.call( this, settings );
 		},
 		save : function(){
 			return this.ctx.toDataURL();

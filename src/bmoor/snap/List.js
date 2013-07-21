@@ -27,6 +27,19 @@ bMoor.constructor.define({
 
 			this.__Node._template.call( this );
 		},
+		_wrapData : function( data ){
+			return new bmoor.model.Collection( data );
+		},
+		_binding : function(){
+			var dis = this;
+			
+			if ( this.model._bind ){
+				this.binded = true;
+				this.model._bind( function( alterations ){
+					dis._make( this, alterations );
+				});
+			}
+		},
 		_make : function( data, alterations ){
 			var
 				additions,
@@ -42,7 +55,7 @@ bMoor.constructor.define({
 				
 				if ( typeof(row) == 'object' ){
 					// this means it was removed, otherwise it would be a number
-					row = row._row; // reference the row element
+					row = row._.row; // reference the row element
 
 					if ( this.mountPoint == row ){
 						this.mountPoint =  row.previousSibling;
@@ -59,20 +72,7 @@ bMoor.constructor.define({
 				this.append( additions[i] );
 			}
 		},
-		_wrapData : function( data ){
-			return new bmoor.model.Collection( data );
-		},
-		_binding : function(){
-			var dis = this;
-			
-			if ( this.data._bind ){
-				this.binded = true;
-				this.data._bind( function( alterations ){
-					dis._make( this, alterations );
-				});
-			}
-		},
-		_makeChild : function( data, tag, attributes, asString ){
+		_makeChild : function( model, tag, attributes, asString ){
 			if ( asString ){
 				var attrs = '';
 					
@@ -82,13 +82,13 @@ bMoor.constructor.define({
 					
 				if ( this.prepared ){
 					return '<'+tag+' class="'+this.childClass+'" '+attrs+'>'
-						+ bMoor.module.Templator.run( this.prepared, data )
+						+ bMoor.module.Templator.run( this.prepared, model )
 						+ '</'+tag+'>';
 				}else return '<'+tag+' class="'+this.childClass+'" '+attrs+'>'+ '</'+tag+'>';
 			}else{
 				if ( this.prepared ){
 					var 
-						template = bMoor.module.Templator.run( this.prepared, data ),
+						template = bMoor.module.Templator.run( this.prepared, model ),
 						element = document.createElement( tag );
 						
 					element.innerHTML = template;
@@ -98,7 +98,7 @@ bMoor.constructor.define({
 						element.setAttribute( attr, attributes[attr] );
 					}
 					
-					bMoor.module.Bootstrap.setContext( element, data );
+					this._pushContext( element, model );
 					
 					return element;
 				}else{
@@ -106,8 +106,11 @@ bMoor.constructor.define({
 				}
 			}
 		},
-		append : function( data ){
-			var el = this._makeChild( data,this.childTag );
+		add : function( data ){
+			this.model.push( data );
+		},
+		append : function( model ){
+			var el = this._makeChild( model, this.childTag );
 
 			if ( this.mountPoint ){
 				if ( this.mountPoint.nextSibling ){
@@ -122,7 +125,7 @@ bMoor.constructor.define({
 				this.mountPoint = el;
 			}
 			
-			data._row = el;
+			model._.row = el;
 
 			return el;
 		},
