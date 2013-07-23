@@ -5,48 +5,52 @@ bMoor.constructor.define({
 	namespace : ['bmoor','controller'],
 	construct : function( model ){
 		this.updates = {};
-		this.deletes = {};
+		this.removes = {};
 		this.creates = {};
 
-		this.model = model;
+		this._model( model );
 
-		if ( data instanceof bmoor.model.Collection ){
+		if ( model instanceof bmoor.model.Collection ){
 			this._collectionBind( model );
 		}else if ( model._bind ){
 			this._binding( model );
 		}
 	},
 	onDefine : function( definition ){
+		var service;
+
 		if ( this.actions ){
-			definition.prototype._ = this.actions;
+			definition.prototype._actions = this.actions;
+		}
+
+		if ( this.services ){
+			if ( !definition.prototype._ ){
+				definition.prototype._ = {};
+			}
+
+			for( service in this.services ){
+				definition.prototype._[ service ] = bMoor.get( this.services[service] );
+			}
 		}
 	},
 	properties : {
 		delay : 2000,
-		url : {
-			"get"    : '',
-			"update" : '',
-			"delete" : '',
-			"create" : ''
-		},
 		_key : null,
+		_model : function( model ){
+			this.model = model;
+		},
 		_binding : function( model ){
 			var 
 				dis = this,
 				key = this._key,
 				create = false,
-				actions = model._,
+				actions = model,
 				action,
 				attr;
 
-			// TODO : foreach, and I don't like this, seems slow?
-			for( attr in this._ ){
-				(function( action ){
-					actions[ attr ] = function(){
-						// apply all functionality to the cleanest data
-						return action.apply( model._.old, arguments );
-					};
-				}( this._[ attr ] ));
+			// TODO : foreach
+			for( attr in this._actions ) if ( this._actions.hasOwnProperty(attr) ){ 
+				actions[ attr ] = this._actions[ attr ]; 
 			}
 
 			if ( key ){
@@ -84,33 +88,37 @@ bMoor.constructor.define({
 		_register : function( model ){
 			var dis = this;
 
-			model._bind(function(){
-				dis._update( this ); // post and updates
-			}, true);
+			model._bind(function(){ dis._update( this ); }, true);
 		},
 		_create : function( model ){
 			var dis = this;
 
 			this._register( model );
 
-			model._call(function(){
-				dis.creates[ this._.uuid ] = this;
-			});
+			model._call(function(){ dis.creates[ this._.snapid ] = this._simplify(); });
 			
 			this._push();
 		},
-		_sendCreate : function( data ){},
-		_update : function( data ){
-			this.updates[ data._.uuid ] = data;
+		_sendCreate : function( data ){
+			throw 'Control needs _sendCreate defined: '+this.__name;
+		},
+		_update : function( model ){
+			this.updates[ model._.snapid ] = model._simplify();
 			this._push();
 		},
-		_sendUpdate : function( data ){},
-		_delete : function( data ){
-			this.deletes[ data._.uuid ] = data;
+		_sendUpdate : function( data ){
+			throw 'Control needs _sendUpdate defined: '+this.__name;
+		},
+		_remove : function( model ){
+			this.removes[ model._.snapid ] = model._simplify();
 			this._push();
 		},
-		_sendDelete : function( data ){},
-		_get : function(){},
+		_sendRemove : function( data ){
+			throw 'Control needs _sendRemove defined: '+this.__name;
+		},
+		_get : function(){
+			throw 'Control needs _get defined: '+this.__name;
+		},
 		_push : function(){
 			var dis = this;
 
@@ -127,33 +135,33 @@ bMoor.constructor.define({
 			// seperate the current back from any future
 			var
 				creates = this.creates,
-				deletes = this.deletes,
+				removes = this.removes,
 				updates = this.updates,
-				uuid;
+				snapid;
 
 			this.creates = {};
-			this.deletes = {};
+			this.removes = {};
 			this.updates = {};
 
-			for( uuid in creates ){
-				if ( !deletes[uuid] ){
+			for( snapid in creates ){
+				if ( !removes[snapid] ){
 					// prevent a create / delete loop
-					this._sendCreate( creates[uuid] );
+					this._sendCreate( creates[snapid] );
 				}
 
-				delete deletes[uuid];
-				delete updates[uuid];
+				delete removes[snapid];
+				delete updates[snapid];
 			}
 
-			for( uuid in updates ){
-				if ( !deletes[uuid] ){
+			for( snapid in updates ){
+				if ( !removes[snapid] ){
 					// prevent an unneeded update
-					this._sendUpdate( updates[uuid] );
+					this._sendUpdate( updates[snapid] );
 				}
 			}
 
-			for( uuid in deletes ){
-				this._sendDelete( deletes[uuid] );
+			for( snapid in removes ){
+				this._sendRemove( removes[snapid] );
 			}
 
 			if ( this.model._.onPush ){

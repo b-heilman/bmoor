@@ -12,10 +12,8 @@
 				// place to put variables that should be ignored
 				listeners : [],
 				interval  : null,
-				old       : this.slice(0)
+				cleaned   : this.slice(0)
 			}; 
-			
-			this._.old._ = this._; // circular reference, but needed
 			
 			if ( obj ){
 				for( var i = 0, c = obj.length; i < c; i++ ){
@@ -76,7 +74,7 @@
 			_run: function(){
 				var
 					moves = {},
-					removals = this._.old,
+					removals = this._.cleaned,
 					dirty = ( this.length != removals.length ),
 					additions = {};
 				
@@ -110,7 +108,7 @@
 					t._.index = i;
 				}
 				
-				this._.old = this.slice(0);
+				this._.cleaned = this.slice(0);
 				
 				if ( dirty ){
 					this._notify( { additions : additions, removals : removals, moves : moves } );
@@ -120,12 +118,12 @@
 				this._.listeners.push( func );
 				
 				if ( this._.interval && !noFlush ){
-					func.call( this._.old, { additions : this._.old } );
+					func.call( this._.cleaned, { additions : this._.cleaned } );
 				}
 			},
 			_notify : function( changes ){
 				for( var i = 0, list = this._.listeners; i < list.length; i++ ){
-					list[i].call( this._.old, changes );
+					list[i].call( this._.cleaned, changes );
 				}
 				
 				return this;

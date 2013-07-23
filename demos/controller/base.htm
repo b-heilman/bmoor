@@ -4,72 +4,101 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	<script src="../../src/jquery.min.js"></script>
 	<script src="../../src/bMoor.js"></script>
+	<script src="../../src/bmoor/service/Abstract.js"></script>
 	<script src="../../src/bmoor/controller/Abstract.js"></script>
 	<script src="../../src/bmoor/snap/List.js"></script>
 
 	<script>
-		var lowData = [{
-			description: 'derp',
-			key : 1,
-			label : 1,
-			display : 2
-		}, {
-			description: 'derp2',
-			key : 2,
-			label : 3,
-			display : 4
-		}];
+		(function( global ){
+			global.lowData = [{
+				description : 'derp',
+				key     : 1,
+				label   : 1,
+				display : 2,
+				eins    : 5,
+				zwei    : 4
+			}, {
+				description : 'derp2',
+				key     : 2,
+				label   : 3,
+				display : 4,
+				eins    : 2,
+				zwei    : 3
+			}];
 
-		$(document).ready(function(){
-			$('#addButton').click(function(){
-				lowView.data.push({
-					description : '',
-					label : '',
-					display : ''
+			$(document).ready(function(){
+				$('#addButton').click(function(){
+					global.lowView.add({
+						description : 'sample1',
+						label   : 'sample2',
+						display : 'sample3',
+						eins    : 1,
+						zwei    : 2
+					});
 				});
 			});
+		}( this ));
+
+		bMoor.constructor.singleton({
+			name : 'Service',
+			namespace : [ 'test' ],
+			parent : [ 'bmoor','service','Abstract' ],
+			properties : {
+				_create : 'http://create/:label/description?blar=:display&asdsdas=asdads',
+				_update : 'http://update/:description/:label?blar=:display',
+				_remove : 'http://remove/'
+			}
 		});
 
 		bMoor.constructor.define({
-			name : 'Tester',
+			name : 'Controller',
 			namespace : [ 'test' ],
 			parent : [ 'bmoor','controller','Abstract' ],
+			services : {
+				'test' : test.Service
+			},
 			actions : {
-				sum : function(){ return 999; }
+				sum : function(){ return parseInt(this.eins) + parseInt(this.zwei); }
 			},
 			properties : {
 				_key : 'key',
-				_sendCreate : function( model ){
-					console.log( 'creating', model );
+				_sendCreate : function( data ){
+					this._.test.create( data );
 				},
-				_sendUpdate : function( model ){
-					console.log( 'changing', model );
+				_sendUpdate : function( data ){
+					this._.test.update( data );
 				},
-				_sendRemove : function( model ){
-					console.log( 'removing', model );
+				_sendRemove : function( data ){
+					this._.test.remove( data );
 				}
 			}
 		});
 	</script>
 </head>
 <body>
-	<table snap-class="bmoor.snap.List" snap-data="lowData" snap-child="tr" snap-mount="mount" 
-		snap-template="temp" snap-publish="lowView" snap-controller="test.Tester">
+	<table snap-class="bmoor.snap.List" snap-model="lowData" snap-child="tr" snap-mount="mount" 
+		snap-template="temp" snap-publish="lowView" snap-controller="test.Controller">
 		<tbody>
 			<tr class='mount'>
-	            <th>Description</th>
+				<th>Yay</th>
+				<th>Description</th>
 	            <th>Label</th>
 	            <th>Display</th>
+	            <th>Eins</th>
+	            <th>Zwei</th>
 	            <th>&nbsp;</th>
         	</tr>
         </tbody>
 	</table>
 	<button id="addButton"> Add Row </button>
 	<script id='temp' type='text/html'>
-		<td><input snap-class='bmoor.snap.form.Text' snap-variable="_.sum()" type='text' name='description'/></td>
+		<td><span snap-class='bmoor.snap.Text' type='text' snap-variable="sum"></span></td>
+		<td><input snap-class='bmoor.snap.form.Text' type='text' name='description'/></td>
         <td><input snap-class='bmoor.snap.form.Text' type='text' name='label'/></td>
         <td><input snap-class='bmoor.snap.form.Text' type='text' name='display'/></td>
-        <td><button snap-class='bmoor.snap.form.Button' type='button' name='_remove' value="1">Remove</button></td>
+        <td><input snap-class='bmoor.snap.form.Text' type='text' name='eins'/></td>
+        <td><input snap-class='bmoor.snap.form.Text' type='text' name='zwei'/></td>
+        <td><button snap-class='bmoor.snap.form.Button' type='button' snap-variable='_.remove' name='remove' value="1">Remove</button></td>
 	</script>
 </body>
 

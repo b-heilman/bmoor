@@ -1,17 +1,12 @@
-	
-Remotely binded models
-	- use a controller pattern that binds to the models to push updates
-	- rejecting the idea of allowing a model to push itself
-	- have nodes subscribe to controller, and the .data attribute gets binded to
-	- create a resource hash
-	- function for defining resources and assigning variables
-	- allow attributes to map to url variables : should be function of the controller
-	
-Form Validator
+
+Multiple Controllers, or Singleton, static data?
+
+Model Validator
 	- form node should become a decorator
 	- form validation should also be a decorator
 
-List dynamics improved
-	- lists aren't really very dynamic
-	- they need to key rows, so a key attribute needs to be passed in
+Services
+	- error handling
+	
+Error Handling
 	

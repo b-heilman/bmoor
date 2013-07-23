@@ -193,14 +193,20 @@ bMoor.constructor.define({
 			
 			if ( this.model._bind ){
 				this.binded = true;
-				this.model._bind( function(){
-					dis._make( this );
-				});
+				this.model._bind( function(){ dis._make( this ); });
 			}
 		},
 		_make : function( data ){
 			// cleanse the data
-			data = this.variable ? ( data ? this.scope[this.variable] : null ) : data;
+			if ( this.variable ){
+				if ( this.scope ){
+					data = this.scope[this.variable];
+
+					if ( typeof(data) == 'function' ){ data = this.scope[this.variable](); }
+				}else{
+					data = null;
+				}
+			}
 
 			if ( this.prepared ){
 				this._setContent( bMoor.module.Templator.run(this.prepared,data) );

@@ -25,8 +25,10 @@
 		parse : function( space ){
 			if ( typeof(space) == 'string' ){
 				return space.split('.'); // turn strings into an array
-			}else if ( space ){
+			}else if ( space.length ){
 				return space.slice(0);
+			}else if ( space ){
+				return space;
 			}else{
 				return [];
 			}
@@ -35,10 +37,11 @@
 			This will create an object in place if it doesn't exist
 		*/
 		get : function( space ){
-			var 
-				curSpace = global;
+			var curSpace = global;
 			
-			if ( space ){
+			if ( !space ){
+				return null;
+			}else if ( typeof(space) == 'string' || space.length ){
 				space = this.parse( space );
 				
 				for( var i = 0; i < space.length; i++ ){
@@ -53,29 +56,32 @@
 				}
 				
 				return curSpace;
-			}else return null;
+			}else return space;
 		},
 		/*
 			returns back the space or null
 		*/
 		exists : function( space ){
-			var 
-				curSpace = global;
+			var curSpace = global;
 			
-			space = this.parse( space );
-			
-			for( var i = 0; i < space.length; i++ ){
-				var
-					nextSpace = space[i];
+			if ( !space ){
+				return null;
+			}else if ( typeof(space) == 'string' || space.length ){
+				space = this.parse( space );
+				
+				for( var i = 0; i < space.length; i++ ){
+					var
+						nextSpace = space[i];
+						
+					if ( !curSpace[nextSpace] ){
+						return null;
+					}
 					
-				if ( !curSpace[nextSpace] ){
-					return null;
+					curSpace = curSpace[nextSpace];
 				}
 				
-				curSpace = curSpace[nextSpace];
-			}
-			
-			return curSpace;
+				return curSpace;
+			}else return space;
 		}
 	};
 	
