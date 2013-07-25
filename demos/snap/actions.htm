@@ -21,39 +21,73 @@
 <body>
 
 <script>
-bMoor.constructor.define({
-	name : 'Tester',
-	namespace : ['test'],
-	parent: ['bmoor','snap','Node'],
-	node : {
-		className : 'tester',
-		actions : {
-			'mouseover' : function(){
-				console.log( 'mouseover' );
-			},
-			'click' : {
-				'' : function(){
-					alert('ouch');
+	var dataSet = { 
+			foo : 'foot', 
+			bar : { uh:'yay' }, 
+			list: [
+				{x:'eins'},
+				{x:'zwei'},
+				{x:'drei'}
+			]
+		}; 
+
+	bMoor.constructor.define({
+		name : 'Tester',
+		namespace : ['test'],
+		parent: ['bmoor','snap','Node'],
+		node : {
+			className : 'tester',
+			actions : {
+				'mouseover' : function(){
+					console.log( 'mouseover' );
 				},
-				'b' : function( event ){
-					alert('bold');
-					event.stopPropagation();
-				},
-				'.snap-node' : function( event, node, helpers ){
-					if ( !helpers.count ){
-						helpers.count = 1;
-					}else{
-						helpers.count++;
+				'click' : {
+					'' : function(){
+						alert('ouch');
+					},
+					'b' : function( event ){
+						alert('bold');
+						event.stopPropagation();
+					},
+					'.snap-node' : function( event, node, helpers ){
+						if ( !helpers.count ){
+							helpers.count = 1;
+						}else{
+							helpers.count++;
+						}
+						
+						console.log( helpers.count, node );
 					}
-					
-					console.log( helpers.count, node );
 				}
 			}
 		}
-	}
-});
+	});
+
+	bMoor.constructor.singleton({
+		name : 'Controller',
+		namespace : ['test'],
+		parent : ['bmoor','controller','Abstract'],
+		require : {
+			classes : [ 
+				['bmoor','model','Map'],
+				['bmoor','model','Collection']
+			]
+		},
+		properties : {
+			_model : function( ){ 
+				var data = dataSet;
+
+				data.list = new bmoor.model.Collection( data.list );
+				data = new bmoor.model.Map( data );
+
+				return data;
+			}
+		}
+	});
 </script>
-<div snap-class="test.Tester" snap-template="template1" snap-model="dataSet"></div>
+
+<div snap-class="test.Tester" snap-template="template1" snap-controller="test.Controller"></div>
+
 <script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
 <script type="text/html" id="template1">
 <![CDATA[

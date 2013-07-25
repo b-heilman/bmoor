@@ -5,81 +5,89 @@
 	<script src="../../src/jquery.min.js"></script>
 	<script src="../../src/bMoor.js"></script>
 	<script src="../../src/bmoor/service/Abstract.js"></script>
-	<script src="../../src/bmoor/controller/Abstract.js"></script>
 	<script src="../../src/bmoor/snap/List.js"></script>
 
 	<script>
 		(function( global ){
-			global.lowData = [{
-				description : 'derp',
-				key     : 1,
-				label   : 1,
-				display : 2,
-				eins    : 5,
-				zwei    : 4
-			}, {
-				description : 'derp2',
-				key     : 2,
-				label   : 3,
-				display : 4,
-				eins    : 2,
-				zwei    : 3
-			}];
 
-			$(document).ready(function(){
-				$('#addButton').click(function(){
-					global.lowView.add({
-						description : 'sample1',
-						label   : 'sample2',
-						display : 'sample3',
-						eins    : 1,
-						zwei    : 2
-					});
-				});
+			var lowData = [{
+					description : 'derp',
+					key     : 1,
+					label   : 1,
+					display : 2,
+					eins    : 5,
+					zwei    : 4
+				}, {
+					description : 'derp2',
+					key     : 2,
+					label   : 3,
+					display : 4,
+					eins    : 2,
+					zwei    : 3
+				}];
+		
+
+			bMoor.constructor.singleton({
+				name : 'Service',
+				namespace : [ 'test' ],
+				parent : [ 'bmoor','service','Abstract' ],
+				properties : {
+					_create : 'http://create/:label/description?blar=:display&asdsdas=asdads',
+					_update : 'http://update/:description/:label?blar=:display',
+					_remove : 'http://remove/'
+				}
+			});
+
+			bMoor.constructor.singleton({
+				name : 'Controller',
+				namespace : [ 'test' ],
+				parent : [ 'bmoor','controller','Abstract' ],
+				services : { 'test' : ['test','Service'] },
+				functions : {
+					sum : function(){ return parseInt(this.eins) + parseInt(this.zwei); }
+				},
+				controller : {
+					className : 'woot',
+					actions : {
+						'click' : {
+							'.row-add' : function( event, controller ){
+								controller.addRow();
+							}
+						}
+					}
+				},
+				properties : {
+					addRow : function(){
+						this.model.push({
+							description : 'sample1',
+							label   : 'sample2',
+							display : 'sample3',
+							eins    : 1,
+							zwei    : 2
+						});
+					},
+					_key : 'key',
+					_model : function(){
+						return new bmoor.model.Collection( lowData );
+					},
+					_sendCreate : function( data ){
+						this._.test.create( data );
+					},
+					_sendUpdate : function( data ){
+						this._.test.update( data );
+					},
+					_sendRemove : function( data ){
+						this._.test.remove( data );
+					}
+				}
 			});
 		}( this ));
-
-		bMoor.constructor.singleton({
-			name : 'Service',
-			namespace : [ 'test' ],
-			parent : [ 'bmoor','service','Abstract' ],
-			properties : {
-				_create : 'http://create/:label/description?blar=:display&asdsdas=asdads',
-				_update : 'http://update/:description/:label?blar=:display',
-				_remove : 'http://remove/'
-			}
-		});
-
-		bMoor.constructor.define({
-			name : 'Controller',
-			namespace : [ 'test' ],
-			parent : [ 'bmoor','controller','Abstract' ],
-			services : {
-				'test' : test.Service
-			},
-			actions : {
-				sum : function(){ return parseInt(this.eins) + parseInt(this.zwei); }
-			},
-			properties : {
-				_key : 'key',
-				_sendCreate : function( data ){
-					this._.test.create( data );
-				},
-				_sendUpdate : function( data ){
-					this._.test.update( data );
-				},
-				_sendRemove : function( data ){
-					this._.test.remove( data );
-				}
-			}
-		});
 	</script>
 </head>
-<body>
-	<table snap-class="bmoor.snap.List" snap-model="lowData" snap-child="tr" snap-mount="mount" 
-		snap-template="temp" snap-publish="lowView" snap-controller="test.Controller">
+<body snap-controller="test.Controller">
+	<table snap-class="bmoor.snap.List" snap-child="tr" snap-mount="mount" snap-template="temp">
 		<tbody>
-			<tr class='mount'>
+			<tr mount>
 				<th>Yay</th>
 				<th>Description</th>
 	            <th>Label</th>
@@ -90,7 +98,7 @@
         	</tr>
         </tbody>
 	</table>
-	<button id="addButton"> Add Row </button>
+	<button class='row-add'> Add Row </button>
 	<script id='temp' type='text/html'>
 		<td><span snap-class='bmoor.snap.Text' type='text' snap-variable="sum"></span></td>
 		<td><input snap-class='bmoor.snap.form.Text' type='text' name='description'/></td>

@@ -3,21 +3,21 @@
 bMoor.constructor.define({
 	name : 'Abstract',
 	namespace : ['bmoor','service'],
-	onDefine : function( definition ){
-		if ( typeof(definition.prototype._get) == 'string' ){
-			definition.prototype._get = definition.prototype._parseService.call( this, definition.prototype._get );
+	construct : function(){
+		if ( typeof(this._get) == 'string' ){
+			this._get = this._parseService( this._get );
 		}
 
-		if ( typeof(definition.prototype._update) == 'string' ){
-			definition.prototype._update = definition.prototype._parseService.call( this, definition.prototype._update );
+		if ( typeof(this._update) == 'string' ){
+			this._update = this._parseService( this._update );
 		}
 
-		if ( typeof(definition.prototype._remove) == 'string' ){
-			definition.prototype._remove = definition.prototype._parseService.call( this, definition.prototype._remove );
+		if ( typeof(this._remove) == 'string' ){
+			this._remove = this._parseService( this._remove );
 		}
 
-		if ( typeof(definition.prototype._create) == 'string' ){
-			definition.prototype._create = definition.prototype._parseService.call( this, definition.prototype._create );
+		if ( typeof(this._create) == 'string' ){
+			this._create = this._parseService( this._create );
 		}
 	},
 	properties : {

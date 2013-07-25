@@ -27,9 +27,6 @@ bMoor.constructor.define({
 
 			this.__Node._template.call( this );
 		},
-		_wrapData : function( data ){
-			return new bmoor.model.Collection( data );
-		},
 		_binding : function(){
 			var dis = this;
 			

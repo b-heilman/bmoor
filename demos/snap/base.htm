@@ -10,31 +10,63 @@
 	bMoor.autoload.setRoot('../../src');
 	bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
 </script>
+<script src="../../src/bmoor/model/Map.js"></script>
+<script src="../../src/bmoor/model/Collection.js"></script>
+<script src="../../src/bmoor/controller/Abstract.js"></script>
+<script src="../../src/bmoor/controller/Variable.js"></script>
 <script src='../../src/bmoor/lib/Resource.js'></script>
 <script src='../../src/bmoor/lib/WaitFor.js'></script>
 <script src='../../src/bmoor/lib/MouseTracker.js'></script>
 <script src='../../src/bmoor/lib/Bootstrap.js'></script>
 <script src='../../src/bmoor/templating/JQote.js'></script>
-<script src='../../src/bmoor/model/Map.js'></script>
 	
 <script src="../../src/bmoor/snap/Node.js"></script>
 <script src="../../src/bmoor/snap/List.js"></script>
+
+
 </head>
 <body>
 	
-<ul snap-class="bmoor.snap.List" snap-template="list1" snap-model="dataSet.list"></ul>
-<ul snap-class="bmoor.snap.List" snap-template="list1" snap-model="dataSet.list" snap-mount='true'>
+<script>
+(function( global ){
+	bMoor.constructor.singleton({
+		name : 'Controller',
+		namespace : ['test'],
+		parent : ['bmoor','controller','Abstract'],
+		require : {
+			classes : [ 
+				['bmoor','model','Map'],
+				['bmoor','model','Collection']
+			]
+		},
+		properties : {
+			_model : function(){ 
+				return new bmoor.model.Map({ 
+					foo : 'foot', 
+					bar : { uh:'yay' }, 
+					list: new bmoor.model.Collection([
+						{x:'eins'},
+						{x:'zwei'},
+						{x:'drei'}
+					]) 
+				});
+			}
+		}
+	});
+}( this ));
+</script>
+
+<ul snap-class="bmoor.snap.List" snap-template="list1" snap-controller="test.Controller" snap-model="list"></ul>
+<ul snap-class="bmoor.snap.List" snap-template="list1" snap-controller="test.Controller" snap-model="list" snap-mount='true'>
 	<li mount>This is a pre existing thing</li>
 	<li>This should be the footer</li>
 </ul>
-<div snap-class="bmoor.snap.Node" snap-template="template1" snap-model="dataSet"> Loading... </div>
-
-<script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
+<div snap-class="bmoor.snap.Node" snap-template="template1" snap-controller="test.Controller"> Loading... </div>
 
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-model="bar"></snap>
+	<span snap-class="bmoor.snap.Node" snap-template="template2" snap-model="bar"></span>
 ]]>
 </script>
 <script type="text/html" id="template2">

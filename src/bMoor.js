@@ -13,6 +13,15 @@
 				: scriptTag.getAttribute('src').match(/^(.*)\/bMoor.js/)[1]
 		};
 	
+	/**
+	*	Extending some base object, to make life easier
+	**/
+	if( !String.prototype.trim) {
+		String.prototype.trim = function () {
+			return this.replace( /^\s+|\s+$/g, '' );
+		};
+	}
+
 	function error( str ){
 		if ( console && console.log ){
 			console.log( str );
@@ -483,16 +492,16 @@
 			function def(){
 				var
 					parent = Namespace.get( settings.parent );
-					
+				
 				if ( parent && parent.prototype.__defining ){
 					setTimeout( def, 10 );
 				}else{
+					
 					define.call( dis, settings, obj );
-					
 					if ( settings.onDefine ){
-						settings.onDefine( obj, namespace, settings.name );
+						settings.onDefine.apply( obj.prototype, [settings, namespace, settings.name, obj] );
 					}
-					
+
 					if ( settings.onReady ){
 						$(document).ready(function(){
 							// make sure all requests have been completed as well
@@ -520,13 +529,13 @@
 		Constructor.prototype.singleton = function( settings ){
 			var old = settings.onDefine ? settings.onDefine : function(){};
 			
-			settings.onDefine = function( definition, namespace, name ){
+			settings.onDefine = function( settings, namespace, name, definition ){
 				var 
 					def = new definition,
 					module;
 
 				namespace[ name ] = def;
-				old( def, namespace, name );
+				old.apply( def, [settings, namespace, name, definition] );
 				
 				if ( settings.module ){
 					module = settings.module;
@@ -633,14 +642,12 @@
 					settings.require.classes.push( decorators[i] );
 				}
 					
-				settings.onDefine = function( definition, namespace, name ){
+				settings.onDefine = function( settings, namespace, name, definition ){
 					// it can either be a class (define) or an instance (singleton)
-					var obj = definition.prototype ? definition.prototype : definition;
-
-					old( definition, namespace, name );
+					old.apply( this, [settings, namespace, name, definition] );
 					
 					for( i = 0; i < decorators.length; i++ ){
-						Namespace.get( decorators[i] )._decorate( obj );
+						Namespace.get( decorators[i] )._decorate( this );
 					}
 				};
 			}
@@ -666,11 +673,11 @@
 				
 				if ( parent.prototype.__onDefine ){
 					if ( settings.onDefine ){
-						var t = settings.onDefine;
+						var old = settings.onDefine;
 						
-						settings.onDefine = function( definition, namespace, name ){
-							parent.prototype.__onDefine.call( settings, definition, namespace, name );
-							t.call( settings, definition, namespace, name );
+						settings.onDefine = function( settings, namespace, name, definition ){
+							parent.prototype.__onDefine.call( this, settings, namespace, name, definition );
+							old.call( this, settings, namespace, name, definition );
 						};
 					}else{
 						settings.onDefine = parent.prototype.__onDefine;

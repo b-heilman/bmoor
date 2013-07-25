@@ -1,56 +1,107 @@
 ;(function( $, global, undefined ){
 
+var controllers = 0;
+
 bMoor.constructor.define({
 	name : 'Abstract',
 	namespace : ['bmoor','controller'],
-	construct : function( model ){
+	require : {
+		classes : [ ['bmoor','model','Map'] ]
+	},
+	construct : function(){
 		this.updates = {};
 		this.removes = {};
 		this.creates = {};
+		
+		this.model = this._model();
 
-		this._model( model );
-
-		if ( model instanceof bmoor.model.Collection ){
-			this._collectionBind( model );
-		}else if ( model._bind ){
-			this._binding( model );
+		if ( this.model instanceof bmoor.model.Collection ){
+			this._collectionBind( this.model );
+		}else if ( this.model._bind ){
+			this._binding( this.model );
 		}
 	},
-	onDefine : function( definition ){
-		var service;
+	onDefine : function( settings ){
+		var 
+			service,
+			controller;
 
-		if ( this.actions ){
-			definition.prototype._actions = this.actions;
+		if ( settings.functions ){
+			this._functions = settings.functions;
+		}
+		
+		if ( settings.services ){
+			if ( !this._ ){
+				this._ = {};
+			}
+
+			for( service in settings.services ){
+				this._[ service ] = bMoor.get( settings.services[service] );
+			}
 		}
 
-		if ( this.services ){
-			if ( !definition.prototype._ ){
-				definition.prototype._ = {};
+		if ( settings.controller ){
+			controller = settings.controller;
+
+
+			if ( !controller.className ){
+
 			}
 
-			for( service in this.services ){
-				definition.prototype._[ service ] = bMoor.get( this.services[service] );
+			// TODO : this could prolly be merges with Node's code
+			this.className = controller.className; // TODO : auto gen this?
+			
+			if ( this.baseClass ){
+				if ( controller.singleClass ){
+					this.baseClass = controller.className;
+				}else{
+					this.baseClass += ' ' + controller.className;
+				}
+			}else{
+				this.baseClass = controller.className;
 			}
+
+			$(document).ready(function(){
+				var
+					className = '.'+controller.className, 
+					subselect,
+					actions,
+					action,
+					create = function( action, subselect, func ){
+						$(document.body).on( action, className+' '+subselect, function( event ){
+							func.call( this, event, $(this).closest(className)[0].controller );
+						});
+					};
+
+				for( action in controller.actions ){
+					actions = controller.actions[ action ];
+
+					for( subselect in actions ){
+						create( action, subselect, actions[subselect] );
+					}
+				}
+			});
 		}
 	},
 	properties : {
-		delay : 2000,
-		_key : null,
-		_model : function( model ){
-			this.model = model;
+		own : function( element ){ 
+			this._element( element ); 
 		},
+		_delay : 2000,
+		_key : null,
+		_model : function(){ return new bmoor.model.Map(); },
 		_binding : function( model ){
 			var 
 				dis = this,
 				key = this._key,
 				create = false,
-				actions = model,
+				functions = model,
 				action,
 				attr;
 
 			// TODO : foreach
-			for( attr in this._actions ) if ( this._actions.hasOwnProperty(attr) ){ 
-				actions[ attr ] = this._actions[ attr ]; 
+			for( attr in this._functions ) if ( this._functions.hasOwnProperty(attr) ){ 
+				functions[ attr ] = this._functions[ attr ]; 
 			}
 
 			if ( key ){
@@ -84,6 +135,19 @@ bMoor.constructor.define({
 					dis._binding( additions[i] );
 				}
 			});
+		},
+		_element : function( element, model ){
+			if ( !model ){
+				model = this.model;
+			}
+
+			element.setAttribute( 'snap-context', null );
+			element.context = model;
+			element.controller = this;
+
+			if ( this.baseClass ){
+				element.className += ' '+this.baseClass;
+			}
 		},
 		_register : function( model ){
 			var dis = this;
@@ -129,7 +193,7 @@ bMoor.constructor.define({
 			this._pushLock = setTimeout(function(){
 				dis._pushLock = null;
 				dis._sendPush();
-			}, this.delay);
+			}, this._delay);
 		},
 		_sendPush : function(){
 			// seperate the current back from any future

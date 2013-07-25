@@ -10,32 +10,34 @@ bMoor.constructor.define({
 			'bMoor.module.Bootstrap' : ['bmoor','lib','Bootstrap']
  		}
 	},
-	onDefine : function( definition ){
-		var node;
+	onDefine : function( settings ){
+		var 
+			dis = this,
+			node;
 		// define object is the context
 		// assume no singletons are getting called into this, can't think why they would...
 		
-		if ( this.node ){
-			node = this.node;
+		if ( settings.node ){
+			node = settings.node;
 			
 			if ( node.className ){
-				definition.prototype.className = node.className;
+				this.className = node.className;
 				
-				if ( definition.prototype.baseClass ){
+				if ( this.baseClass ){
 					if ( node.singleClass ){
-						definition.prototype.baseClass = node.className;
+						this.baseClass = node.className;
 					}else{
-						definition.prototype.baseClass += ' ' + node.className;
+						this.baseClass += ' ' + node.className;
 					}
 				}else{
-					definition.prototype.baseClass = node.className;
+					this.baseClass = node.className;
 				}
 			}
 			
 			$(document).ready(function(){
 				var 
 					act,
-					className = '.'+definition.prototype.className,
+					className = '.'+dis.className,
 					helpers = node.helpers ? node.helpers : {},
 					makeGlobal = function( action, func ){
 						// this seems highly inefficient, is there a better way?
@@ -44,6 +46,7 @@ bMoor.constructor.define({
 							func( event, $(className), helpers );
 						});
 					},
+					// TODO : maybe subselect goes away from here and into the controller?
 					makeSplitAction = function( action, subselect, func ){
 						if ( subselect == '' ){
 							$(document.body).on( action, className, function( event ){
@@ -87,7 +90,7 @@ bMoor.constructor.define({
 		this._attributes = attributes;
 		this._element( element );
 		this._template();
-		this._model( attributes ? attributes.context : undefined );
+		this._model();
 		
 		this._binding();
 		if ( !this.binded ){
@@ -112,33 +115,37 @@ bMoor.constructor.define({
 		},
 		_element : function( element ){
 			this.$ = $( element );
-			this.element = element;
+
+			// TODO : kinda wanna get ride of this?
 			this.$.data( 'node', this );
+
+			this.element = element;
+			element.node = this;
 			
 			element.className += ' '+this.baseClass;
 		},
-		_wrapData : function( data ){
-			return new bmoor.model.Map( data );
-		},
-		_model : function( context ){
+		_model : function(){
 			var 
 				data,
+				pos,
+				args = [],
 				scope,
 				variable,
 				controller,
 				publishPath,
 				publishName;
 
-			context = this.element.context || context || global;
+			this.model = this._findContext() || global;
 
-			// TODO : make this model rather than data
 			model = this._getAttribute( 'model' );
 			if ( model ){
 				if ( typeof(model) == 'string' ){
-					model = this._unwrapVar( context, model );
+					model = this._unwrapVar( this.model, model );
+				}else{
+					model = this.model;
 				}
 			}else{
-				model = context;
+				model = this.model;
 			}
 
 			variable = this._getAttribute( 'variable', this.element.name );
@@ -154,32 +161,14 @@ bMoor.constructor.define({
 			}
 
 			// so now lets assign everything
-			if ( !model || (typeof(model) == 'object' && !model._bind) ){
-				this.model = this._wrapData( model );
+			if ( !model || !model._bind ){
+				this.model = new bmoor.model.Map( model );
 			}else{
 				this.model = model;
 			}
 
 			this.scope = scope;
 			this.variable = variable;
-
-			// publish any reference back to the context
-			publishPath = this._getAttribute( 'publish' );
-			if ( publishPath ){
-				publishPath = publishPath.split('.');
-				publishName = publishPath.pop();
-
-				publishPath = this._unwrapVar( context, publishPath );
-				publishPath[ publishName ] = this;
-			}
-
-			controller = this._getAttribute( 'controller' );
-			if ( controller ){
-				controller = bMoor.get( controller );
-				this.controller = new controller( this.model );
-			}else{
-				this.controller = null;
-			}
 		},
 		_template : function(){
 			var template = this._getAttribute('template');
@@ -197,6 +186,8 @@ bMoor.constructor.define({
 			}
 		},
 		_make : function( data ){
+			this._pushContext();
+
 			// cleanse the data
 			if ( this.variable ){
 				if ( this.scope ){
@@ -213,8 +204,6 @@ bMoor.constructor.define({
 			}else if ( this.variable ){
 				this._setContent( data );
 			}
-
-			this._pushContext();
 
 			this._finalize();
 		},
@@ -274,6 +263,21 @@ bMoor.constructor.define({
 				return $( element ).find( selector );
 			}
 		},
+		_findContext : function(){
+			var node = this.element;
+
+			if ( !node.hasAttribute ){
+				node = node[ 0 ];
+			}
+
+			while( node.tagName != 'HTML' ){
+				if ( node.context ){ return node.context; }
+
+				node = node.parentNode;
+			}
+
+			return null;
+		},
 		_pushContext : function( element, model ){
 			if ( !element ){
 				element = this.element;
@@ -283,8 +287,10 @@ bMoor.constructor.define({
 				model = this.model;
 			}
 
-			for( var nodes = this._select('[snap-class]', element), i = 0, c = nodes.length; i < c; i++){
-				nodes[i].context = model;
+			if ( element.setAttribute ){
+				// I am doing this right now to make it visually obvious where the context is in the DOM
+				element.setAttribute( 'snap-context', null );
+				element.context = model;
 			}
 		}
 	}

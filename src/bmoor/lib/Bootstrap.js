@@ -12,13 +12,13 @@ bMoor.constructor.singleton({
 		if ( !installed ){
 			var builder = self;
 			
-			installed = true;
-			
-			builder.check();
-			
-			setInterval(function(){
+			bMoor.constructor.loaded(function(){
+				installed = true;
+				
 				builder.check();
-			}, 25);
+				
+				setInterval(function(){ builder.check(); }, 25);
+			});
 		}
 	},
 	construct: function(){
@@ -52,17 +52,17 @@ bMoor.constructor.singleton({
 				this._checking = false;
 			}
 		},
-		_build : function( waiting, node, cb ){
+		_buildNode : function( waiting, element ){
 			// context -> model -> scope -> variable
 			var
-				create = node.getAttribute('snap-class'),
+				create = element.getAttribute('snap-class'),
 				requirements = [],
 				decorators = [];
 			
 			// up here, so the require loop doesn't become infinite
-			node.removeAttribute('snap-class');
+			element.removeAttribute('snap-class');
 			
-			if ( node.hasAttribute('snap-decorator') ){
+			if ( element.hasAttribute('snap-decorator') ){
 				decorators = node.getAttribute('snap-decorator').split(',');
 				requirements = decorators.slice(0);
 			}
@@ -73,40 +73,66 @@ bMoor.constructor.singleton({
 				var 
 					i,
 					creator = bMoor.get( create ),
-					el = new creator( node );
+					el = new creator( element );
 				
 				for( i = 0; i < decorators.length; i++ ){
 					bMoor.get( decorators[i] )._decorate( el );
 				}
+			});
+		},
+		_buildControl : function( waiting, element ){
+			var
+				create = element.getAttribute('snap-controller'),
+				args = [],
+				requirements = [],
+				pos;
+			
+			// up here, so the require loop doesn't become infinite
+			element.removeAttribute('snap-controller');
+			
+			pos = create.indexOf( '(' );
+			// TODO : this is pretty weak	
+			if ( pos >= 0 ){
+				args = create.substring( pos + 1, create.length - 1 ).trim().split(',');
+				create = create.substring( 0, pos );
+			}
 
-				if ( cb ){
-					cb();
-				}
+			args.unshift( element );
+			requirements.push( create );
+			
+			waiting.require( requirements, function(){
+				var controller = bMoor.get( create );
+
+				// run the factory attribute, just incase, and then tell the controller to own the element
+				controller.own.apply( controller, args );
 			});
 		},
 		build : function( element ){
 			var 
 				dis = this,
 				waiting = bMoor.module.Wait,
-				others = [];
+				others = [],
+				nodes;
 
 			if ( dis._preRender ){
 				dis._preRender();
 				dis._preRender = null;
 			}
 
-			for( var nodes = this.select(element,'[snap-class]'), i = 0, c = nodes.length; i < c; i++){
-				var node = nodes[i];
-				
-				if ( node.hasAttribute('snap-publish') ){
-					this._build( waiting, node );
-				}else{
-					others.push( node );
-				}
+			if ( element.hasAttribute('snap-controller') ){
+				this._buildControl( waiting, element );
 			}
-			
-			for( var i = 0, c = others.length; i < c; i++ ){
-				this._build( waiting, others[i] );
+
+			for( nodes = this.select(element,'[snap-controller]'), i = 0, c = nodes.length; i < c; i++){
+				this._buildControl( waiting, nodes[i] );
+			}
+
+			if ( element.hasAttribute('snap-class') ){
+				this._buildNode( waiting, element );
+			}
+
+			for( nodes = this.select(element,'[snap-class]'), i = 0, c = nodes.length; i < c; i++){
+				this._buildNode( waiting, nodes[i] );
 			}
 			
 			waiting.done(function(){

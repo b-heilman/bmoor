@@ -8,16 +8,31 @@
 
 	<script>
 	(function( global ){
-		global.lowData = [{
-			description: 'derp',
-			label : 1,
-			display : 2
-		},{
-			description: 'derp2',
-			label : 3,
-			display : 4
-		}];
-
+		bMoor.constructor.singleton({
+			name : 'Controller',
+			namespace : ['test'],
+			parent : ['bmoor','controller','Abstract'],
+			require : {
+				classes : [ 
+					['bmoor','model','Map'],
+					['bmoor','model','Collection']
+				]
+			},
+			properties : {
+				_model : function(){
+					return new bmoor.model.Collection([{
+						description: 'derp',
+						label : 1,
+						display : 2
+					},{
+						description: 'derp2',
+						label : 3,
+						display : 4
+					}]);
+				}
+			}
+		});
+	
 		$(document).ready(function(){
 			$('#addButton').click(function(){
 				global.lowView.add({
@@ -30,9 +45,8 @@
 	}( this ));
 	</script>
 </head>
-<body>
-	<table snap-class="bmoor.snap.List" snap-model="lowData" snap-child="tr" snap-mount="mount" 
-		snap-template="temp" snap-publish="lowView">
+<body snap-controller="test.Controller" >
+	<table snap-class="bmoor.snap.List" snap-child="tr" snap-mount="mount" snap-template="temp">
 		<tbody>
 			<tr class='mount'>
 	            <th>Description</th>
