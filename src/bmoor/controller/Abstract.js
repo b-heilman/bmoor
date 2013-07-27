@@ -152,7 +152,7 @@ bMoor.constructor.define({
 		_register : function( model ){
 			var dis = this;
 
-			model._bind(function(){ dis._update( this ); }, true);
+			model._bind(function( settings ){ dis._update( this, settings ); }, true);
 		},
 		_create : function( model ){
 			var dis = this;
@@ -186,16 +186,19 @@ bMoor.constructor.define({
 		_push : function(){
 			var dis = this;
 
-			if ( this._pushLock ){
-				clearTimeout( this._pushLock );
-			}
+			// if no delay, assume it will be something manual
+			if ( this._delay ){
+				if ( this._pushLock ){
+					clearTimeout( this._pushLock );
+				}
 
-			this._pushLock = setTimeout(function(){
-				dis._pushLock = null;
-				dis._sendPush();
-			}, this._delay);
+				this._pushLock = setTimeout(function(){
+					dis._pushLock = null;
+					dis.sendPush();
+				}, this._delay);
+			}
 		},
-		_sendPush : function(){
+		sendPush : function(){
 			// seperate the current back from any future
 			var
 				creates = this.creates,

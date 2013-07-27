@@ -15,10 +15,34 @@ bMoor.constructor.define({
 			this.__Node._binding.call( this );
 			
 			if ( this.model && this.variable ){
-				this.alter(function( value ){
-					dis.scope[ dis.element.name ] = value;
-				});
+				this._listen();
 			}
+		},
+		_listen : function( cb ){
+			var dis = this;
+			
+			if ( this.element.nodeName ){
+				this.element.onchange = function(){ dis._onChange(); };
+			}else{
+				// otherwise I assume it's a set
+				for( var i = 0, c = this.element.length; i < c; i++ ){
+					// TODO : can I limit this to one call for radio?
+					this.element[i].onchange = function(){ dis._onChange(); };
+				}
+			}
+		},
+		_onChange : function(){
+			var value = this.val();
+
+			if ( this._isValid(value) ){
+				this._onAlter( value );
+			}
+		},
+		_isValid : function( value ){
+			return true;
+		},
+		_onAlter : function( value ){
+			this.scope[ this.element.name ] = value
 		},
 		val : function( value ){
 			if ( value ){
@@ -38,23 +62,6 @@ bMoor.constructor.define({
 				this.element.selectedIndex = dex;
 			}else{
 				return this.element.options[this.element.selectedIndex].value;
-			}
-		},
-		alter : function( cb ){
-			var dis = this;
-			
-			if ( this.element.nodeName ){
-				this.element.onchange = function(){
-					cb( dis.val() );
-				};
-			}else{
-				// otherwise I assume it's a set
-				for( var i = 0, c = this.element.length; i < c; i++ ){
-					// TODO : can I limit this to one call for radio?
-					this.element[i].onchange = function(){
-						cb( dis.val() );
-					};
-				}
 			}
 		}
 	}

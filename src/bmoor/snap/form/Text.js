@@ -15,10 +15,30 @@ bMoor.constructor.define({
 			this.__Node._binding.call( this );
 			
 			if ( this.model && this.variable ){
-				this.alter(function( value ){
-					dis.scope[ dis.element.name ] = value;
-				});
+				this._listen();
 			}
+		},
+		// TODO : make alter protected for the rest
+		_listen : function(){
+			var 
+				dis = this,
+				el = this.element;
+			
+			el.onkeyup = function(){ dis._onChange(); };
+			el.onchange = function(){ dis._onChange(); };
+		},
+		_onChange : function(){
+			var value = this.val();
+
+			if ( this._isValid(value) ){
+				this._onAlter( value );
+			}
+		},
+		_isValid : function( value ){
+			return true;
+		},
+		_onAlter : function( value ){
+			this.scope[ this.element.name ] = value
 		},
 		val : function( value ){
 			if ( arguments.length ){
@@ -27,19 +47,7 @@ bMoor.constructor.define({
 				return this.element.value;
 			}
 		},
-		alter : function( cb ){
-			var 
-				dis = this,
-				el = this.element;
-			
-			el.onkeyup = function(){
-				el.onchange();
-			};
-			
-			el.onchange = function(){
-				cb( dis.val() );
-			};
-		}
+		
 	}
 });
 

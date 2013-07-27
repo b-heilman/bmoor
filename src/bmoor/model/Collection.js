@@ -26,7 +26,7 @@
 		properties : {
 			remove : function( obj ){
 				var index = this.find( obj );
-				
+	
 				if ( index != -1 ){
 					this.splice( index, 1 );
 				}
@@ -51,9 +51,10 @@
 			},
 			_stop : function(){
 				clearInterval( this._.interval );
-
-				this._interval = null;
+				this._.interval = null;
 				
+				this._flush( {stop:true} );
+
 				return this;
 			},
 			_start : function(){
@@ -62,16 +63,16 @@
 				
 				
 				if ( !this._.interval ){
-					dis._run();
+					dis._flush( {start:true} );
 
 					this._.interval = setInterval(function(){
-						dis._run();
+						dis._flush( {} );
 					}, 50);
 				}
 				
 				return this;
 			},
-			_run: function(){
+			_flush : function( settings ){
 				var
 					moves = {},
 					removals = this._.cleaned,
@@ -111,14 +112,26 @@
 				this._.cleaned = this.slice(0);
 				
 				if ( dirty ){
-					this._notify( { additions : additions, removals : removals, moves : moves } );
+					settings.additions = additions;
+					settings.removals = removals;
+					settings.moves = moves;
+
+					this._notify( settings );
 				}
 			},
 			_bind : function( func, noFlush ){
-				this._.listeners.push( func );
+				if ( typeof(func) == 'function' ){
+					this._.listeners.push( func );
+				}else if ( func ) {
+					if ( func.update ){ 
+						func = func.update; 
+						this._.listeners.push( func.update );
+					}
+					if ( func.cleanse ){ /* nothing here now */ }
+				}
 				
-				if ( this._.interval && !noFlush ){
-					func.call( this._.cleaned, { additions : this._.cleaned } );
+				if ( func && this._.interval && !noFlush ){
+					func.call( this._.cleaned, {binding:true, additions:this._.cleaned} );
 				}
 			},
 			_notify : function( changes ){

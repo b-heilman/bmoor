@@ -18,7 +18,24 @@
 					['bmoor','model','Collection']
 				]
 			},
+			controller : {
+				className : 'woot',
+				actions : {
+					'click' : {
+						'.row-add' : function( event, controller ){
+							controller.addRow();
+						}
+					}
+				}
+			},
 			properties : {
+				addRow : function(){
+					this.model.push({
+						description : 'sample1',
+						label   : 'sample2',
+						display : 'sample3'
+					});
+				},
 				_model : function(){
 					return new bmoor.model.Collection([{
 						description: 'derp',
@@ -31,16 +48,6 @@
 					}]);
 				}
 			}
-		});
-	
-		$(document).ready(function(){
-			$('#addButton').click(function(){
-				global.lowView.add({
-					description : '',
-					label : '',
-					display : ''
-				});
-			});
 		});
 	}( this ));
 	</script>
@@ -56,7 +63,7 @@
         	</tr>
         </tbody>
 	</table>
-	<button id="addButton"> Add Row </button>
+	<button class="row-add"> Add Row </button>
 	<script id='temp' type='text/html'>
 		<td><input snap-class='bmoor.snap.form.Text' type='text' name='description'/></td>
         <td><input snap-class='bmoor.snap.form.Text'  type='text' name='label'/></td>

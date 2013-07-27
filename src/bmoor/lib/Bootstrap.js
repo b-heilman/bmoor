@@ -63,7 +63,7 @@ bMoor.constructor.singleton({
 			element.removeAttribute('snap-class');
 			
 			if ( element.hasAttribute('snap-decorator') ){
-				decorators = node.getAttribute('snap-decorator').split(',');
+				decorators = element.getAttribute('snap-decorator').split(',');
 				requirements = decorators.slice(0);
 			}
 

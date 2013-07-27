@@ -583,24 +583,31 @@
 			}
 			
 			old = settings.properties._decorate;
-			construct = settings.properties.__construct;
+			construct = settings.construct;
 
 			delete settings.properties._decorate;
-			delete settings.properties.__construct;
+			delete settings.construct;
 
-			settings.properties._decorate = function( el ){
+			settings.properties._decorate = function( el, classDef ){
 				var key;
 				
 				if ( construct ){
-					// TODO : if it is already created, it should be run against it...  how to tell?
-					override( '__construct', el, construct );
+					if ( classDef ){
+						// this is a prototype defintion, not on an existing object
+						override( '__construct', el, function(){
+							this._wrapped.apply( this, arguments );
+							construct.apply( this ); 
+						});
+					}else{
+						construct.apply( el )
+					}
 				}
 
 				for( key in this ){
 					if ( key === '__construct' ){
 						// __construct will get nuked during the define process, so cache it here in case of override
 						continue;
-					}else if ( key === '_decorator' ){
+					}else if ( key === '_decorate' ){
 						// throw this out, we are automatically defining it and always called later if defined in settings
 						continue;
 					}else if ( el[key] ){
@@ -647,7 +654,8 @@
 					old.apply( this, [settings, namespace, name, definition] );
 					
 					for( i = 0; i < decorators.length; i++ ){
-						Namespace.get( decorators[i] )._decorate( this );
+						// this is the prototype
+						Namespace.get( decorators[i] )._decorate( this, true );
 					}
 				};
 			}

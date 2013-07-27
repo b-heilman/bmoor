@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<script src="../../src/jquery.min.js"></script>
+	<script src="../../src/bMoor.js"></script>
+	<script src='../../src/jquery/jquery.jqote2.js'></script>
+	<script src="../../src/bmoor/snap/form/Text.js"></script>
+	<script src="../../src/bmoor/snap/form/Checked.js"></script>
+	<script src="../../src/bmoor/snap/form/Button.js"></script>
+	<script src="../../src/bmoor/snap/form/Select.js"></script>
+	<script src="../../src/bmoor/controller/Variable.js"></script>
+	<script src="../../src/bmoor/snap/form/Ranged.js"></script>
+</head>
+<body>
+<script> var daMap = { number   : 10, reg : '', delay : 'delay' }; </script>
+<style>
+	.state-error {
+		background-color: #fcc;
+	}
+
+	.state-valid {
+		background-color: #cfc;
+	}
+</style>
+<form snap-controller="bmoor.controller.Variable( daMap )">
+	<div>
+		<span snap-class="bmoor.snap.Node" snap-variable="number"></span>
+		<label>number<input snap-class="bmoor.snap.form.Text" snap-decorator='bmoor.snap.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
+	</div>
+	<div>
+		<span snap-class="bmoor.snap.Node" snap-variable="reg"></span>
+		<label>number<input snap-class="bmoor.snap.form.Text" snap-decorator='bmoor.snap.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
+	</div>
+	<div>
+		<span snap-class="bmoor.snap.Node" snap-variable="delay"></span>
+		<label>number<input snap-class="bmoor.snap.form.Text" snap-decorator='bmoor.snap.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
+	</div>
+</form>
+</body>
+</html>

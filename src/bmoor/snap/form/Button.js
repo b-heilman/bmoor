@@ -20,26 +20,39 @@ bMoor.constructor.define({
 					dis._make( this );
 				});
 				
-				this.alter(function( value ){
-					console.log( dis.scope, dis.element.name );
-					dis.scope[ dis.element.name ] = value;
-				});
+				this._listen();
 			}
+		},
+		_listen : function(){
+			var 
+				dis = this,
+				element = this.element.length ? this.element : [ this.element ];
+			
+			for( var i = 0, c = element.length; i < c; i++ ){
+				element[i].onclick = function(){
+					var r = dis._onChange();
+					return r === undefined ? false : r;
+				};
+			}
+		},
+		_onChange : function(){
+			var value = this.val();
+
+			if ( this._isValid(value) ){
+				this._onAlter( value );
+				return true;
+			}else return false;
+		},
+		_isValid : function( value ){
+			return true;
+		},
+		_onAlter : function( value ){
+			this.scope[ this.element.name ] = value
 		},
 		val : function( value ){
 			if ( value ){
 			}else{
-				return null;
-			}
-		},
-		alter : function( cb ){
-			var element = this.element.length ? this.element : [ this.element ];
-			
-			for( var i = 0, c = element.length; i < c; i++ ){
-				element[i].onclick = function(){
-					var r = cb( this.value );
-					return r === undefined ? false : r;
-				};
+				return this.element.value;
 			}
 		}
 	}
