@@ -5,7 +5,10 @@ bMoor.constructor.singleton({
 	name : 'Bootstrap',
 	namespace : ['bmoor','lib'],
 	require : {
-		references : { 'bMoor.module.Wait' : ['bmoor','lib','WaitFor'] }
+		references : { 
+			'bMoor.module.Wait' : ['bmoor','lib','WaitFor'],
+			'bMoor.module.Schedule' : ['bmoor','lib','Bouncer']
+		}
 	},
 	module : 'Bootstrap',
 	onReady : function( self ){
@@ -68,17 +71,20 @@ bMoor.constructor.singleton({
 			}
 
 			requirements.push( create );
-			
-			waiting.require( requirements, function(){
-				var 
-					i,
-					creator = bMoor.get( create ),
-					el = new creator( element );
-				
-				for( i = 0; i < decorators.length; i++ ){
-					bMoor.get( decorators[i] )._decorate( el );
+			 
+			return {
+				requirements : requirements,
+				build : function(){
+					var 
+						i,
+						creator = bMoor.get( create ),
+						el = new creator( element );
+					
+					for( i = 0; i < decorators.length; i++ ){
+						bMoor.get( decorators[i] )._decorate( el );
+					}
 				}
-			});
+			};
 		},
 		_buildControl : function( waiting, element ){
 			var
@@ -100,19 +106,26 @@ bMoor.constructor.singleton({
 			args.unshift( element );
 			requirements.push( create );
 			
-			waiting.require( requirements, function(){
-				var controller = bMoor.get( create );
+			return {
+				requirements : requirements,
+				build : function(){
+					var controller = bMoor.get( create );
 
-				// run the factory attribute, just incase, and then tell the controller to own the element
-				controller.own.apply( controller, args );
-			});
+					// run the factory attribute, just incase, and then tell the controller to own the element
+					controller.own.apply( controller, args );
+				}
+			};
 		},
 		build : function( element ){
 			var 
+				i,
+				c,
 				dis = this,
 				waiting = bMoor.module.Wait,
-				others = [],
-				nodes;
+				schedule = bMoor.module.Schedule,
+				res,
+				nodes,
+				requirements = [];
 
 			if ( dis._preRender ){
 				dis._preRender();
@@ -120,27 +133,38 @@ bMoor.constructor.singleton({
 			}
 
 			if ( element.hasAttribute('snap-controller') ){
-				this._buildControl( waiting, element );
+				res = this._buildControl( waiting, element );
+				requirements = requirements.concat( res.requirements );
+				schedule.add( res.build );
 			}
 
 			for( nodes = this.select(element,'[snap-controller]'), i = 0, c = nodes.length; i < c; i++){
-				this._buildControl( waiting, nodes[i] );
+				res = this._buildControl( waiting, nodes[i] );
+				requirements = requirements.concat( res.requirements );
+				schedule.add( res.build );
 			}
 
 			if ( element.hasAttribute('snap-class') ){
-				this._buildNode( waiting, element );
+				res = this._buildNode( waiting, element );
+				requirements = requirements.concat( res.requirements );
+				schedule.add( res.build );
 			}
 
 			for( nodes = this.select(element,'[snap-class]'), i = 0, c = nodes.length; i < c; i++){
-				this._buildNode( waiting, nodes[i] );
+				res = this._buildNode( waiting, nodes[i] );
+				requirements = requirements.concat( res.requirements );
+				schedule.add( res.build );
 			}
 			
-			waiting.done(function(){
+			schedule.done(function(){
 				if ( dis._render ){
 					dis._render();
 					dis._render = null;
 				}
 			});
+
+			waiting.require( requirements );
+			waiting.done( function(){ schedule.run(); });
 		},
 		select : function( element, selector ){
 			if ( element.querySelectorAll ){

@@ -4,7 +4,10 @@ bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
 	require : {
-		classes : [ ['bmoor','model','Map'] ],
+		classes : [ 
+			['bmoor','model','Map'],
+			['bmoor','model','Collection']
+		],
 		references : { 
 			'bMoor.module.Templator' : ['bmoor','templating','JQote'],
 			'bMoor.module.Bootstrap' : ['bmoor','lib','Bootstrap']
@@ -162,7 +165,11 @@ bMoor.constructor.define({
 
 			// so now lets assign everything
 			if ( !model || !model._bind ){
-				this.model = new bmoor.model.Map( model );
+				if ( model.length ){
+					this.model = new bmoor.model.Collection( model );
+				}else{
+					this.model = new bmoor.model.Map( model );
+				}
 			}else{
 				this.model = model;
 			}
@@ -198,7 +205,7 @@ bMoor.constructor.define({
 					data = null;
 				}
 			}
-
+			
 			if ( this.prepared ){
 				this._setContent( bMoor.module.Templator.run(this.prepared,data) );
 			}else if ( this.variable ){
@@ -208,7 +215,22 @@ bMoor.constructor.define({
 			this._finalize();
 		},
 		_setContent : function( content ){
-			this.element.innerHTML = content;
+			var 
+				next,
+				node,
+				el = document.createElement( 'div' );
+
+			el.innerHTML = content;
+
+			this.element.innerHTML = '';
+
+			node = el.firstChild;
+			while( node ){
+				next = node.nextSibling;
+
+				this.element.appendChild( node );
+				node = next;
+			}
 		},
 		_finalize : function(){},
 		_getAttribute : function( attribute, otherwise, adjustment ){

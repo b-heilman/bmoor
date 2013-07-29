@@ -63,8 +63,10 @@ bMoor.constructor.define({
 			}
 		},
 		val : function( value ){
+			var element = this.element;
+
 			if ( value ){
-				if ( this.element.nodeName ){
+				if ( element.nodeName ){
 					if ( element.value == value ){
 						element.checked = true;
 					}else{
@@ -104,9 +106,9 @@ bMoor.constructor.define({
 					}
 				}
 			}else{
-				if ( this.element.nodeName ){
-					if ( this.element.checked ){
-						return this.element.value;
+				if ( element.nodeName ){
+					if ( element.checked ){
+						return element.value;
 					}else{
 						return null;
 					}
@@ -114,8 +116,8 @@ bMoor.constructor.define({
 					if ( this.multi ){
 						var rtn = [];
 						
-						for( var i = 0, c = this.element.length; i < c; i++ ){
-							var el = this.element[i];
+						for( var i = 0, c = element.length; i < c; i++ ){
+							var el = element[i];
 							if ( el.checked ){
 								rtn.push( el.value );
 							}
@@ -123,8 +125,8 @@ bMoor.constructor.define({
 						
 						return rtn;
 					}else{
-						for( var i = this.element.length - 1; i >= 0; i-- ){
-							var el = this.element[i];
+						for( var i = element.length - 1; i >= 0; i-- ){
+							var el = element[i];
 							if ( el.checked ){
 								return el.value;
 							}

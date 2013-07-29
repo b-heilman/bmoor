@@ -11,7 +11,6 @@ bMoor.constructor.define({
 		},
 		_binding : function(){
 			var dis = this;
-			
 			this.__Node._binding.call( this );
 			
 			if ( this.model && this.variable ){
@@ -28,15 +27,23 @@ bMoor.constructor.define({
 			el.onchange = function(){ dis._onChange(); };
 		},
 		_onChange : function(){
-			var value = this.val();
+			var 
+				value = this.val(),
+				valid = this._isValid(value);
 
-			if ( this._isValid(value) ){
+			if ( valid === false ){
+				this.$.addClass( 'state-error' );
+				this.$.removeClass( 'state-valid' );
+			}else{
 				this._onAlter( value );
+
+				if ( valid === true ){
+					this.$.removeClass( 'state-error' );
+					this.$.addClass( 'state-valid' );
+				}
 			}
 		},
-		_isValid : function( value ){
-			return true;
-		},
+		_isValid : function( value ){ return null; },
 		_onAlter : function( value ){
 			this.scope[ this.element.name ] = value
 		},

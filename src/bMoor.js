@@ -322,7 +322,7 @@
 			}
 		};
 		
-		ClassLoader.ready = function( callback ){
+		ClassLoader.done = function( callback ){
 			if ( this.requests == 0 ){
 				callback();
 			}else{
@@ -505,7 +505,7 @@
 					if ( settings.onReady ){
 						$(document).ready(function(){
 							// make sure all requests have been completed as well
-							ClassLoader.ready( function(){
+							ClassLoader.done( function(){
 								settings.onReady( namespace[settings.name] );
 							});
 						});

@@ -48,14 +48,14 @@ bMoor.constructor.decorator({
 				number,
 				valid = true;
 
-			if ( this._wrapped(value) ){
+			if ( this._wrapped(value) !== false ){
 				number = parseInt( value );
-
-				if ( this.maxVal && number > this.maxVal ){
+				
+				if ( this.maxVal && (number > this.maxVal || isNaN(number)) ){
 					valid = false;
 				}
 
-				if ( this.minVal && number < this.minVal ){
+				if ( this.minVal && (number < this.minVal || isNaN(number)) ){
 					valid = false;
 				}
 
@@ -64,11 +64,9 @@ bMoor.constructor.decorator({
 				}
 
 				if ( valid ){
-					this.$.removeClass( 'state-error' );
-					this.$.addClass( 'state-valid' );
+					
 				}else{
-					this.$.addClass( 'state-error' );
-					this.$.removeClass( 'state-valid' );
+					
 				}
 
 				return valid;

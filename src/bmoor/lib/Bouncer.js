@@ -3,9 +3,10 @@
 bMoor.constructor.singleton({
 	name : 'Bouncer',
 	namespace : ['bmoor','snap'],
+	module : 'Schedule',
 	construct: function(){
 		this._stack = [];
-		this._empty = [];
+		this._done = [];
 		this._pauseAfter = null;
 		this._lock = false;
 	},
@@ -18,20 +19,20 @@ bMoor.constructor.singleton({
 		add : function( op ){
 			this._stack.push( op );
 		},
-		empty : function( op ){
-			this._empty.push( op );
+		done : function( op ){
+			this._done.push( op );
 		},
 		_run : function(){
+			this._lock = false;
+			
 			if ( this._stack.length ){
-				this._lock = false;
 				this.run();
 			}else{
-				if ( this._empty.length ){
-					while ( this._empty.length ){
-						this.add( this._empty );
+				if ( this._done.length ){
+					while ( this._done.length ){
+						this.add( this._done.shift() );
 					}
 					
-					this._lock = false;
 					this.run();
 				}else{
 					this._pauseAfter = null;
@@ -60,12 +61,10 @@ bMoor.constructor.singleton({
 					
 					op();
 					
-					if ( this._stack.length ){
-						if ( (new Date()).getTime() > this._pauseAfter ) {
-							setTimeout( function(){ dis._pauseAfter = null; dis._run(); }, this.runPause );
-						}else{
-							this._run();
-						}
+					if ( (new Date()).getTime() > this._pauseAfter ) {
+						setTimeout( function(){ dis._pauseAfter = null; dis._run(); }, this.runPause );
+					}else{
+						this._run();
 					}
 				}
 			}
