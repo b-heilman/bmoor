@@ -1,6 +1,6 @@
 ;(function( $, global, undefined ){
 
-bMoor.constructor.singleton({
+bMoor.constructor.define({
 	name : 'Variable',
 	namespace : ['bmoor','controller'],
 	parent : ['bmoor','controller','Abstract'],
@@ -11,9 +11,9 @@ bMoor.constructor.singleton({
 		]
 	},
 	properties : {
-		own : function( element ){ 
-			var data = global[ arguments[1] ];
-
+		_arguments : function( variable ){ 
+			var data = global[ variable ];
+			
 			if ( !data._bind ){
 				if ( data.length ){
 					data = new bmoor.model.Collection( data );
@@ -22,10 +22,13 @@ bMoor.constructor.singleton({
 				}
 
 				// now make sure, all instances become tied together
-				global[ arguments[1] ] = data; 
+				global[ variable ] = data; 
 			} 
 
-			this._element( element, data );
+			this.model = data;
+		},
+		_model : function(){
+			return; // this is taken care of by the argument
 		}
 	}
 });

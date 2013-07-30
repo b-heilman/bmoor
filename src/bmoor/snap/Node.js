@@ -3,6 +3,7 @@
 bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
+	parent : ['bmoor','lib','Snap'],
 	require : {
 		classes : [ 
 			['bmoor','model','Map'],
@@ -17,8 +18,6 @@ bMoor.constructor.define({
 		var 
 			dis = this,
 			node;
-		// define object is the context
-		// assume no singletons are getting called into this, can't think why they would...
 		
 		if ( settings.node ){
 			node = settings.node;
@@ -90,7 +89,7 @@ bMoor.constructor.define({
 	construct : function( element, attributes ){
 		this.binded = false;
 		
-		this._attributes = attributes;
+		this._attributes( attributes );
 		this._element( element );
 		this._template();
 		this._model();
@@ -101,11 +100,6 @@ bMoor.constructor.define({
 		}
 	},
 	properties : {
-		getModel : function(){
-			if ( this.model && this.model._bind ){
-				return this.model;
-			}else return null;
-		},
 		__warn : function( warning ){
 			this__log( 'warn', warning );
 		},
@@ -118,64 +112,47 @@ bMoor.constructor.define({
 		},
 		_element : function( element ){
 			this.$ = $( element );
+			this.$.data( 'node', this ); // TODO : kinda wanna get ride of this?
 
-			// TODO : kinda wanna get ride of this?
-			this.$.data( 'node', this );
-
-			this.element = element;
+			this.__Snap._element.call( this, element );
+			
 			element.node = this;
 			
 			element.className += ' '+this.baseClass;
 		},
 		_model : function(){
 			var 
-				data,
-				pos,
-				args = [],
 				scope,
-				variable,
-				controller,
-				publishPath,
-				publishName;
+				variable;
 
-			this.model = this._findContext() || global;
-
-			model = this._getAttribute( 'model' );
-			if ( model ){
-				if ( typeof(model) == 'string' ){
-					model = this._unwrapVar( this.model, model );
-				}else{
-					model = this.model;
-				}
-			}else{
-				model = this.model;
-			}
+			this.__Snap._model.call( this );
 
 			variable = this._getAttribute( 'variable', this.element.name );
 
+			// first try for variable
 			if ( variable && typeof(variable) == 'string' ){
 				scope = variable.split('.');
-				variable = scope.pop();
 
-				scope = this._unwrapVar( model, scope );
+				this.variable = scope.pop();
+				this.scope = this._unwrapVar( this.model, scope );
 			}else{
-				scope = model;
-				variable = null;
-			}
+				// otherwise check for scope
+				scope = this._getAttribute( 'scope' );
 
-			// so now lets assign everything
-			if ( !model || !model._bind ){
-				if ( model.length ){
-					this.model = new bmoor.model.Collection( model );
+				if ( scope ){
+					this.scope = this._unwrapVar( this.model, scope );
 				}else{
-					this.model = new bmoor.model.Map( model );
+					// well, the model it is then
+					this.scope = this.model;
 				}
-			}else{
-				this.model = model;
+
+				this.variable = null;
 			}
 
-			this.scope = scope;
-			this.variable = variable;
+			// I'm pretty sure I want to slide the model down if the scope turns out to be a model itself?
+			if ( this.scope._bind ){
+				this.model = this.scope;
+			}
 		},
 		_template : function(){
 			var template = this._getAttribute('template');
@@ -192,18 +169,14 @@ bMoor.constructor.define({
 				this.model._bind( function(){ dis._make( this ); });
 			}
 		},
-		_make : function( data ){
-			this._pushContext();
+		_make : function( model ){
+			var data = this.scope;
 
 			// cleanse the data
 			if ( this.variable ){
-				if ( this.scope ){
-					data = this.scope[this.variable];
+				data = data[this.variable];
 
-					if ( typeof(data) == 'function' ){ data = this.scope[this.variable](); }
-				}else{
-					data = null;
-				}
+				if ( typeof(data) == 'function' ){ data = this.scope[this.variable](); }
 			}
 			
 			if ( this.prepared ){
@@ -233,35 +206,6 @@ bMoor.constructor.define({
 			}
 		},
 		_finalize : function(){},
-		_getAttribute : function( attribute, otherwise, adjustment ){
-			var attr;
-			
-			if ( this._attributes && this._attributes[attribute] ){
-				attr = this._attributes[attribute];
-			}else{
-				attribute = 'snap-'+attribute;
-				
-				if ( this.element.hasAttribute && this.element.hasAttribute(attribute) ){
-					attr = this.element.getAttribute( attribute );
-				}else return otherwise;
-			}
-			
-			return adjustment ? adjustment( attr ) : attr;
-		},
-		_unwrapVar : function( context, variable ){
-			var 
-				path = typeof(variable) == 'string' ? variable.split('.') : variable,
-				i,
-				c;
-
-			for( i = 0, c = path.length; i < c; i++ ){
-				if ( context[path[i]] ){
-					context = context[ path[i] ];
-				}else return undefined;
-			}
-
-			return context;
-		},
 		_decodeData : function( variable ) {
 			// TODO : prolly inline this
 			return this._unwrapVar( this.model, variable );
@@ -283,36 +227,6 @@ bMoor.constructor.define({
 				return element.querySelectorAll( selector );
 			}else{
 				return $( element ).find( selector );
-			}
-		},
-		_findContext : function(){
-			var node = this.element;
-
-			if ( !node.hasAttribute ){
-				node = node[ 0 ];
-			}
-
-			while( node.tagName != 'HTML' ){
-				if ( node.context ){ return node.context; }
-
-				node = node.parentNode;
-			}
-
-			return null;
-		},
-		_pushContext : function( element, model ){
-			if ( !element ){
-				element = this.element;
-			}
-
-			if ( !model ){
-				model = this.model;
-			}
-
-			if ( element.setAttribute ){
-				// I am doing this right now to make it visually obvious where the context is in the DOM
-				element.setAttribute( 'snap-context', null );
-				element.context = model;
 			}
 		}
 	}

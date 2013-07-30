@@ -5,16 +5,23 @@ var controllers = 0;
 bMoor.constructor.define({
 	name : 'Abstract',
 	namespace : ['bmoor','controller'],
+	parent : ['bmoor','lib','Snap'],
 	require : {
 		classes : [ ['bmoor','model','Map'] ]
 	},
-	construct : function(){
+	construct : function( element, attributes, arguments ){
+		this._attributes( attributes );
+		this._arguments.apply( this, arguments );
+		this._element( element );
+		
+		// call the model generator, allow it to return or set this.model
+		this.model = this._model() || this.model; 
+		this._pushModel( this.element, this.model );
+
 		this.updates = {};
 		this.removes = {};
 		this.creates = {};
 		
-		this.model = this._model();
-
 		if ( this.model instanceof bmoor.model.Collection ){
 			this._collectionBind( this.model );
 		}else if ( this.model._bind ){
@@ -45,7 +52,7 @@ bMoor.constructor.define({
 
 
 			if ( !controller.className ){
-
+				controller.className = 'snap-controller'
 			}
 
 			// TODO : this could prolly be merges with Node's code
@@ -84,12 +91,47 @@ bMoor.constructor.define({
 		}
 	},
 	properties : {
-		own : function( element ){ 
-			this._element( element ); 
-		},
 		_delay : 2000,
 		_key : null,
-		_model : function(){ return new bmoor.model.Map(); },
+		_arguments : function( args ){
+			// any possible arguments go here
+		},
+		_model : function(){
+			var model;
+
+			this.__Snap._model.call( this );
+
+			model = this._getAttribute( 'model' );
+			
+			if ( model ){
+				if ( typeof(model) == 'string' ){
+					model = this._unwrapVar( this.model, model );
+				}else{
+					model = this.model;
+				}
+			}else{
+				model = this.model;
+			}
+
+			if ( !model || !model._bind ){
+				if ( model.length ){
+					this.model = new bmoor.model.Collection( model );
+				}else{
+					this.model = new bmoor.model.Map( model );
+				}
+			}else{
+				this.model = model;
+			}
+		},
+		_element : function( element ){
+			this.__Snap._element.call( this, element );
+			
+			element.controller = this;
+
+			if ( this.baseClass ){
+				element.className += ' '+this.baseClass;
+			}
+		},
 		_binding : function( model ){
 			var 
 				dis = this,
@@ -136,19 +178,10 @@ bMoor.constructor.define({
 				}
 			});
 		},
-		_element : function( element, model ){
-			if ( !model ){
-				model = this.model;
-			}
-
-			element.setAttribute( 'snap-context', null );
-			element.context = model;
-			element.controller = this;
-
-			if ( this.baseClass ){
-				element.className += ' '+this.baseClass;
-			}
-		},
+		_sendCreate : function( data ){ return; },
+		_sendUpdate : function( data ){ return; },
+		_sendRemove : function( data ){ return; },
+		_get : function(){ return; },
 		_register : function( model ){
 			var dis = this;
 
@@ -163,25 +196,13 @@ bMoor.constructor.define({
 			
 			this._push();
 		},
-		_sendCreate : function( data ){
-			throw 'Control needs _sendCreate defined: '+this.__name;
-		},
 		_update : function( model ){
 			this.updates[ model._.snapid ] = model._simplify();
 			this._push();
 		},
-		_sendUpdate : function( data ){
-			throw 'Control needs _sendUpdate defined: '+this.__name;
-		},
 		_remove : function( model ){
 			this.removes[ model._.snapid ] = model._simplify();
 			this._push();
-		},
-		_sendRemove : function( data ){
-			throw 'Control needs _sendRemove defined: '+this.__name;
-		},
-		_get : function(){
-			throw 'Control needs _get defined: '+this.__name;
 		},
 		_push : function(){
 			var dis = this;

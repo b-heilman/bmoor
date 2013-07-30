@@ -13,23 +13,22 @@
 <script src="../../src/bmoor/model/Map.js"></script>
 <script src="../../src/bmoor/model/Collection.js"></script>
 <script src="../../src/bmoor/controller/Abstract.js"></script>
-<script src="../../src/bmoor/controller/Variable.js"></script>
 <script src='../../src/bmoor/lib/Resource.js'></script>
 <script src='../../src/bmoor/lib/WaitFor.js'></script>
 <script src='../../src/bmoor/lib/MouseTracker.js'></script>
 <script src='../../src/bmoor/lib/Bootstrap.js'></script>
 <script src='../../src/bmoor/templating/JQote.js'></script>
 	
+<script src="../../src/bmoor/lib/Snap.js"></script>
 <script src="../../src/bmoor/snap/Node.js"></script>
 <script src="../../src/bmoor/snap/List.js"></script>
-
 
 </head>
 <body>
 	
 <script>
 (function( global ){
-	bMoor.constructor.singleton({
+	bMoor.constructor.define({
 		name : 'Controller',
 		namespace : ['test'],
 		parent : ['bmoor','controller','Abstract'],
@@ -56,8 +55,8 @@
 }( this ));
 </script>
 
-<ul snap-class="bmoor.snap.List" snap-template="list1" snap-controller="test.Controller" snap-model="list"></ul>
-<ul snap-class="bmoor.snap.List" snap-template="list1" snap-controller="test.Controller" snap-model="list" snap-mount='true'>
+<ul snap-class="bmoor.snap.List" snap-template="list1" snap-controller="test.Controller" snap-scope="list"></ul>
+<ul snap-class="bmoor.snap.List" snap-template="list1" snap-controller="test.Controller" snap-scope="list" snap-mount='true'>
 	<li mount>This is a pre existing thing</li>
 	<li>This should be the footer</li>
 </ul>
@@ -66,7 +65,7 @@
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<span snap-class="bmoor.snap.Node" snap-template="template2" snap-model="bar"></span>
+	<span snap-class="bmoor.snap.Node" snap-template="template2" snap-variable="bar"></span>
 ]]>
 </script>
 <script type="text/html" id="template2">

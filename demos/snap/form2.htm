@@ -8,7 +8,7 @@
 
 	<script>
 	(function( global ){
-		bMoor.constructor.singleton({
+		bMoor.constructor.define({
 			name : 'Controller',
 			namespace : ['test'],
 			parent : ['bmoor','controller','Abstract'],
@@ -55,7 +55,7 @@
 <body snap-controller="test.Controller" >
 	<table snap-class="bmoor.snap.List" snap-child="tr" snap-mount="mount" snap-template="temp">
 		<tbody>
-			<tr class='mount'>
+			<tr mount>
 	            <th>Description</th>
 	            <th>Label</th>
 	            <th>Display</th>

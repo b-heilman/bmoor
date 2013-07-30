@@ -1,7 +1,7 @@
-
-Multiple Controllers, or Singleton, static data?
+Controller Heirarchy
 
 Model Validator
+	- form becomes a decorator for controllers...
 	- form node should become a decorator
 	- form validation should also be a decorator
 

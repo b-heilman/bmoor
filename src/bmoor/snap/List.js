@@ -84,8 +84,6 @@ bMoor.constructor.define({
 					
 				element.innerHTML = template;
 					
-				this._pushContext( element, model );
-					
 			return element;
 		},
 		add : function( data ){
@@ -108,7 +106,7 @@ bMoor.constructor.define({
 				next = node.nextSibling;
 
 				this._append( node );
-				this._pushContext( node, model );
+				this._pushModel( node, model );
 				model._.rows.push( node );
 				
 				node = next;

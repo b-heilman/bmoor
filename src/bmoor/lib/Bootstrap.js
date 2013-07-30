@@ -77,8 +77,8 @@ bMoor.constructor.singleton({
 				build : function(){
 					var 
 						i,
-						creator = bMoor.get( create ),
-						el = new creator( element );
+						node = bMoor.get( create ),
+						el = new node( element );
 					
 					for( i = 0; i < decorators.length; i++ ){
 						bMoor.get( decorators[i] )._decorate( el );
@@ -97,22 +97,20 @@ bMoor.constructor.singleton({
 			element.removeAttribute('snap-controller');
 			
 			pos = create.indexOf( '(' );
-			// TODO : this is pretty weak	
+			// TODO : this is pretty weak
 			if ( pos >= 0 ){
 				args = create.substring( pos + 1, create.length - 1 ).trim().split(',');
 				create = create.substring( 0, pos );
 			}
 
-			args.unshift( element );
 			requirements.push( create );
 			
 			return {
 				requirements : requirements,
 				build : function(){
-					var controller = bMoor.get( create );
-
-					// run the factory attribute, just incase, and then tell the controller to own the element
-					controller.own.apply( controller, args );
+					var 
+						controller = bMoor.get( create ),
+						el = new controller( element, {}, args );
 				}
 			};
 		},

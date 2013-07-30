@@ -63,7 +63,7 @@
 		}
 	});
 
-	bMoor.constructor.singleton({
+	bMoor.constructor.define({
 		name : 'Controller',
 		namespace : ['test'],
 		parent : ['bmoor','controller','Abstract'],
@@ -92,7 +92,7 @@
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<snap snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-model="bar"></snap>
+	<span snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-scope="bar"></span>
 ]]>
 </script>
 <script type="text/html" id="template2">
