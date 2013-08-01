@@ -24,6 +24,54 @@
 		background-color: #cfc;
 	}
 </style>
+<script>
+bMoor.constructor.singleton({
+	name : 'Service',
+	namespace : [ 'test' ],
+	parent : [ 'bmoor','service','Abstract' ],
+	properties : {
+		_create : 'srvc/create.srvc?blar=:display&asdsdas=asdads',
+		_update : 'srvc/update.srvc?blar=:display',
+		_remove : '/delete/somewhere'
+	}
+});
+
+bMoor.constructor.mutate({
+	name : 'Control',
+	namespace : [ 'test' ],
+	parent : [ 'bmoor','controller','Abstract' ],
+	services : { 'srvc' : ['test','Service'] },
+	decorators : [
+		['bmoor','controller','Form'],
+		['bmoor','controller','Var']
+	],
+	controller : {
+		className : 'generic',
+		actions : {
+			'click' : {
+				'button[type="submit"]' : function( event, controller ){
+					controller.sendPush();
+
+					return false;
+				}
+			}
+		}
+	},
+	properties : {
+		_delay : false,
+		_key : 'key',
+		_sendCreate : function( model ){
+			this._.srvc.create( model );
+		},
+		_sendUpdate : function( model ){
+			this._.srvc.update( model );
+		},
+		_sendRemove : function( model ){
+			this._.srvc.remove( model );
+		}
+	}
+});
+</script>
 <form snap-control="bmoor.controller.Abstract( daMap )" snap-stint="bmoor.controller.Var,bmoor.controller.Form">
 	<div>
 		<span snap-class="bmoor.snap.Node" snap-variable="number"></span>

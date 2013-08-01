@@ -35,6 +35,9 @@ bMoor.constructor.define({
 		// I think model._.root should be directed by the controller itself...
 		// models default to themselves, collections will point their children up the chain
 		// controllers can redirect after that if they want...
+		if ( !this._forwardRoot ){
+			this.model._.root = this.model;
+		}
 	},
 	onDefine : function( settings ){
 		var 
@@ -101,6 +104,7 @@ bMoor.constructor.define({
 	properties : {
 		_delay : 2000,
 		_key : null,
+		_forwardRoot : true,
 		_arguments : function(){
 			this.args = arguments;
 		},

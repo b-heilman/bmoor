@@ -28,20 +28,44 @@ bMoor.constructor.define({
 		_parseService : function( service ){
 			return new Function( 'data', 'return "' + service.replace( /:([^\/?&]+)/g, '"+data.$1+"' ) + '";' );
 		},
-		_ajax : function( url, data ){
-			$.ajax( url, { data : data });
+		_ajax : function( url, model, cb ){
+			$.getJson( url, model._simplify(), function( json ){
+				if ( json ){
+					if ( json.success ){
+						cb.call( model, json );
+					}
+
+					if ( json.messages ){
+						this._setMessages( model, json.messages ); // new array will be detected
+					}
+
+					if ( json.errors ){
+						this._setErrors( model, json.errors ); // new array will be detected
+					}
+				}
+			});
 		},
-		create : function( data ){
-			this._ajax( this._create(data), data );
+		_setMessages : function( model, messages ){
+			if ( model.$messages ){
+				model.$messages = messages;
+			}
 		},
-		update : function( data ){
-			this._ajax( this._update(data), data );
+		_setErrors : function( model, errors ){
+			if ( model.$errors ){
+				model.$errors = errors;
+			}
 		},
-		remove : function( data ){
-			this._ajax( this._remove(data), data );
+		create : function( model, cb ){
+			this._ajax( this._create(model), model, cb );
 		},
-		get : function( data ){
-			this._ajax( this._get(data), data );
+		update : function( model, cb ){
+			this._ajax( this._update(model), model, cb );
+		},
+		remove : function( model, cb ){
+			this._ajax( this._remove(model), model, cb );
+		},
+		get : function( model, cb ){
+			this._ajax( this._get(model), model, cb );
 		}
 	}
 });

@@ -11,6 +11,8 @@ bMoor.constructor.decorator({
 			errors = {},
 			count = 0;
 
+		model.$errors = [];
+		model.$messages = [];
 		model.$isValid = false;
 
 		model.$addError = function( node ){
