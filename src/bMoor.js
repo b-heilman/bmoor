@@ -438,9 +438,7 @@
 		 *   onDefine    : ( definition, namespace, name ) function to call when class has been defined
 		 * }
 		 */
-		Constructor.prototype.define = function( settings ){
-			loading++;
-			
+		Constructor.prototype.define = function( settings ){	
 			var
 				dis = this,
 				requests = settings.require,
@@ -454,39 +452,32 @@
 					}
 				}; 
 			
+			loading++;
+
 			if ( !settings.name ){
 				throw 'Need name for class';
 			}
 				
 			namespace[ settings.name ] = new PlaceHolder();
-			
+
 			if ( !requests ){
-				requests = [];
+				requests = {};
+			}else if ( requests.length ){
+				requests = {
+					classes : requests
+				};
 			}
 			
 			if ( settings.parent ){
-				if ( requests.length != undefined ){
-					requests.push( settings.parent );
+				if ( requests.classes ){
+					requests.classes.push( settings.parent );
 				}else{
-					if ( requests.classes ){
-						requests.classes.push( settings.parent );
-					}else{
-						requests.classes = [ settings.parent ];
-					}
+					requests.classes = [ settings.parent ];
 				}
 			}
 			
 			if ( settings.aliases ){
-				var r;
-				
-				if ( requests.length != undefined ){
-					requests = {
-						classes : requests, // I can't think of when this isn't true?
-						aliases : settings.aliases
-					};
-				}else{
-					requests.aliases = settings.aliases;
-				}
+				requests.aliases = settings.aliases;
 			}
 			
 			function def(){
@@ -595,8 +586,10 @@
 					if ( classDef ){
 						// this is a prototype defintion, not on an existing object
 						override( '__construct', el, function(){
-							this._wrapped.apply( this, arguments );
-							construct.apply( this ); 
+							if ( this._wrapped ){
+								this._wrapped.apply( this, arguments );
+							}
+							construct.apply( this, arguments ); 
 						});
 					}else{
 						construct.apply( el )
@@ -639,6 +632,10 @@
 				
 				if ( !settings.require ){
 					settings.require = {};
+				}else if ( settings.require.length ){
+					settings.require = {
+						class : settings.require
+					}
 				}
 			
 				if ( !settings.require.classes ){
@@ -648,14 +645,22 @@
 				for( i = 0; i < decorators.length; i++ ){
 					settings.require.classes.push( decorators[i] );
 				}
-					
+				
 				settings.onDefine = function( settings, namespace, name, definition ){
+					var 
+						c,
+						list;
+
 					// it can either be a class (define) or an instance (singleton)
 					old.apply( this, [settings, namespace, name, definition] );
 					
-					for( i = 0; i < decorators.length; i++ ){
+					for( i = 0, list = decorators, c = list.length; i < c; i++ ){
 						// this is the prototype
-						Namespace.get( decorators[i] )._decorate( this, true );
+						Namespace.get( list[i] )._decorate( this, true );
+					}
+
+					for( i in settings.noOverride ){
+						this[i] = settings.noOverride[i];
 					}
 				};
 			}
@@ -674,9 +679,13 @@
 				ns = ( settings.namespace ? Namespace.parse(settings.namespace) : [] ),
 				namespace = ( settings.namespace ? Namespace.get(ns) : global );
 			
-			
 			// inheret from the parent
 			if ( parent ){
+				if ( !parent.prototype.__name ){
+					// assume this is a base class, so..
+					parent.prototype.__name = settings.parent;
+				}
+
 				this.extend( obj, parent );
 				
 				if ( parent.prototype.__onDefine ){

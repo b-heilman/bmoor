@@ -28,16 +28,6 @@ bMoor.constructor.define({
 
 			this.__Node._template.call( this );
 		},
-		_binding : function(){
-			var dis = this;
-			
-			if ( this.model._bind ){
-				this.binded = true;
-				this.model._bind( function( alterations ){
-					dis._make( this, alterations );
-				});
-			}
-		},
 		_make : function( data, alterations ){
 			var
 				i,
@@ -72,7 +62,7 @@ bMoor.constructor.define({
 				}
 			}
 
-			for( var i in additions ){
+			for( i = 0, c = additions.length; i < c; i++ ){
 				// TODO : put them in the right place
 				this.append( additions[i] );
 			}
@@ -101,15 +91,17 @@ bMoor.constructor.define({
 
 			model._.rows = [];
 
-			node = el.firstChild;
-			while( node ){
-				next = node.nextSibling;
+			element = el.firstChild;
+			while( element ){
+				next = element.nextSibling;
 
-				this._append( node );
-				this._pushModel( node, model );
-				model._.rows.push( node );
+				this._append( element );
+				this._pushModel( element, model );
+				model._.rows.push( element );
+
+				this._controlElement( element );
 				
-				node = next;
+				element = next;
 			}
 
 			return el;

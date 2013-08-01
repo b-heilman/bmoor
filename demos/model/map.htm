@@ -16,14 +16,15 @@
 </head>
 <body>
 	<script>
-		var
-			model = new bmoor.model.Map( { foo : 1, bar : 2 } );
+	bMoor.autoload.done(function(){
+		var model = new bmoor.model.Map( { foo : 1, bar : 2 } );
 		
 		model._start();
 		model._bind( function(){console.log(model);} );
 		
 		setTimeout( function(){ console.log( 'foo = 3' ); model.foo = 3; }, 500 );
 		setTimeout( function(){ console.log( 'tmp = 1' ); model.tmp = 1; }, 2000 );
+	});
 	</script>
 </body>
 </html>

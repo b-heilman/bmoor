@@ -1,5 +1,7 @@
 ;(function( $, global, undefined ){
 
+var nodesCount = 0;
+
 bMoor.constructor.define({
 	name : 'Node',
 	namespace : ['bmoor','snap'],
@@ -89,6 +91,8 @@ bMoor.constructor.define({
 	construct : function( element, attributes ){
 		this.binded = false;
 		
+		this.nodeId = nodesCount++;
+
 		this._attributes( attributes );
 		this._element( element );
 		this._template();
@@ -148,11 +152,6 @@ bMoor.constructor.define({
 
 				this.variable = null;
 			}
-
-			// I'm pretty sure I want to slide the model down if the scope turns out to be a model itself?
-			if ( this.scope._bind ){
-				this.model = this.scope;
-			}
 		},
 		_template : function(){
 			var template = this._getAttribute('template');
@@ -162,11 +161,15 @@ bMoor.constructor.define({
 			} else this.prepared = null;
 		},
 		_binding : function(){
-			var dis = this;
+			var 
+				dis = this,
+				data = this.scope._bind ? this.scope : this.model;
 			
-			if ( this.model._bind ){
-				this.binded = true;
-				this.model._bind( function(){ dis._make( this ); });
+			if ( data._bind ){
+				this.binded = true; // what was this for?
+				data._bind( function( alterations ){
+					dis._make( this, alterations );
+				});
 			}
 		},
 		_make : function( model ){
@@ -190,19 +193,26 @@ bMoor.constructor.define({
 		_setContent : function( content ){
 			var 
 				next,
-				node,
+				element,
 				el = document.createElement( 'div' );
 
 			el.innerHTML = content;
 
 			this.element.innerHTML = '';
 
-			node = el.firstChild;
-			while( node ){
-				next = node.nextSibling;
+			element = el.firstChild;
+			while( element ){
+				next = element.nextSibling;
+				
+				this.element.appendChild( element );
+				this._controlElement( element );
 
-				this.element.appendChild( node );
-				node = next;
+				element = next;
+			}
+		},
+		_controlElement : function( element ){
+			if ( element.nodeType != 3 ){
+				bMoor.module.Bootstrap.build( element );
 			}
 		},
 		_finalize : function(){},

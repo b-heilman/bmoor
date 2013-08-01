@@ -7,7 +7,10 @@ bMoor.constructor.define({
 	namespace : ['bmoor','controller'],
 	parent : ['bmoor','lib','Snap'],
 	require : {
-		classes : [ ['bmoor','model','Map'] ]
+		classes : [ 
+			['bmoor','model','Map'],
+			['bmoor','model','Collection']
+		]
 	},
 	construct : function( element, attributes, arguments ){
 		this._attributes( attributes );
@@ -27,6 +30,11 @@ bMoor.constructor.define({
 		}else if ( this.model._bind ){
 			this._binding( this.model );
 		}
+
+		// TODO : do I want to redirect the model to point back here automatically?  
+		// I think model._.root should be directed by the controller itself...
+		// models default to themselves, collections will point their children up the chain
+		// controllers can redirect after that if they want...
 	},
 	onDefine : function( settings ){
 		var 
@@ -93,8 +101,8 @@ bMoor.constructor.define({
 	properties : {
 		_delay : 2000,
 		_key : null,
-		_arguments : function( args ){
-			// any possible arguments go here
+		_arguments : function(){
+			this.args = arguments;
 		},
 		_model : function(){
 			var model;
@@ -161,6 +169,8 @@ bMoor.constructor.define({
 
 			collection._bind(function( alterations ){
 				var
+					i,
+					c,
 					additions,
 					removals,
 					row;
@@ -168,13 +178,17 @@ bMoor.constructor.define({
 				additions = alterations.additions;
 				removals = alterations.removals;
 
-				for( var i in removals ){
-					// TODO : Should I unbind somehow?
-					dis._remove( removals[i] );
+				if ( removals ){
+					for( i = 0, c = removals.length; i < c; i++ ){
+						// TODO : Should I unbind somehow?
+						dis._remove( removals[i] );
+					}
 				}
 
-				for( var i in additions ){
-					dis._binding( additions[i] );
+				if ( additions ){
+					for( i = 0, c = additions.length; i < c; i++ ){
+						dis._binding( additions[i] );
+					}
 				}
 			});
 		},

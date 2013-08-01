@@ -15,11 +15,9 @@ bMoor.constructor.define({
 		_binding : function(){
 			var dis = this;
 			
-			if ( this.model && this.variable ){
-				this.model._bind(function(){
-					dis._make( this );
-				});
-				
+			this.__Node._binding.call( this );
+			
+			if ( this.scope && this.variable ){
 				this._listen();
 			}
 		},

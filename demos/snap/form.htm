@@ -24,13 +24,13 @@
 </head>
 <body>
 <script>
-	var daMap = new bmoor.model.Map({
+	var daMap = {
 		text : 'woot',
 		radio : 2,
 		checkbox : 1
-	});
+	};
 </script>
-<form snap-class="bmoor.snap.Form" snap-controller="bmoor.controller.Variable( daMap )">
+<form snap-class="bmoor.snap.Form" snap-control="bmoor.controller.Abstract( daMap )" snap-stint="bmoor.controller.Var">
 	<span snap-class="bmoor.snap.Node" snap-variable="text"></span>
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
@@ -46,8 +46,8 @@
 		<option>derp 4</option>
 	</select>
 </form>
-<div snap-class="bmoor.snap.Debug" snap-controller="bmoor.controller.Variable( daMap )"></div>
-<form snap-class="bmoor.snap.Form" snap-controller="bmoor.controller.Variable( daMap )">
+<div snap-class="bmoor.snap.Debug" snap-control="bmoor.controller.Variable( daMap )"></div>
+<form snap-class="bmoor.snap.Form" snap-control="bmoor.controller.Variable( daMap )">
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
 	<label>radio 2<input type='radio' name='radio' value='2' /></label>

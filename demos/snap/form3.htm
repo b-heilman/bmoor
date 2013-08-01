@@ -11,9 +11,10 @@
 	<script src="../../src/bmoor/snap/form/Select.js"></script>
 	<script src="../../src/bmoor/controller/Variable.js"></script>
 	<script src="../../src/bmoor/snap/form/Validation.js"></script>
+	<script src="../../src/bmoor/snap/form/Disabled.js"></script>
 </head>
 <body>
-<script> var daMap = { number   : 10, reg : '', delay : 'delay' }; </script>
+<script> var daMap = { number   : 10, reg : '', delay : 'delay' };</script>
 <style>
 	.state-error {
 		background-color: #fcc;
@@ -23,19 +24,21 @@
 		background-color: #cfc;
 	}
 </style>
-<form snap-controller="bmoor.controller.Variable( daMap )">
+<form snap-control="bmoor.controller.Abstract( daMap )" snap-stint="bmoor.controller.Var,bmoor.controller.Form">
 	<div>
 		<span snap-class="bmoor.snap.Node" snap-variable="number"></span>
-		<label>number<input snap-class="bmoor.snap.form.Text" snap-decorator='bmoor.snap.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
+		<label>number<input snap-class="bmoor.snap.form.Text" snap-visage='bmoor.snap.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
 	</div>
 	<div>
 		<span snap-class="bmoor.snap.Node" snap-variable="reg"></span>
-		<label>reg<input snap-class="bmoor.snap.form.Text" snap-decorator='bmoor.snap.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
+		<label>reg<input snap-class="bmoor.snap.form.Text" snap-visage='bmoor.snap.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
 	</div>
 	<div>
 		<span snap-class="bmoor.snap.Node" snap-variable="delay"></span>
-		<label>delay<input snap-class="bmoor.snap.form.Text" snap-decorator='bmoor.snap.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
+		<label>delay<input snap-class="bmoor.snap.form.Text" snap-visage='bmoor.snap.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
 	</div>
+	<button type='reset' snap-class='bmoor.snap.form.Button'>Reset</button>
+	<button type='submit' snap-class='bmoor.snap.form.Button' snap-visage='bmoor.snap.form.Disabled'>Submit</button>
 </form>
 </body>
 </html>

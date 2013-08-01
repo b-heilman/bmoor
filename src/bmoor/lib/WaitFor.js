@@ -11,20 +11,22 @@ bMoor.constructor.singleton({
 	module : 'Wait',
 	properties : {
 		_waiting : 0,
-		_done : null,
+		_done : [],
 		_return : function(){
+			var func;
+
 			this._waiting--;
 			
-			if ( this._done && this._waiting < 1 ){
-				this._done();
-				this._done = null;
+			while ( this._done.length && this._waiting < 1 ){
+				func = this._done.pop();
+				func();
 			}
 		},
 		done : function( cb ){
 			if ( this._waiting < 1 ){
 				cb();
 			}else{
-				this._done = cb;
+				this._done.unshift( cb );
 			}
 		},
 		require : function( requirements, cb ){

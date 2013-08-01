@@ -1,5 +1,3 @@
-Controller Heirarchy
-
 Model Validator
 	- form becomes a decorator for controllers...
 	- form node should become a decorator

@@ -1,32 +1,16 @@
 ;(function( global, undefined ){
 	// TODO : allow traits, so I can pull in functionality from Model.js
-	bMoor.constructor.define({
+	bMoor.constructor.mutate({
 		name : 'Collection',
 		parent : 'Array',
 		namespace : ['bmoor','model'],
-		require: [
-			['bmoor','model','Map']
+		decorators: [
+			['bmoor','model','Mapped']
 		],
-		construct : function( obj ){
-			this._ = {
-				// place to put variables that should be ignored
-				listeners : [],
-				interval  : null,
-				cleaned   : this.slice(0)
-			}; 
-			
-			if ( obj ){
-				for( var i = 0, c = obj.length; i < c; i++ ){
-					this.push( obj[i] );
-				}
-			}
-			
-			this._start();
-		},
 		properties : {
 			remove : function( obj ){
 				var index = this.find( obj );
-	
+				
 				if ( index != -1 ){
 					this.splice( index, 1 );
 				}
@@ -49,97 +33,91 @@
 					return -1;
 				}
 			},
-			_stop : function(){
-				clearInterval( this._.interval );
-				this._.interval = null;
-				
-				this._flush( {stop:true} );
-
-				return this;
+			pop : function(){
+				this._.removals.push( this.__Array.pop.apply(this) );
 			},
-			_start : function(){
+			shift : function(){
+				this._.removals.push( this.__Array.shift.apply(this) );
+			},
+			splice : function( pos, length ){
+				// keeping the removals for the next clean cycle
+				this._.removals = this._.removals.concat( this.__Array.splice.apply(this, arguments) );
+			}
+		},
+		noOverride : {
+			_init : function( obj ){
 				var 
-					dis = this;
-				
-				
-				if ( !this._.interval ){
-					dis._flush( {start:true} );
+					i, 
+					c;
 
-					this._.interval = setInterval(function(){
-						dis._flush( {} );
-					}, 50);
-				}
+				this._.removals = [];
 				
-				return this;
+				for( i = 0, c = obj.length; i < c; i++ ){
+					this.push( obj[i] );
+				}
 			},
-			_flush : function( settings ){
+			_clean : function(){
 				var
+					i,
+					list,
 					moves = {},
-					removals = this._.cleaned,
-					dirty = ( this.length != removals.length ),
-					additions = {};
-				
-				for( var i = this.length - 1; i >= 0; i-- ){
-					var t = this[i];
+					changes = [],
+					cleaned = this._.cleaned,
+					removals,
+					additions = [];
+
+				for( i = 0, list = this._.cleanses, c = list.length; i < c; i++ ){ list[i].call( this ); }
+
+				for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' ){
+					var val = this[key];
 					
-					if ( !t._ ){
-						this[i] = t = new bmoor.model.Map( t );
-					}
-
-					if ( t._.remove ){
-						// allow for a model to force its own removal
-						this.splice( i, 1 );
-						dirty = true;
-
+					if ( typeof(val) == 'function' ){
 						continue;
-					}else if ( t._.index == undefined ){
-						additions[ i ] = t;
-						removals.splice( i, 1 );
-						dirty = true;
-					}else if ( t._.index != i ){
-						moves[ i ] = t;
-						removals.splice( i, 1 );
-						dirty = true;
-					}else if ( i == t._.index ){
-						removals.splice( i, 1 );
-					}else{
-						dirty = true;
-					}
-					
-					t._.index = i;
-				}
-				
-				this._.cleaned = this.slice(0);
-				
-				if ( dirty ){
-					settings.additions = additions;
-					settings.removals = removals;
-					settings.moves = moves;
+					} else {
+						i = parseInt( key );
 
-					this._notify( settings );
-				}
-			},
-			_bind : function( func, noFlush ){
-				if ( typeof(func) == 'function' ){
-					this._.listeners.push( func );
-				}else if ( func ) {
-					if ( func.update ){ 
-						func = func.update; 
-						this._.listeners.push( func.update );
+						if ( isNaN(i) ){
+							if ( val != cleaned[key] ){
+								changes.push( key );
+								cleaned[key] = val;
+							}
+						} else {
+							// part of the array
+							if ( !val._ ){
+								this[i] = val = new bmoor.model.Map( val );
+							}
+
+							if ( val._.remove ){
+								// allow for a model to force its own removal
+								this.splice( i, 1 );
+							}else if ( val._.index == undefined ){
+								// new row added
+								additions.push( val );
+								val._.root = this._.root; // direct all child models back up the chain
+							}else if ( val._.index != i ){
+								// indexed by where it was, moved to where it is
+								moves[ val._.index ] = val;
+							}
+							
+							val._.index = i;
+						}
 					}
-					if ( func.cleanse ){ /* nothing here now */ }
 				}
-				
-				if ( func && this._.interval && !noFlush ){
-					func.call( this._.cleaned, {binding:true, additions:this._.cleaned} );
-				}
+
+				removals = this._.removals ;
+				this._.removals = [];
+
+				changes.additions = additions;
+				changes.removals = removals;
+				changes.moves = moves;
+
+				return changes;
 			},
-			_notify : function( changes ){
-				for( var i = 0, list = this._.listeners; i < list.length; i++ ){
-					list[i].call( this._.cleaned, changes );
-				}
-				
-				return this;
+			_needNotify : function( changes ){
+				return changes.length || changes.additions.length || changes.removals.length || changes.moves.length;
+			},
+			_onBind : function( func ){
+				func.call( this, {binding:true, additions:this} );
 			}
 		}
 	});
