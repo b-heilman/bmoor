@@ -9,6 +9,18 @@ bMoor.constructor.define({
 		_setContent : function( content ){
 			this.element.value = content;
 		},
+		_element : function( element ){
+			this.__Node._element.call( this, element );
+
+			this.root = this._findRoot();
+		},
+		_model : function(){
+			this.__Node._model.call( this );
+
+			if ( this.variable && !this.element.name ){
+				this.element.setAttribute( 'name', this.variable );
+			}
+		},
 		_binding : function(){
 			var dis = this;
 
@@ -31,8 +43,8 @@ bMoor.constructor.define({
 		},
 		_onChange : function(){
 			var 
-				root = this.model._.root,
-				value = this.val(),
+				root = this.root.model,
+				value = this.val,
 				valid = this._isValid( value );
 
 			this._onAlter( value );
@@ -66,7 +78,7 @@ bMoor.constructor.define({
 			this.element.setAttribute( 'value', this.val() );
 		},
 		setState : function( state ){
-			var root = this.model._.root;
+			var root = this.root.model;
 
 			if ( state ){
 				if ( root.$removeError ){

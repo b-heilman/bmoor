@@ -100,7 +100,7 @@ bMoor.constructor.define({
 		
 		this._binding();
 		if ( !this.binded ){
-			this._make( this.scope ); // binding will cause it to run otherwise
+			this._prep( this.scope, { noBind : true } ); // binding will cause it to run otherwise
 		}
 	},
 	properties : {
@@ -142,15 +142,22 @@ bMoor.constructor.define({
 			}else{
 				// otherwise check for scope
 				scope = this._getAttribute( 'scope' );
-
+				
 				if ( scope ){
+					scope = scope.split('.');
 					this.scope = this._unwrapVar( this.model, scope );
 				}else{
-					// well, the model it is then
 					this.scope = this.model;
 				}
-
+				
 				this.variable = null;
+			}
+
+			if ( this.scope._bind ) {
+				this.model = this.scope;
+				this.test = this.variable;
+			}else {
+				this.test = ( scope ? scope[0] : null ) || this.variable; // either it is, or null ... and it will be on model
 			}
 		},
 		_template : function(){
@@ -163,25 +170,30 @@ bMoor.constructor.define({
 		_binding : function(){
 			var 
 				dis = this,
-				data = this.scope._bind ? this.scope : this.model;
+				data = this.model;
 			
 			if ( data._bind ){
-				this.binded = true; // what was this for?
+				this.binded = true;
+
 				data._bind( function( alterations ){
-					dis._make( this, alterations );
+					if ( alterations.binding ){
+						dis._prep( dis.scope, alterations );
+					} else if ( !dis.test || alterations[dis.test] ){
+						dis._prep( dis.scope, alterations );
+					}
 				});
 			}
 		},
-		_make : function( model ){
-			var data = this.scope;
-
-			// cleanse the data
+		_prep : function( data, alterations ){
 			if ( this.variable ){
 				data = data[this.variable];
 
 				if ( typeof(data) == 'function' ){ data = this.scope[this.variable](); }
 			}
-			
+
+			this._make( data, alterations );
+		},
+		_make : function( data, alterations ){
 			if ( this.prepared ){
 				this._setContent( bMoor.module.Templator.run(this.prepared,data) );
 			}else if ( this.variable ){

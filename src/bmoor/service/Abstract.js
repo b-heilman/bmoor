@@ -28,44 +28,66 @@ bMoor.constructor.define({
 		_parseService : function( service ){
 			return new Function( 'data', 'return "' + service.replace( /:([^\/?&]+)/g, '"+data.$1+"' ) + '";' );
 		},
-		_ajax : function( url, model, cb ){
-			$.getJson( url, model._simplify(), function( json ){
-				if ( json ){
-					if ( json.success ){
-						cb.call( model, json );
-					}
+		_ajax : function( url, controller, data, cb ){
+			var dis = this;
 
-					if ( json.messages ){
-						this._setMessages( model, json.messages ); // new array will be detected
-					}
+			$.ajax( url, {
+				data : model._simplify(),
+				dataType : 'json',
+				success : function( json ){
+					if ( json ){
+						if ( json.messages ){
+							dis._setMessages( controller, json.messages ); // new array will be detected
+						}
 
-					if ( json.errors ){
-						this._setErrors( model, json.errors ); // new array will be detected
+						if ( json.errors ){
+							dis._setErrors( controller, json.errors ); // new array will be detected
+						}
+
+						if ( json.success && cb ){
+							cb.call( controller.model, json );
+						}
 					}
 				}
 			});
 		},
-		_setMessages : function( model, messages ){
-			if ( model.$messages ){
-				model.$messages = messages;
+		_setMessages : function( controller, messages ){
+			var 
+				model = controller.root.model,
+				$messages = model.$messages;
+
+			if ( $messages ){
+				model.$messages = $messages.concat( messages );
 			}
 		},
-		_setErrors : function( model, errors ){
-			if ( model.$errors ){
-				model.$errors = errors;
+		_setErrors : function( controller, errors ){
+			var 
+				model = controller.root.model,
+				$errors = model.$errors;
+
+			if ( $errors ){
+				model.$errors = $errors.concat( errors );
 			}
 		},
-		create : function( model, cb ){
-			this._ajax( this._create(model), model, cb );
+		create : function( controller, cb ){
+			var data = controller.model._simplify();
+
+			this._ajax( this._create(data), controller, data, cb );
 		},
-		update : function( model, cb ){
-			this._ajax( this._update(model), model, cb );
+		update : function( controller, cb ){
+			var data = controller.model._simplify();
+
+			this._ajax( this._update(data), controller, data, cb );
 		},
-		remove : function( model, cb ){
-			this._ajax( this._remove(model), model, cb );
+		remove : function( controller, cb ){
+			var data = controller.model._simplify();
+
+			this._ajax( this._remove(data), controller, data, cb );
 		},
-		get : function( model, cb ){
-			this._ajax( this._get(model), model, cb );
+		get : function( controller, cb ){
+			var data = controller.model._simplify();
+
+			this._ajax( this._get(data), controller, data, cb );
 		}
 	}
 });

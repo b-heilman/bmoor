@@ -20,17 +20,29 @@
 <script src="../../src/bmoor/snap/form/Select.js"></script>
 <script src="../../src/bmoor/snap/Form.js"></script>
 <script src="../../src/bmoor/snap/Debug.js"></script>
-<script src="../../src/bmoor/controller/Variable.js"></script>
 </head>
-<body>
+<body snap-control="test.Control">
 <script>
 	var daMap = {
 		text : 'woot',
 		radio : 2,
 		checkbox : 1
 	};
+
+	bMoor.constructor.define({
+		name : 'Control',
+		namespace : [ 'test' ],
+		parent : [ 'bmoor','controller','Abstract' ],
+		properties : {
+			_delay : false,
+			_key : 'key',
+			_model : function(){
+				return daMap;
+			}
+		}
+	});
 </script>
-<form snap-class="bmoor.snap.Form" snap-control="bmoor.controller.Abstract( daMap )" snap-stint="bmoor.controller.Var">
+<form snap-class="bmoor.snap.Form">
 	<span snap-class="bmoor.snap.Node" snap-variable="text"></span>
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
@@ -46,8 +58,8 @@
 		<option>derp 4</option>
 	</select>
 </form>
-<div snap-class="bmoor.snap.Debug" snap-control="bmoor.controller.Variable( daMap )"></div>
-<form snap-class="bmoor.snap.Form" snap-control="bmoor.controller.Variable( daMap )">
+<div snap-class="bmoor.snap.Debug"></div>
+<form snap-class="bmoor.snap.Form">
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
 	<label>radio 2<input type='radio' name='radio' value='2' /></label>
@@ -62,5 +74,6 @@
 		<option>derp 4</option>
 	</select>
 </form>
+
 </body>
 </html>

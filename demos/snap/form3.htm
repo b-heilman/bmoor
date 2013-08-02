@@ -9,12 +9,11 @@
 	<script src="../../src/bmoor/snap/form/Checked.js"></script>
 	<script src="../../src/bmoor/snap/form/Button.js"></script>
 	<script src="../../src/bmoor/snap/form/Select.js"></script>
-	<script src="../../src/bmoor/controller/Variable.js"></script>
+	<script src="../../src/bmoor/service/Abstract.js"></script>
 	<script src="../../src/bmoor/snap/form/Validation.js"></script>
 	<script src="../../src/bmoor/snap/form/Disabled.js"></script>
 </head>
 <body>
-<script> var daMap = { number   : 10, reg : '', delay : 'delay' };</script>
 <style>
 	.state-error {
 		background-color: #fcc;
@@ -25,6 +24,8 @@
 	}
 </style>
 <script>
+var daMap = { number   : 10, reg : '', delay : 'delay' };
+
 bMoor.constructor.singleton({
 	name : 'Service',
 	namespace : [ 'test' ],
@@ -42,37 +43,30 @@ bMoor.constructor.mutate({
 	parent : [ 'bmoor','controller','Abstract' ],
 	services : { 'srvc' : ['test','Service'] },
 	decorators : [
-		['bmoor','controller','Form'],
-		['bmoor','controller','Var']
+		['bmoor','controller','Form']
 	],
-	controller : {
-		className : 'generic',
-		actions : {
-			'click' : {
-				'button[type="submit"]' : function( event, controller ){
-					controller.sendPush();
-
-					return false;
-				}
-			}
-		}
-	},
 	properties : {
 		_delay : false,
 		_key : 'key',
-		_sendCreate : function( model ){
-			this._.srvc.create( model );
+		_model : function(){
+			return daMap;
 		},
-		_sendUpdate : function( model ){
-			this._.srvc.update( model );
+		_sendCreate : function( model, cb ){
+			this._.srvc.create( model, cb );
 		},
-		_sendRemove : function( model ){
-			this._.srvc.remove( model );
+		_sendUpdate : function( model, cb ){
+			this._.srvc.update( model, cb );
+		},
+		_sendRemove : function( model, cb ){
+			this._.srvc.remove( model, cb );
 		}
 	}
 });
+
 </script>
-<form snap-control="bmoor.controller.Abstract( daMap )" snap-stint="bmoor.controller.Var,bmoor.controller.Form">
+<form snap-control="test.Control">
+	<ul snap-class="bmoor.snap.List" class="errors" snap-variable='$errors' snap-template="errorTemplate"></ul>
+	<ul snap-class="bmoor.snap.List" class="messages" snap-variable='$messages' snap-template="messageTemplate"></ul>
 	<div>
 		<span snap-class="bmoor.snap.Node" snap-variable="number"></span>
 		<label>number<input snap-class="bmoor.snap.form.Text" snap-visage='bmoor.snap.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
@@ -88,5 +82,14 @@ bMoor.constructor.mutate({
 	<button type='reset' snap-class='bmoor.snap.form.Button'>Reset</button>
 	<button type='submit' snap-class='bmoor.snap.form.Button' snap-visage='bmoor.snap.form.Disabled'>Submit</button>
 </form>
+
+<script id='errorTemplate' type='text/html'>
+	<li><#= this #></li>
+</script>
+
+<script id='messageTemplate' type='text/html'>
+	<li><#= this #></li>
+</script>
+
 </body>
 </html>

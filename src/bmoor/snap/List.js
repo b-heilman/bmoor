@@ -37,34 +37,46 @@ bMoor.constructor.define({
 				changes,
 				rows,
 				row;
-
-			additions = alterations.additions;
-			removals = alterations.removals;
-
-			for( var i in removals ){
-				row = removals[ i ];
-				
-				if ( typeof(row) == 'object' ){
-					// this means it was removed, otherwise it would be a number
-					rows = row._.rows; // reference the row element
-
-					for( i = 0, c = rows.length; i < c; i++ ){
-						row = rows[i];
+			
+			if ( this.model instanceof bmoor.model.Collection ){
+				removals = alterations.removals;
+				if ( removals ){
+					for( var i in removals ){
+						row = removals[ i ];
 						
-						if ( this.mountPoint == row ){
-							this.mountPoint =  row.previousSibling;
-						}
+						if ( typeof(row) == 'object' ){
+							// this means it was removed, otherwise it would be a number
+							rows = row._.rows; // reference the row element
 
-						if ( row.parentNode ){
-							row.parentNode.removeChild( row );
+							for( i = 0, c = rows.length; i < c; i++ ){
+								row = rows[i];
+								
+								if ( this.mountPoint == row ){
+									this.mountPoint =  row.previousSibling;
+								}
+
+								if ( row.parentNode ){
+									row.parentNode.removeChild( row );
+								}
+							}
 						}
 					}
 				}
-			}
 
-			for( i = 0, c = additions.length; i < c; i++ ){
-				// TODO : put them in the right place
-				this.append( additions[i] );
+				additions = alterations.additions;
+				if ( additions ){
+					for( i = 0, c = additions.length; i < c; i++ ){
+						// TODO : put them in the right place
+						this.append( additions[i] );
+					}
+				}
+			}else{
+				// otherwise I assume this is an array, and I just completely rewrite it every time
+				this.$.empty();
+				for( i = 0, c = data.length; i < c; i++ ){
+					// TODO : put them in the right place
+					this.append( data[i] );
+				}
 			}
 		},
 		_makeChildren : function( model ){
@@ -89,7 +101,9 @@ bMoor.constructor.define({
 				el = el.getElementsByTagName( 'tbody' )[0];
 			}
 
-			model._.rows = [];
+			if ( model._ ){
+				model._.rows = [];
+			}
 
 			element = el.firstChild;
 			while( element ){
@@ -97,7 +111,10 @@ bMoor.constructor.define({
 
 				this._append( element );
 				this._pushModel( element, model );
-				model._.rows.push( element );
+
+				if ( model._ ){
+					model._.rows.push( element );
+				}
 
 				this._controlElement( element );
 				
@@ -108,7 +125,7 @@ bMoor.constructor.define({
 		},
 		_append : function( element ){
 			if ( element.nodeType != 3 ){
-				if ( this.mountPoint ){
+				if ( this.mountPoint && this.mountPoint.parentNode ){
 					if ( this.mountPoint.nextSibling ){
 						this.mountPoint.parentNode.insertBefore( element, this.mountPoint.nextSibling );
 					}else{

@@ -47,7 +47,7 @@ bMoor.constructor.define({
 			
 			return adjustment ? adjustment( attr ) : attr;
 		},
-		_findModel : function(){
+		_findProperty : function( property ){
 			var node = this.element;
 
 			if ( node ){
@@ -56,13 +56,26 @@ bMoor.constructor.define({
 				}
 
 				while( node.tagName != 'HTML' ){
-					if ( node.model ){ return node.model; }
+					if ( node[property] ){ return node[property]; }
 
 					node = node.parentNode;
 				}
 			}
 
 			return null;
+		},
+		_findRoot : function(){
+			return this._findProperty( 'root' );
+		},
+		_setRoot : function( controller ){
+			if ( !controller ){
+				controller = this.root;
+			}
+			
+			this.element.root = controller;
+		},
+		_findModel : function(){
+			return this._findProperty( 'model' );
 		},
 		_pushModel : function( element, model ){
 			if ( !element ){

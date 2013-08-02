@@ -18,7 +18,8 @@ bMoor.constructor.define({
 		this._element( element );
 		
 		// call the model generator, allow it to return or set this.model
-		this.model = this._model() || this.model; 
+		this.model = this._cleanModel( this._model() || this.model );
+		
 		this._pushModel( this.element, this.model );
 
 		this.updates = {};
@@ -30,13 +31,17 @@ bMoor.constructor.define({
 		}else if ( this.model._bind ){
 			this._binding( this.model );
 		}
-
+		
 		// TODO : do I want to redirect the model to point back here automatically?  
 		// I think model._.root should be directed by the controller itself...
 		// models default to themselves, collections will point their children up the chain
 		// controllers can redirect after that if they want...
-		if ( !this._forwardRoot ){
-			this.model._.root = this.model;
+		this.root = this._findRoot();
+
+		if ( this._newRoot || !this.root ){
+			this._setRoot( this );
+		}else{
+			this._setRoot();
 		}
 	},
 	onDefine : function( settings ){
@@ -104,16 +109,18 @@ bMoor.constructor.define({
 	properties : {
 		_delay : 2000,
 		_key : null,
-		_forwardRoot : true,
+		_newRoot : false,
 		_arguments : function(){
+			// maybe arguments should really be a hash?
+			// use json decode?
 			this.args = arguments;
 		},
 		_model : function(){
 			var model;
 
-			this.__Snap._model.call( this );
+			this.__Snap._model.call( this ); // set this.model, a possible parent model
 
-			model = this._getAttribute( 'model' );
+			model = this._getAttribute( 'model' ); // allow redirecting the model
 			
 			if ( model ){
 				if ( typeof(model) == 'string' ){
@@ -125,15 +132,20 @@ bMoor.constructor.define({
 				model = this.model;
 			}
 
-			if ( !model || !model._bind ){
+			return model;
+		},
+		_cleanModel : function( model ){
+			if ( !model ){
+				model = new bmoor.model.Map( {} );
+			}else if ( !model._bind ){
 				if ( model.length ){
-					this.model = new bmoor.model.Collection( model );
+					model = new bmoor.model.Collection( model );
 				}else{
-					this.model = new bmoor.model.Map( model );
+					model = new bmoor.model.Map( model );
 				}
-			}else{
-				this.model = model;
 			}
+
+			return model;
 		},
 		_element : function( element ){
 			this.__Snap._element.call( this, element );
@@ -157,7 +169,7 @@ bMoor.constructor.define({
 			for( attr in this._functions ) if ( this._functions.hasOwnProperty(attr) ){ 
 				functions[ attr ] = this._functions[ attr ]; 
 			}
-
+			
 			if ( key ){
 				if ( model[key] ){
 					this._register( model );
@@ -207,19 +219,19 @@ bMoor.constructor.define({
 		},
 		_create : function( model ){
 			var dis = this;
-
+			
 			this._register( model );
 
-			model._call(function(){ dis.creates[ this._.snapid ] = this._simplify(); });
+			model._call(function(){ dis.creates[ this._.snapid ] = model; });
 			
 			this._push();
 		},
 		_update : function( model ){
-			this.updates[ model._.snapid ] = model._simplify();
+			this.updates[ model._.snapid ] = model;
 			this._push();
 		},
 		_remove : function( model ){
-			this.removes[ model._.snapid ] = model._simplify();
+			this.removes[ model._.snapid ] = model;
 			this._push();
 		},
 		_push : function(){
@@ -237,22 +249,39 @@ bMoor.constructor.define({
 				}, this._delay);
 			}
 		},
-		sendPush : function(){
+		sendPush : function( cb ){
 			// seperate the current back from any future
 			var
+				count = 1,
 				creates = this.creates,
 				removes = this.removes,
 				updates = this.updates,
 				snapid;
 
+			// TODO : I really need to make this a pattern...
+			function onReturn(){
+				count--;
+				
+				if ( !count ){
+					cb();
+				} 
+			}
+
 			this.creates = {};
 			this.removes = {};
 			this.updates = {};
 
+			/*
+			TODO : do this correctly, also do onPush
+			if ( this.model._.onPushBegin ){
+				this.model._.onPushStart();
+			}
+			*/
 			for( snapid in creates ){
 				if ( !removes[snapid] ){
 					// prevent a create / delete loop
-					this._sendCreate( creates[snapid] );
+					count++;
+					this._sendCreate( creates[snapid], onReturn );
 				}
 
 				delete removes[snapid];
@@ -262,17 +291,17 @@ bMoor.constructor.define({
 			for( snapid in updates ){
 				if ( !removes[snapid] ){
 					// prevent an unneeded update
-					this._sendUpdate( updates[snapid] );
+					count++;
+					this._sendUpdate( updates[snapid], onReturn );
 				}
 			}
 
 			for( snapid in removes ){
-				this._sendRemove( removes[snapid] );
+				count++;
+				this._sendRemove( removes[snapid], onReturn );
 			}
 
-			if ( this.model._.onPush ){
-				this.model._.onPush();
-			}
+			onReturn();
 		}
 	}
 });

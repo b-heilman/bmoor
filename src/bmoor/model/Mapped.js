@@ -27,7 +27,7 @@
 				var simple = {};
 
 				// TODO : what about models inside of models?
-				for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' ){
+				for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' && key[0] != '$' ){
 					val = this[ key ];
 
 					if ( typeof(val) == 'function' ){
@@ -45,7 +45,7 @@
 					i,
 					c,
 					val,
-					changes = [],
+					changes = {},
 					cleaned = this._.cleaned;
 				
 				for( i = 0, list = this._.cleanses, c = list.length; i < c; i++ ){ list[i].call( this ); }
@@ -57,8 +57,8 @@
 						continue;
 					}else{
 						if ( val != cleaned[key] ){
-							changes.push( key );
-							cleaned[key] = val;
+							changes[ key ] = true;
+							cleaned[ key ] = val;
 						}
 					}
 				}
@@ -94,7 +94,7 @@
 				return this;
 			},
 			_needNotify : function( changes ){
-				return changes.length;
+				return !$.isEmptyObject( changes );
 			},
 			_flush : function( settings ){
 				var 

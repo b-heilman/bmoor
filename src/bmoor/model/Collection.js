@@ -61,7 +61,7 @@
 					i,
 					list,
 					moves = {},
-					changes = [],
+					changes = {},
 					cleaned = this._.cleaned,
 					removals,
 					additions = [];
@@ -78,8 +78,8 @@
 
 						if ( isNaN(i) ){
 							if ( val != cleaned[key] ){
-								changes.push( key );
-								cleaned[key] = val;
+								changes[ key ] = true;
+								cleaned[ key ] = val;
 							}
 						} else {
 							// part of the array
@@ -93,7 +93,6 @@
 							}else if ( val._.index == undefined ){
 								// new row added
 								additions.push( val );
-								val._.root = this._.root; // direct all child models back up the chain
 							}else if ( val._.index != i ){
 								// indexed by where it was, moved to where it is
 								moves[ val._.index ] = val;
@@ -114,7 +113,19 @@
 				return changes;
 			},
 			_needNotify : function( changes ){
-				return changes.length || changes.additions.length || changes.removals.length || changes.moves.length;
+				var key;
+
+				for( key in changes ) if ( changes.hasOwnProperty(key) ){
+					if ( key == 'additions' && changes.additions.length ){
+						return true;
+					}else if ( key == 'removals' && !$.isEmptyObject(changes.removals) ){
+						return true;
+					}else if ( key == 'moves' && !$.isEmptyObject(changes.moves) ){
+						return true;
+					}else{
+						return true;
+					}
+				}
 			},
 			_onBind : function( func ){
 				func.call( this, {binding:true, additions:this} );
