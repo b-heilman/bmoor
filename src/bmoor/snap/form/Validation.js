@@ -62,13 +62,7 @@ bMoor.constructor.decorator({
 				if ( this.regEx && !this.regEx.test(''+value) ){
 					valid = false;
 				}
-
-				if ( valid ){
-					
-				}else{
-					
-				}
-
+				
 				return valid;
 			}else return false;
 		},

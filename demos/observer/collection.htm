@@ -1,0 +1,47 @@
+<html>
+<head>
+	<style>
+		.noteable-note textarea{
+			display: none;
+		}
+		
+		.note-active textarea{
+			display: block;
+		}
+	</style>
+	
+	<script src='../../src/jquery.min.js'></script>
+	<script src='../../src/bMoor.js'></script>
+	<script src='../../src/bmoor/observer/Map.js'></script>
+	<script src='../../src/bmoor/observer/Collection.js'></script>
+</head>
+<body>
+	<script>
+	bMoor.autoload.done(function(){
+		var
+			derp = [{x:2},{x:4},{x:6}],
+			collection = new bmoor.observer.Collection( derp ),
+			hold = {x:8},
+			hold2 = {x:10};
+		
+		collection.stop();
+		collection.bind( function( changes ){
+			console.log( 'collection', this );
+			console.log( 'additions', changes.additions );
+			console.log( 'moves', changes.moves );
+			console.log( 'removals', changes.removals );
+		} );
+		
+		console.log( collection );
+
+		setTimeout( function(){ console.log('pushing'); derp.push(hold); collection.flush(); }, 500 );
+		setTimeout( function(){ console.log('pushing'); derp.push(hold2); collection.flush(); }, 1000 );
+		setTimeout( function(){ console.log('remove'); derp.remove(hold); collection.flush(); }, 2000);
+		setTimeout( function(){ console.log('shifting'); derp.shift(); collection.flush(); }, 3000);
+		setTimeout( function(){ console.log('popping'); derp.pop(); derp._.flush(); }, 4000);
+		setTimeout( function(){ console.log( 'end', derp ); collection.flush(); }, 4500);
+	});
+	</script>
+</body>
+</html>
+

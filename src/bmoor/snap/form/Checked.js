@@ -40,13 +40,15 @@ bMoor.constructor.define({
 			}
 		},
 		_model : function( context ){
-			var name;
-
-			this.__Node._model.call( this, context );
+			var 
+				name,
+				model = this.__Node._model.call( this, context );
 
 			if ( !this.variable ){
 				this.variable = this.name;
 			}
+
+			return model;
 		},
 		_setContent : function( content ){
 			this.val( content );
@@ -56,7 +58,7 @@ bMoor.constructor.define({
 			
 			this.__Node._binding.call( this );
 
-			if ( this.model && this.variable ){
+			if ( this.observer && this.variable ){
 				this.alter(function( value ){
 					dis.scope[ dis.name ] = value;
 				});

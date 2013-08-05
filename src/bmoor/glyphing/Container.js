@@ -7,7 +7,7 @@ bMoor.constructor.define({
 	require: [
 		['bmoor','lib','MouseTracker'],
 		['bmoor','glyphing','Glyph'],
-		['bmoor','model','Collection']
+		['bmoor','observer','Collection']
 	],
 	statics : {
 		settings : {
@@ -157,7 +157,7 @@ bMoor.constructor.define({
 			this.__Node._element.call( this, element );
 			
 			this.activeGlyph = null;
-			this.glyphs = new bmoor.model.Collection();
+			this.glyphs = new bmoor.observer.Collection();
 			this.glyphs._start();
 			this.controller = null;
 			

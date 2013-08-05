@@ -8,8 +8,8 @@ bMoor.constructor.define({
 	parent : ['bmoor','lib','Snap'],
 	require : {
 		classes : [ 
-			['bmoor','model','Map'],
-			['bmoor','model','Collection']
+			['bmoor','observer','Map'],
+			['bmoor','observer','Collection']
 		],
 		references : { 
 			'bMoor.module.Templator' : ['bmoor','templating','JQote'],
@@ -88,22 +88,35 @@ bMoor.constructor.define({
 	node : {
 		className : 'snap-node'
 	},
-	construct : function( element, attributes ){
-		this.binded = false;
-		
-		this.nodeId = nodesCount++;
-
+	construct : function( element, attributes, delay ){
 		this._attributes( attributes );
-		this._element( element );
-		this._template();
-		this._model();
-		
-		this._binding();
-		if ( !this.binded ){
-			this._prep( this.scope, { noBind : true } ); // binding will cause it to run otherwise
+
+		if ( delay ){
+			this.element = element;
+		}else{
+			this.init( element );
 		}
 	},
 	properties : {
+		init : function( element ){
+			if ( !element ){
+				element = this.element;
+			}
+
+			this.binded = false;
+		
+			this.nodeId = nodesCount++;
+			
+			this._element( element );
+			this._template();
+
+			this.observer = this._observe( this._model() );
+			this.scope = this.observer.model;
+
+			this._binding();
+
+			this._finalize();
+		},
 		__warn : function( warning ){
 			this__log( 'warn', warning );
 		},
@@ -126,39 +139,30 @@ bMoor.constructor.define({
 		},
 		_model : function(){
 			var 
+				attr,
+				info,
 				scope,
-				variable;
+				variable,
+				model = this.__Snap._model.call( this );
 
-			this.__Snap._model.call( this );
+			attr = this._getAttribute( 'scope', this.element.name );
+			if ( attr ){
+				scope = attr.split('.');
+				info = this._unwrapVar( model, scope, true );
 
-			variable = this._getAttribute( 'variable', this.element.name );
-
-			// first try for variable
-			if ( variable && typeof(variable) == 'string' ){
-				scope = variable.split('.');
-
-				this.variable = scope.pop();
-				this.scope = this._unwrapVar( this.model, scope );
-			}else{
-				// otherwise check for scope
-				scope = this._getAttribute( 'scope' );
-				
-				if ( scope ){
-					scope = scope.split('.');
-					this.scope = this._unwrapVar( this.model, scope );
+				if ( !info ){
+					// TODO : what do I do?
+				}else if ( typeof(info.value) == 'object' ){
+					// if scope is a model, make it he model we watch
+					this.variable = null;
+					model = info.value;
 				}else{
-					this.scope = this.model;
+					this.variable = info.variable;
+					model = info.scope;
 				}
-				
-				this.variable = null;
 			}
-
-			if ( this.scope._bind ) {
-				this.model = this.scope;
-				this.test = this.variable;
-			}else {
-				this.test = ( scope ? scope[0] : null ) || this.variable; // either it is, or null ... and it will be on model
-			}
+			
+			return model;
 		},
 		_template : function(){
 			var template = this._getAttribute('template');
@@ -168,39 +172,40 @@ bMoor.constructor.define({
 			} else this.prepared = null;
 		},
 		_binding : function(){
-			var 
-				dis = this,
-				data = this.model;
+			var dis = this;
 			
-			if ( data._bind ){
-				this.binded = true;
+			this.binded = true;
 
-				data._bind( function( alterations ){
-					if ( alterations.binding ){
-						dis._prep( dis.scope, alterations );
-					} else if ( !dis.test || alterations[dis.test] ){
-						dis._prep( dis.scope, alterations );
-					}
-				});
-			}
+			this.observer.bind( function( alterations ){
+				if ( dis._needUpdate(alterations) ) {
+					dis._prep( this.model, alterations );
+				}
+			});
+		},
+		_needUpdate : function( alterations ){
+			return alterations.binding || ( this.variable && alterations[this.variable] );
 		},
 		_prep : function( data, alterations ){
 			if ( this.variable ){
-				data = data[this.variable];
+				value = data[this.variable];
 
-				if ( typeof(data) == 'function' ){ data = this.scope[this.variable](); }
+				if ( typeof(data) == 'function' ){ 
+					value = data[this.variable](); 
+				}
+			}else{
+				value = data;
 			}
 
-			this._make( data, alterations );
+			this._make( value, alterations );
 		},
 		_make : function( data, alterations ){
 			if ( this.prepared ){
 				this._setContent( bMoor.module.Templator.run(this.prepared,data) );
 			}else if ( this.variable ){
 				this._setContent( data );
+			}else{
+				this._wrapElement( this.element );
 			}
-
-			this._finalize();
 		},
 		_setContent : function( content ){
 			var 
@@ -219,9 +224,12 @@ bMoor.constructor.define({
 				this.element.appendChild( element );
 				this._controlElement( element );
 
+				this._wrapElement( element );
+
 				element = next;
 			}
 		},
+		_wrapElement : function( element ){},
 		_controlElement : function( element ){
 			if ( element.nodeType != 3 ){
 				bMoor.module.Bootstrap.build( element );
@@ -230,7 +238,7 @@ bMoor.constructor.define({
 		_finalize : function(){},
 		_decodeData : function( variable ) {
 			// TODO : prolly inline this
-			return this._unwrapVar( this.model, variable );
+			return this._unwrapVar( this.observer.model, variable );
 		},
 		// TODO : this should be renamed
 		_decode : function( variable ){
@@ -239,17 +247,6 @@ bMoor.constructor.define({
 			}else if ( variable[0] == '{' || variable[0] == '[' ){
 				return eval( variable );
 			}else return eval( 'global.' + variable );
-		},
-		_select : function( selector, element ){
-			if ( !element ){
-				element = this.element;
-			}
-
-			if ( element.querySelectorAll ){
-				return element.querySelectorAll( selector );
-			}else{
-				return $( element ).find( selector );
-			}
 		}
 	}
 });

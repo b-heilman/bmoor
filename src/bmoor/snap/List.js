@@ -5,7 +5,7 @@ bMoor.constructor.define({
 	namespace : ['bmoor','snap'],
 	parent : ['bmoor','snap','Node'],
 	require : [
-		['bmoor','model','Collection']
+		['bmoor','observer','Collection']
 	],
 	node : {
 		className : 'snap-list'
@@ -38,7 +38,7 @@ bMoor.constructor.define({
 				rows,
 				row;
 			
-			if ( this.model instanceof bmoor.model.Collection ){
+			if ( this.observer instanceof bmoor.observer.Collection ){
 				removals = alterations.removals;
 				if ( removals ){
 					for( var i in removals ){
@@ -95,25 +95,24 @@ bMoor.constructor.define({
 			var 
 				node,
 				next,
+				observer = model._;
 				el = this._makeChildren( model );
 
 			if ( this.isTable ){
 				el = el.getElementsByTagName( 'tbody' )[0];
 			}
 
-			if ( model._ ){
-				model._.rows = [];
-			}
+			observer.rows = [];
 
 			element = el.firstChild;
 			while( element ){
 				next = element.nextSibling;
 
 				this._append( element );
-				this._pushModel( element, model );
+				this._pushObserver( element, observer );
 
 				if ( model._ ){
-					model._.rows.push( element );
+					observer.rows.push( element );
 				}
 
 				this._controlElement( element );
@@ -122,6 +121,9 @@ bMoor.constructor.define({
 			}
 
 			return el;
+		},
+		_needUpdate : function( alterations ){
+			return alterations.binding || !this.test || alterations[this.test];
 		},
 		_append : function( element ){
 			if ( element.nodeType != 3 ){

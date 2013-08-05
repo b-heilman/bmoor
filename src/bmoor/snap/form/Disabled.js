@@ -4,9 +4,15 @@ bMoor.constructor.decorator({
 	name : 'Disabled',
 	namespace : ['bmoor','snap','form'],
 	properties : {
-		_make : function( model ){
-			if ( this.model.$isValid !== undefined ){
-				this.element.disabled = !this.model.$isValid;
+		_needUpdate : function( alterations ){
+			return alterations.$isValid || this._wrapped( alterations );
+		},
+		// TODO : make shouldn't need to be called
+		_make : function(){
+			var data = this.root.observer.model;
+			
+			if ( data.$isValid !== undefined ){
+				this.element.disabled = !data.$isValid;
 			}
 		},
 	}

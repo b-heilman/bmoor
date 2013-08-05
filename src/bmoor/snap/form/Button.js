@@ -3,52 +3,22 @@
 bMoor.constructor.define({
 	name : 'Button',
 	namespace : ['bmoor','snap','form'],
-	parent : ['bmoor','snap','Node'],
+	parent : ['bmoor','snap','form','Input'],
 	properties: {
-		_setContent : function( content ){
-			if ( this.element.value == content ){
-				this.$.addClass('active');
-			}else{
-				this.$.removeClass('active');
-			}
-		},
-		_binding : function(){
-			var dis = this;
-			
-			this.__Node._binding.call( this );
-			
-			if ( this.scope && this.variable ){
-				this._listen();
-			}
-		},
 		_listen : function(){
 			var 
 				dis = this,
-				element = this.element.length ? this.element : [ this.element ];
+				el = this.element;
 			
-			for( var i = 0, c = element.length; i < c; i++ ){
-				element[i].onclick = function(){
-					var r = dis._onChange();
-					return r === undefined ? false : r;
-				};
-			}
-		},
-		_onChange : function(){
-			var value = this.val();
-
-			if ( this._isValid(value) ){
-				this._onAlter( value );
-				return true;
-			}else return false;
-		},
-		_isValid : function( value ){
-			return true;
-		},
-		_onAlter : function( value ){
-			this.scope[ this.element.name ] = value
+			el.onclick = function(){ dis._onChange(); };
 		},
 		val : function( value ){
 			if ( value ){
+				if ( this.element.value == value ){
+					this.$.addClass('active');
+				}else{
+					this.$.removeClass('active');
+				}
 			}else{
 				return this.element.value;
 			}

@@ -10,8 +10,8 @@
 	bMoor.autoload.setRoot('../../src');
 	bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
 </script>
-<script src="../../src/bmoor/model/Map.js"></script>
-<script src="../../src/bmoor/model/Collection.js"></script>
+<script src="../../src/bmoor/observer/Map.js"></script>
+<script src="../../src/bmoor/observer/Collection.js"></script>
 <script src="../../src/bmoor/controller/Abstract.js"></script>
 <script src='../../src/bmoor/lib/Resource.js'></script>
 <script src='../../src/bmoor/lib/WaitFor.js'></script>
@@ -34,21 +34,21 @@
 		parent : ['bmoor','controller','Abstract'],
 		require : {
 			classes : [ 
-				['bmoor','model','Map'],
-				['bmoor','model','Collection']
+				['bmoor','observer','Map'],
+				['bmoor','observer','Collection']
 			]
 		},
 		properties : {
 			_model : function(){ 
-				return new bmoor.model.Map({ 
+				return { 
 					foo : 'foot', 
 					bar : { uh:'yay' }, 
-					list: new bmoor.model.Collection([
+					list: [
 						{x:'eins'},
 						{x:'zwei'},
 						{x:'drei'}
-					]) 
-				});
+					]
+				};
 			}
 		}
 	});
@@ -65,7 +65,7 @@
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<span snap-class="bmoor.snap.Node" snap-template="template2" snap-variable="bar"></span>
+	<span snap-class="bmoor.snap.Node" snap-template="template2" snap-scope="bar"></span>
 ]]>
 </script>
 <script type="text/html" id="template2">

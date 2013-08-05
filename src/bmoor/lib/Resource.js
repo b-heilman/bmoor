@@ -117,7 +117,7 @@ bMoor.constructor.singleton({
 					});
 				}
 			}
-			
+
 			if ( dis == null ) {
 				if ( cb ){
 					cb( templates[id] );

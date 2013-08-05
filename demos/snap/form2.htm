@@ -14,8 +14,8 @@
 			parent : ['bmoor','controller','Abstract'],
 			require : {
 				classes : [ 
-					['bmoor','model','Map'],
-					['bmoor','model','Collection']
+					['bmoor','observer','Map'],
+					['bmoor','observer','Collection']
 				]
 			},
 			controller : {
@@ -30,14 +30,14 @@
 			},
 			properties : {
 				addRow : function(){
-					this.model.push({
+					this.observer.model.push({
 						description : 'sample1',
 						label   : 'sample2',
 						display : 'sample3'
 					});
 				},
 				_model : function(){
-					return new bmoor.model.Collection([{
+					return [{
 						description: 'derp',
 						label : 1,
 						display : 2
@@ -49,7 +49,7 @@
 						description: 'derp3',
 						label : 5,
 						display : 6
-					}]);
+					}];
 				}
 			}
 		});
@@ -73,7 +73,7 @@
 			<td><input snap-class='bmoor.snap.form.Text' type='text' name='description'/></td>
 	        <td><input snap-class='bmoor.snap.form.Text'  type='text' name='label'/></td>
 	        <td><input snap-class='bmoor.snap.form.Text'  type='text' name='display'/></td>
-	        <td><button snap-class='bmoor.snap.form.Button' type='button' snap-variable="_.remove" name='remove' value="1">Remove</button></td>
+	        <td><button snap-class='bmoor.snap.form.Button' type='button' name='$remove' value="1">Remove</button></td>
 	    </tr>
 	</script>
 </body>

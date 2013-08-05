@@ -6,44 +6,6 @@ bMoor.constructor.define({
 	name : 'Abstract',
 	namespace : ['bmoor','controller'],
 	parent : ['bmoor','lib','Snap'],
-	require : {
-		classes : [ 
-			['bmoor','model','Map'],
-			['bmoor','model','Collection']
-		]
-	},
-	construct : function( element, attributes, arguments ){
-		this._attributes( attributes );
-		this._arguments.apply( this, arguments );
-		this._element( element );
-		
-		// call the model generator, allow it to return or set this.model
-		this.model = this._cleanModel( this._model() || this.model );
-		
-		this._pushModel( this.element, this.model );
-
-		this.updates = {};
-		this.removes = {};
-		this.creates = {};
-		
-		if ( this.model instanceof bmoor.model.Collection ){
-			this._collectionBind( this.model );
-		}else if ( this.model._bind ){
-			this._binding( this.model );
-		}
-		
-		// TODO : do I want to redirect the model to point back here automatically?  
-		// I think model._.root should be directed by the controller itself...
-		// models default to themselves, collections will point their children up the chain
-		// controllers can redirect after that if they want...
-		this.root = this._findRoot();
-
-		if ( this._newRoot || !this.root ){
-			this._setRoot( this );
-		}else{
-			this._setRoot();
-		}
-	},
 	onDefine : function( settings ){
 		var 
 			service,
@@ -106,7 +68,50 @@ bMoor.constructor.define({
 			});
 		}
 	},
+	construct : function( element, attributes, arguments, delay ){
+		this._attributes( attributes );
+		this._arguments.apply( this, arguments );
+		
+		if ( delay ){
+			this.element = element;
+		}else{
+			this.init( element );
+		}
+	},
 	properties : {
+		init : function( element ){
+			if ( !element ){
+				element = this.element;
+			}
+			
+			this._element( element );
+		
+			// call the model generator, allow it to return or set this.model
+			this.observer = this._observe( this._model() );
+			this.scope = this.observer.model;
+
+			this._pushObserver( this.element, this.observer );
+
+			this.updates = {};
+			this.removes = {};
+			this.creates = {};
+			
+			if ( this.observer instanceof bmoor.observer.Collection ){
+				this._collectionBind( this.observer );
+			}else if ( this.observer ){
+				this._binding( this.observer );
+			}
+			
+			this.root = this._findRoot();
+
+			if ( this._newRoot || !this.root ){
+				this._setRoot( this );
+			}else{
+				this._setRoot();
+			}
+
+			this._finalize();
+		},
 		_delay : 2000,
 		_key : null,
 		_newRoot : false,
@@ -115,33 +120,20 @@ bMoor.constructor.define({
 			// use json decode?
 			this.args = arguments;
 		},
+		// make models observes that are then linked...
 		_model : function(){
-			var model;
+			var 
+				info,
+				attr,
+				model = this.__Snap._model.call( this );
 
-			this.__Snap._model.call( this ); // set this.model, a possible parent model
-
-			model = this._getAttribute( 'model' ); // allow redirecting the model
+			attr = this._getAttribute( 'model' ); // allow redirecting the model
 			
-			if ( model ){
-				if ( typeof(model) == 'string' ){
-					model = this._unwrapVar( this.model, model );
-				}else{
-					model = this.model;
-				}
-			}else{
-				model = this.model;
-			}
+			if ( attr && typeof(attr) == 'string' ){
+				info = this._unwrapVar( model, attr, true );
 
-			return model;
-		},
-		_cleanModel : function( model ){
-			if ( !model ){
-				model = new bmoor.model.Map( {} );
-			}else if ( !model._bind ){
-				if ( model.length ){
-					model = new bmoor.model.Collection( model );
-				}else{
-					model = new bmoor.model.Map( model );
+				if ( info ){
+					model = info.value;
 				}
 			}
 
@@ -156,34 +148,35 @@ bMoor.constructor.define({
 				element.className += ' '+this.baseClass;
 			}
 		},
-		_binding : function( model ){
+		_binding : function( observer ){
 			var 
+				model = observer.model,
 				dis = this,
 				key = this._key,
 				create = false,
-				functions = model,
 				action,
 				attr;
 
 			// TODO : foreach
 			for( attr in this._functions ) if ( this._functions.hasOwnProperty(attr) ){ 
-				functions[ attr ] = this._functions[ attr ]; 
+				model[ attr ] = this._functions[ attr ]; 
 			}
 			
 			if ( key ){
 				if ( model[key] ){
-					this._register( model );
+					this._register( observer );
 				}else{
-					this._create( model );
+					this._create( observer );
 				}
 			}else{
-				this._register( model );
+				this._register( observer );
 			}
 		},
+		_finalize : function(){},
 		_collectionBind : function( collection ){
 			var dis = this;
 
-			collection._bind(function( alterations ){
+			collection.bind(function( alterations ){
 				var
 					i,
 					c,
@@ -194,16 +187,17 @@ bMoor.constructor.define({
 				additions = alterations.additions;
 				removals = alterations.removals;
 
+				// both of these come back as the models, reference the observer
 				if ( removals ){
 					for( i = 0, c = removals.length; i < c; i++ ){
 						// TODO : Should I unbind somehow?
-						dis._remove( removals[i] );
+						dis._remove( removals[i]._ );
 					}
 				}
 
 				if ( additions ){
 					for( i = 0, c = additions.length; i < c; i++ ){
-						dis._binding( additions[i] );
+						dis._binding( additions[i]._ );
 					}
 				}
 			});
@@ -212,26 +206,30 @@ bMoor.constructor.define({
 		_sendUpdate : function( data ){ return; },
 		_sendRemove : function( data ){ return; },
 		_get : function(){ return; },
-		_register : function( model ){
+		_register : function( observer ){
 			var dis = this;
 
-			model._bind(function( settings ){ dis._update( this, settings ); }, true);
+			observer.bind(function( settings ){ 
+				dis._update( this, settings ); 
+			}, true);
 		},
-		_create : function( model ){
+		_create : function( observer ){
 			var dis = this;
 			
-			this._register( model );
+			this._register( observer );
 
-			model._call(function(){ dis.creates[ this._.snapid ] = model; });
+			observer.run(function(){ 
+				dis.creates[ this.snapid ] = this.model;
+			});
 			
 			this._push();
 		},
-		_update : function( model ){
-			this.updates[ model._.snapid ] = model;
+		_update : function( observer ){
+			this.updates[ observer.snapid ] = observer.model;
 			this._push();
 		},
-		_remove : function( model ){
-			this.removes[ model._.snapid ] = model;
+		_remove : function( observer ){
+			this.removes[ observer.snapid ] = observer.model;
 			this._push();
 		},
 		_push : function(){

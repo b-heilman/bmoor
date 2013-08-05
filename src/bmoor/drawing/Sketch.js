@@ -6,7 +6,6 @@ bMoor.constructor.define({
 	parent : ['bmoor','snap','Node'],
 	require: [
 		['bmoor','lib','MouseTracker'],
-		['bmoor','model','Map'],
 		['bmoor','drawing','Context'],
 		['bmoor','drawing','stroke','Brush']
 	],

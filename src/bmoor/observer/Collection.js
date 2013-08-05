@@ -2,20 +2,27 @@
 	// TODO : allow traits, so I can pull in functionality from Model.js
 	bMoor.constructor.mutate({
 		name : 'Collection',
-		parent : 'Array',
-		namespace : ['bmoor','model'],
-		decorators: [
-			['bmoor','model','Mapped']
-		],
-		properties : {
-			remove : function( obj ){
+		namespace : ['bmoor','observer'],
+		parent: ['bmoor','observer','Map'],
+		construct : function( model ){
+			var 
+				dis = this,
+				old = {};
+
+			this.__Map.__construct.call( this, model );
+
+			this.removals = [];
+
+			// TODO : is this the best way to do this?
+			model.remove = function( obj ){
 				var index = this.find( obj );
 				
 				if ( index != -1 ){
 					this.splice( index, 1 );
 				}
-			},
-			find : function( obj, fromIndex ){
+			};
+
+			model.find = function( obj, fromIndex ){
 				if ( this.indexOf ){
 					return this.indexOf( obj, fromIndex );
 				}else{
@@ -32,44 +39,35 @@
 
 					return -1;
 				}
-			},
-			pop : function(){
-				this._.removals.push( this.__Array.pop.apply(this) );
-			},
-			shift : function(){
-				this._.removals.push( this.__Array.shift.apply(this) );
-			},
-			splice : function( pos, length ){
-				// keeping the removals for the next clean cycle
-				this._.removals = this._.removals.concat( this.__Array.splice.apply(this, arguments) );
-			}
-		},
-		noOverride : {
-			_init : function( obj ){
-				var 
-					i, 
-					c;
+			};
 
-				this._.removals = [];
-				
-				for( i = 0, c = obj.length; i < c; i++ ){
-					this.push( obj[i] );
-				}
-			},
+			model.pop = function(){
+				dis.removals.push( Array.prototype.pop.call(this) );
+			};
+
+			model.shift = function(){
+				dis.removals.push( Array.prototype.shift.call(this) );
+			};
+
+			model.splice = function(){
+				// keeping the removals for the next clean cycle
+				dis.removals = dis.removals.concat( Array.prototype.splice.apply(this, arguments) );
+			};
+		},
+		properties : {
 			_clean : function(){
 				var
 					i,
 					list,
+					model = this.model,
 					moves = {},
 					changes = {},
-					cleaned = this._.cleaned,
+					cleaned = this.cleaned,
 					removals,
 					additions = [];
 
-				for( i = 0, list = this._.cleanses, c = list.length; i < c; i++ ){ list[i].call( this ); }
-
-				for( var key in this ) if ( this.hasOwnProperty(key) && key[0] != '_' ){
-					var val = this[key];
+				for( var key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' ){
+					var val = model[key];
 					
 					if ( typeof(val) == 'function' ){
 						continue;
@@ -82,14 +80,14 @@
 								cleaned[ key ] = val;
 							}
 						} else {
-							// part of the array
+							// TODO : do i really want to do this?
 							if ( !val._ ){
-								this[i] = val = new bmoor.model.Map( val );
+								new bmoor.observer.Map( val );
 							}
 
-							if ( val._.remove ){
+							if ( val.$remove ){
 								// allow for a model to force its own removal
-								this.splice( i, 1 );
+								this.model.splice( i, 1 );
 							}else if ( val._.index == undefined ){
 								// new row added
 								additions.push( val );
@@ -103,8 +101,8 @@
 					}
 				}
 
-				removals = this._.removals ;
-				this._.removals = [];
+				removals = this.removals ;
+				this.removals = [];
 
 				changes.additions = additions;
 				changes.removals = removals;
@@ -128,7 +126,8 @@
 				}
 			},
 			_onBind : function( func ){
-				func.call( this, {binding:true, additions:this} );
+				// TODO : maybe change the list to play nice with the binding setting
+				this.run( func, {binding:true, additions:this.model} );
 			}
 		}
 	});

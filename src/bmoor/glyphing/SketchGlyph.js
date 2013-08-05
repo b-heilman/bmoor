@@ -77,7 +77,7 @@ bMoor.constructor.define({
 	properties : {
 		// glyphing setters
 		makeModel : function(){
-			return new bmoor.model.Map();
+			return new bmoor.observer.Map({});
 		},
 		makeModelCleanses : function(){
 			return {

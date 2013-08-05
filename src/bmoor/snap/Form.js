@@ -14,17 +14,14 @@ bMoor.constructor.define({
 		className : 'snap-form'
 	},
 	properties : {
-		_finalize : function(){
+		_wrapElement : function( element ){
 			var 
 				dis = this,
 				names = {},
-				fields = [],
-				element = this.element;
+				fields = [];
 			
-			this.__Node._finalize.call( this );
-			
+
 			elements = element.elements;
-			
 			for( var i = 0, c = elements.length; i < c; i++ ){
 				names[ elements[i].name ] = true;
 			}
@@ -48,16 +45,16 @@ bMoor.constructor.define({
 				}
 				
 				if ( el.nodeName == 'BUTTON' ){
-					input = new bmoor.snap.form.Button( field, {model : this.model} );
+					input = new bmoor.snap.form.Button( field );
 				}else if ( el.nodeName == 'SELECT' ){
-					input = new bmoor.snap.form.Select( field, {model : this.model} );
+					input = new bmoor.snap.form.Select( field );
 				}else{
 					if ( el.type == 'checkbox' || el.type == 'radio' ){
-						input = new bmoor.snap.form.Checked( field, {model : this.model} );
+						input = new bmoor.snap.form.Checked( field );
 					}else if (el.type == 'button' ){
-						input = new bmoor.snap.form.Button( field, {model : this.model} );
+						input = new bmoor.snap.form.Button( field );
 					}else{
-						input = new bmoor.snap.form.Text( field, {model : this.model} );
+						input = new bmoor.snap.form.Text( field );
 					}
 				}
 			}

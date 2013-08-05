@@ -3,34 +3,78 @@
 bMoor.constructor.define({
 	name : 'Snap',
 	namespace : ['bmoor','lib'],
+	require : {
+		classes : [ 
+			['bmoor','observer','Map'],
+			['bmoor','observer','Collection']
+		]
+	},
 	properties : {
 		getModel : function(){
-			if ( this.model && this.model._bind ){
-				return this.model;
+			if ( this.observer ){
+				return this.observer.model;
 			}else return null;
 		},
 		_element : function( element ){
 			this.element = element;
 		},
 		_model : function(){
-			this.model = this._findModel() || global;
+			var observer = this._findObserver();
+
+			return  observer ? observer.model : global;
+		},
+		_observe : function( model ){
+			var observer = null;
+
+			if ( model ){
+				if ( model._ ){
+					observer = model._;
+				}else{
+					if ( model.length ){
+						observer = new bmoor.observer.Collection( model );
+					}else{
+						observer = new bmoor.observer.Map( model );
+					}
+				}
+			}
+
+			return observer;
 		},
 		_attributes : function( attributes ){
 			this._attributes = attributes;
 		},
-		_unwrapVar : function( context, variable ){
+		_unwrapVar : function( context, variable, smart ){
 			var 
-				path = typeof(variable) == 'string' ? variable.split('.') : variable,
+				scope,
+				value = context,
+				variable,
+				test = typeof(variable) == 'string' ? variable.split('.') : variable,
 				i,
 				c;
 
-			for( i = 0, c = path.length; i < c; i++ ){
-				if ( context[path[i]] ){
-					context = context[ path[i] ];
-				}else return undefined;
-			}
+			if ( smart ){
+				for( i = 0, c = test.length; i < c; i++ ){
+					if ( value[test[i]] ){
+						scope = value;
+						variable = test[i];
+						value = value[ variable ];
+					}else return undefined;
+				}
 
-			return context;
+				return {
+					scope : scope,
+					value : value,
+					variable : variable
+				};
+			}else{
+				for( i = 0, c = test.length; i < c; i++ ){
+					if ( value[test[i]] ){
+						value = value[ test[i] ];
+					}else return undefined;
+				}
+
+				return scope;
+			}
 		},
 		_getAttribute : function( attribute, otherwise, adjustment ){
 			var attr;
@@ -56,8 +100,9 @@ bMoor.constructor.define({
 				}
 
 				while( node.tagName != 'HTML' ){
-					if ( node[property] ){ return node[property]; }
-
+					if ( node[property] ){ 
+						return node[property]; 
+					}
 					node = node.parentNode;
 				}
 			}
@@ -74,19 +119,30 @@ bMoor.constructor.define({
 			
 			this.element.root = controller;
 		},
-		_findModel : function(){
-			return this._findProperty( 'model' );
+		_findObserver : function(){
+			return this._findProperty( 'observer' );
 		},
-		_pushModel : function( element, model ){
+		_pushObserver : function( element, observer ){
 			if ( !element ){
 				element = this.element;
 			}
 
-			if ( !model ){
-				model = this.model;
+			if ( !observer ){
+				observer = this.observer;
 			}
 			
-			element.model = model;
+			element.observer = observer;
+		},
+		_select : function( selector, element ){
+			if ( !element ){
+				element = this.element;
+			}
+
+			if ( element.querySelectorAll ){
+				return element.querySelectorAll( selector );
+			}else{
+				return $( element ).find( selector );
+			}
 		}
 	}
 });

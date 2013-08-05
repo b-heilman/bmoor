@@ -76,11 +76,13 @@ bMoor.constructor.singleton({
 					var 
 						i,
 						node = bMoor.get( create ),
-						el = new node( element );
+						el = new node( element, {}, true );
 					
 					for( i = 0; i < visages.length; i++ ){
 						bMoor.get( visages[i] )._decorate( el );
 					}
+
+					el.init();
 				}
 			};
 		},
@@ -115,11 +117,13 @@ bMoor.constructor.singleton({
 					var 
 						i,
 						controller = bMoor.get( create ),
-						el = new controller( element, {}, args );
+						el = new controller( element, {}, args, true );
 
 					for( i = 0; i < stints.length; i++ ){
 						bMoor.get( stints[i] )._decorate( el );
 					}
+
+					el.init();
 				}
 			};
 		},
