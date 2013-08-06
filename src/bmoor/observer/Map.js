@@ -47,7 +47,7 @@
 
 				return simple
 			},
-			start : function(){
+			start : function( interval ){
 				var 
 					dis = this,
 					val;
@@ -57,7 +57,7 @@
 					
 					this.flush( {start:true} );
 
-					this.interval = setInterval(function(){ dis.flush( {} ); }, 50);
+					this.interval = setInterval(function(){ dis.flush( {} ); }, interval || 50);
 				}
 				
 				return this;

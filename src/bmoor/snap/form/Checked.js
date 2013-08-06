@@ -60,7 +60,7 @@ bMoor.constructor.define({
 
 			if ( this.observer && this.variable ){
 				this.alter(function( value ){
-					dis.scope[ dis.name ] = value;
+					dis.observer.model[ dis.name ] = value;
 				});
 			}
 		},

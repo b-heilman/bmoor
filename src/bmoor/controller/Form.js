@@ -33,7 +33,6 @@ bMoor.constructor.decorator({
 						delete errors[node.nodeId];
 
 						if ( !count ){
-							console.log( '-->', count );
 							this.$isValid = true;
 						}
 					}
@@ -43,7 +42,6 @@ bMoor.constructor.decorator({
 					changes[ node.nodeId ] = node;
 
 					if ( count == 0 ) {
-						console.log( '-->', count );
 						this.$isValid = true;
 					}
 				}

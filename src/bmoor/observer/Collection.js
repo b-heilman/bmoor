@@ -41,6 +41,7 @@
 				}
 			};
 
+			// keeping the removals for the next clean cycle
 			model.pop = function(){
 				dis.removals.push( Array.prototype.pop.call(this) );
 			};
@@ -50,7 +51,6 @@
 			};
 
 			model.splice = function(){
-				// keeping the removals for the next clean cycle
 				dis.removals = dis.removals.concat( Array.prototype.splice.apply(this, arguments) );
 			};
 		},
@@ -114,21 +114,32 @@
 				var key;
 
 				for( key in changes ) if ( changes.hasOwnProperty(key) ){
-					if ( key == 'additions' && changes.additions.length ){
-						return true;
-					}else if ( key == 'removals' && !$.isEmptyObject(changes.removals) ){
-						return true;
-					}else if ( key == 'moves' && !$.isEmptyObject(changes.moves) ){
-						return true;
+					if ( key == 'additions' ){
+						if ( changes.additions.length ){
+							return true;
+						}
+					}else if ( key == 'removals' ){
+						if ( changes.removals.length ){
+							return true;
+						}
+					}else if ( key == 'moves' ){
+						if ( !$.isEmptyObject(changes.moves) ){
+							return true;
+						}
 					}else{
 						return true;
 					}
 				}
+
+				return false;
 			},
 			_onBind : function( func ){
 				// TODO : maybe change the list to play nice with the binding setting
 				this.run( func, {binding:true, additions:this.model} );
-			}
+			},
+			run : function( func, changes ){
+				func.call( this, changes );
+			},
 		}
 	});
 }( this ));

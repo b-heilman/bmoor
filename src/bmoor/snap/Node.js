@@ -111,7 +111,6 @@ bMoor.constructor.define({
 			this._template();
 
 			this.observer = this._observe( this._model() );
-			this.scope = this.observer.model;
 
 			this._binding();
 
@@ -145,20 +144,33 @@ bMoor.constructor.define({
 				variable,
 				model = this.__Snap._model.call( this );
 
-			attr = this._getAttribute( 'scope', this.element.name );
+			attr = this._getAttribute( 'observe' );
 			if ( attr ){
 				scope = attr.split('.');
 				info = this._unwrapVar( model, scope, true );
 
-				if ( !info ){
-					// TODO : what do I do?
-				}else if ( typeof(info.value) == 'object' ){
-					// if scope is a model, make it he model we watch
-					this.variable = null;
-					model = info.value;
+				if ( info.value instanceof bmoor.observer.Map ){
+					model = info.value.model;
 				}else{
-					this.variable = info.variable;
-					model = info.scope;
+					throw 'Trying to observe, but no observer.Map found';
+				}
+			}else{
+				attr = this._getAttribute( 'scope', this.element.name );
+				
+				if ( attr ){
+					scope = attr.split('.');
+					info = this._unwrapVar( model, scope, true );
+
+					if ( !info ){
+						// TODO : what do I do?
+					}else if ( typeof(info.value) == 'object' ){
+						// if scope is a model, make it he model we watch
+						this.variable = null;
+						model = info.value;
+					}else{
+						this.variable = info.variable;
+						model = info.scope;
+					}
 				}
 			}
 			
@@ -176,14 +188,47 @@ bMoor.constructor.define({
 			
 			this.binded = true;
 
+
+			this.bindings = this._makeBindings();
+
 			this.observer.bind( function( alterations ){
 				if ( dis._needUpdate(alterations) ) {
 					dis._prep( this.model, alterations );
 				}
 			});
 		},
+		_makeBindings : function(){
+			var attr = this._getAttribute('binding');
+
+			// control when this node updates itself
+			if ( attr ){
+				if ( attr[0] == '-' ){
+					return [];
+				}else if ( attr[0] == '*' ){
+					return null;
+				}else return attr.split(',');
+			}else if ( this.variable ){
+				return [ this.variable ];
+			}else return [];
+		},
 		_needUpdate : function( alterations ){
-			return alterations.binding || ( this.variable && alterations[this.variable] );
+			var 
+				i,
+				c,
+				isNeeded,
+				bindings = this.bindings;
+
+			if ( bindings ){
+				isNeeded = false;
+
+				for( i = 0, c = bindings.length; i < c && !isNeeded; i++ ){
+					isNeeded = alterations[ bindings[i] ];
+				}
+			}else{
+				isNeeded = true;
+			}
+			
+			return alterations.binding || isNeeded;
 		},
 		_prep : function( data, alterations ){
 			if ( this.variable ){

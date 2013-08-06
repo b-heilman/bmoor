@@ -73,7 +73,7 @@ bMoor.constructor.define({
 					}else return undefined;
 				}
 
-				return scope;
+				return value;
 			}
 		},
 		_getAttribute : function( attribute, otherwise, adjustment ){

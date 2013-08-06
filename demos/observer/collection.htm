@@ -26,6 +26,7 @@
 		
 		collection.stop();
 		collection.bind( function( changes ){
+			console.log('======', changes );
 			console.log( 'collection', this );
 			console.log( 'additions', changes.additions );
 			console.log( 'moves', changes.moves );
@@ -40,6 +41,8 @@
 		setTimeout( function(){ console.log('shifting'); derp.shift(); collection.flush(); }, 3000);
 		setTimeout( function(){ console.log('popping'); derp.pop(); derp._.flush(); }, 4000);
 		setTimeout( function(){ console.log( 'end', derp ); collection.flush(); }, 4500);
+
+		setTimeout( function(){ console.log( 'start', derp ); collection.start(2000); }, 4500);
 	});
 	</script>
 </body>

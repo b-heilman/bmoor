@@ -37,9 +37,7 @@ bMoor.constructor.define({
 			
 			this.lockValue();
 
-			if ( this.scope && this.variable ){
-				this._listen();
-			}
+			this._listen();
 		},
 		// TODO : make alter protected for the rest
 		_listen : function(){
@@ -74,11 +72,11 @@ bMoor.constructor.define({
 			}
 		},
 		_pushChange : function(){
-			this.scope[ this.element.name ] = this.val();
+			this.observer.model[ this.element.name ] = this.val();
 		},
 		setState : function( state ){
 			var root = this.root.observer.model;
-			console.log( root );
+			
 			if ( state ){
 				if ( root.$removeError ){
 					root.$removeError( this );
@@ -88,7 +86,6 @@ bMoor.constructor.define({
 				this.$.addClass( 'state-valid' );
 			}else{
 				if ( root.$addError ){
-					console.log( 'addError' );
 					root.$addError( this );
 				}
 
