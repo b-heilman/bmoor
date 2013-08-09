@@ -23,21 +23,26 @@ bMoor.constructor.singleton({
 		}
 	},
 	construct: function(){
-		this._render = function(){
+		this.done(function(){
 			document.body.className += ' snap-ready';
-		};
+		});
 	},
 	properties: {
 		_stopped : false,
 		_checking : false,
-		_render : null,
+		_booting : 0,
+		_render : [],
 		_preRender : null,
 		preRender : function( cb ){
 			this._preRender = cb;
 		},
-		render : function( cb ){
+		done : function( cb ){
 			// I don't need to call right away, because it will get cycled and run anyway
-			this._render = cb;
+			if ( this._booting == 0 ){
+				cb();
+			}else{
+				this._render.push( cb );
+			}
 		},
 		stop : function(){
 			this._stopped = true;
@@ -70,6 +75,8 @@ bMoor.constructor.singleton({
 
 			requirements.push( create );
 			 
+			console.log( create, requirements );
+
 			return {
 				requirements : requirements,
 				build : function(){
@@ -139,6 +146,8 @@ bMoor.constructor.singleton({
 				builds = [],
 				requirements = [];
 
+			this._booting++;
+
 			if ( dis._preRender ){
 				dis._preRender();
 				dis._preRender = null;
@@ -162,6 +171,7 @@ bMoor.constructor.singleton({
 				builds.unshift( res.build );
 			}
 
+
 			for( nodes = this.select(element,'[snap-class]'), i = 0, c = nodes.length; i < c; i++){
 				res = this._buildNode( waiting, nodes[i] );
 				requirements = requirements.concat( res.requirements );
@@ -169,10 +179,16 @@ bMoor.constructor.singleton({
 			}
 			
 			schedule.done(function(){
+				var op;
+
 				if ( dis._render ){
-					dis._render();
-					dis._render = null;
+					while( dis._render.length){
+						op = dis._render.shift();
+						op();
+					}
 				}
+
+				dis._booting--;
 			});
 
 			waiting.require( requirements );

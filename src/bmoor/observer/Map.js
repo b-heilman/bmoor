@@ -6,8 +6,6 @@
 		namespace : ['bmoor','observer'],
 		// this will use the observer pattern to allow element to bind to a model
 		construct : function( model ){
-			model._ = this;
-
 			this.snapid = snapid++;
 			this.cleaned = {};
 			this.listeners = [];
@@ -22,6 +20,10 @@
 			},
 			setModel : function( model ){
 				this.model = model;
+
+				if ( !model._ ){
+					model._ = this;
+				}
 
 				if ( !this.interval ){
 					this.start();
@@ -46,6 +48,15 @@
 				}
 
 				return simple
+			},
+			isEmpty : function(){
+				var model = this.model;
+
+				for( var key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' && key[0] != '$' ){
+					return false;
+				}
+
+				return true
 			},
 			start : function( interval ){
 				var 
@@ -80,7 +91,7 @@
 					for( var key in settings ){
 						changes[ key ] = settings[ key ];
 					}
-
+					
 					this._notify( changes );
 				}
 			},
@@ -136,7 +147,7 @@
 					list,
 					i,
 					c;
-
+				
 				for( i = 0, list = this.listeners, c = list.length; i < c; i++ ){ 
 					this.run( list[i], changes );
 				}

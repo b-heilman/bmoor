@@ -2,7 +2,7 @@
 	
 bMoor.constructor.singleton({
 	name : 'Bouncer',
-	namespace : ['bmoor','snap'],
+	namespace : ['bmoor','lib'],
 	module : 'Schedule',
 	construct: function(){
 		this._stack = [];
@@ -43,7 +43,7 @@ bMoor.constructor.singleton({
 			var 
 				dis = this,
 				op;
-		
+			
 			if ( this._stack.length && !this._lock ){
 				this._lock = true;
 				
@@ -67,6 +67,8 @@ bMoor.constructor.singleton({
 						this._run();
 					}
 				}
+			}else{
+				this._run(); // clear the done buffer
 			}
 		}
 	}

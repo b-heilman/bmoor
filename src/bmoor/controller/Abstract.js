@@ -54,7 +54,7 @@ bMoor.constructor.define({
 					action,
 					create = function( action, subselect, func ){
 						$(document.body).on( action, className+' '+subselect, function( event ){
-							func.call( this, event, $(this).closest(className)[0].controller );
+							return func.call( this, event, $(this).closest(className)[0].controller );
 						});
 					};
 
@@ -69,8 +69,8 @@ bMoor.constructor.define({
 		}
 	},
 	construct : function( element, attributes, arguments, delay ){
-		this._attributes( attributes );
-		this._arguments.apply( this, arguments );
+		this._parseAttributes( attributes );
+		this._parseArguments.apply( this, arguments );
 		
 		if ( delay ){
 			this.element = element;
@@ -84,11 +84,10 @@ bMoor.constructor.define({
 				element = this.element;
 			}
 			
-			this._element( element );
+			this._initElement( element );
 		
 			// call the model generator, allow it to return or set this.model
-			this.observer = this._observe( this._model() );
-			this.scope = this.observer.model;
+			this.observer = this._observe( this._initModel() );
 
 			this._pushObserver( this.element, this.observer );
 
@@ -97,14 +96,14 @@ bMoor.constructor.define({
 			this.creates = {};
 			
 			if ( this.observer instanceof bmoor.observer.Collection ){
-				this._collectionBind( this.observer );
+				this._bindCollection( this.observer );
 			}else if ( this.observer ){
-				this._binding( this.observer );
+				this._bindMap( this.observer );
 			}
 			
-			this.root = this._findRoot();
+			this.root = this._findRoot() || this;
 
-			if ( this._newRoot || !this.root ){
+			if ( this._newRoot ){
 				this._setRoot( this );
 			}else{
 				this._setRoot();
@@ -115,17 +114,17 @@ bMoor.constructor.define({
 		_delay : 2000,
 		_key : null,
 		_newRoot : false,
-		_arguments : function(){
+		_parseArguments : function(){
 			// maybe arguments should really be a hash?
 			// use json decode?
 			this.args = arguments;
 		},
 		// make models observes that are then linked...
-		_model : function(){
+		_initModel : function(){
 			var 
 				info,
 				attr,
-				model = this.__Snap._model.call( this );
+				model = this._model ? this._model() : this.__Snap._initModel.call( this );
 
 			attr = this._getAttribute( 'model' ); // allow redirecting the model
 			
@@ -139,8 +138,8 @@ bMoor.constructor.define({
 
 			return model;
 		},
-		_element : function( element ){
-			this.__Snap._element.call( this, element );
+		_initElement : function( element ){
+			this.__Snap._initElement.call( this, element );
 			
 			element.controller = this;
 
@@ -148,7 +147,7 @@ bMoor.constructor.define({
 				element.className += ' '+this.baseClass;
 			}
 		},
-		_binding : function( observer ){
+		_bindMap : function( observer ){
 			var 
 				model = observer.model,
 				dis = this,
@@ -173,7 +172,7 @@ bMoor.constructor.define({
 			}
 		},
 		_finalize : function(){},
-		_collectionBind : function( collection ){
+		_bindCollection : function( collection ){
 			var dis = this;
 
 			collection.bind(function( alterations ){
@@ -197,14 +196,14 @@ bMoor.constructor.define({
 
 				if ( additions ){
 					for( i = 0, c = additions.length; i < c; i++ ){
-						dis._binding( additions[i]._ );
+						dis._bindMap( additions[i]._ );
 					}
 				}
 			});
 		},
-		_sendCreate : function( data ){ return; },
-		_sendUpdate : function( data ){ return; },
-		_sendRemove : function( data ){ return; },
+		_sendCreate : function( observer, cb ){ cb(); return; },
+		_sendUpdate : function( observer, cb ){ cb(); return; },
+		_sendRemove : function( observer, cb ){ cb(); return; },
 		_get : function(){ return; },
 		_register : function( observer ){
 			var dis = this;
@@ -219,17 +218,17 @@ bMoor.constructor.define({
 			this._register( observer );
 
 			observer.run(function(){ 
-				dis.creates[ this.snapid ] = this.model;
+				dis.creates[ this.snapid ] = this;
 			});
 			
 			this._push();
 		},
 		_update : function( observer ){
-			this.updates[ observer.snapid ] = observer.model;
+			this.updates[ observer.snapid ] = observer;
 			this._push();
 		},
 		_remove : function( observer ){
-			this.removes[ observer.snapid ] = observer.model;
+			this.removes[ observer.snapid ] = observer;
 			this._push();
 		},
 		_push : function(){
@@ -260,11 +259,11 @@ bMoor.constructor.define({
 			function onReturn(){
 				count--;
 				
-				if ( !count ){
+				if ( !count && cb ){
 					cb();
 				} 
 			}
-
+			
 			this.creates = {};
 			this.removes = {};
 			this.updates = {};
@@ -285,7 +284,7 @@ bMoor.constructor.define({
 				delete removes[snapid];
 				delete updates[snapid];
 			}
-
+			
 			for( snapid in updates ){
 				if ( !removes[snapid] ){
 					// prevent an unneeded update
@@ -293,7 +292,7 @@ bMoor.constructor.define({
 					this._sendUpdate( updates[snapid], onReturn );
 				}
 			}
-
+			
 			for( snapid in removes ){
 				count++;
 				this._sendRemove( removes[snapid], onReturn );

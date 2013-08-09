@@ -15,10 +15,20 @@ bMoor.constructor.define({
 				return this.observer.model;
 			}else return null;
 		},
-		_element : function( element ){
+		__warn : function( warning ){
+			this__log( 'warn', warning );
+		},
+		__error : function( error ){
+			this.__log( 'error', error );
+			throw error;
+		},
+		__log : function(){
+			console.log.apply( console, arguments );
+		},
+		_initElement : function( element ){
 			this.element = element;
 		},
-		_model : function(){
+		_initModel : function(){
 			var observer = this._findObserver();
 
 			return  observer ? observer.model : global;
@@ -40,7 +50,7 @@ bMoor.constructor.define({
 
 			return observer;
 		},
-		_attributes : function( attributes ){
+		_parseAttributes : function( attributes ){
 			this._attributes = attributes;
 		},
 		_unwrapVar : function( context, variable, smart ){
@@ -54,7 +64,7 @@ bMoor.constructor.define({
 
 			if ( smart ){
 				for( i = 0, c = test.length; i < c; i++ ){
-					if ( value[test[i]] ){
+					if ( value[test[i]] !== undefined ){
 						scope = value;
 						variable = test[i];
 						value = value[ variable ];
@@ -68,7 +78,7 @@ bMoor.constructor.define({
 				};
 			}else{
 				for( i = 0, c = test.length; i < c; i++ ){
-					if ( value[test[i]] ){
+					if ( value[test[i]] !== undefined ){
 						value = value[ test[i] ];
 					}else return undefined;
 				}
@@ -143,6 +153,18 @@ bMoor.constructor.define({
 			}else{
 				return $( element ).find( selector );
 			}
+		},
+		_decodeData : function( variable ) {
+			// TODO : prolly inline this
+			return this._unwrapVar( this.observer.model, variable );
+		},
+		// TODO : this should be renamed
+		_decode : function( variable ){
+			if ( typeof(variable) != 'string' ){
+				return variable;
+			}else if ( variable[0] == '{' || variable[0] == '[' ){
+				return eval( variable );
+			}else return eval( 'global.' + variable );
 		}
 	}
 });

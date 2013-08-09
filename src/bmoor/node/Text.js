@@ -2,13 +2,13 @@
 
 bMoor.constructor.define({
 	name : 'Text',
-	namespace : ['bmoor','snap'],
-	parent : ['bmoor','snap','Node'],
+	namespace : ['bmoor','node'],
+	parent : ['bmoor','node','Basic'],
 	node : {
-		className : 'snap-text'
+		className : 'node-text'
 	},
 	properties: {
-		_setContent : function( content ){
+		_makeContent : function( content ){
 			this.element.innerHTML = String(content)
 				.replace(/&/g, '&amp;')
 				.replace(/"/g, '&quot;')

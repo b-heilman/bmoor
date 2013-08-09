@@ -634,7 +634,7 @@
 					settings.require = {};
 				}else if ( settings.require.length ){
 					settings.require = {
-						class : settings.require
+						classes : settings.require
 					}
 				}
 			

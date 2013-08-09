@@ -5,13 +5,13 @@
 	<script src="../../src/jquery.min.js"></script>
 	<script src="../../src/bMoor.js"></script>
 	<script src='../../src/jquery/jquery.jqote2.js'></script>
-	<script src="../../src/bmoor/snap/form/Text.js"></script>
-	<script src="../../src/bmoor/snap/form/Checked.js"></script>
-	<script src="../../src/bmoor/snap/form/Button.js"></script>
-	<script src="../../src/bmoor/snap/form/Select.js"></script>
+	<script src="../../src/bmoor/node/form/Text.js"></script>
+	<script src="../../src/bmoor/node/form/Checked.js"></script>
+	<script src="../../src/bmoor/node/form/Button.js"></script>
+	<script src="../../src/bmoor/node/form/Select.js"></script>
 	<script src="../../src/bmoor/service/Abstract.js"></script>
-	<script src="../../src/bmoor/snap/form/Validation.js"></script>
-	<script src="../../src/bmoor/snap/form/Disabled.js"></script>
+	<script src="../../src/bmoor/node/form/Validation.js"></script>
+	<script src="../../src/bmoor/node/form/Disabled.js"></script>
 </head>
 <body>
 <style>
@@ -24,7 +24,11 @@
 	}
 </style>
 <script>
-var daMap = { number   : 10, reg : '', delay : 'delay' };
+var daMap = { 
+	number   : 10, 
+	reg : '', 
+	delay : 'delay' 
+};
 
 bMoor.constructor.singleton({
 	name : 'Service',
@@ -51,36 +55,36 @@ bMoor.constructor.mutate({
 		_model : function(){
 			return daMap;
 		},
-		_sendCreate : function( model, cb ){
-			this._.srvc.create( model, cb );
+		_sendCreate : function( observer, cb ){
+			this._.srvc.create( this, observer, cb );
 		},
-		_sendUpdate : function( model, cb ){
-			this._.srvc.update( model, cb );
+		_sendUpdate : function( observer, cb ){
+			this._.srvc.update( this, observer, cb );
 		},
-		_sendRemove : function( model, cb ){
-			this._.srvc.remove( model, cb );
+		_sendRemove : function( observer, cb ){
+			this._.srvc.remove( this, observer, cb );
 		}
 	}
 });
 
 </script>
 <form snap-control="test.Control">
-	<ul snap-class="bmoor.snap.List" class="errors" snap-variable='$errors' snap-template="errorTemplate"></ul>
-	<ul snap-class="bmoor.snap.List" class="messages" snap-variable='$messages' snap-template="messageTemplate"></ul>
+	<ul snap-class="bmoor.node.List" class="errors" snap-observe='$errors' snap-template="errorTemplate"></ul>
+	<ul snap-class="bmoor.node.List" class="messages" snap-observe='$messages' snap-template="messageTemplate"></ul>
 	<div>
-		<span snap-class="bmoor.snap.Node" snap-variable="number"></span>
-		<label>number<input snap-class="bmoor.snap.form.Text" snap-visage='bmoor.snap.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
+		<span snap-class="bmoor.node.Text" snap-scope="number"></span>
+		<label>number<input snap-class="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
 	</div>
 	<div>
-		<span snap-class="bmoor.snap.Node" snap-variable="reg"></span>
-		<label>reg<input snap-class="bmoor.snap.form.Text" snap-visage='bmoor.snap.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
+		<span snap-class="bmoor.node.Text" snap-scope="reg"></span>
+		<label>reg<input snap-class="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
 	</div>
 	<div>
-		<span snap-class="bmoor.snap.Node" snap-variable="delay"></span>
-		<label>delay<input snap-class="bmoor.snap.form.Text" snap-visage='bmoor.snap.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
+		<span snap-class="bmoor.node.Text" snap-scope="delay"></span>
+		<label>delay<input snap-class="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
 	</div>
-	<button type='reset' snap-class='bmoor.snap.form.Button'>Reset</button>
-	<button type='submit' snap-class='bmoor.snap.form.Button' snap-visage='bmoor.snap.form.Disabled'>Submit</button>
+	<button type='reset' snap-class='bmoor.node.form.Button'>Reset</button>
+	<button type='submit' snap-class='bmoor.node.form.Button' snap-visage='bmoor.node.form.Disabled'>Submit</button>
 </form>
 
 <script id='errorTemplate' type='text/html'>

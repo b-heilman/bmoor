@@ -26,13 +26,13 @@ bMoor.constructor.define({
 		_remove : null,
 		_create : null,
 		_parseService : function( service ){
-			return new Function( 'data', 'return "' + service.replace( /:([^\/?&]+)/g, '"+data.$1+"' ) + '";' );
+			return new Function( 'model', 'return "' + service.replace( /:([^\/?&]+)/g, '"+model.$1+"' ) + '";' );
 		},
-		_ajax : function( url, controller, data, cb ){
+		_ajax : function( url, controller, observer, data, cb ){
 			var dis = this;
 
 			$.ajax( url, {
-				data : model._simplify(),
+				data : data,
 				dataType : 'json',
 				success : function( json ){
 					if ( json ){
@@ -45,7 +45,7 @@ bMoor.constructor.define({
 						}
 
 						if ( json.success && cb ){
-							cb.call( controller.model, json );
+							cb.call( controller, observer, json );
 						}
 					}
 				}
@@ -53,7 +53,7 @@ bMoor.constructor.define({
 		},
 		_setMessages : function( controller, messages ){
 			var 
-				model = controller.root.model,
+				model = controller.root.observer.model,
 				$messages = model.$messages;
 
 			if ( $messages ){
@@ -62,32 +62,32 @@ bMoor.constructor.define({
 		},
 		_setErrors : function( controller, errors ){
 			var 
-				model = controller.root.model,
+				model = controller.root.observer.model,
 				$errors = model.$errors;
 
 			if ( $errors ){
 				model.$errors = $errors.concat( errors );
 			}
 		},
-		create : function( controller, cb ){
-			var data = controller.model._simplify();
+		create : function( controller, observer, cb ){
+			var data = observer.simplify();
 
-			this._ajax( this._create(data), controller, data, cb );
+			this._ajax( this._create(data), controller, observer, data, cb );
 		},
-		update : function( controller, cb ){
-			var data = controller.model._simplify();
+		update : function( controller, observer, cb ){
+			var data = observer.simplify();
 
-			this._ajax( this._update(data), controller, data, cb );
+			this._ajax( this._update(data), controller, observer, data, cb );
 		},
-		remove : function( controller, cb ){
-			var data = controller.model._simplify();
+		remove : function( controller, observer, cb ){
+			var data = observer.simplify();
 
-			this._ajax( this._remove(data), controller, data, cb );
+			this._ajax( this._remove(data), controller, observer, data, cb );
 		},
-		get : function( controller, cb ){
-			var data = controller.model._simplify();
+		get : function( controller, observer, cb ){
+			var data = observer.simplify();
 
-			this._ajax( this._get(data), controller, data, cb );
+			this._ajax( this._get(data), controller, observer, data, cb );
 		}
 	}
 });

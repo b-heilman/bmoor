@@ -3,8 +3,8 @@
 var nodesCount = 0;
 
 bMoor.constructor.define({
-	name : 'Node',
-	namespace : ['bmoor','snap'],
+	name : 'Basic',
+	namespace : ['bmoor','node'],
 	parent : ['bmoor','lib','Snap'],
 	require : {
 		classes : [ 
@@ -86,10 +86,10 @@ bMoor.constructor.define({
 		}
 	},
 	node : {
-		className : 'snap-node'
+		className : 'node-basic'
 	},
 	construct : function( element, attributes, delay ){
-		this._attributes( attributes );
+		this._parseAttributes( attributes );
 
 		if ( delay ){
 			this.element = element;
@@ -107,43 +107,32 @@ bMoor.constructor.define({
 		
 			this.nodeId = nodesCount++;
 			
-			this._element( element );
-			this._template();
+			this._initElement( element );
+			
+			this.observer = this._observe( this._initModel() );
 
-			this.observer = this._observe( this._model() );
-
-			this._binding();
+			this._bind();
 
 			this._finalize();
 		},
-		__warn : function( warning ){
-			this__log( 'warn', warning );
-		},
-		__error : function( error ){
-			this.__log( 'error', error );
-			throw error;
-		},
-		__log : function(){
-			console.log.apply( console, arguments );
-		},
-		_element : function( element ){
+		_initElement : function( element ){
 			this.$ = $( element );
 			this.$.data( 'node', this ); // TODO : kinda wanna get ride of this?
 
-			this.__Snap._element.call( this, element );
+			this.__Snap._initElement.call( this, element );
 			
 			element.node = this;
 			
 			element.className += ' '+this.baseClass;
 		},
-		_model : function(){
+		_initModel : function(){
 			var 
 				attr,
 				info,
 				scope,
 				variable,
-				model = this.__Snap._model.call( this );
-
+				model = this.__Snap._initModel.call( this );
+			
 			attr = this._getAttribute( 'observe' );
 			if ( attr ){
 				scope = attr.split('.');
@@ -151,16 +140,21 @@ bMoor.constructor.define({
 
 				if ( info.value instanceof bmoor.observer.Map ){
 					model = info.value.model;
+				}else if ( typeof(info.value) == 'object' ){
+					model = info.scope;
+					this.variable = info.variable;
+					new bmoor.observer.Map( info.value );
 				}else{
 					throw 'Trying to observe, but no observer.Map found';
 				}
 			}else{
 				attr = this._getAttribute( 'scope', this.element.name );
-				
+				console.log( attr, model );
 				if ( attr ){
 					scope = attr.split('.');
 					info = this._unwrapVar( model, scope, true );
 
+					console.log( info );
 					if ( !info ){
 						// TODO : what do I do?
 					}else if ( typeof(info.value) == 'object' ){
@@ -176,24 +170,15 @@ bMoor.constructor.define({
 			
 			return model;
 		},
-		_template : function(){
-			var template = this._getAttribute('template');
-
-			if ( template ){
-				this.prepared = bMoor.module.Templator.prepare( template );
-			} else this.prepared = null;
-		},
-		_binding : function(){
+		_bind : function(){
 			var dis = this;
 			
-			this.binded = true;
-
-
 			this.bindings = this._makeBindings();
 
 			this.observer.bind( function( alterations ){
+				console.log( alterations );
 				if ( dis._needUpdate(alterations) ) {
-					dis._prep( this.model, alterations );
+					dis._prepContent( this.model, alterations );
 				}
 			});
 		},
@@ -230,7 +215,7 @@ bMoor.constructor.define({
 			
 			return alterations.binding || isNeeded;
 		},
-		_prep : function( data, alterations ){
+		_prepContent : function( data, alterations ){
 			if ( this.variable ){
 				value = data[this.variable];
 
@@ -241,58 +226,15 @@ bMoor.constructor.define({
 				value = data;
 			}
 
-			this._make( value, alterations );
-		},
-		_make : function( data, alterations ){
-			if ( this.prepared ){
-				this._setContent( bMoor.module.Templator.run(this.prepared,data) );
-			}else if ( this.variable ){
-				this._setContent( data );
-			}else{
-				this._wrapElement( this.element );
+			if ( this._makeContent( value, alterations ) ){
+				this._finalizeContent();
 			}
 		},
-		_setContent : function( content ){
-			var 
-				next,
-				element,
-				el = document.createElement( 'div' );
-
-			el.innerHTML = content;
-
-			this.element.innerHTML = '';
-
-			element = el.firstChild;
-			while( element ){
-				next = element.nextSibling;
-				
-				this.element.appendChild( element );
-				this._controlElement( element );
-
-				this._wrapElement( element );
-
-				element = next;
-			}
+		_makeContent : function( data, alterations ){ 
+			return true;
 		},
-		_wrapElement : function( element ){},
-		_controlElement : function( element ){
-			if ( element.nodeType != 3 ){
-				bMoor.module.Bootstrap.build( element );
-			}
-		},
-		_finalize : function(){},
-		_decodeData : function( variable ) {
-			// TODO : prolly inline this
-			return this._unwrapVar( this.observer.model, variable );
-		},
-		// TODO : this should be renamed
-		_decode : function( variable ){
-			if ( typeof(variable) != 'string' ){
-				return variable;
-			}else if ( variable[0] == '{' || variable[0] == '[' ){
-				return eval( variable );
-			}else return eval( 'global.' + variable );
-		}
+		_finalizeContent : function(){},
+		_finalize : function(){}
 	}
 });
 

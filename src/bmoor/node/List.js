@@ -2,43 +2,51 @@
 
 bMoor.constructor.define({
 	name : 'List',
-	namespace : ['bmoor','snap'],
-	parent : ['bmoor','snap','Node'],
+	namespace : ['bmoor','node'],
+	parent : ['bmoor','node','View'],
 	require : [
 		['bmoor','observer','Collection']
 	],
 	node : {
-		className : 'snap-list'
+		className : 'node-list'
 	},
 	properties: {
-		_element : function( element ){
-			this.__Node._element.call( this, element );
+		_initElement : function( element ){
+			this.__View._initElement.call( this, element );
 			
 			this.isTable = ( this.element.tagName == 'TABLE' );
 			
 			this.mountPoint = null;
-			this.origin = null;
 		},
-		_template : function(){
+		_makeTemplate : function(){
 			var mount = this._getAttribute('mount');
 
-			if ( mount ){
+			if ( !this.mountPoint && mount ){
 				this.mountPoint = this.$.find('[mount]')[0];
 			}
 
-			this.__Node._template.call( this );
+			return this.__View._makeTemplate.call( this );
 		},
-		_make : function( data, alterations ){
+		_needUpdate : function( alterations ){
+			// TODO : isn't this repetitive?
+			return alterations.binding 
+				|| ( alterations.addition && alterations.additions.length )
+				|| ( alterations.removals && alterations.removals.length )
+				|| !$.isEmptyObject( alterations.moves );
+		},
+		_makeContent : function( data, alterations ){
 			var
 				i,
 				c,
+				row,
+				rows,
 				additions,
 				removals,
 				changes,
-				rows,
-				row;
+				template = this._makeTemplate( data );
 			
-			if ( this.observer instanceof bmoor.observer.Collection ){
+			console.log( data );
+			if ( data._ instanceof bmoor.observer.Collection ){
 				removals = alterations.removals;
 				if ( removals ){
 					for( var i in removals ){
@@ -67,7 +75,7 @@ bMoor.constructor.define({
 				if ( additions ){
 					for( i = 0, c = additions.length; i < c; i++ ){
 						// TODO : put them in the right place
-						this.append( additions[i] );
+						this.append( additions[i], template );
 					}
 				}
 			}else{
@@ -75,34 +83,34 @@ bMoor.constructor.define({
 				this.$.empty();
 				for( i = 0, c = data.length; i < c; i++ ){
 					// TODO : put them in the right place
-					this.append( data[i] );
+					this.append( data[i], template );
 				}
 			}
 		},
-		_makeChildren : function( model ){
-			var 
-				template = bMoor.module.Templator.run( this.prepared, model ),
-				element = document.createElement( this.isTable ? 'table' : 'div' );
-					
-				element.innerHTML = template;
+		_makeChildren : function( model, template ){
+			var element = document.createElement( this.isTable ? 'table' : 'div' );
+			element.innerHTML = bMoor.module.Templator.run( template, model );
 					
 			return element;
 		},
 		add : function( data ){
-			this.model.push( data );
+			this.observer.model.push( data );
 		},
-		append : function( model ){
+		// TODO : I would somehow like to use set content...
+		append : function( model, template ){
 			var 
 				node,
 				next,
 				observer = model._;
-				el = this._makeChildren( model );
+				el = this._makeChildren( model, template );
 
 			if ( this.isTable ){
 				el = el.getElementsByTagName( 'tbody' )[0];
 			}
 
-			observer.rows = [];
+			if ( observer ){
+				observer.rows = [];
+			}
 
 			element = el.firstChild;
 			while( element ){
@@ -111,19 +119,16 @@ bMoor.constructor.define({
 				this._append( element );
 				this._pushObserver( element, observer );
 
-				if ( model._ ){
+				if ( observer ){
 					observer.rows.push( element );
 				}
 
-				this._controlElement( element );
+				this._finalizeElement( element );
 				
 				element = next;
 			}
 
 			return el;
-		},
-		_needUpdate : function( alterations ){
-			return alterations.binding || !this.test || alterations[this.test];
 		},
 		_append : function( element ){
 			if ( element.nodeType != 3 ){

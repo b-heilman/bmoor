@@ -2,7 +2,7 @@
 
 bMoor.constructor.decorator({
 	name : 'Required',
-	namespace : ['bmoor','snap','form'],
+	namespace : ['bmoor','node','form'],
 	properties : {
 		_isValid : function( value ){
 			if ( this._wrapped(value) !== false ){

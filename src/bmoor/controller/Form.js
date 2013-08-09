@@ -4,6 +4,7 @@ bMoor.constructor.decorator({
 	name : 'Form',
 	namespace : ['bmoor','controller'],
 	properties : {
+		_delay : null,
 		_finalize : function(){
 			var 
 				$root = $(this.element),

@@ -2,19 +2,19 @@
 
 bMoor.constructor.define({
 	name : 'Style',
-	namespace : ['bmoor','snap'],
-	parent : ['bmoor','snap','Node'],
+	namespace : ['bmoor','node'],
+	parent : ['bmoor','node','Basic'],
 	node : {
 		singleClass : true,
-		className : 'snap-style'
+		className : 'node-style'
 	},
 	properties: {
-		_setContent : function( content ){
+		_makeContent : function( content ){
 			if ( this.element.styleSheet ){
 				this.element.styleSheet.cssText = content;
 			} else {
 				this.element.innerHTML = '';
-				this.element.appendChild(document.createTextNode( content ));
+				this.element.appendChild( document.createTextNode(content) );
 			}
 		}
 	}

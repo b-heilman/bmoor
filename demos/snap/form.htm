@@ -13,13 +13,13 @@
 <script src="../../src/bmoor/lib/WaitFor.js"></script>
 <script src="../../src/bmoor/lib/Bootstrap.js"></script>
 <script src="../../src/bmoor/observer/Map.js"></script>
-<script src="../../src/bmoor/snap/Node.js"></script>
-<script src="../../src/bmoor/snap/form/Text.js"></script>
-<script src="../../src/bmoor/snap/form/Checked.js"></script>
-<script src="../../src/bmoor/snap/form/Button.js"></script>
-<script src="../../src/bmoor/snap/form/Select.js"></script>
-<script src="../../src/bmoor/snap/Form.js"></script>
-<script src="../../src/bmoor/snap/Debug.js"></script>
+<script src="../../src/bmoor/node/Basic.js"></script>
+<script src="../../src/bmoor/node/form/Text.js"></script>
+<script src="../../src/bmoor/node/form/Checked.js"></script>
+<script src="../../src/bmoor/node/form/Button.js"></script>
+<script src="../../src/bmoor/node/form/Select.js"></script>
+<script src="../../src/bmoor/node/Form.js"></script>
+<script src="../../src/bmoor/node/Debug.js"></script>
 </head>
 <body snap-control="test.Control">
 <script>
@@ -42,8 +42,8 @@
 		}
 	});
 </script>
-<form snap-class="bmoor.snap.Form">
-	<span snap-class="bmoor.snap.Node" snap-scope="text"></span>
+<form snap-class="bmoor.node.Form">
+	<span snap-class="bmoor.node.Text" snap-scope="text"></span>
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
 	<label>radio 2<input type='radio' name='radio' value='2' /></label>
@@ -58,8 +58,7 @@
 		<option>derp 4</option>
 	</select>
 </form>
-<div snap-class="bmoor.snap.Debug"></div>
-<form snap-class="bmoor.snap.Form">
+<form snap-class="bmoor.node.Form">
 	<label>text<input type='text' name='text' /></label>
 	<label>radio 1<input type='radio' name='radio' value='1' /></label>
 	<label>radio 2<input type='radio' name='radio' value='2' /></label>

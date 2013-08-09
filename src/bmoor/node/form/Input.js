@@ -2,8 +2,8 @@
 
 bMoor.constructor.define({
 	name : 'Input',
-	namespace : ['bmoor','snap','form'],
-	parent : ['bmoor','snap','Node'],
+	namespace : ['bmoor','node','form'],
+	parent : ['bmoor','node','Basic'],
 	properties: {
 		// gets called by the data bind
 		lockValue : function(){},
@@ -11,16 +11,16 @@ bMoor.constructor.define({
 		_isValid : function( value ){ 
 			return null; 
 		}, // pretty much 
-		_setContent : function( content ){
-			this.val( content );
+		_makeContent : function( data ){
+			this.val( data );
 		},
-		_element : function( element ){
-			this.__Node._element.call( this, element );
+		_initElement : function( element ){
+			this.__Basic._initElement.call( this, element );
 
 			this.root = this._findRoot();
 		},
-		_model : function(){
-			var model = this.__Node._model.call( this );
+		_initModel : function(){
+			var model = this.__Basic._initModel.call( this );
 
 			if ( !this.variable && this.element.name ){
 				this.variable = this.element.name;
@@ -30,10 +30,10 @@ bMoor.constructor.define({
 
 			return model;
 		},
-		_binding : function(){
+		_bind : function(){
 			var dis = this;
 
-			this.__Node._binding.call( this );
+			this.__Basic._bind.call( this );
 			
 			this.lockValue();
 

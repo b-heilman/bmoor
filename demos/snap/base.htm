@@ -20,8 +20,10 @@
 <script src='../../src/bmoor/templating/JQote.js'></script>
 	
 <script src="../../src/bmoor/lib/Snap.js"></script>
-<script src="../../src/bmoor/snap/Node.js"></script>
-<script src="../../src/bmoor/snap/List.js"></script>
+<script src="../../src/bmoor/node/Basic.js"></script>
+<script src="../../src/bmoor/node/View.js"></script>
+<script src="../../src/bmoor/node/Text.js"></script>
+<script src="../../src/bmoor/node/List.js"></script>
 
 </head>
 <body>
@@ -55,17 +57,17 @@
 }( this ));
 </script>
 
-<ul snap-class="bmoor.snap.List" snap-template="list1" snap-control="test.Controller" snap-scope="list"></ul>
-<ul snap-class="bmoor.snap.List" snap-template="list1" snap-control="test.Controller" snap-scope="list" snap-mount='true'>
+<ul snap-class="bmoor.node.List" snap-template="list1" snap-control="test.Controller" snap-scope="list"></ul>
+<ul snap-class="bmoor.node.List" snap-template="list1" snap-control="test.Controller" snap-scope="list" snap-mount='true'>
 	<li mount>This is a pre existing thing</li>
 	<li>This should be the footer</li>
 </ul>
-<div snap-class="bmoor.snap.Node" snap-template="template1" snap-control="test.Controller"> Loading... </div>
+<div snap-class="bmoor.node.View" snap-template="template1" snap-control="test.Controller"> Loading... </div>
 
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<span snap-class="bmoor.snap.Node" snap-template="template2" snap-scope="bar"></span>
+	<span snap-class="bmoor.node.View" snap-template="template2" snap-scope="bar"></span>
 ]]>
 </script>
 <script type="text/html" id="template2">

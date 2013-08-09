@@ -2,8 +2,8 @@
 
 bMoor.constructor.define({
 	name : 'Button',
-	namespace : ['bmoor','snap','form'],
-	parent : ['bmoor','snap','form','Input'],
+	namespace : ['bmoor','node','form'],
+	parent : ['bmoor','node','form','Input'],
 	properties: {
 		_listen : function(){
 			var 

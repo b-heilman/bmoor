@@ -2,8 +2,8 @@
 
 bMoor.constructor.define({
 	name : 'Select',
-	namespace : ['bmoor','snap','form'],
-	parent : ['bmoor','snap','form','Input'],
+	namespace : ['bmoor','node','form'],
+	parent : ['bmoor','node','form','Input'],
 	properties: {
 		_element : function ( element ){
 			var 

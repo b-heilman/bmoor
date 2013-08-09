@@ -2,14 +2,14 @@
 
 bMoor.constructor.define({
 	name : 'Script',
-	namespace : ['bmoor','snap'],
-	parent : ['bmoor','snap','Node'],
+	namespace : ['bmoor','node'],
+	parent : ['bmoor','node','Basic'],
 	node : {
 		singleClass : true,
-		className : 'snap-script'
+		className : 'node-script'
 	},
 	properties: {
-		_setContent : function( content ){
+		_makeContent : function( content ){
 			var script = document.createElement('script');
 			script.text = content;
 			
