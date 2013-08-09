@@ -7,9 +7,12 @@ bMoor.constructor.define({
 	namespace : ['bmoor','node'],
 	parent : ['bmoor','node','View'],
 	properties : {
+		_needUpdate : function( alterations ){
+			return alterations[ this._getAttribute('template') ] || this._wrapped( alterations );
+		},
 		_makeTemplate : function( model ){
 			var template;
-
+			
 			if ( model ){
 				template = this._unwrapVar( model, this._getAttribute('template') );
 				

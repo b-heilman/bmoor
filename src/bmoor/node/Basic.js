@@ -149,12 +149,11 @@ bMoor.constructor.define({
 				}
 			}else{
 				attr = this._getAttribute( 'scope', this.element.name );
-				console.log( attr, model );
+				
 				if ( attr ){
 					scope = attr.split('.');
 					info = this._unwrapVar( model, scope, true );
 
-					console.log( info );
 					if ( !info ){
 						// TODO : what do I do?
 					}else if ( typeof(info.value) == 'object' ){
@@ -176,7 +175,6 @@ bMoor.constructor.define({
 			this.bindings = this._makeBindings();
 
 			this.observer.bind( function( alterations ){
-				console.log( alterations );
 				if ( dis._needUpdate(alterations) ) {
 					dis._prepContent( this.model, alterations );
 				}

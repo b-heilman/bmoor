@@ -75,8 +75,6 @@ bMoor.constructor.singleton({
 
 			requirements.push( create );
 			 
-			console.log( create, requirements );
-
 			return {
 				requirements : requirements,
 				build : function(){

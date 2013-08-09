@@ -45,9 +45,9 @@ bMoor.constructor.define({
 				changes,
 				template = this._makeTemplate( data );
 			
-			console.log( data );
 			if ( data._ instanceof bmoor.observer.Collection ){
 				removals = alterations.removals;
+				
 				if ( removals ){
 					for( var i in removals ){
 						row = removals[ i ];
