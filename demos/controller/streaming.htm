@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<script src="../../src/jquery.min.js"></script>
+	<script src="../../src/bMoor.js"></script>
+	<script src="../../src/bmoor/service/Abstract.js"></script>
+	<script src="../../src/bmoor/node/List.js"></script>
+
+	<script>
+		(function( global ){
+			bMoor.constructor.define({
+				name : 'ControllerA',
+				namespace : [ 'test' ],
+				parent : [ 'bmoor','controller','Abstract' ],
+				inStreams : { 
+					'test' : {
+						'mine' : 'theirs'
+					}
+				},
+				controller : {
+					className : 'wootA',
+					actions : {
+						'click' : {
+							'button' : function( event, controller ){
+								controller.observer.model.mine = 'A';
+							}
+						}
+					}
+				},
+				properties : {
+					_key : 'key',
+					_model : function(){
+						return {
+							mine : '----'
+						};
+					}
+				}
+			});
+
+			bMoor.constructor.define({
+				name : 'ControllerB',
+				namespace : [ 'test' ],
+				parent : [ 'bmoor','controller','Abstract' ],
+				inStreams : { 
+					'test' : {
+						'mine' : 'theirs'
+					}
+				},
+				controller : {
+					className : 'wootB',
+					actions : {
+						'click' : {
+							'button' : function( event, controller ){
+								controller.observer.model.mine = 'B';
+							}
+						}
+					}
+				},
+				properties : {
+					_key : 'key',
+					_model : function(){
+						return {
+							mine : '----'
+						};
+					}
+				}
+			});
+
+			bMoor.constructor.define({
+				name : 'Controller2',
+				namespace : [ 'test' ],
+				parent : [ 'bmoor','controller','Abstract' ],
+				inStreams : { 
+					'test' : {
+						'derp' : 'theirs'
+					}
+				},
+				properties : {
+					_key : 'key',
+					_model : function(){
+						return {
+							derp : ''
+						};
+					}
+				}
+			});
+		}( this ));
+	</script>
+</head>
+<body>
+	<div snap-control="test.ControllerA">
+		<button>Click Me - A</button>
+	</div>
+	<div snap-control="test.ControllerB">
+		<button>Click Me - B</button>
+	</div>
+	<div snap-control="test.Controller2">
+		<span snap-node="bmoor.node.Text" snap-scope='derp'></span>
+	</div>
+</body>
+
+</html>

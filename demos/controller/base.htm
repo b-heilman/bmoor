@@ -85,7 +85,7 @@
 	</script>
 </head>
 <body snap-controller="test.Controller">
-	<table snap-class="bmoor.snap.List" snap-child="tr" snap-mount="mount" snap-template="temp">
+	<table snap-node="bmoor.snap.List" snap-mount="mount" snap-template="temp">
 		<tbody>
 			<tr mount>
 				<th>Yay</th>
@@ -100,13 +100,13 @@
 	</table>
 	<button class='row-add'> Add Row </button>
 	<script id='temp' type='text/html'>
-		<td><span snap-class='bmoor.snap.Text' type='text' snap-variable="sum"></span></td>
-		<td><input snap-class='bmoor.snap.form.Text' type='text' name='description'/></td>
-        <td><input snap-class='bmoor.snap.form.Text' type='text' name='label'/></td>
-        <td><input snap-class='bmoor.snap.form.Text' type='text' name='display'/></td>
-        <td><input snap-class='bmoor.snap.form.Text' type='text' name='eins'/></td>
-        <td><input snap-class='bmoor.snap.form.Text' type='text' name='zwei'/></td>
-        <td><button snap-class='bmoor.snap.form.Button' type='button' snap-variable='_.remove' name='remove' value="1">Remove</button></td>
+		<td><span snap-node='bmoor.snap.Text' type='text' snap-variable="sum"></span></td>
+		<td><input snap-node='bmoor.snap.form.Text' type='text' name='description'/></td>
+        <td><input snap-node='bmoor.snap.form.Text' type='text' name='label'/></td>
+        <td><input snap-node='bmoor.snap.form.Text' type='text' name='display'/></td>
+        <td><input snap-node='bmoor.snap.form.Text' type='text' name='eins'/></td>
+        <td><input snap-node='bmoor.snap.form.Text' type='text' name='zwei'/></td>
+        <td><button snap-node='bmoor.snap.form.Button' type='button' snap-variable='_.remove' name='remove' value="1">Remove</button></td>
 	</script>
 </body>
 

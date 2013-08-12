@@ -14,7 +14,7 @@
 		};
 	
 	/**
-	*	Extending some base object, to make life easier
+	*	Extending some base objects, to make life easier
 	**/
 	if( !String.prototype.trim) {
 		String.prototype.trim = function () {
@@ -414,6 +414,8 @@
 	
 	// Used to help in the creation of classes below, just used as named stub
 	function PlaceHolder(){}
+
+	function Arguments(){ this.args = arguments; }
 	
 	function Constructor(){}
 	(function(){
@@ -448,7 +450,7 @@
 				),
 				obj = function(){
 					if ( !initializing ){
-						this.__construct.apply( this, arguments );
+						this.__construct.apply( this, arguments[0] instanceof Arguments ? arguments[0].args : arguments );
 					}
 				}; 
 			
@@ -482,6 +484,7 @@
 			
 			function def(){
 				var
+					reference,
 					parent = Namespace.get( settings.parent );
 				
 				if ( parent && parent.prototype.__defining ){
@@ -490,15 +493,17 @@
 					
 					define.call( dis, settings, obj );
 					if ( settings.onDefine ){
-						settings.onDefine.apply( obj.prototype, [settings, namespace, settings.name, obj] );
+						reference = settings.onDefine.apply( obj.prototype, [settings, namespace, settings.name, obj] );
+					}
+
+					if ( !reference ){
+						reference = namespace[settings.name];
 					}
 
 					if ( settings.onReady ){
 						$(document).ready(function(){
 							// make sure all requests have been completed as well
-							ClassLoader.done( function(){
-								settings.onReady( namespace[settings.name] );
-							});
+							ClassLoader.done( function(){ settings.onReady(reference); });
 						});
 					}
 					
@@ -525,19 +530,39 @@
 					def = new definition,
 					module;
 
-				namespace[ name ] = def;
-				old.apply( def, [settings, namespace, name, definition] );
+				namespace[ name.charAt(0).toLowerCase() + name.slice(1) ] = def;
 				
+				old.apply( this, [settings, namespace, name, definition, def] );
 				if ( settings.module ){
 					module = settings.module;
 					module = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
 					modules[ module ] = def;
 				}
+
+				return def;
 			};
 			
 			this.define( settings );
 		};
 		
+		Constructor.prototype.factory = function( settings ){
+			var old = settings.onDefine ? settings.onDefine : function(){};
+			
+			settings.onDefine = function( settings, namespace, name, definition ){
+				var 
+					space = {},
+					factory = function(){
+						Array.prototype.push.call( arguments, definition );
+						return settings.factory.apply( space, arguments );
+					};
+
+				namespace[ name.charAt(0).toLowerCase() + name.slice(1) ] = factory;
+				old.apply( this, arguments );
+			};
+			
+			this.define( settings );
+		};
+
 		// decorators will reserve _wrapped
 		function override( key, el, override ){
 			var 
@@ -648,6 +673,9 @@
 				
 				settings.onDefine = function( settings, namespace, name, definition ){
 					var 
+						pos,
+						decorator,
+						name,
 						c,
 						list;
 
@@ -656,7 +684,12 @@
 					
 					for( i = 0, list = decorators, c = list.length; i < c; i++ ){
 						// this is the prototype
-						Namespace.get( list[i] )._decorate( this, true );
+						decorator = list[i];
+						pos = decorator.length - 1;
+						name = decorator[ pos ];
+						
+						decorator[ pos ] = name.charAt(0).toLowerCase() + name.slice(1);
+						Namespace.get( decorator )._decorate( this, true );
 					}
 
 					for( i in settings.noOverride ){

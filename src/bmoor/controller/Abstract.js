@@ -6,6 +6,11 @@ bMoor.constructor.define({
 	name : 'Abstract',
 	namespace : ['bmoor','controller'],
 	parent : ['bmoor','lib','Snap'],
+	require : {
+		classes : [ 
+			['bmoor','lib','Stream'],
+		]
+	},
 	onDefine : function( settings ){
 		var 
 			service,
@@ -15,6 +20,10 @@ bMoor.constructor.define({
 			this._functions = settings.functions;
 		}
 		
+		// set instreams or outstreams to be mapped
+		this._inStreams = settings.inStreams || {};
+		this._outStreams = settings.outStreams || {};
+
 		if ( settings.services ){
 			if ( !this._ ){
 				this._ = {};
@@ -80,6 +89,8 @@ bMoor.constructor.define({
 	},
 	properties : {
 		init : function( element ){
+			var stream;
+
 			if ( !element ){
 				element = this.element;
 			}
@@ -90,6 +101,14 @@ bMoor.constructor.define({
 			this.observer = this._observe( this._initModel() );
 
 			this._pushObserver( this.element, this.observer );
+
+			for( stream in this._inStreams ){
+				bmoor.lib.stream( stream ).bind( this.observer, this._inStreams[stream], this._outStreams[stream] );
+			}
+
+			for( stream in this._outStreams ) if ( !this._inStreams[stream] ){
+				bmoor.lib.stream( stream ).bind( this.observer, {}, this._outStreams[stream] );
+			}
 
 			this.updates = {};
 			this.removes = {};

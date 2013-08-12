@@ -1,0 +1,35 @@
+<html>
+<head>
+<script src="../../src/jquery.min.js"></script>
+<script src="../../src/bMoor.js"></script>
+<script src="../../src/bmoor/lib/Stream.js"></script>
+</head>
+<body>
+<script>
+bMoor.autoload.done(function(){
+	var 
+		obj1 = {},
+		obj2 = {},
+		obj3 = {},
+		obs1 = new bmoor.observer.Map( obj1 ),
+		obs2 = new bmoor.observer.Map( obj2 ),
+		obs3 = new bmoor.observer.Map( obj3 );
+
+	bmoor.lib.stream( 'test' ).bind( obs1 );
+	bmoor.lib.stream( 'test' ).bind( obs2, {'einse':'test','zwei':'derp'} );
+	bmoor.lib.stream( 'test' ).bind( obs3, {'drei':'test'}, {'value':'derp'} );
+
+	bmoor.lib.stream( 'test' ).push( 'value', 3 );
+
+	obj3.test = 'woot';
+	obj2.zwei = 'zwei';
+
+	setTimeout( function(){
+		console.log( obj1 );
+		console.log( obj2 );	
+		console.log( obj3 );	
+	}, 1000);
+});
+</script>
+</body>
+</html>

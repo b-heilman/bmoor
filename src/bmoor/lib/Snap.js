@@ -101,8 +101,8 @@ bMoor.constructor.define({
 			
 			return adjustment ? adjustment( attr ) : attr;
 		},
-		_findProperty : function( property ){
-			var node = this.element;
+		_findProperty : function( property, element ){
+			var node = element || this.element;
 
 			if ( node ){
 				if ( !node.hasAttribute ){
@@ -119,8 +119,8 @@ bMoor.constructor.define({
 
 			return null;
 		},
-		_findRoot : function(){
-			return this._findProperty( 'root' );
+		_findRoot : function( element ){
+			return this._findProperty( 'root', element );
 		},
 		_setRoot : function( controller ){
 			if ( !controller ){
@@ -129,8 +129,8 @@ bMoor.constructor.define({
 			
 			this.element.root = controller;
 		},
-		_findObserver : function(){
-			return this._findProperty( 'observer' );
+		_findObserver : function( element ){
+			return this._findProperty( 'observer', element );
 		},
 		_pushObserver : function( element, observer ){
 			if ( !element ){

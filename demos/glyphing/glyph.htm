@@ -41,7 +41,7 @@
 	<script src='../../src/bmoor/glyphing/Controller.js'></script>
 </head>
 <body>
-	<form snap-class="bmoor.glyphing.Controller" snap-data="this.container">
+	<form snap-node="bmoor.glyphing.Controller" snap-data="this.container">
 		<label>Top : <input name='top'/></label>
 		<label>Left : <input name='left'/></label>
 		<label>Width : <input name='width'/></label>
@@ -50,7 +50,7 @@
 		<label>Angle : <input name='angle'/></label>
 	</form>
 	<div style="margin: 20px auto; width: 400px;">
-		<div snap-class="bmoor.glyphing.Container" snap-template="glyphTemplate" 
+		<div snap-node="bmoor.glyphing.Container" snap-template="glyphTemplate" 
 			snap-publish="this.container" style="border: 1px solid black; height: 200px;"></div>
 		<div id="count">0</div>
 		<button onclick="alert( container.toJson() );">To Json</button>

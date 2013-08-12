@@ -1,10 +1,11 @@
-Model Validator
-	- form becomes a decorator for controllers...
-	- form node should become a decorator
-	- form validation should also be a decorator
+Streams
+	- variables to mapped from one object to another
+	- global way to register streams and access them
+	- create a factory pattern
 
 Services
 	- error handling
+	- implement promises
 	
 Error Handling
 	

@@ -61,12 +61,12 @@ bMoor.constructor.singleton({
 		_buildNode : function( waiting, element ){
 			// context -> model -> scope -> variable
 			var
-				create = element.getAttribute('snap-class'),
+				create = element.getAttribute('snap-node'),
 				requirements = [],
 				visages = [];
 			
 			// up here, so the require loop doesn't become infinite
-			element.removeAttribute('snap-class');
+			element.removeAttribute('snap-node');
 			
 			if ( element.hasAttribute('snap-visage') ){
 				visages = element.getAttribute('snap-visage').split(',');
@@ -145,7 +145,7 @@ bMoor.constructor.singleton({
 				requirements = [];
 
 			this._booting++;
-
+			
 			if ( dis._preRender ){
 				dis._preRender();
 				dis._preRender = null;
@@ -163,14 +163,14 @@ bMoor.constructor.singleton({
 				builds.unshift( res.build );
 			}
 
-			if ( element.hasAttribute('snap-class') ){
+			if ( element.hasAttribute('snap-node') ){
 				res = this._buildNode( waiting, element );
 				requirements = requirements.concat( res.requirements );
 				builds.unshift( res.build );
 			}
 
 
-			for( nodes = this.select(element,'[snap-class]'), i = 0, c = nodes.length; i < c; i++){
+			for( nodes = this.select(element,'[snap-node]'), i = 0, c = nodes.length; i < c; i++){
 				res = this._buildNode( waiting, nodes[i] );
 				requirements = requirements.concat( res.requirements );
 				builds.unshift( res.build );

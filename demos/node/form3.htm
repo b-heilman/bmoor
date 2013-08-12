@@ -69,22 +69,22 @@ bMoor.constructor.mutate({
 
 </script>
 <form snap-control="test.Control">
-	<ul snap-class="bmoor.node.List" class="errors" snap-observe='$errors' snap-template="errorTemplate"></ul>
-	<ul snap-class="bmoor.node.List" class="messages" snap-observe='$messages' snap-template="messageTemplate"></ul>
+	<ul snap-node="bmoor.node.List" class="errors" snap-observe='$errors' snap-template="errorTemplate"></ul>
+	<ul snap-node="bmoor.node.List" class="messages" snap-observe='$messages' snap-template="messageTemplate"></ul>
 	<div>
-		<span snap-class="bmoor.node.Text" snap-scope="number"></span>
-		<label>number<input snap-class="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
+		<span snap-node="bmoor.node.Text" snap-scope="number"></span>
+		<label>number<input snap-node="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
 	</div>
 	<div>
-		<span snap-class="bmoor.node.Text" snap-scope="reg"></span>
-		<label>reg<input snap-class="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
+		<span snap-node="bmoor.node.Text" snap-scope="reg"></span>
+		<label>reg<input snap-node="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
 	</div>
 	<div>
-		<span snap-class="bmoor.node.Text" snap-scope="delay"></span>
-		<label>delay<input snap-class="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
+		<span snap-node="bmoor.node.Text" snap-scope="delay"></span>
+		<label>delay<input snap-node="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
 	</div>
-	<button type='reset' snap-class='bmoor.node.form.Button'>Reset</button>
-	<button type='submit' snap-class='bmoor.node.form.Button' snap-visage='bmoor.node.form.Disabled'>Submit</button>
+	<button type='reset' snap-node='bmoor.node.form.Button'>Reset</button>
+	<button type='submit' snap-node='bmoor.node.form.Button' snap-visage='bmoor.node.form.Disabled'>Submit</button>
 </form>
 
 <script id='errorTemplate' type='text/html'>

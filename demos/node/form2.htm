@@ -57,7 +57,7 @@
 	</script>
 </head>
 <body snap-control="test.Controller" >
-	<table snap-class="bmoor.node.List" snap-child="tr" snap-mount="mount" snap-template="temp">
+	<table snap-node="bmoor.node.List" snap-mount="mount" snap-template="temp">
 		<tbody>
 			<tr mount>
 	            <th>Description</th>
@@ -70,10 +70,10 @@
 	<button class="row-add"> Add Row </button>
 	<script id='temp' type='text/html'>
 		<tr>
-			<td><input snap-class='bmoor.node.form.Text' type='text' name='description'/></td>
-	        <td><input snap-class='bmoor.node.form.Text'  type='text' name='label'/></td>
-	        <td><input snap-class='bmoor.node.form.Text'  type='text' name='display'/></td>
-	        <td><button snap-class='bmoor.node.form.Button' type='button' name='$remove' value="1">Remove</button></td>
+			<td><input snap-node='bmoor.node.form.Text' type='text' name='description'/></td>
+	        <td><input snap-node='bmoor.node.form.Text'  type='text' name='label'/></td>
+	        <td><input snap-node='bmoor.node.form.Text'  type='text' name='display'/></td>
+	        <td><button snap-node='bmoor.node.form.Button' type='button' name='$remove' value="1">Remove</button></td>
 	    </tr>
 	</script>
 </body>

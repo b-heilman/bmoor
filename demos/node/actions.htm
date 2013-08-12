@@ -86,13 +86,13 @@
 	});
 </script>
 
-<div snap-class="test.Tester" snap-template="template1" snap-control="test.Controller"></div>
+<div snap-node="test.Tester" snap-template="template1" snap-control="test.Controller"></div>
 
 <script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<span snap-class="bmoor.snap.Node" snap-tag="span" snap-template="template2" snap-scope="bar"></span>
+	<span snap-node="bmoor.snap.Node" snap-template="template2" snap-scope="bar"></span>
 ]]>
 </script>
 <script type="text/html" id="template2">
