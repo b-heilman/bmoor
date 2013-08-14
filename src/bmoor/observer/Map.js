@@ -68,7 +68,7 @@
 					
 					this.flush( {start:true} );
 
-					this.interval = setInterval(function(){ dis.flush( {} ); }, interval || 50);
+					this.interval = setInterval( function(){ dis.flush( {} ); }, interval || 50 );
 				}
 				
 				return this;
@@ -151,7 +151,7 @@
 				for( i = 0, list = this.listeners, c = list.length; i < c; i++ ){ 
 					this.run( list[i], changes );
 				}
-				
+
 				return this;
 			},
 			_onBind : function( func ){

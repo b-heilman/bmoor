@@ -60,11 +60,10 @@
 					i,
 					list,
 					model = this.model,
-					moves = {},
 					changes = {},
 					cleaned = this.cleaned,
 					removals,
-					additions = [];
+					moves = {};
 
 				for( var key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' ){
 					var val = model[key];
@@ -90,10 +89,9 @@
 								this.model.splice( i, 1 );
 							}else if ( val._.index == undefined ){
 								// new row added
-								additions.push( val );
+								moves[ key ] = val;
 							}else if ( val._.index != i ){
-								// indexed by where it was, moved to where it is
-								moves[ val._.index ] = val;
+								moves[ key ] = val;
 							}
 							
 							val._.index = i;
@@ -101,12 +99,10 @@
 					}
 				}
 
-				removals = this.removals ;
-				this.removals = [];
-
-				changes.additions = additions;
-				changes.removals = removals;
+				changes.removals = this.removals;
 				changes.moves = moves;
+
+				this.removals = [];
 
 				return changes;
 			},
@@ -114,11 +110,7 @@
 				var key;
 
 				for( key in changes ) if ( changes.hasOwnProperty(key) ){
-					if ( key == 'additions' ){
-						if ( changes.additions.length ){
-							return true;
-						}
-					}else if ( key == 'removals' ){
+					if ( key == 'removals' ){
 						if ( changes.removals.length ){
 							return true;
 						}
@@ -135,7 +127,7 @@
 			},
 			_onBind : function( func ){
 				// TODO : maybe change the list to play nice with the binding setting
-				this.run( func, {binding:true, additions:this.model} );
+				this.run( func, {binding:true, moves:this.model} );
 			},
 			run : function( func, changes ){
 				func.call( this, changes );

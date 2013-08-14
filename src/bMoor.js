@@ -45,14 +45,24 @@
 		/*
 			This will create an object in place if it doesn't exist
 		*/
-		get : function( space ){
-			var curSpace = global;
+		get : function( space, notAClass ){
+			var 
+				curSpace = global,
+				position,
+				name;
 			
 			if ( !space ){
 				return null;
 			}else if ( typeof(space) == 'string' || space.length ){
 				space = this.parse( space );
 				
+				if ( notAClass ){
+					position = space.length - 1;
+					name = space[ position ];
+					
+					space[ position ] = name.charAt(0).toLowerCase() + name.slice(1);
+				}
+
 				for( var i = 0; i < space.length; i++ ){
 					var
 						nextSpace = space[i];
@@ -70,14 +80,24 @@
 		/*
 			returns back the space or null
 		*/
-		exists : function( space ){
-			var curSpace = global;
+		exists : function( space, notAClass ){
+			var 
+				curSpace = global,
+				position,
+				name;
 			
 			if ( !space ){
 				return null;
 			}else if ( typeof(space) == 'string' || space.length ){
 				space = this.parse( space );
 				
+				if ( notAClass ){
+					position = space.length - 1;
+					name = space[ position ];
+					
+					space[ position ] = name.charAt(0).toLowerCase() + name.slice(1);
+				}
+
 				for( var i = 0; i < space.length; i++ ){
 					var
 						nextSpace = space[i];
@@ -519,6 +539,7 @@
 				}
 			};
 			
+			console.log( requests, settings );
 			ClassLoader.require( requests, def, [], this);
 		};
 
@@ -684,12 +705,7 @@
 					
 					for( i = 0, list = decorators, c = list.length; i < c; i++ ){
 						// this is the prototype
-						decorator = list[i];
-						pos = decorator.length - 1;
-						name = decorator[ pos ];
-						
-						decorator[ pos ] = name.charAt(0).toLowerCase() + name.slice(1);
-						Namespace.get( decorator )._decorate( this, true );
+						Namespace.get( list[i], true )._decorate( this, true );
 					}
 
 					for( i in settings.noOverride ){
@@ -815,8 +831,10 @@
 	
 	global.bMoor = {
 		module      : modules,
+		setTemplate : function( id, template ){ this.templates[ id ] = template; },
+		templates   : {},
 		require     : function(){ ClassLoader.require.apply( ClassLoader, arguments ); },
-		get         : function( space ){ return Namespace.exists( space ); },
+		get         : function( space, notAClass ){ return Namespace.exists( space, notAClass ); },
 		settings    : environmentSettings,
 		autoload    : ClassLoader,
 		constructor : new Constructor()

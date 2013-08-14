@@ -63,7 +63,19 @@ bMoor.constructor.define({
 					action,
 					create = function( action, subselect, func ){
 						$(document.body).on( action, className+' '+subselect, function( event ){
-							return func.call( this, event, $(this).closest(className)[0].controller );
+							var
+								node = this,
+								controller,
+								observer;
+
+							observer = bmoor.lib.Snap.prototype._findElementWithProperty( 'observer', this );
+							if ( $(observer).hasClass(className) ){
+								controller = observer;
+							}else{
+								controller = $(this).closest( className )[0];
+							}
+
+							return func.call( this, event, controller.controller, observer.observer );
 						});
 					};
 

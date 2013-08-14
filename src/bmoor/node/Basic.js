@@ -98,13 +98,15 @@ bMoor.constructor.define({
 		}
 	},
 	properties : {
+		defaultControl : null, // remember to preload this
 		init : function( element ){
+			this.classBindings = [];
+			this.makeClass = null;
+
 			if ( !element ){
 				element = this.element;
 			}
 
-			this.binded = false;
-		
 			this.nodeId = nodesCount++;
 			
 			this._initElement( element );
@@ -116,14 +118,47 @@ bMoor.constructor.define({
 			this._finalize();
 		},
 		_initElement : function( element ){
+			var 
+				dis = this,
+				controller,
+				attr;
+
 			this.$ = $( element );
 			this.$.data( 'node', this ); // TODO : kinda wanna get ride of this?
 
 			this.__Snap._initElement.call( this, element );
-			
+
 			element.node = this;
+
+			// install a default controller
+			// TODO : a better way to do this?
+			if ( !element.controller && this.defaultControl ){
+				controller = bMoor.get( this.defaultControl );
+				new controller( element );
+			}
 			
-			element.className += ' '+this.baseClass;
+			attr = this._getAttribute( 'class' );
+
+			this.className = element.className + ' ' + this.baseClass;
+
+			if ( attr ){
+				this.makeClass = new Function( 'model', 'return "' 
+					+ attr
+						.replace( /\{\{([^\?]+)\?([^:]+):([^\}]+)\}\}/g, 
+							function( match, arg1, arg2, arg3 ){
+								dis.classBindings.push( arg1 );
+								return '"+(model.'+arg1+'?"'+arg2+'":"'+arg3+'")+"'
+							}
+						)
+						.replace( /\{\{([^\/?&]+)\}\}/g, function( match, arg1 ){
+								dis.classBindings.push( arg1 );
+								return '"+model.'+arg1+'+"' 
+							}
+						) 
+					+ '";' );
+			}else{
+				element.className = this.className;
+			}
 		},
 		_initModel : function(){
 			var 
@@ -172,11 +207,15 @@ bMoor.constructor.define({
 		_bind : function(){
 			var dis = this;
 			
-			this.bindings = this._makeBindings();
+			this.viewBindings = this._makeBindings();
 
 			this.observer.bind( function( alterations ){
 				if ( dis._needUpdate(alterations) ) {
 					dis._prepContent( this.model, alterations );
+				}
+
+				if ( dis.makeClass && dis._needClassUpdate(alterations) ){
+					dis._updateClass( this.model );
 				}
 			});
 		},
@@ -194,12 +233,37 @@ bMoor.constructor.define({
 				return [ this.variable ];
 			}else return [];
 		},
+		_needClassUpdate : function( alterations ){
+			var 
+				i,
+				c,
+				isNeeded = false,
+				bindings = this.classBindings;
+
+			if ( alterations.binding ){
+				return true;
+			}
+
+			for( i = 0, c = bindings.length; i < c && !isNeeded; i++ ){
+				isNeeded = alterations[ bindings[i] ];
+			}
+			
+			return isNeeded;
+		},
+		_updateClass : function( data ){
+			this.element.className = this.className + ' ' + this.makeClass( data );
+		},
+		// TODO : change to _needContentUpdate
 		_needUpdate : function( alterations ){
 			var 
 				i,
 				c,
 				isNeeded,
-				bindings = this.bindings;
+				bindings = this.viewBindings;
+
+			if ( alterations.binding ){
+				return true;
+			}
 
 			if ( bindings ){
 				isNeeded = false;
@@ -211,7 +275,7 @@ bMoor.constructor.define({
 				isNeeded = true;
 			}
 			
-			return alterations.binding || isNeeded;
+			return isNeeded;
 		},
 		_prepContent : function( data, alterations ){
 			if ( this.variable ){
@@ -228,6 +292,7 @@ bMoor.constructor.define({
 				this._finalizeContent();
 			}
 		},
+		// TODO : change to _updateContent
 		_makeContent : function( data, alterations ){ 
 			return true;
 		},

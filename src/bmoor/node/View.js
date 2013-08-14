@@ -10,8 +10,9 @@ bMoor.constructor.define({
 		className : 'node-view'
 	},
 	properties : {
+		defaultTemplate : null,
 		_makeTemplate : function( data ){
-			var template = this._getAttribute('template');
+			var template = this._getAttribute('template') || this.defaultTemplate;
 
 			if ( template ){
 				return bMoor.module.Templator.prepare( template );
@@ -19,13 +20,15 @@ bMoor.constructor.define({
 		},
 		_makeContent : function( data, alterations ){
 			var template = this._makeTemplate( data );
-
+			console.log( data );
 			if ( template ){
 				this._setContent( bMoor.module.Templator.run(template,data) );
 				return true;
 			}else return false;
 		},
 		_setContent : function( content ){
+			console.log( content );
+
 			var 
 				next,
 				element,

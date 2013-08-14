@@ -101,7 +101,7 @@ bMoor.constructor.define({
 			
 			return adjustment ? adjustment( attr ) : attr;
 		},
-		_findProperty : function( property, element ){
+		_findElementWithProperty : function( property, element ){
 			var node = element || this.element;
 
 			if ( node ){
@@ -111,13 +111,18 @@ bMoor.constructor.define({
 
 				while( node.tagName != 'HTML' ){
 					if ( node[property] ){ 
-						return node[property]; 
+						return node; 
 					}
 					node = node.parentNode;
 				}
 			}
 
 			return null;
+		},
+		_findProperty : function( property, element ){
+			var node = this._findElementWithProperty( property, element );
+
+			return node ? node[ property ] : null;
 		},
 		_findRoot : function( element ){
 			return this._findProperty( 'root', element );

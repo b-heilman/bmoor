@@ -7,12 +7,11 @@ bMoor.constructor.define({
 	namespace : ['bmoor','node'],
 	parent : ['bmoor','node','View'],
 	properties : {
-		_needUpdate : function( alterations ){
-			return alterations[ this._getAttribute('template') ] || this._wrapped( alterations );
-		},
 		_makeTemplate : function( model ){
-			var template;
-			
+			var 
+				dis = this,
+				template;
+
 			if ( model ){
 				template = this._unwrapVar( model, this._getAttribute('template') );
 				
@@ -28,7 +27,7 @@ bMoor.constructor.define({
 			return null;
 		},
 		_needUpdate : function( alterations ){
-			return alterations.modelSwitch || this.__View._needUpdate.call( this, alterations);
+			return alterations.modelSwitch || alterations[ this._getAttribute('template') ] || this.__View._needUpdate.call( this, alterations);
 		}
 	}
 });

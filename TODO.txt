@@ -1,7 +1,6 @@
-Streams
-	- variables to mapped from one object to another
-	- global way to register streams and access them
-	- create a factory pattern
+Prototype
+	- Allow for JS, CSS, and Templates to be loaded together
+	- implement for overloading, so templates can be preloaded and not loaded over by the default
 
 Services
 	- error handling

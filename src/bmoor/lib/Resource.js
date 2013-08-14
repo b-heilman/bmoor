@@ -8,25 +8,35 @@ bMoor.constructor.singleton({
 	name : 'Resource',
 	namespace : ['bmoor','lib'],
 	module : 'Resource',
-	onReady : function(){
-		var scripts = document.getElementsByTagName('script');
-		
+	onReady : function( self ){
+		var 
+			templateId,
+			scripts = document.getElementsByTagName('script');
+
+		bMoor.setTemplate = function( id, template ){
+			self.setTemplate( id, template );
+		};
+
+		// if there are already templates set, lets convert them over
+		for( templateId in bMoor.templates ){
+			self.setTemplate( templateId, bMoor.templates[templateId] );
+		}
+
 		for( var i = 0, c = scripts.length; i < c; i++ ){
 			var script = scripts[i];
 			
 			if ( script.id ){
 				if ( script.src ){
-					bMoor.module.Resource.__static.loadedScripts[ script.src ] = script.id;
+					self.__static.loadedScripts[ script.src ] = script.id;
 				}
 				
 				if ( script.getAttribute('type') == "text/html" ){
-					bMoor.module.Resource.setTemplate( script.id, script.innerHTML );
+					self.setTemplate( script.id, script.innerHTML );
 				}
 			}
 		}
 	},
 	statics : {
-		templates : {},
 		loadedScripts : {}
 	},
 	properties : {
@@ -78,7 +88,7 @@ bMoor.constructor.singleton({
 			var 
 				node,
 				dis = null,
-				templates = this.__static.templates;
+				templates = bMoor.templates;
 			
 			if ( cb == undefined && typeof(src) != 'string' ){
 				cb = src;
@@ -129,7 +139,7 @@ bMoor.constructor.singleton({
 			return null;
 		},
 		setTemplate : function( id, template ){
-			var templates = this.__static.templates;
+			var templates = bMoor.templates;
 
 			switch( typeof(template) ){
 				case 'string' :

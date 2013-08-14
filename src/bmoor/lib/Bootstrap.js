@@ -84,7 +84,7 @@ bMoor.constructor.singleton({
 						el = new node( element, {}, true );
 					
 					for( i = 0; i < visages.length; i++ ){
-						bMoor.get( visages[i] )._decorate( el );
+						bMoor.get( visages[i], true )._decorate( el );
 					}
 
 					el.init();
@@ -125,7 +125,7 @@ bMoor.constructor.singleton({
 						el = new controller( element, {}, args, true );
 
 					for( i = 0; i < stints.length; i++ ){
-						bMoor.get( stints[i] )._decorate( el );
+						bMoor.get( stints[i], true )._decorate( el );
 					}
 
 					el.init();

@@ -51,11 +51,11 @@
 						}
 					});
 				}
-
+				
 				if ( reverse ){
 					this._listeners.push(function( key, val ){
 						var field = reverse[ key ];
-
+						
 						if ( field ) {
 							observer.model[ field ] = val;
 						}
@@ -69,8 +69,14 @@
 			push : function( key, val ){
 				var list, i, c;
 
-				for( i = 0, list = this._listeners, c = list.length; i < c; i++ ){
-					list[i]( key, val );
+				if ( arguments.length == 2 ){
+					for( i = 0, list = this._listeners, c = list.length; i < c; i++ ){
+						list[i]( key, val );
+					}
+				}else{
+					for( i in key ){
+						this.push( i, key[i] );
+					}
 				}
 			}
 		}
