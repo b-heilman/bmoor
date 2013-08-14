@@ -20,15 +20,13 @@ bMoor.constructor.define({
 		},
 		_makeContent : function( data, alterations ){
 			var template = this._makeTemplate( data );
-			console.log( data );
+			
 			if ( template ){
 				this._setContent( bMoor.module.Templator.run(template,data) );
 				return true;
 			}else return false;
 		},
 		_setContent : function( content ){
-			console.log( content );
-
 			var 
 				next,
 				element,

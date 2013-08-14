@@ -539,7 +539,6 @@
 				}
 			};
 			
-			console.log( requests, settings );
 			ClassLoader.require( requests, def, [], this);
 		};
 
