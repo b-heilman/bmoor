@@ -2,9 +2,14 @@ Prototype
 	- Allow for JS, CSS, and Templates to be loaded together
 	- implement for overloading, so templates can be preloaded and not loaded over by the default
 
+Implement promises
+	- services pass back base object, populate later
+	- loading of classes are using promises
+
+? Do I want to remove observe...
+
 Services
 	- error handling
-	- implement promises
 	
 Error Handling
 	

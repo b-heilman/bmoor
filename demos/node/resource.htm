@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../../src/jquery.min.js"></script>
+<script src="../../src/bMoor.js"></script>
+<script>
+	// unneccisary now
+	bMoor.autoload.setLibrary( ['demos'], '../js' );
+</script>
+<script src="../js/Test1.js"></script>
+
+</head>
+<body>
+	
+<script>
+(function( global ){
+	bMoor.constructor.define({
+		name : 'Controller',
+		namespace : ['test'],
+		parent : ['bmoor','controller','Abstract'],
+		require : {
+			classes : [ 
+				['bmoor','observer','Map'],
+				['bmoor','observer','Collection']
+			]
+		},
+		properties : {
+			_model : function(){ 
+				return { 
+					foo : 'foot', 
+					bar : { uh:'yay' }, 
+					list: [
+						{x:'eins'},
+						{x:'zwei'},
+						{x:'drei'}
+					]
+				};
+			}
+		}
+	});
+}( this ));
+</script>
+
+<div snap-node="demos.Test1" snap-control="test.Controller"> Loading... </div>
+</body>
+</html>

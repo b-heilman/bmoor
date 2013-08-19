@@ -62,6 +62,7 @@ bMoor.constructor.define({
 					actions,
 					action,
 					create = function( action, subselect, func ){
+						console.log( action, className+' '+subselect );
 						$(document.body).on( action, className+' '+subselect, function( event ){
 							var
 								node = this,
@@ -69,6 +70,7 @@ bMoor.constructor.define({
 								observer;
 
 							observer = bmoor.lib.Snap.prototype._findElementWithProperty( 'observer', this );
+							
 							if ( $(observer).hasClass(className) ){
 								controller = observer;
 							}else{
@@ -101,7 +103,9 @@ bMoor.constructor.define({
 	},
 	properties : {
 		init : function( element ){
-			var stream;
+			var 
+				dis = this,
+				stream;
 
 			if ( !element ){
 				element = this.element;
@@ -119,7 +123,13 @@ bMoor.constructor.define({
 			}
 
 			for( stream in this._outStreams ) if ( !this._inStreams[stream] ){
-				bmoor.lib.stream( stream ).bind( this.observer, {}, this._outStreams[stream] );
+				if ( typeof(this._outStreams[stream]) == 'function' ){
+					bmoor.lib.stream( stream ).bind( this.observer, {}, function(){
+						dis._outStreams[stream].apply( dis, arguments ); 
+					});
+				}else{
+					bmoor.lib.stream( stream ).bind( this.observer, {}, this._outStreams[stream] );
+				}
 			}
 
 			this.updates = {};
@@ -155,7 +165,9 @@ bMoor.constructor.define({
 			var 
 				info,
 				attr,
-				model = this._model ? this._model() : this.__Snap._initModel.call( this );
+				model = this._model 
+					? this._model( this.__Snap._initModel.call(this) ) 
+					: this.__Snap._initModel.call( this );
 
 			attr = this._getAttribute( 'model' ); // allow redirecting the model
 			

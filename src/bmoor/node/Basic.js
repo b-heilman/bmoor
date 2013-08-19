@@ -54,18 +54,18 @@ bMoor.constructor.define({
 					makeSplitAction = function( action, subselect, func ){
 						if ( subselect == '' ){
 							$(document.body).on( action, className, function( event ){
-								func.call( this, event, $(this).data('node'), helpers );
+								func.call( this, event, this.node, helpers );
 							});
 						}else{
 							$(document.body).on( action, className+' '+subselect, function( event ){
-								func.call( this, event, $(this).closest(className).data('node'), helpers );
+								func.call( this, event, $(this).closest(className)[0].node, helpers );
 							});
 						}
 					}, 
 					makeAction = function( action, func ){
 						if ( typeof(func) == 'function' ){
 							$(document.body).on( action, className, function( event ){
-								func.call( this, event, $(this).data('node'), helpers );
+								func.call( this, event, this.node, helpers );
 							});
 						}else{
 							for( var a in func ){
@@ -113,6 +113,8 @@ bMoor.constructor.define({
 			
 			this.observer = this._observe( this._initModel() );
 
+			this._pushObserver( this.element, this.observer );
+			
 			this._bind();
 
 			this._finalize();

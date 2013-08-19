@@ -18,30 +18,35 @@
 			this._listeners = [];
 		},
 		properties : {
-			// map : my var -> stream var
-			// reverse : stream var -> my var
+			// map : my var -> stream var, or a function
+			// reverse : stream var -> my var, or a function
 			bind : function( observer, map, reverse ){
 				var 
 					key,
 					dis = this;
 
 				if ( map ){
-					if ( !reverse ){
-						reverse = {};
-						for( key in map ){
-							reverse[ map[key] ] = key;
-						}
-					}
-
-					observer.bind(function( alterations ){
-						var key;
-
-						for( key in alterations ) if ( alterations.hasOwnProperty(key) ){
-							if ( map[key] ) {
-								dis.push( map[key], this.model[key] );
+					if ( typeof(map) == 'function' ){
+						// this is impossible, they really meant reverse
+						reverse = map;
+					}else{
+						if ( !reverse ){
+							reverse = {};
+							for( key in map ){
+								reverse[ map[key] ] = key;
 							}
 						}
-					});
+
+						observer.bind(function( alterations ){
+							var key;
+
+							for( key in alterations ) if ( alterations.hasOwnProperty(key) ){
+								if ( map[key] ) {
+									dis.push( map[key], this.model[key] );
+								}
+							}
+						});
+					}
 				}else{
 					observer.bind(function( alterations ){
 						var key;
@@ -53,13 +58,17 @@
 				}
 				
 				if ( reverse ){
-					this._listeners.push(function( key, val ){
-						var field = reverse[ key ];
-						
-						if ( field ) {
-							observer.model[ field ] = val;
-						}
-					});
+					if ( typeof(reverse) == 'function' ){
+						this._listeners.push( reverse );
+					}else{
+						this._listeners.push(function( key, val ){
+							var field = reverse[ key ];
+							
+							if ( field ) {
+								observer.model[ field ] = val;
+							}
+						});
+					}
 				}else{
 					this._listeners.push(function( key, val ){
 						observer.model[key] = val;

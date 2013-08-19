@@ -40,10 +40,10 @@ bMoor.constructor.define({
 				if ( model._ ){
 					observer = model._;
 				}else{
-					if ( model.length ){
-						observer = new bmoor.observer.Collection( model );
-					}else{
+					if ( model.length === undefined ){
 						observer = new bmoor.observer.Map( model );
+					}else{
+						observer = new bmoor.observer.Collection( model );
 					}
 				}
 			}

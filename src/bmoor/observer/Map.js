@@ -16,14 +16,15 @@
 		},
 		properties : {
 			init : function( model ){
-				this.setModel( model );
+				this.spy( model );
+				model._ = this;
 			},
-			setModel : function( model ){
-				this.model = model;
-
-				if ( !model._ ){
-					model._ = this;
+			spy : function( model ){
+				if ( this.model && this.model._ == this ){
+					delete this.model._;
 				}
+
+				this.model = model;
 
 				if ( !this.interval ){
 					this.start();

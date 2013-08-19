@@ -23,7 +23,7 @@ bMoor.constructor.singleton({
 		}
 	},
 	construct: function(){
-		this.done(function(){
+		this._render.push(function(){
 			document.body.className += ' snap-ready';
 		});
 	},
