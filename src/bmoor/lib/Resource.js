@@ -113,7 +113,7 @@ bMoor.constructor.singleton({
 				}else if ( node = document.getElementById(id) ){
 					this.setTemplate( id, node.innerHTML );
 				}else if ( src == null ){
-					throw 'loadTemplate : '+id+' requested, and not found, while src is null';
+					throw 'loadTemplate : ('+id+') requested, and not found, while src is null';
 				}else{
 					dis = this;
 					

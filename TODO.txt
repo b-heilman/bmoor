@@ -1,6 +1,6 @@
-Prototype
-	- Allow for JS, CSS, and Templates to be loaded together
-	- implement for overloading, so templates can be preloaded and not loaded over by the default
+Scripts and Styles can be minified, read what in what is in the snap-min attribute
+
+Time to add in forEach and filter... but do I want them as famework constructs or adjust the base prototypes?
 
 Implement promises
 	- services pass back base object, populate later

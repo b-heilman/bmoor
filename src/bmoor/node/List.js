@@ -187,8 +187,12 @@ bMoor.constructor.define({
 					}
 				}else{
 					// this means there is nothing else...
-					this.element.appendChild( element );
-					
+					if ( this.isTable ){
+						this.element.getElementsByTagName('tbody')[0].appendChild( element );
+					}else{
+						this.element.appendChild( element );
+					}
+
 					this.mountPoint.last = element;
 				}
 			}

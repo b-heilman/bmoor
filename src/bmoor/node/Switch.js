@@ -14,9 +14,10 @@ bMoor.constructor.define({
 
 			if ( model ){
 				template = this._unwrapVar( model, this._getAttribute('template') );
-				
 				if ( !template ){
 					template = this._getAttribute('defaultTemplate');
+				}else{
+					this.watchTemplateVar = this._getAttribute('template');
 				}
 				
 				if ( template ){
@@ -27,7 +28,8 @@ bMoor.constructor.define({
 			return null;
 		},
 		_needUpdate : function( alterations ){
-			return alterations.modelSwitch || alterations[ this._getAttribute('template') ] || this.__View._needUpdate.call( this, alterations);
+			return alterations.modelSwitch 
+				|| this.__View._needUpdate.call( this, alterations);
 		}
 	}
 });

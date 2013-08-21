@@ -11,11 +11,16 @@ bMoor.constructor.define({
 	},
 	properties : {
 		defaultTemplate : null,
-		_makeTemplate : function( data ){
+		_makeTemplate : function( model ){
 			var template = this._getAttribute('template') || this.defaultTemplate;
 
 			if ( template ){
-				return bMoor.module.Templator.prepare( template );
+				if ( template.charAt(0) == '>' ){
+					this.watchTemplateVar = template.substring(1);
+					template = this._unwrapVar( model, template.substring(1) );
+				}
+
+				return bMoor.module.Templator.prepare( template || this.defaultTemplate );
 			} else return null;
 		},
 		_makeContent : function( data, alterations ){
@@ -46,6 +51,10 @@ bMoor.constructor.define({
 
 				element = next;
 			}
+		},
+		_needUpdate : function( alterations ){
+			return ( this.watchTemplateVar && alterations[this.watchTemplateVar] ) 
+				|| this.__Basic._needUpdate.call( this, alterations );
 		},
 		_finalizeElement : function( element ){
 			if ( element.nodeType != 3 ){

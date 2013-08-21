@@ -144,59 +144,62 @@ bMoor.constructor.singleton({
 				builds = [],
 				requirements = [];
 
-			this._booting++;
-			
-			if ( dis._preRender ){
-				dis._preRender();
-				dis._preRender = null;
-			}
-
-			if ( element.hasAttribute('snap-control') ){
-				res = this._buildControl( waiting, element );
-				requirements = requirements.concat( res.requirements );
-				builds.unshift( res.build );
-			}
-
-			for( nodes = this.select(element,'[snap-control]'), i = 0, c = nodes.length; i < c; i++){
-				res = this._buildControl( waiting, nodes[i] );
-				requirements = requirements.concat( res.requirements );
-				builds.unshift( res.build );
-			}
-
-			if ( element.hasAttribute('snap-node') ){
-				res = this._buildNode( waiting, element );
-				requirements = requirements.concat( res.requirements );
-				builds.unshift( res.build );
-			}
-
-
-			for( nodes = this.select(element,'[snap-node]'), i = 0, c = nodes.length; i < c; i++){
-				res = this._buildNode( waiting, nodes[i] );
-				requirements = requirements.concat( res.requirements );
-				builds.unshift( res.build );
-			}
-			
-			schedule.done(function(){
-				var op;
-
-				if ( dis._render ){
-					while( dis._render.length){
-						op = dis._render.shift();
-						op();
-					}
+			// right now I just want DOM elements
+			if ( element.hasAttribute ){
+				this._booting++;
+				
+				if ( dis._preRender ){
+					dis._preRender();
+					dis._preRender = null;
 				}
 
-				dis._booting--;
-			});
+				if ( element.hasAttribute('snap-control') ){
+					res = this._buildControl( waiting, element );
+					requirements = requirements.concat( res.requirements );
+					builds.unshift( res.build );
+				}
 
-			waiting.require( requirements );
-			waiting.done( function(){
-				while( builds.length ){
-					schedule.add( builds.pop() );
+				for( nodes = this.select(element,'[snap-control]'), i = 0, c = nodes.length; i < c; i++){
+					res = this._buildControl( waiting, nodes[i] );
+					requirements = requirements.concat( res.requirements );
+					builds.unshift( res.build );
+				}
+
+				if ( element.hasAttribute('snap-node') ){
+					res = this._buildNode( waiting, element );
+					requirements = requirements.concat( res.requirements );
+					builds.unshift( res.build );
+				}
+
+
+				for( nodes = this.select(element,'[snap-node]'), i = 0, c = nodes.length; i < c; i++){
+					res = this._buildNode( waiting, nodes[i] );
+					requirements = requirements.concat( res.requirements );
+					builds.unshift( res.build );
 				}
 				
-				schedule.run(); 
-			});
+				schedule.done(function(){
+					var op;
+
+					if ( dis._render ){
+						while( dis._render.length){
+							op = dis._render.shift();
+							op();
+						}
+					}
+
+					dis._booting--;
+				});
+
+				waiting.require( requirements );
+				waiting.done( function(){
+					while( builds.length ){
+						schedule.add( builds.pop() );
+					}
+					
+					schedule.run(); 
+				});
+			}
 		},
 		select : function( element, selector ){
 			if ( element.querySelectorAll ){
