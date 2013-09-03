@@ -10,7 +10,14 @@ bMoor.constructor.singleton({
 	module : 'Resource',
 	onReady : function( self ){
 		var 
+			i,
+			j,
+			c,
+			co,
+			minified,
+			instance,
 			templateId,
+			links = document.getElementsByTagName('link'),
 			scripts = document.getElementsByTagName('script');
 
 		bMoor.setTemplate = function( id, template ){
@@ -22,25 +29,57 @@ bMoor.constructor.singleton({
 			self.setTemplate( templateId, bMoor.templates[templateId] );
 		}
 
-		for( var i = 0, c = scripts.length; i < c; i++ ){
-			var script = scripts[i];
+		for( i = 0, c = scripts.length; i < c; i++ ){
+			instance = scripts[ i ];
 			
-			if ( script.id ){
-				if ( script.src ){
-					self.__static.loadedScripts[ script.src ] = script.id;
+			if ( instance.hasAttribute('snap-min') ){
+				minified = instance.getAttribute('snap-min').split(';');
+				for( j = 0, co = minified.length; j < co; j++ ){
+					self.__static.loadedScripts[ minified[j] ] = instance;
 				}
-				
-				if ( script.getAttribute('type') == "text/html" ){
-					self.setTemplate( script.id, script.innerHTML );
+			}else if ( instance.src ){
+				self.__static.loadedScripts[ instance.src ] = instance;
+			}
+
+			if ( instance.id ){
+				if ( instance.type == "text/html" ){
+					self.setTemplate( instance.id, instance.innerHTML );
+				}
+			}
+		}
+
+		for( i = 0, c = links.length; i < c; i++ ){
+			instance = links[ i ];
+
+			if ( instance.rel == 'stylesheet' ){
+				if ( instance.hasAttribute('snap-min') ){
+					minified = instance.getAttribute('snap-min').split(';');
+					for( j = 0, co = minified.length; j < co; j++ ){
+						self.__static.loadedStyles[ minified[j] ] = instance;
+					}
+				}else if ( instance.href ){
+					self.__static.loadedStyles[ instance.href ] = instance;
 				}
 			}
 		}
 	},
 	statics : {
-		loadedScripts : {}
+		loadedScripts : {},
+		loadedStyles : {}
 	},
 	properties : {
+		settings : {
+			version : null
+		},
 		loadScript : function( src, cb ){
+			if ( this.settings.version ){
+				if ( src.indexOf('?') == -1 ){
+					src += '?v=' + this.settings.version;
+				}else{
+					src += '&v=' + this.settings.version;
+				}
+			}
+
 			$.ajax({ url : src, dataType : 'script', success : cb });
 		},
 		loadStyle : function( src, cb ){
@@ -50,6 +89,14 @@ bMoor.constructor.singleton({
 				sheet,
 				interval = null;
 			
+			if ( this.settings.version ){
+				if ( path.indexOf('?') == -1 ){
+					path += '?v=' + this.settings.version;
+				}else{
+					path += '&v=' + this.settings.version;
+				}
+			}
+
 			style = document.createElement( 'link' );
 			style.setAttribute( 'href', path );
 			style.setAttribute( 'rel', 'stylesheet' );
@@ -95,12 +142,21 @@ bMoor.constructor.singleton({
 				src = null;
 			}
 			
+			if ( this.settings.version ){
+				if ( src.indexOf('?') == -1 ){
+					src += '?v=' + this.settings.version;
+				}else{
+					src += '&v=' + this.settings.version;
+				}
+			}
+
 			if ( id[0] == '#' ){
 				// TODO : is this right?
 				id = id.substring(1);
 			}
 			
 			if ( !templates[id] ){
+				/*
 				if ( loadedScripts[src] ){
 					// script already was loaded
 					var sid = loadedScript[src];
@@ -110,7 +166,9 @@ bMoor.constructor.singleton({
 					}else{
 						this.setTemplate( id, document.getElementById(sid).innerHTML );
 					}
-				}else if ( node = document.getElementById(id) ){
+				}else 
+				*/
+				if ( node = document.getElementById(id) ){
 					this.setTemplate( id, node.innerHTML );
 				}else if ( src == null ){
 					throw 'loadTemplate : ('+id+') requested, and not found, while src is null';

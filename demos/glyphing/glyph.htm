@@ -13,28 +13,9 @@
 	<script src='../../src/jquery.min.js'></script>
 	<script src='../../src/bMoor.js'></script>
 	
-	<script>
-		bMoor.autoload.setRoot('../../src');
-		bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
-	</script>
-	<script src='../../src/jquery/jquery.jqote2.js'></script>
-	
 	<script src='../../src/bmoor/lib/WaitFor.js'></script>
 	<script src='../../src/bmoor/lib/Bootstrap.js'></script>
 	<script src='../../src/bmoor/lib/MouseTracker.js'></script>
-	
-	<script src='../../src/bmoor/observer/Map.js'></script>
-	<script src='../../src/bmoor/observer/Collection.js'></script>
-	
-	<script src='../../src/bmoor/templating/JQote.js'></script>
-	
-	<script src='../../src/bmoor/snap/Node.js'></script>
-	
-	<script src='../../src/bmoor/snap/form/Text.js'></script>
-	<script src='../../src/bmoor/snap/form/Button.js'></script>
-	<script src='../../src/bmoor/snap/form/Checked.js'></script>
-	<script src='../../src/bmoor/snap/form/Select.js'></script>
-	<script src='../../src/bmoor/snap/Form.js'></script>
 	
 	<script src='../../src/bmoor/glyphing/Glyph.js'></script>
 	<script src='../../src/bmoor/glyphing/Container.js'></script>
@@ -60,7 +41,7 @@
 		<button onclick="container.addGlyph({left:20,top:70,width:50,height:50})">Add Glyph 3</button>
 	</div>
 	<script>
-	bmoor.lib.Bootstrap.render(function(){
+	bMoor.module.Bootstrap.render(function(){
 		container.unlock();
 	});
 	</script>

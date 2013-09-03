@@ -1,12 +1,15 @@
 ;(function( $, global, undefined ){
 
-bMoor.constructor.define({
+bMoor.constructor.mutate({
 	name : 'Controller',
 	namespace : ['bmoor','glyphing'],
 	require: [
 		['bmoor','glyphing','Glyph']
 	],
-	parent : ['bmoor','snap','Form'],
+	parent : ['bmoor','node','View'],
+	decorators : [
+		['bmoor','node','Form']
+	],
 	properties : { 
 		_model : function(){
 			this.collection = data.getCollection();

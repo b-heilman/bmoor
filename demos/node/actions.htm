@@ -5,18 +5,14 @@
 <script src="../../src/jquery.min.js"></script>
 <script src="../../src/bMoor.js"></script>
 <script src='../../src/jquery/jquery.jqote2.js'></script>
-<script>
-	bMoor.autoload.setRoot('../../src');
-	bMoor.autoload.setLibrary( ['jquery'], '../../src/jquery', {fullName : true} );
-</script>
 <script src='../../src/bmoor/lib/WaitFor.js'></script>
 <script src='../../src/bmoor/lib/MouseTracker.js'></script>
 <script src='../../src/bmoor/lib/Bootstrap.js'></script>
 <script src='../../src/bmoor/templating/JQote.js'></script>
 <script src='../../src/bmoor/observer/Map.js'></script>
 	
-<script src="../../src/bmoor/snap/Node.js"></script>
-<script src="../../src/bmoor/snap/List.js"></script>
+<script src="../../src/bmoor/node/Basic.js"></script>
+<script src="../../src/bmoor/node/List.js"></script>
 </head>
 <body>
 
@@ -34,7 +30,7 @@
 	bMoor.constructor.define({
 		name : 'Tester',
 		namespace : ['test'],
-		parent: ['bmoor','snap','Node'],
+		parent: ['bmoor','node','View'],
 		node : {
 			className : 'tester',
 			actions : {
@@ -69,40 +65,30 @@
 		parent : ['bmoor','controller','Abstract'],
 		require : {
 			classes : [ 
-				['bmoor','model','Map'],
-				['bmoor','model','Collection']
+				['bmoor','observer','Map'],
+				['bmoor','observer','Collection']
 			]
 		},
 		properties : {
-			_model : function( ){ 
-				var data = dataSet;
-
-				data.list = new bmoor.model.Collection( data.list );
-				data = new bmoor.model.Map( data );
-
-				return data;
+			_initModel : function( ){ 
+				return dataSet;
 			}
 		}
 	});
 </script>
 
-<div snap-node="test.Tester" snap-template="template1" snap-control="test.Controller"></div>
+<div snap-node="test.Tester" snap-template="template1" snap-controller="test.Controller"></div>
 
-<script>var dataSet = { foo:'foot', bar:{uh:'yay'}, list:[{x:'eins'},{x:'zwei'},{x:'drei'}] };</script>
+<script>var dataSet = { foo:'foot', bar:{uh:'yay'} };</script>
 <script type="text/html" id="template1">
 <![CDATA[
 	<b><#= this.foo #></b>
-	<span snap-node="bmoor.snap.Node" snap-template="template2" snap-scope="bar"></span>
+	<span snap-node="bmoor.node.View" snap-template="template2" snap-scope="bar"></span>
 ]]>
 </script>
 <script type="text/html" id="template2">
 <![CDATA[
 	<i><#= this.uh #></i>
-]]>
-</script>
-<script type="text/html" id="list1">
-<![CDATA[
-	<i><#= this.x #></i>
 ]]>
 </script>
 </body>

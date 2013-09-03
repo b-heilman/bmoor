@@ -91,16 +91,16 @@ bMoor.constructor.singleton({
 				}
 			};
 		},
-		_buildControl : function( waiting, element ){
+		_buildController : function( waiting, element ){
 			var
-				create = element.getAttribute('snap-control'),
+				create = element.getAttribute('snap-controller'),
 				args = [],
 				requirements = [],
 				stints = [],
 				pos;
 			
 			// up here, so the require loop doesn't become infinite
-			element.removeAttribute('snap-control');
+			element.removeAttribute('snap-controller');
 			
 			if ( element.hasAttribute('snap-stint') ){
 				stints = element.getAttribute('snap-stint').split(',');
@@ -153,14 +153,14 @@ bMoor.constructor.singleton({
 					dis._preRender = null;
 				}
 
-				if ( element.hasAttribute('snap-control') ){
-					res = this._buildControl( waiting, element );
+				if ( element.hasAttribute('snap-controller') ){
+					res = this._buildController( waiting, element );
 					requirements = requirements.concat( res.requirements );
 					builds.unshift( res.build );
 				}
 
-				for( nodes = this.select(element,'[snap-control]'), i = 0, c = nodes.length; i < c; i++){
-					res = this._buildControl( waiting, nodes[i] );
+				for( nodes = this.select(element,'[snap-controller]'), i = 0, c = nodes.length; i < c; i++){
+					res = this._buildController( waiting, nodes[i] );
 					requirements = requirements.concat( res.requirements );
 					builds.unshift( res.build );
 				}

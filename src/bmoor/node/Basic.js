@@ -31,7 +31,7 @@ bMoor.constructor.define({
 					if ( node.singleClass ){
 						this.baseClass = node.className;
 					}else{
-						this.baseClass += ' ' + node.className;
+						this.baseClass = node.className + ' ' + this.baseClass;
 					}
 				}else{
 					this.baseClass = node.className;
@@ -41,7 +41,7 @@ bMoor.constructor.define({
 			$(document).ready(function(){
 				var 
 					act,
-					className = '.'+dis.className,
+					className = '.'+dis.className.split(' ')[0], // the primary class should always be on the left
 					helpers = node.helpers ? node.helpers : {},
 					makeGlobal = function( action, func ){
 						// this seems highly inefficient, is there a better way?
@@ -98,7 +98,7 @@ bMoor.constructor.define({
 		}
 	},
 	properties : {
-		defaultControl : null, // remember to preload this
+		defaultController : null, // remember to preload this
 		init : function( element ){
 			this.classBindings = [];
 			this.makeClass = null;
@@ -134,16 +134,16 @@ bMoor.constructor.define({
 
 			// install a default controller
 			// TODO : a better way to do this?
-			if ( !element.controller && this.defaultControl ){
-				controller = bMoor.get( this.defaultControl );
+			if ( !element.controller && this.defaultController ){
+				controller = bMoor.get( this.defaultController );
 				new controller( element );
 			}
 			
 			attr = this._getAttribute( 'class' );
 
-			this.className = element.className + ' ' + this.baseClass;
-
 			if ( attr ){
+				element.origClassName = element.className;
+
 				this.makeClass = new Function( 'model', 'return "' 
 					+ attr
 						.replace( /\{\{([^\?]+)\?([^:]+):([^\}]+)\}\}/g, 
@@ -159,7 +159,7 @@ bMoor.constructor.define({
 						) 
 					+ '";' );
 			}else{
-				element.className = this.className;
+				element.className = this.baseClass + ' ' + element.className;
 			}
 		},
 		_initModel : function(){
@@ -253,7 +253,9 @@ bMoor.constructor.define({
 			return isNeeded;
 		},
 		_updateClass : function( data ){
-			this.element.className = this.className + ' ' + this.makeClass( data );
+			var element = this.element;
+
+			element.className = this.baseClass + ' ' + element.origClassName + ' ' + this.makeClass( data );
 		},
 		// TODO : change to _needContentUpdate
 		_needUpdate : function( alterations ){

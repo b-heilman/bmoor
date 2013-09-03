@@ -6,7 +6,7 @@ bMoor.constructor.define({
 		references : { 'jQuery.fn.jqote' : ['jquery','jqote2'] },
 		classes : [ ['bmoor','model','Map'] ]
 	},
-	parent : ['bmoor','snap','Node'],
+	parent : ['bmoor','node','View'],
 	node : {
 		className : 'glyphing-glyph',
 		actions : {

@@ -6,6 +6,9 @@ bMoor.constructor.define({
 	name : 'View',
 	namespace : ['bmoor','node'],
 	parent : ['bmoor','node','Basic'],
+	require: {
+		references : { 'bMoor.module.Templator' : ['bmoor','templating','JQote'] },
+	},
 	node : {
 		className : 'node-view'
 	},

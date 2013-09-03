@@ -1,15 +1,22 @@
-Scripts and Styles can be minified, read what in what is in the snap-min attribute
+- Time to add in forEach and filter... but do I want them as famework constructs or adjust the base prototypes?
 
-Time to add in forEach and filter... but do I want them as famework constructs or adjust the base prototypes?
+- Allow preset variables to be added to file requests, like v='some version'
 
-Implement promises
+- Allow views to use innerHTML to set its template
+
+- Implement promises
 	- services pass back base object, populate later
 	- loading of classes are using promises
 
 ? Do I want to remove observe...
 
-Services
+- Services
+	- create a system that caches responses and what not
 	- error handling
 	
-Error Handling
+- Error Handling
 	
+- Create a min file
+
+- General tests
+
