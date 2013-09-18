@@ -2,8 +2,8 @@
 
 bMoor.constructor.define({
 	name : 'Text',
-	namespace : ['bmoor','node','form'],
-	parent : ['bmoor','node','form','Input'],
+	namespace : ['bmoor','node','input'],
+	parent : ['bmoor','node','input','Basic'],
 	properties: {
 		// gets called by the data bind
 		_listen : function(){

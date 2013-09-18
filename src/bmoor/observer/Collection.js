@@ -9,7 +9,7 @@
 				dis = this,
 				old = {};
 
-			this.__Map.__construct.call( this, model );
+			this['bmoor.observer.Map'].__construct.call( this, model );
 
 			this.removals = [];
 

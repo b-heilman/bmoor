@@ -2,8 +2,8 @@
 
 bMoor.constructor.define({
 	name : 'Select',
-	namespace : ['bmoor','node','form'],
-	parent : ['bmoor','node','form','Input'],
+	namespace : ['bmoor','node','input'],
+	parent : ['bmoor','node','input','Basic'],
 	properties: {
 		_element : function ( element ){
 			var 
@@ -11,7 +11,7 @@ bMoor.constructor.define({
 				i,
 				c;
 
-			this.__Input._element.call( this, element );
+			this['bmoor.node.input.Basic']._element.call( this, element );
 
 			selected = this._select('[selected]');
 

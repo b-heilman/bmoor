@@ -849,8 +849,9 @@
 			
 			child.prototype = new parent();
 			child.prototype.constructor = child;
-			// right now, I think this will suffice
-			child.prototype['__'+parent.prototype.__name] = parent.prototype;
+			
+			child.prototype[ parent.prototype.__class ] = parent.prototype;
+
 			initializing = false;
 		};
 		

@@ -14,6 +14,7 @@
 	<script src='../../src/bMoor.js'></script>
 	
 	<script src='../../src/bmoor/lib/WaitFor.js'></script>
+	<script src='../../src/bmoor/lib/Bouncer.js'></script>
 	<script src='../../src/bmoor/lib/Bootstrap.js'></script>
 	<script src='../../src/bmoor/lib/MouseTracker.js'></script>
 	
@@ -41,8 +42,10 @@
 		<button onclick="container.addGlyph({left:20,top:70,width:50,height:50})">Add Glyph 3</button>
 	</div>
 	<script>
-	bMoor.module.Bootstrap.render(function(){
-		container.unlock();
+	bMoor.autoload.done(function(){
+		bMoor.module.Bootstrap.render(function(){
+			container.unlock();
+		});
 	});
 	</script>
 	<script type="text/html" id="glyphTemplate">

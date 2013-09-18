@@ -12,7 +12,7 @@ bMoor.constructor.define({
 	},
 	properties: {
 		_initElement : function( element ){
-			this.__View._initElement.call( this, element );
+			this['bmoor.node.View']._initElement.call( this, element );
 			
 			this.isTable = ( this.element.tagName == 'TABLE' );
 			
@@ -20,19 +20,38 @@ bMoor.constructor.define({
 		},
 		_makeTemplate : function(){
 			var 
-				mount = this._getAttribute('mount'),
+				mount,
+				mountBelow,
 				element;
 
-			if ( !this.mountPoint && mount ){
-				element = this.$.find('[mount]')[0];
+			if ( !this.mountPoint ){
+				// TODO : match by attribute value
+				mount = this._getAttribute('mount'),
+				mountBelow = this._getAttribute('mountBelow');
+
+				if ( mount ){
+					mount = this.$.find('[mount]')[0];
+				}
+
+				if ( mountBelow ){
+					element = this.$.find('[mountBelow]')[0];
+				}
+
+				// TODO : this isn't entirely right, need to clean up
+				this.mountPoint = {
+					base : mount ? mount
+						: ( element ? element.parentNode
+							: ( this.isTable 
+								? this.element.getElementsByTagName( 'tbody' )[0]
+								: this.element
+							)
+						),
+					below : element,
+					above : element
+				};
 			}
 
-			this.mountPoint = {
-				mount : element,
-				last  : element
-			};
-
-			return this.__View._makeTemplate.call( this );
+			return this['bmoor.node.View']._makeTemplate.call( this );
 		},
 		_needUpdate : function( alterations ){
 			// TODO : isn't this repetitive?
@@ -49,9 +68,10 @@ bMoor.constructor.define({
 				moves,
 				removals,
 				template = this._makeTemplate( data );
-			
+
 			if ( data._ instanceof bmoor.observer.Collection ){
 				removals = alterations.removals;
+				
 				if ( removals ){
 					for( var i in removals ){
 						row = removals[ i ];
@@ -72,6 +92,7 @@ bMoor.constructor.define({
 				}
 				
 				moves = alterations.moves;
+				
 				for( i = 0, c = data.length; i < c; i++ ){
 					if ( moves[i] ){
 						this.insert( moves[i], template, data[i-1] );
@@ -79,7 +100,7 @@ bMoor.constructor.define({
 				}
 			}else{
 				// otherwise I assume this is an array, and I just completely rewrite it every time
-				this.$.empty();
+				$( this.mountPoint.base ).empty();
 				for( i = 0, c = data.length; i < c; i++ ){
 					// TODO : put them in the right place
 					this.append( data[i], template, null );
@@ -116,16 +137,22 @@ bMoor.constructor.define({
 			return els;
 		},
 		_append : function( element ){
-			var mount = this.mountPoint.last;
+			var mount = this.mountPoint.above;
 
 			if ( element.nodeType != 3 ){
-				if ( mount.nextSibling ){
-					mount.parentNode.insertBefore( element, mount.nextSibling );
-				}else{
-					mount.parentNode.appendChild( element );
-				}
+				if ( mount ){
+					if ( mount.nextSibling ){
+						mount.parentNode.insertBefore( element, mount.nextSibling );
+					}else{
+						mount.parentNode.appendChild( element );
+					}
 
-				this.mountPoint.last = element;
+					this.mountPoint.last = element;
+				}else{
+					this.mountPoint.base.appendChild( element );
+					this.mountPoint.below = element;
+					this.mountPoint.above = element;
+				}
 			}
 		},
 		// TODO : I would somehow like to use set content...
@@ -144,7 +171,7 @@ bMoor.constructor.define({
 			if ( previous && previous._.rows ){
 				previous = previous._.rows[ previous._.rows.length - 1 ]
 			}else{
-				previous = this.mountPoint.mount;
+				previous = this.mountPoint.above;
 			}
 
 			if ( !observer.rows ){
@@ -161,7 +188,7 @@ bMoor.constructor.define({
 					element = element.nextSibling;
 				}
 			}
-
+			
 			for( i = 0, nodes = observer.rows, c = nodes.length; i < c; i++ ){
 				element = nodes[i];
 
@@ -182,18 +209,14 @@ bMoor.constructor.define({
 						mount.parentNode.appendChild( element );
 					}
 
-					if ( mount == this.mountPoint.last ){
-						this.mountPoint.last = element;
+					if ( mount == this.mountPoint.above ){
+						this.mountPoint.above = element;
 					}
 				}else{
 					// this means there is nothing else...
-					if ( this.isTable ){
-						this.element.getElementsByTagName('tbody')[0].appendChild( element );
-					}else{
-						this.element.appendChild( element );
-					}
-
-					this.mountPoint.last = element;
+					this.mountPoint.base.appendChild( element );
+					this.mountPoint.below = element;
+					this.mountPoint.above = element;
 				}
 			}
 		}

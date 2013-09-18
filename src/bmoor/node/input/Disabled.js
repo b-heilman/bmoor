@@ -2,7 +2,7 @@
 
 bMoor.constructor.decorator({
 	name : 'Disabled',
-	namespace : ['bmoor','node','form'],
+	namespace : ['bmoor','node','input'],
 	properties : {
 		_needUpdate : function( alterations ){
 			return alterations.$isValid || this._wrapped( alterations );

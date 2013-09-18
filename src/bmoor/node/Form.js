@@ -1,15 +1,14 @@
 ;(function( $, global, undefined ){
 
-bMoor.constructor.define({
+bMoor.constructor.decorator({
 	name : 'Form',
 	namespace : ['bmoor','node'],
 	require: [
-		['bmoor','node','form','Text'],
-		['bmoor','node','form','Checked'],
-		['bmoor','node','form','Button'],
-		['bmoor','node','form','Select']
+		['bmoor','node','input','Text'],
+		['bmoor','node','input','Checked'],
+		['bmoor','node','input','Button'],
+		['bmoor','node','input','Select']
 	],
-	parent : ['bmoor','node','Basic'],
 	node : {
 		className : 'node-form'
 	},
@@ -20,6 +19,8 @@ bMoor.constructor.define({
 				element = this.element,
 				names = {},
 				fields = [];
+			
+			this._wrapped();
 			
 			elements = element.elements;
 			for( var i = 0, c = elements.length; i < c; i++ ){
@@ -43,18 +44,18 @@ bMoor.constructor.define({
 				}else{
 					el = field;
 				}
-				
+
 				if ( el.nodeName == 'BUTTON' ){
-					input = new bmoor.node.form.Button( field );
+					input = new bmoor.node.input.Button( field );
 				}else if ( el.nodeName == 'SELECT' ){
-					input = new bmoor.node.form.Select( field );
+					input = new bmoor.node.input.Select( field );
 				}else{
 					if ( el.type == 'checkbox' || el.type == 'radio' ){
-						input = new bmoor.node.form.Checked( field );
+						input = new bmoor.node.input.Checked( field );
 					}else if (el.type == 'button' ){
-						input = new bmoor.node.form.Button( field );
+						input = new bmoor.node.input.Button( field );
 					}else{
-						input = new bmoor.node.form.Text( field );
+						input = new bmoor.node.input.Text( field );
 					}
 				}
 			}

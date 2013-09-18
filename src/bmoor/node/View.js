@@ -6,8 +6,8 @@ bMoor.constructor.define({
 	name : 'View',
 	namespace : ['bmoor','node'],
 	parent : ['bmoor','node','Basic'],
-	require: {
-		references : { 'bMoor.module.Templator' : ['bmoor','templating','JQote'] },
+	references : { 
+		'bMoor.module.Templator' : ['bmoor','templating','JQote']
 	},
 	node : {
 		className : 'node-view'
@@ -57,7 +57,7 @@ bMoor.constructor.define({
 		},
 		_needUpdate : function( alterations ){
 			return ( this.watchTemplateVar && alterations[this.watchTemplateVar] ) 
-				|| this.__Basic._needUpdate.call( this, alterations );
+				|| this['bmoor.node.Basic']._needUpdate.call( this, alterations );
 		},
 		_finalizeElement : function( element ){
 			if ( element.nodeType != 3 ){

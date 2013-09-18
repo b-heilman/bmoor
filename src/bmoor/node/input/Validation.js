@@ -2,7 +2,7 @@
 
 bMoor.constructor.decorator({
 	name : 'Validation',
-	namespace : ['bmoor','node','form'],
+	namespace : ['bmoor','node','input'],
 	construct : function(){
 		var value;
 

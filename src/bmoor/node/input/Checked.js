@@ -2,7 +2,7 @@
 
 bMoor.constructor.define({
 	name : 'Checked',
-	namespace : ['bmoor','node','form'],
+	namespace : ['bmoor','node','input'],
 	parent : ['bmoor','node','Basic'],
 	properties: {
 		_initElement : function( element ){
@@ -11,7 +11,7 @@ bMoor.constructor.define({
 				e,
 				i;
 
-			this.__Basic._initElement.call( this, element );
+			this['bmoor.node.Basic']._initElement.call( this, element );
 
 			this.checked = [];
 			this.map = {};
@@ -42,7 +42,7 @@ bMoor.constructor.define({
 		_initModel : function( context ){
 			var 
 				name,
-				model = this.__Basic._initModel.call( this, context );
+				model = this['bmoor.node.Basic']._initModel.call( this, context );
 
 			if ( !this.variable ){
 				this.variable = this.name;
@@ -56,7 +56,7 @@ bMoor.constructor.define({
 		_bind : function(){
 			var dis = this;
 			
-			this.__Basic._bind.call( this );
+			this['bmoor.node.Basic']._bind.call( this );
 
 			if ( this.observer && this.variable ){
 				this.alter(function( value ){

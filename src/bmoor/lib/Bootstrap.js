@@ -86,7 +86,7 @@ bMoor.constructor.singleton({
 					for( i = 0; i < visages.length; i++ ){
 						bMoor.get( visages[i], true )._decorate( el );
 					}
-
+					
 					el.init();
 				}
 			};
@@ -143,7 +143,7 @@ bMoor.constructor.singleton({
 				nodes,
 				builds = [],
 				requirements = [];
-
+			
 			// right now I just want DOM elements
 			if ( element.hasAttribute ){
 				this._booting++;
@@ -181,11 +181,9 @@ bMoor.constructor.singleton({
 				schedule.done(function(){
 					var op;
 
-					if ( dis._render ){
-						while( dis._render.length){
-							op = dis._render.shift();
-							op();
-						}
+					while( dis._render.length){
+						op = dis._render.shift();
+						op();
 					}
 
 					dis._booting--;

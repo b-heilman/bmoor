@@ -48,7 +48,6 @@ bMoor.constructor.define({
 					actions,
 					action,
 					create = function( action, subselect, func ){
-						console.log( action, className+' '+subselect );
 						$(document.body).on( action, className+' '+subselect, function( event ){
 							var
 								node = this,
@@ -98,7 +97,7 @@ bMoor.constructor.define({
 			}
 			
 			this._initElement( element );
-		
+			
 			// call the model generator, allow it to return or set this.model
 			this.observer = this._observe( this._initModel() );
 
@@ -141,8 +140,8 @@ bMoor.constructor.define({
 				info,
 				attr,
 				model = this._model 
-					? this._model( this.__Snap._initModel.call(this) ) 
-					: this.__Snap._initModel.call( this );
+					? this._model( this['bmoor.lib.Snap']._initModel.call(this) ) 
+					: this['bmoor.lib.Snap']._initModel.call( this );
 
 			attr = this._getAttribute( 'model' ); // allow redirecting the model
 			
@@ -157,7 +156,7 @@ bMoor.constructor.define({
 			return model;
 		},
 		_initElement : function( element ){
-			this.__Snap._initElement.call( this, element );
+			this['bmoor.lib.Snap']._initElement.call( this, element );
 			
 			element.controller = this;
 

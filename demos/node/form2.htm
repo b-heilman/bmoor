@@ -4,7 +4,12 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	<script src="../../src/jquery.min.js"></script>
 	<script src="../../src/bMoor.js"></script>
+	<script src="../../src/bmoor/observer/Map.js"></script>
+	<script src="../../src/bmoor/observer/Collection.js"></script>
+	<script src="../../src/bmoor/node/View.js"></script>
 	<script src="../../src/bmoor/node/List.js"></script>
+	<script src="../../src/jquery/jquery.jqote2.js"></script>
+	<script src="../../src/bmoor/templating/Decorator.js"></script>
 
 	<script>
 	(function( global ){
@@ -57,9 +62,9 @@
 	</script>
 </head>
 <body snap-controller="test.Controller" >
-	<table snap-node="bmoor.node.List" snap-mount="mount" snap-template="temp">
+	<table snap-node="bmoor.node.List" snap-template="temp">
 		<tbody>
-			<tr mount>
+			<tr>
 	            <th>Description</th>
 	            <th>Label</th>
 	            <th>Display</th>
@@ -70,10 +75,10 @@
 	<button class="row-add"> Add Row </button>
 	<script id='temp' type='text/html'>
 		<tr>
-			<td><input snap-node='bmoor.node.form.Text' type='text' name='description'/></td>
-	        <td><input snap-node='bmoor.node.form.Text'  type='text' name='label'/></td>
-	        <td><input snap-node='bmoor.node.form.Text'  type='text' name='display'/></td>
-	        <td><button snap-node='bmoor.node.form.Button' type='button' name='$remove' value="1">Remove</button></td>
+			<td><input snap-node='bmoor.node.input.Text' type='text' name='description'/></td>
+	        <td><input snap-node='bmoor.node.input.Text'  type='text' name='label'/></td>
+	        <td><input snap-node='bmoor.node.input.Text'  type='text' name='display'/></td>
+	        <td><button snap-node='bmoor.node.input.Button' type='button' name='$remove' value="1">Remove</button></td>
 	    </tr>
 	</script>
 </body>

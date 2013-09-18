@@ -2,8 +2,8 @@
 
 bMoor.constructor.define({
 	name : 'Checkbox',
-	namespace : ['bmoor','node','form'],
-	parent : ['bmoor','node','form','Input'],
+	namespace : ['bmoor','node','input'],
+	parent : ['bmoor','node','input','Basic'],
 	properties: {
 		val : function( value ){
 			var element = this.element;

@@ -90,7 +90,7 @@ bMoor.constructor.define({
 	},
 	construct : function( element, attributes, delay ){
 		this._parseAttributes( attributes );
-
+		
 		if ( delay ){
 			this.element = element;
 		}else{
@@ -106,13 +106,11 @@ bMoor.constructor.define({
 			if ( !element ){
 				element = this.element;
 			}
-
 			this.nodeId = nodesCount++;
 			
 			this._initElement( element );
 			
 			this.observer = this._observe( this._initModel() );
-
 			this._pushObserver( this.element, this.observer );
 			
 			this._bind();
@@ -128,7 +126,7 @@ bMoor.constructor.define({
 			this.$ = $( element );
 			this.$.data( 'node', this ); // TODO : kinda wanna get ride of this?
 
-			this.__Snap._initElement.call( this, element );
+			this['bmoor.lib.Snap']._initElement.call( this, element );
 
 			element.node = this;
 
@@ -168,7 +166,7 @@ bMoor.constructor.define({
 				info,
 				scope,
 				variable,
-				model = this.__Snap._initModel.call( this );
+				model = this['bmoor.lib.Snap']._initModel.call( this );
 			
 			attr = this._getAttribute( 'observe' );
 			if ( attr ){
@@ -203,7 +201,7 @@ bMoor.constructor.define({
 					}
 				}
 			}
-			
+
 			return model;
 		},
 		_bind : function(){
@@ -282,6 +280,8 @@ bMoor.constructor.define({
 			return isNeeded;
 		},
 		_prepContent : function( data, alterations ){
+			var dis = this;
+
 			if ( this.variable ){
 				value = data[this.variable];
 
@@ -293,7 +293,9 @@ bMoor.constructor.define({
 			}
 
 			if ( this._makeContent( value, alterations ) ){
-				this._finalizeContent();
+				bMoor.module.Bootstrap.done(function(){
+					dis._finalizeContent();
+				});
 			}
 		},
 		// TODO : change to _updateContent

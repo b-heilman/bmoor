@@ -23,6 +23,7 @@ bMoor.constructor.define({
 			throw error;
 		},
 		__log : function(){
+			Array.prototype.unshift.call( arguments, this.__class + ' -> ' );
 			console.log.apply( console, arguments );
 		},
 		_initElement : function( element ){

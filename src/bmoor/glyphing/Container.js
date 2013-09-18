@@ -3,7 +3,7 @@
 bMoor.constructor.define({
 	name : 'Container',
 	namespace : ['bmoor','glyphing'],
-	parent : ['bmoor','snap','Node'],
+	parent : ['bmoor','node','View'],
 	require: [
 		['bmoor','lib','MouseTracker'],
 		['bmoor','glyphing','Glyph'],

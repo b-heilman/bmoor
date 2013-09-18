@@ -1,8 +1,8 @@
 ;(function( $, global, undefined ){
 
 bMoor.constructor.define({
-	name : 'Input',
-	namespace : ['bmoor','node','form'],
+	name : 'Basic',
+	namespace : ['bmoor','node','input'],
 	parent : ['bmoor','node','Basic'],
 	properties: {
 		// gets called by the data bind
@@ -15,12 +15,12 @@ bMoor.constructor.define({
 			this.val( data );
 		},
 		_initElement : function( element ){
-			this.__Basic._initElement.call( this, element );
+			this['bmoor.node.Basic']._initElement.call( this, element );
 
 			this.root = this._findRoot();
 		},
 		_initModel : function(){
-			var model = this.__Basic._initModel.call( this );
+			var model = this['bmoor.node.Basic']._initModel.call( this );
 
 			if ( !this.variable && this.element.name ){
 				this.variable = this.element.name;
@@ -33,7 +33,7 @@ bMoor.constructor.define({
 		_bind : function(){
 			var dis = this;
 
-			this.__Basic._bind.call( this );
+			this['bmoor.node.Basic']._bind.call( this );
 			
 			this.lockValue();
 

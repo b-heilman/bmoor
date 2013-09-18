@@ -5,13 +5,13 @@
 	<script src="../../src/jquery.min.js"></script>
 	<script src="../../src/bMoor.js"></script>
 	<script src='../../src/jquery/jquery.jqote2.js'></script>
-	<script src="../../src/bmoor/node/form/Text.js"></script>
-	<script src="../../src/bmoor/node/form/Checked.js"></script>
-	<script src="../../src/bmoor/node/form/Button.js"></script>
-	<script src="../../src/bmoor/node/form/Select.js"></script>
+	<script src="../../src/bmoor/node/input/Text.js"></script>
+	<script src="../../src/bmoor/node/input/Checked.js"></script>
+	<script src="../../src/bmoor/node/input/Button.js"></script>
+	<script src="../../src/bmoor/node/input/Select.js"></script>
 	<script src="../../src/bmoor/service/Abstract.js"></script>
-	<script src="../../src/bmoor/node/form/Validation.js"></script>
-	<script src="../../src/bmoor/node/form/Disabled.js"></script>
+	<script src="../../src/bmoor/node/input/Validation.js"></script>
+	<script src="../../src/bmoor/node/input/Disabled.js"></script>
 </head>
 <body>
 <style>
@@ -73,18 +73,18 @@ bMoor.constructor.mutate({
 	<ul snap-node="bmoor.node.List" class="messages" snap-observe='$messages' snap-template="messageTemplate"></ul>
 	<div>
 		<span snap-node="bmoor.node.Text" snap-scope="number"></span>
-		<label>number<input snap-node="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
+		<label>number<input snap-node="bmoor.node.input.Text" snap-visage='bmoor.node.input.Validation' snap-min='5' snap-max='20' type='text' name='number'/></label>
 	</div>
 	<div>
 		<span snap-node="bmoor.node.Text" snap-scope="reg"></span>
-		<label>reg<input snap-node="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
+		<label>reg<input snap-node="bmoor.node.input.Text" snap-visage='bmoor.node.input.Validation' snap-match='^\d*$' type='text' name='reg'/></label>
 	</div>
 	<div>
 		<span snap-node="bmoor.node.Text" snap-scope="delay"></span>
-		<label>delay<input snap-node="bmoor.node.form.Text" snap-visage='bmoor.node.form.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
+		<label>delay<input snap-node="bmoor.node.input.Text" snap-visage='bmoor.node.input.Validation' snap-match='^\d*$' snap-delay='500' type='text' name='delay'/></label>
 	</div>
-	<button type='reset' snap-node='bmoor.node.form.Button'>Reset</button>
-	<button type='submit' snap-node='bmoor.node.form.Button' snap-visage='bmoor.node.form.Disabled'>Submit</button>
+	<button type='reset' snap-node='bmoor.node.input.Button'>Reset</button>
+	<button type='submit' snap-node='bmoor.node.input.Button' snap-visage='bmoor.node.input.Disabled'>Submit</button>
 </form>
 
 <script id='errorTemplate' type='text/html'>

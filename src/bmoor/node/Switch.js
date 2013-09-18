@@ -29,7 +29,7 @@ bMoor.constructor.define({
 		},
 		_needUpdate : function( alterations ){
 			return alterations.modelSwitch 
-				|| this.__View._needUpdate.call( this, alterations);
+				|| this['bmoor.node.View']._needUpdate.call( this, alterations);
 		}
 	}
 });
