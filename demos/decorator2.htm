@@ -1,0 +1,73 @@
+<html>
+<head>
+<script src="../src/jquery.min.js"></script>
+<script src="../src/bMoor.js"></script>
+
+</head>
+<body>
+<script>
+
+bMoor.constructor.decorator({
+	name : 'Decorator1',
+	properties : {
+		message : '',
+		hello : function(){
+			this._wrapped();
+			console.log( 'eins' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.decorator({
+	name : 'Decorator2',
+	properties : {
+		hello : function(){
+			console.log( 'zwei' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.decorator({
+	name : 'Decorator3',
+	properties : {
+		hello : function(){
+			console.log( 'drei' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.decorator({
+	name : 'Decorator4',
+	properties : {
+		hello : function(){
+			console.log( 'fier' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.mutate({
+	name : 'HelloWorld',
+	decorators : [
+		['Decorator1'],
+		['Decorator2'],
+		['Decorator3'],
+		['Decorator4'],
+	],
+	properties : {
+		message : 'Hello World',
+		hello : function(){
+			console.log( this.message );
+		}
+	}
+});
+
+( new HelloWorld() ).hello();
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<html>
+<head>
+<script src="../src/jquery.min.js"></script>
+<script src="../src/bMoor.js"></script>
+
+<script>
+bMoor.autoload.setRoot('js');
+</script>
+
+</head>
+<body>
+<script>
+bMoor.require([
+		'bmoor.Test2', 
+		['bmoor','test','Test3']
+	], function(){
+		setTimeout( function(){
+			var 
+				t1 = new bmoor.Test1(),
+				t2 = new bmoor.Test2(),
+				t3 = new bmoor.test.Test3();
+			
+			t1.hello();
+			t2.hello();
+			t3.hello();
+		}, 500 );
+	}
+);
+</script>
+
+</body>
+</html>

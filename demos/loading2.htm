@@ -1,0 +1,34 @@
+<html>
+<head>
+<script src="../src/jquery.min.js"></script>
+<script src="../src/bMoor.js"></script>
+<script>
+bMoor.autoload.setRoot('js');
+</script>
+
+</head>
+<body>
+<script>
+bMoor.require([
+		'bmoor.Test2', 
+		['bmoor','test','Test3']
+	], function( test2, test3 ){
+		var 
+			t1 = new bmoor.Test1(),
+			t2 = new test2(),
+			t3 = new test3();
+		
+		t1.hello();
+		t2.hello();
+		t3.hello();
+	}
+);
+
+bMoor.constructor.loaded(function(){
+	console.log( 'onloaded' );
+	//(new bmoor.Test1()).hello();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+<html>
+<head>
+<script src="../src/jquery.min.js"></script>
+<script src="../src/bMoor.js"></script>
+
+</head>
+<body>
+<script>
+bMoor.constructor.define({
+	name : 'HelloWorld',
+	properties : {
+		message : 'Hello World',
+		hello : function(){
+			console.log( this.message );
+		}
+	}
+});
+
+var hw = new HelloWorld();
+
+hw.hello();
+</script>
+<script>
+bMoor.constructor.decorator({
+	name : 'HelloWorldWrap',
+	properties : {
+		message : 'again',
+		hello : function(){
+			alert( 'Hello There' );
+		}
+	}
+});
+
+bMoor.constructor.mutate({
+	name : 'HelloWorld2',
+	parent : 'HelloWorld',
+	decorators : [
+		['HelloWorldWrap']
+	]
+});
+
+
+var hw2 = new HelloWorld2();
+
+hw2.hello();
+</script>
+
+
+</body>
+</html>
