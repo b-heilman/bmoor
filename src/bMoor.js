@@ -178,7 +178,7 @@
 				var
 					dir = classPath.shift();
 				
-				if ( lib[ dir ] == undefined ){
+				if ( lib[ dir ] === undefined ){
 					lib[ dir ] = {};
 				}
 				lib = lib[ dir ];
@@ -186,7 +186,7 @@
 			
 			lib['/'] = path;
 			lib['.'] = settings;
-			lib['*'] = catchAll == true; // type caste
+			lib['*'] = catchAll === true; // type caste
 			lib['>'] = this.parseResource( path );
 		};
 		
@@ -262,11 +262,11 @@
 				space;
 
 			function fireCallback(){
-				if ( target == undefined ){
+				if ( target === undefined ){
 					target = {};
 				}
 			
-				if ( args == undefined ){
+				if ( args === undefined ){
 					args = [];
 				}
 				
@@ -344,7 +344,7 @@
 		};
 		
 		ClassLoader.done = function( callback ){
-			if ( this.requests == 0 ){
+			if ( this.requests === 0 ){
 				callback();
 			}else{
 				this.onReady.push( callback );
@@ -364,33 +364,36 @@
 				resource,
 				dis = this,
 				reqCount = 1,
+				reference,
 				references = null,
 				classes = null,
 				aliases = null;
 			
 			function cb(){
-				var t;
+				var
+					namespace,
+					aliasi = [],
+					req,
+					i,
+					c,
+					t;
 
 				reqCount--;
 				
-				if ( reqCount == 0 ){
-					var
-						aliasi = [],
-						i,
-						c;
+				if ( reqCount === 0 ){
 
 					dis.requests--;
 
 					// now all requirements are loaded
 					reqCount--; // locks any double calls, requests to -1
 					
-					for( var i = 0, req = aliases, c = req ? req.length : 0; i < c; i++ ){
+					for( i = 0, req = aliases, c = req ? req.length : 0; i < c; i++ ){
 						aliasi.push( Namespace.get(req[i]) );
 					}
 					
 					callback.apply( {}, aliasi );
 					
-					if ( dis.requests == 0 ){
+					if ( dis.requests === 0 ){
 						while( dis.onReady.length ){
 							t = dis.onReady.shift();
 							t();
@@ -416,9 +419,8 @@
 			this.requests++;
 
 			// build up the request stack
-			for( var i = 0, req = classes, len = req ? req.length : 0; i < len; i++ ){
-				var
-					namespace = Namespace.parse( req[i] );
+			for( i = 0, req = classes, len = req ? req.length : 0; i < len; i++ ){
+				namespace = Namespace.parse( req[i] );
 				
 				// if namespace does not exist, load it
 				reqCount++;
@@ -426,9 +428,8 @@
 			}
 			
 			// build up the request stack
-			for( var reference in references ){
-				var
-					namespace = Namespace.parse( reference );
+			for( reference in references ){
+				namespace = Namespace.parse( reference );
 				
 				reqCount++;
 				this.loadSpace( namespace, references[reference], cb );
@@ -443,7 +444,7 @@
 			}
 
 			if ( requirements.styles ){
-				for( var reference in requirements.styles ){
+				for( reference in requirements.styles ){
 					reqCount++;
 
 					resource = requirements.styles[reference];
@@ -458,7 +459,7 @@
 			}
 			// ----------
 			if ( requirements.templates ){
-				for( var reference in requirements.templates ){
+				for( reference in requirements.templates ){
 					reqCount++;
 
 					resource = requirements.templates[reference];
@@ -573,14 +574,14 @@
 					delete obj.prototype.__defining;
 
 					loading--;
-					if ( loading == 0 ){
+					if ( loading === 0 ){
 						while( onLoaded.length ){
 							var cb = onLoaded.pop();
 							cb( $, global );
 						}
 					}
 				}
-			};
+			}
 			
 			ClassLoader.require( requests, def, resourceRoot );
 		};
@@ -588,9 +589,9 @@
 		Constructor.prototype.singleton = function( settings ){
 			var old = settings.onDefine ? settings.onDefine : function(){};
 			
-			settings.onDefine = function( settings, namespace, name, definition ){
+			settings.onDefine = function( settings, namespace, name, Definition ){
 				var 
-					def = new definition,
+					def = new Definition(),
 					module;
 
 				namespace[ name.charAt(0).toLowerCase() + name.slice(1) ] = def;
@@ -611,11 +612,11 @@
 		Constructor.prototype.factory = function( settings ){
 			var old = settings.onDefine ? settings.onDefine : function(){};
 			
-			settings.onDefine = function( settings, namespace, name, definition ){
+			settings.onDefine = function( settings, namespace, name, Definition ){
 				var 
 					space = {},
 					factory = function(){
-						Array.prototype.push.call( arguments, definition );
+						Array.prototype.push.call( arguments, Definition );
 						return settings.factory.apply( space, arguments );
 					};
 
@@ -627,9 +628,9 @@
 		};
 
 		// decorators will reserve _wrapped
-		function override( key, el, override ){
+		function override( key, el, action ){
 			var 
-				type = typeof(override),
+				type = typeof(action),
 				old = el[key];
 			
 			if (  type == 'function' ){
@@ -640,7 +641,7 @@
 
 					this._wrapped = old;
 
-					rtn = override.apply( this, arguments );
+					rtn = action.apply( this, arguments );
 
 					this._wrapped = backup;
 
@@ -648,9 +649,9 @@
 				};
 			}else if ( type == 'string' ){
 				// for now, I am just going to append the strings with a white space between...
-				el[key] += ' ' + override;
+				el[key] += ' ' + action;
 			}
-		};
+		}
 		
 		Constructor.prototype.decorator = function( settings ){
 			var 
@@ -680,7 +681,7 @@
 							construct.apply( this, arguments ); 
 						});
 					}else{
-						construct.apply( el )
+						construct.apply( el );
 					}
 				}
 
@@ -723,7 +724,7 @@
 				}else if ( settings.require.length ){
 					settings.require = {
 						classes : settings.require
-					}
+					};
 				}
 			
 				if ( !settings.require.classes ){
@@ -736,9 +737,9 @@
 				
 				settings.onDefine = function( settings, namespace, name, definition ){
 					var 
+						i,
 						pos,
 						decorator,
-						name,
 						c,
 						list;
 
@@ -823,7 +824,7 @@
 			if ( settings.properties ){
 				this.properties( obj, settings.properties );
 			}
-		};
+		}
 		
 		Constructor.prototype.properties = function( child, properties ){
 			for( var name in properties ){
@@ -852,13 +853,13 @@
 		};
 		
 		// used to extend a child instance using the parent's prototype
-		Constructor.prototype.extend = function( child, parent ){
+		Constructor.prototype.extend = function( child, Parent ){
 			initializing = true;
 			
-			child.prototype = new parent();
+			child.prototype = new Parent();
 			child.prototype.constructor = child;
 			
-			child.prototype[ parent.prototype.__class ] = parent.prototype;
+			child.prototype[ Parent.prototype.__class ] = Parent.prototype;
 
 			initializing = false;
 		};
@@ -943,7 +944,7 @@
 									}else{
 										error( 'failed to load file : '+first+"\nError : "+exception );
 									}
-								});;
+								});
 						};
 
 					load();
@@ -1017,12 +1018,12 @@
 						dis = null,
 						templates = bMoor.templates;
 					
-					if ( cb == undefined && typeof(src) != 'string' ){
+					if ( cb === undefined && typeof(src) != 'string' ){
 						cb = src;
 						src = null;
 					}
 					
-					if ( id[0] == '#' ){
+					if ( id[0] === '#' ){
 						// TODO : is this right?
 						id = id.substring(1);
 					}
@@ -1037,9 +1038,9 @@
 							}else{
 								this.setTemplate( id, document.getElementById(sid).innerHTML );
 							}
-						}else if ( node = document.getElementById(id) ){
+						}else if ( (node = document.getElementById(id)) !== undefined ){
 							this.setTemplate( id, node.innerHTML );
-						}else if ( src == null ){
+						}else if ( src === null ){
 							throw 'loadTemplate : '+id+' requested, and not found, while src is null';
 						}else{
 							dis = this;
@@ -1055,7 +1056,7 @@
 						}
 					}
 
-					if ( dis == null ) {
+					if ( dis === null ) {
 						if ( cb ){
 							cb( templates[id] );
 						}else{

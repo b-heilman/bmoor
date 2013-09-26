@@ -20,14 +20,22 @@ module.exports = function(grunt) {
 				src: ['src/jquery.min.js', 'build/bMoor.min.js'],
 				dest: 'build/alpha.js',
 			},
+		},
+		jshint: {
+			options : {
+				laxbreak : true,
+				smarttabs : true
+			},
+			all : ['src/bMoor.js']
 		}
   	});
 
 	// Load the plugin that provides the "uglify" task.
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-concat');
+	grunt.loadNpmTasks('grunt-contrib-jshint');
 
 	// Default task(s).
-	grunt.registerTask('default', ['uglify','concat']);
+	grunt.registerTask('default', ['jshint:all','uglify','concat']);
 
 };
