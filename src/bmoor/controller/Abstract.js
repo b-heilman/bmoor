@@ -109,9 +109,11 @@ bMoor.constructor.define({
 
 			for( stream in this._outStreams ) if ( !this._inStreams[stream] ){
 				if ( typeof(this._outStreams[stream]) == 'function' ){
-					bmoor.lib.stream( stream ).bind( this.observer, {}, function(){
-						dis._outStreams[stream].apply( dis, arguments ); 
-					});
+					(function( func ){
+						bmoor.lib.stream( stream ).bind( dis.observer, {}, function(){
+							func.apply( dis, arguments ); 
+						});
+					}( dis._outStreams[stream] ));
 				}else{
 					bmoor.lib.stream( stream ).bind( this.observer, {}, this._outStreams[stream] );
 				}

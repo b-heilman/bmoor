@@ -11,6 +11,7 @@
 ? Do I want to remove observe...
 
 - Services
+	- acts as an in memory DB
 	- create a system that caches responses and what not
 	- error handling
 	

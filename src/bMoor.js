@@ -351,6 +351,14 @@
 			}
 		};
 
+		/**
+		* requirements : {
+		*  classes : [ 'some.class.Name' ],
+		*  references : { 'attribute' : 'path/to/script.js' }
+		*  scripts : [ 'path/to/script.js' ]
+		*  styles : [ 'path/to/style.css' ]
+		* }
+		**/
 		ClassLoader.require = function( requirements, callback, resourceRoot ){
 			var
 				resource,

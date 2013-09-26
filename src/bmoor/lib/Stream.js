@@ -16,6 +16,7 @@
 		},
 		construct : function(){
 			this._listeners = [];
+			this._data = {};
 		},
 		properties : {
 			// map : my var -> stream var, or a function
@@ -25,11 +26,13 @@
 					key,
 					dis = this;
 
+				// registers anything going from the observer into the stream
 				if ( map ){
 					if ( typeof(map) == 'function' ){
 						// this is impossible, they really meant reverse
 						reverse = map;
 					}else{
+						// flip the map inside out
 						if ( !reverse ){
 							reverse = {};
 							for( key in map ){
@@ -57,6 +60,7 @@
 					});
 				}
 				
+				// registers anything going from the stream into the observer
 				if ( reverse ){
 					if ( typeof(reverse) == 'function' ){
 						this._listeners.push( reverse );
@@ -75,8 +79,22 @@
 					});
 				}
 			},
+			pull : function(){
+				var 
+					t = {},
+					key;
+
+				for( key in this._data ){
+					t[ key ] = this._data[ key ];
+				}
+
+				return t;
+			},
 			push : function( key, val ){
 				var list, i, c;
+
+				// snap shot of the current state
+				this._data[ key ] = val;
 
 				if ( arguments.length == 2 ){
 					for( i = 0, list = this._listeners, c = list.length; i < c; i++ ){
