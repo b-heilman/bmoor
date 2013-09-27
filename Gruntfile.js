@@ -23,6 +23,7 @@ module.exports = function(grunt) {
 		},
 		jshint: {
 			options : {
+				strict : false,
 				laxbreak : true,
 				smarttabs : true
 			},

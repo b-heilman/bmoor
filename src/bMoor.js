@@ -556,7 +556,8 @@
 					setTimeout( def, 10 );
 				}else{
 					
-					define.call( dis, settings, obj );
+					define( dis, settings, obj );
+
 					if ( settings.onDefine ){
 						reference = settings.onDefine.apply( obj.prototype, [settings, namespace, settings.name, obj] );
 					}
@@ -767,7 +768,7 @@
 		};
 		
 		// passing in obj as later I might configure it to allow you to run this against an already defined class
-		function define( settings, obj ){
+		function define( dis, settings, obj ){
 			var
 				parent = ( settings.parent ? Namespace.get(settings.parent) : null ),
 				ns = ( settings.namespace ? Namespace.parse(settings.namespace) : [] ),
@@ -780,7 +781,7 @@
 					parent.prototype.__name = settings.parent;
 				}
 
-				this.extend( obj, parent );
+				dis.extend( obj, parent );
 				
 				if ( parent.prototype.__onDefine ){
 					if ( settings.onDefine ){
@@ -817,14 +818,14 @@
 			
 			// define any aliases
 			if ( settings.aliases ){
-				this.alias( obj, settings.aliases );
+				dis.alias( obj, settings.aliases );
 			}
 			
 			// right now, i am making it static on the prototype level, so __parent.__static might be neccisary
-			this.statics( obj, settings.statics );
+			dis.statics( obj, settings.statics );
 			
 			if ( settings.properties ){
-				this.properties( obj, settings.properties );
+				dis.properties( obj, settings.properties );
 			}
 		}
 		
