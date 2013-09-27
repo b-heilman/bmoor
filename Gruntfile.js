@@ -9,7 +9,7 @@ module.exports = function(grunt) {
 			},
 			build: {
 				src: 'build/bmoor.js',
-				dest: 'build/bMoor.min.js'
+				dest: 'build/bmoor.min.js'
 			}
 		},
 		concat: {
