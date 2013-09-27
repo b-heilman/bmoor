@@ -51,9 +51,7 @@
 				position,
 				name;
 			
-			if ( !space ){
-				return null;
-			}else if ( typeof(space) == 'string' || space.length ){
+			if ( space && (typeof(space) == 'string' || space.length) ){
 				space = this.parse( space );
 				
 				if ( notAClass ){
@@ -73,9 +71,9 @@
 					
 					curSpace = curSpace[nextSpace];
 				}
-				
-				return curSpace;
-			}else return space;
+			}
+
+			return curSpace;
 		},
 		/*
 			returns back the space or null
@@ -364,10 +362,14 @@
 				resource,
 				dis = this,
 				reqCount = 1,
+				namespace,
 				reference,
 				references = null,
 				classes = null,
-				aliases = null;
+				aliases = null,
+				req,
+				i,
+				c;
 			
 			function cb(){
 				var
@@ -419,7 +421,7 @@
 			this.requests++;
 
 			// build up the request stack
-			for( i = 0, req = classes, len = req ? req.length : 0; i < len; i++ ){
+			for( i = 0, req = classes, c = req ? req.length : 0; i < c; i++ ){
 				namespace = Namespace.parse( req[i] );
 				
 				// if namespace does not exist, load it
@@ -517,7 +519,6 @@
 					}
 				}; 
 			
-
 			loading++;
 
 			if ( !settings.name ){
@@ -549,7 +550,7 @@
 			function def(){
 				var
 					reference,
-					parent = Namespace.get( settings.parent );
+					parent = Namespace.exists( settings.parent );
 				
 				if ( parent && parent.prototype.__defining ){
 					setTimeout( def, 10 );
@@ -592,11 +593,12 @@
 			settings.onDefine = function( settings, namespace, name, Definition ){
 				var 
 					def = new Definition(),
+					singularity = name.charAt(0).toLowerCase() + name.slice(1),
 					module;
 
-				namespace[ name.charAt(0).toLowerCase() + name.slice(1) ] = def;
+				namespace[ singularity ] = def;
 				
-				old.apply( this, [settings, namespace, name, definition, def] );
+				old.apply( this, [settings, namespace, name, Definition, def] );
 				if ( settings.module ){
 					module = settings.module;
 					module = module.charAt(0).toUpperCase() + module.slice(1).toLowerCase();
