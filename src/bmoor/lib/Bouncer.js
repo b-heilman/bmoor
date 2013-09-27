@@ -49,13 +49,13 @@ bMoor.constructor.singleton({
 				
 				op = this._stack.shift();
 				
-				if ( this.runWindow == 0 ){
+				if ( this.runWindow === 0 ){
 					// if no run window, just run everything as it comes in
 					op();
 					
 					this._run();
 				}else{
-					if ( this._pauseAfter == null ){
+					if ( this._pauseAfter === null ){
 						this._setTime();
 					}
 					

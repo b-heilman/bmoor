@@ -8,7 +8,7 @@ module.exports = function(grunt) {
 				banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
 			},
 			build: {
-				src: 'src/bMoor.js',
+				src: 'build/bmoor.js',
 				dest: 'build/bMoor.min.js'
 			}
 		},
@@ -17,8 +17,15 @@ module.exports = function(grunt) {
 				separator: ';',
 			},
 			dist: {
-				src: ['src/jquery.min.js', 'build/bMoor.min.js'],
-				dest: 'build/alpha.js',
+				src: [
+					'src/bMoor.js', 
+					'src/bmoor/lib/Resource.js',
+					'src/bmoor/lib/Bouncer.js',
+					'src/bmoor/lib/KeyboadTracker.js',
+					'src/bmoor/lib/MouseTracker.js',
+					'src/bmoor/lib/WaitFor.js'
+				],
+				dest: 'build/bmoor.js',
 			},
 		},
 		jshint: {
@@ -27,7 +34,7 @@ module.exports = function(grunt) {
 				laxbreak : true,
 				smarttabs : true
 			},
-			all : ['src/bMoor.js']
+			all : ['src/bMoor.js','src/bmoor/lib/*.js']
 		}
   	});
 
@@ -37,6 +44,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 
 	// Default task(s).
-	grunt.registerTask('default', ['jshint:all','uglify','concat']);
+	grunt.registerTask('default', ['jshint:all','concat','uglify']);
 
 };

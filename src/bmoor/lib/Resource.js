@@ -133,7 +133,7 @@ bMoor.constructor.singleton({
 				dis = null,
 				templates = bMoor.templates;
 			
-			if ( cb == undefined && typeof(src) != 'string' ){
+			if ( cb === undefined && typeof(src) != 'string' ){
 				cb = src;
 				src = null;
 			}
@@ -164,9 +164,9 @@ bMoor.constructor.singleton({
 					}
 				}else 
 				*/
-				if ( node = document.getElementById(id) ){
+				if ( (node = document.getElementById(id)) !== undefined ){
 					this.setTemplate( id, node.innerHTML );
-				}else if ( src == null ){
+				}else if ( src === null ){
 					throw 'loadTemplate : ('+id+') requested, and not found, while src is null';
 				}else{
 					dis = this;
@@ -182,7 +182,7 @@ bMoor.constructor.singleton({
 				}
 			}
 
-			if ( dis == null ) {
+			if ( dis === null ) {
 				if ( cb ){
 					cb( templates[id] );
 				}else{
