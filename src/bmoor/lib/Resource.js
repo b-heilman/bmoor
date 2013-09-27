@@ -1,9 +1,5 @@
 ;(function( $, global, undefined ){
 
-var
-	templates = {},
-	loadedScripts = {};
-
 bMoor.constructor.singleton({
 	name : 'Resource',
 	namespace : ['bmoor','lib'],
