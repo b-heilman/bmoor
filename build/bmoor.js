@@ -3,14 +3,14 @@
 
 	var
 		scripts = document.getElementsByTagName( 'script' ),
-		scriptTag = scripts[ scripts.length - 1 ],
+		scriptTag = scripts[ scripts.length - 1 ], // will be this script
 		modules = {},
 		environmentSettings = {
 			templator : ['bmoor','templating','JQote'],
 			templatorTag : '#',
 			jsRoot : scriptTag.hasAttribute('root')
 				? scriptTag.getAttribute('root')
-				: scriptTag.getAttribute('src').match(/^(.*)\/bMoor.js/)[1]
+				: scriptTag.getAttribute('src').match(/^(.*)\/b[Mm]oor(\.min)?\.js/)[1]
 		};
 	
 	/**

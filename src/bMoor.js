@@ -10,7 +10,7 @@
 			templatorTag : '#',
 			jsRoot : scriptTag.hasAttribute('root')
 				? scriptTag.getAttribute('root')
-				: scriptTag.getAttribute('src').match(/^(.*)\/b[Mm]oor(\.min)\.js/)[1]
+				: scriptTag.getAttribute('src').match(/^(.*)\/b[Mm]oor(\.min)?\.js/)[1]
 		};
 	
 	/**
