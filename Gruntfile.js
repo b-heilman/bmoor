@@ -19,7 +19,6 @@ module.exports = function(grunt) {
 			dist: {
 				src: [
 					'src/bMoor.js', 
-					'src/bmoor/lib/Resource.js',
 					'src/bmoor/lib/Bouncer.js',
 					'src/bmoor/lib/KeyboadTracker.js',
 					'src/bmoor/lib/MouseTracker.js',

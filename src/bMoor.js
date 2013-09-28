@@ -299,7 +299,6 @@
 			
 			if ( !space ){
 				var
-					timeout,
 					info = this.getLibrary( reference ),
 					path = info.root + ( info.path.length ? '/'+info.path.join('/') : '' ) 
 						+ '/' + ( info.settings.fullName ? reference.join('.') : info.name ),
@@ -325,14 +324,14 @@
 					};
 				
 				// loading is a class global
-				if ( !loading[path] ){
-					loading[path] = [ waitForIt ];
-
-					bMoor.module.Resource.loadScriptSet( path+'.js', path+'.min.js', success );
+				if ( loading[path] ){
+					loading[path].push( waitForIt );
 				}else if ( typeof(loading[path]) == 'boolean' ){
 					waitForIt(); // shouldn't ever happen, but you never know
 				}else{
-					loading[path].push( waitForIt );
+					loading[path] = [ waitForIt ];
+					
+					bMoor.module.Resource.loadScriptSet( path+'.js', path+'.min.js', success );
 				}
 			}else if ( space instanceof PlaceHolder ){
 				waitForIt();
