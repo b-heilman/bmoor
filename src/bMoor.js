@@ -1040,7 +1040,7 @@
 							}else{
 								this.setTemplate( id, document.getElementById(sid).innerHTML );
 							}
-						}else if ( (node = document.getElementById(id)) !== undefined ){
+						}else if ( (node = document.getElementById(id)) !== null ){
 							this.setTemplate( id, node.innerHTML );
 						}else if ( src === null ){
 							throw 'loadTemplate : '+id+' requested, and not found, while src is null';
