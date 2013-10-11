@@ -20,7 +20,7 @@ module.exports = function(grunt) {
 				src: [
 					'src/bMoor.js', 
 					'src/bmoor/lib/Bouncer.js',
-					'src/bmoor/lib/KeyboadTracker.js',
+					'src/bmoor/lib/KeyboardTracker.js',
 					'src/bmoor/lib/MouseTracker.js',
 					'src/bmoor/lib/WaitFor.js'
 				],

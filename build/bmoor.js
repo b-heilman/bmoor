@@ -1040,7 +1040,7 @@
 							}else{
 								this.setTemplate( id, document.getElementById(sid).innerHTML );
 							}
-						}else if ( (node = document.getElementById(id)) !== undefined ){
+						}else if ( (node = document.getElementById(id)) !== null ){
 							this.setTemplate( id, node.innerHTML );
 						}else if ( src === null ){
 							throw 'loadTemplate : '+id+' requested, and not found, while src is null';
@@ -1170,6 +1170,27 @@ bMoor.constructor.singleton({
 
 }( jQuery, this ));
 ;// I should use this as an excuse to write a singleton pattern
+;(function( global, undefined ){
+	bMoor.constructor.singleton({
+		name : 'KeyboardTracker',
+		namespace : ['bmoor','lib'],
+		onReady : function( self ){
+			$(document.body).on('keydown', function( event ){
+				self.activeKeys[ event.which ] = true;
+			});
+
+			$(document.body).on('keyup', function( event ){
+				delete self.activeKeys[ event.which ];
+			});
+		},
+		properties : {
+			activeKeys : {},
+			isDown : function( key ){
+				return this.activeKeys[ key ];
+			}
+		}
+	});
+}( this ));;// I should use this as an excuse to write a singleton pattern
 ;(function( global, undefined ){
 	bMoor.constructor.singleton({
 		name : 'MouseTracker',
