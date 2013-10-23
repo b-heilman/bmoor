@@ -192,7 +192,8 @@
 						// function(){/*
 						//   ... the template code ...
 						// */}
-						rtn = template.toString().split(/\n/).slice(1, -1).join('\n'); 
+						rtn = ( template.isTemplate ) ? template :
+							template.toString().split(/\n/).slice(1, -1).join('\n'); 
 						break;
 						
 					default :
