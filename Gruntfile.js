@@ -36,6 +36,12 @@ module.exports = function(grunt) {
 				smarttabs : true
 			},
 			all : ['src/bMoor.js','src/bmoor/lib/*.js']
+		},
+		jasmine : {
+			src : ['spec/config.js','external/jquery.min.js','build/bmoor.min.js'],
+			options : {
+				specs : 'spec/**/*.js'
+			}
 		}
   	});
 
@@ -43,8 +49,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-jasmine');
 
 	// Default task(s).
-	grunt.registerTask('default', ['jshint:all','concat','uglify']);
+	grunt.registerTask('default', ['jshint:all','concat','uglify','jasmine']);
 
 };

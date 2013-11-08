@@ -1,0 +1,3 @@
+var bMoor = {
+	root : null
+};

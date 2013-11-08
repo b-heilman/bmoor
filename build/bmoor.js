@@ -11,21 +11,23 @@
 	"use strict";
 
 	var
+		bMoor = global.bMoor || {},
 		scripts = document.getElementsByTagName( 'script' ),
 		scriptTag = scripts[ scripts.length - 1 ], // will be this script
 		modules = {},
 		environmentSettings = {
 			templator : ['bmoor','templating','JQote'],
 			templatorTag : '#',
-			jsRoot : scriptTag.hasAttribute('root')
+			jsRoot : bMoor.root || scriptTag.hasAttribute('root')
 				? scriptTag.getAttribute('root')
 				: scriptTag.getAttribute('src').match(/^(.*)\/b[Mm]oor(\.min)?\.js/)[1]
 		};
 	
+	global.bMoor = bMoor; // register
+
 	/**
 	*	Extending some base objects, to make life easier
 	**/
-
 	function error( str ){
 		if ( console && console.log ){
 			console.log( str );
@@ -879,16 +881,20 @@
 		};
 	}());
 
-	global.bMoor = {
-		module      : modules,
-		setTemplate : function( id, template ){ this.templates[ id ] = template; },
-		templates   : {},
-		require     : function(){ ClassLoader.require.apply( ClassLoader, arguments ); },
-		get         : function( space, notAClass ){ return Namespace.exists( space, notAClass ); },
-		settings    : environmentSettings,
-		autoload    : ClassLoader,
-		constructor : new Constructor()
+	bMoor.module  = modules;
+	bMoor.setTemplate = function( id, template ){ 
+		this.templates[ id ] = template; 
 	};
+	bMoor.templates = {};
+	bMoor.require = function(){ 
+		ClassLoader.require.apply( ClassLoader, arguments ); 
+	};
+	bMoor.get = function( space, notAClass ){ 
+		return Namespace.exists( space, notAClass ); 
+	};
+	bMoor.settings = environmentSettings; // TODO : Do I even use these?
+	bMoor.autoload = ClassLoader;
+	bMoor.constructor = new Constructor();
 }( jQuery, this ));
 ;;(function( global, undefined ){
 	"use strict";
