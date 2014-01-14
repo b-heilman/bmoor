@@ -1,3 +1,1 @@
-var bMoor = {
-	root : null
-};
+bMoor.root = null;

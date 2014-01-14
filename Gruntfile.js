@@ -18,32 +18,39 @@ module.exports = function(grunt) {
 			},
 			dist: {
 				src: [
-					'src/addons.js',
-					'src/bMoor.js', 
-					'src/bmoor/lib/Resource.js',
-					'src/bmoor/lib/Bouncer.js',
-					'src/bmoor/lib/KeyboardTracker.js',
-					'src/bmoor/lib/MouseTracker.js',
-					'src/bmoor/lib/WaitFor.js'
+					'src/bMoor.js',
+					'src/bmoor/build/Compiler.js',
+					'src/bmoor/build/Mod**.js',
+					'src/bmoor/defer/Basic.js',
+					'src/bmoor/defer/Group.js',
+					'src/bmoor/core/Decorator.js'
 				],
 				dest: 'build/bmoor.js',
 			},
 		},
 		jshint: {
-			options : {
-				strict : false,
-				laxbreak : true,
-				smarttabs : true
-			},
-			all : ['src/bMoor.js','src/bmoor/lib/*.js']
+			jshintrc : true,
+			all : ['src/bmoor/**/*.js']
 		},
 		jasmine : {
-			src : ['spec/config.js','external/jquery.min.js','build/bmoor.min.js'],
-			options : {
-				specs : 'spec/**/*.js'
+			main : {
+				src : [
+					'src/bMoor.js',
+					'spec/config.js',
+					'src/bmoor/build/Compiler.js',
+					'src/bmoor/build/Mod**.js',
+					'src/bmoor/defer/Basic.js',
+					'src/bmoor/defer/Group.js',
+					'src/bmoor/core/Decorator.js'
+				],
+				options : {
+					specs : [
+						'spec/**/*.js'
+					]
+				}
 			}
 		}
-  	});
+	});
 
 	// Load the plugin that provides the "uglify" task.
 	grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -52,6 +59,8 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-jasmine');
 
 	// Default task(s).
-	grunt.registerTask('default', ['jshint:all','concat','uglify','jasmine']);
-
+	grunt.registerTask('default', ['jshint:all','concat','uglify','jasmine:main']);
+	grunt.registerTask('hint', ['jshint:all']);
+	grunt.registerTask('test', ['jshint:all', 'jasmine:main']);
+	grunt.registerTask('make', ['concat','uglify']);
 };

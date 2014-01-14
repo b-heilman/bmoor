@@ -1,23 +1,12 @@
-- Time to add in forEach and filter... but do I want them as famework constructs or adjust the base prototypes?
+- create a function to register new functions on bMoor
 
-- Allow views to use innerHTML to set its template (this would be very tough, need to not use <>)
-	! this may break the existing parser.
-	? How do you handle recursive nodes in this
+- create a wrapper function that allows you to instantiate and also pass in gets.  So a API becomes : ( path <string>, root <object - default to global> )
+	* bMoor.get - return back the object, create it if it isn’t there already
+	* bMoor.exist - return back the object if it is found, undefined otherwise
+	* bMoor.require - like exist, but sync requires for the class if not found
 
-- Implement promises
-	- services pass back base object, populate later
-	- loading of classes are using promises
-
-? Do I want to remove observe...
-
-- Services
-	- acts as an in memory DB
-	- create a system that caches responses and what not
-	- error handling
-	
 - Error Handling
-	
-- Create a min file
 
 - General tests
+
 
