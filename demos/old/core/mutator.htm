@@ -1,0 +1,116 @@
+<html>
+<head>
+<script src="../../external/jquery.min.js"></script>
+
+<script src="../../src/bMoor.js"></script>
+<script src="../../src/bmoor/core/PlaceHolder.js"></script>
+<script src="../../src/bmoor/core/Namespace.js"></script>
+<script src="../../src/bmoor/core/Constructor.js"></script>
+<script src="../../src/bmoor/core/Loader.js"></script>
+
+</head>
+<body>
+<script>
+bMoor.constructor.define({
+	name : 'HelloWorld',
+	properties : {
+		message : 'Hello World',
+		hello : function(){
+			console.log( this.message );
+		}
+	}
+});
+
+var hw = new HelloWorld();
+
+hw.hello();
+</script>
+<script>
+bMoor.constructor.decorator({
+	name : 'HelloWorldWrap',
+	properties : {
+		message : 'again',
+		hello : function(){
+			this._wrapped();
+			alert( 'Hello There' );
+		}
+	}
+});
+
+bMoor.constructor.mutate({
+	name : 'HelloWorld2',
+	parent : 'HelloWorld',
+	decorators : [
+		['HelloWorldWrap']
+	]
+});
+
+
+var hw2 = new HelloWorld2();
+
+hw2.hello();
+
+bMoor.constructor.decorator({
+	name : 'Decorator1',
+	properties : {
+		message : '',
+		hello : function(){
+			this._wrapped();
+			console.log( 'eins' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.decorator({
+	name : 'Decorator2',
+	properties : {
+		hello : function(){
+			console.log( 'zwei' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.decorator({
+	name : 'Decorator3',
+	properties : {
+		hello : function(){
+			console.log( 'drei' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.decorator({
+	name : 'Decorator4',
+	properties : {
+		hello : function(){
+			console.log( 'fier' );
+			this._wrapped();
+		}
+	}
+});
+
+bMoor.constructor.mutate({
+	name : 'HelloWorld',
+	decorators : [
+		['Decorator1'],
+		['Decorator2'],
+		['Decorator3'],
+		['Decorator4'],
+	],
+	properties : {
+		message : 'Hello World',
+		hello : function(){
+			console.log( this.message );
+		}
+	}
+});
+
+( new HelloWorld() ).hello();
+</script>
+
+
+</body>
+</html>

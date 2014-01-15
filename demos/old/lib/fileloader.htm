@@ -1,0 +1,29 @@
+<html>
+<head>
+<script src="../external/jquery.min.js"></script>
+
+<script src="../src/addons.js"></script>
+<script src="../src/bMoor.js"></script>
+<script src="../src/bmoor/lib/Resource.js"></script>
+
+</head>
+<body>
+<script>
+bMoor.autoload.loadSpace('der');
+bMoor.autoload.loadSpace('der.fn.blar');
+
+bMoor.autoload.setLibrary( ['der'], '/jquery' );
+bMoor.autoload.setLibrary( ['der','fn'], '/jquery', {fullName : true} );
+bMoor.autoload.setLibrary( ['sometest'], '/sometest.min', {}, true );
+bMoor.autoload.setLibrary( ['sometest','function','bar'], '/sometest/bar' );
+
+bMoor.autoload.loadSpace('der');
+bMoor.autoload.loadSpace('der.fn.blar');
+bMoor.autoload.loadSpace('sometest.function');
+bMoor.autoload.loadSpace('sometest.function.foo');
+bMoor.autoload.loadSpace('sometest.function.bar.woot');
+bMoor.autoload.loadSpace('test');
+
+</script>
+</body>
+</html>

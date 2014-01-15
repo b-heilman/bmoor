@@ -1,0 +1,15 @@
+{
+  "strict": false,
+  "laxbreak": true,
+  "smarttabs": true,
+  "quotmark": false,
+  "curly": false,   
+  "eqeqeq": true,  
+  "immed": true,   
+  "latedef": true, 
+  "newcap": true,  
+  "noarg": true,   
+  "undef": true,  
+  "boss": true,
+  "globals": {"bMoor":true,"bmoor":true}
+}

@@ -1,0 +1,79 @@
+<html>
+<head>
+<script src="../../src/bMoor.js"></script>
+<script src="../../spec/config.js"></script>
+<script src="../../src/bmoor/build/Compiler.js"></script>
+<script src="../../src/bmoor/build/ModConstruct.js"></script>
+<script src="../../src/bmoor/build/ModInherit.js"></script>
+<script src="../../src/bmoor/build/ModProperties.js"></script>
+<script src="../../src/bmoor/build/ModFinalize.js"></script>
+<script src="../../src/bmoor/build/ModSingleton.js"></script>
+<script src="../../src/bmoor/build/ModFactory.js"></script>
+<script src="../../src/bmoor/build/ModDecorate.js"></script>
+<script src="../../src/bmoor/defer/Basic.js"></script>
+<script src="../../src/bmoor/defer/Group.js"></script>
+<script src="../../src/bmoor/core/Decorator.js"></script>
+</head>
+<body>
+
+<script>
+bMoor.define({
+	name : 'foo.Bar',
+	properties : {
+		unos : function( eh ){ console.log('woot '+this.dos+(eh||'')); },
+		dos : 2,
+		tres : 'three'
+	}
+}).then(function(obj){
+	var t = new obj();
+
+	console.log( 'foo.Bar', t );
+	
+	t.unos();
+});
+
+bMoor.define({
+	name : 'foo.Bar2',
+	singleton : true,
+	factory : 'fac',
+	parent : 'foo.Bar',
+	properties : {
+		dos : '--2--'
+	}
+}).then(function(obj){ 
+	var t = new obj();
+
+	console.log( 'foo.Bar2', t );
+
+	t.unos();
+});
+
+bMoor.define({
+	name : 'Decorator1',
+	parent : 'bmoor.core.Decorator',
+	properties : {
+		unos : function(){
+			console.log('wrapped content:');
+			this.$wrapped();
+		}
+	} 
+});
+
+bMoor.define({
+	name : 'foo.Bar3',
+	parent : 'foo.Bar2',
+	decorators : [
+		'Decorator1'
+	]
+});
+
+console.log( foo.bar2 );
+
+foo.bar2.unos('3');
+
+var t = new foo.Bar3();
+t.unos();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<html>
+<head>
+<script src="../../external/jquery.min.js"></script>
+
+<script src="../../src/bMoor.js"></script>
+<script src="../../src/bmoor/core/PlaceHolder.js"></script>
+<script src="../../src/bmoor/core/Namespace.js"></script>
+<script src="../../src/bmoor/core/Constructor.js"></script>
+<script src="../../src/bmoor/core/Loader.js"></script>
+
+</head>
+<body>
+<script>
+bMoor.constructor.define({
+	name : 'HelloWorld',
+	statics : {
+		message : 'Hello World'
+	},
+	properties : {
+		hello : function(){
+			console.log( this.__static.message );
+		}
+	}
+});
+
+var
+	hw = new HelloWorld();
+
+hw.hello();
+</script>
+<script>
+bMoor.constructor.define({
+	name : 'HelloWorld2',
+	parent : 'HelloWorld',
+	statics : {
+		message : 'Hello World 2'
+	}
+});
+
+var
+	hw = new HelloWorld2();
+
+hw.hello();
+</script>
+
+<script>
+bMoor.constructor.define({
+	name : 'HelloWorld3',
+	namespace : 'foo.bar',
+	parent : 'HelloWorld',
+	statics : {
+		message : 'Hello World 3'
+	},
+	publics : {
+		hello : function(){
+			this.__HelloWorld.hello.call( this );
+		}
+	}
+});
+
+var
+	hw = new foo.bar.HelloWorld3();
+
+hw.hello();
+</script>
+
+</body>
+</html>

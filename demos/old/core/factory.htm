@@ -1,0 +1,36 @@
+<html>
+<head>
+<script src="../../external/jquery.min.js"></script>
+
+<script src="../../src/bMoor.js"></script>
+<script src="../../src/bmoor/core/PlaceHolder.js"></script>
+<script src="../../src/bmoor/core/Namespace.js"></script>
+<script src="../../src/bmoor/core/Constructor.js"></script>
+<script src="../../src/bmoor/core/Loader.js"></script>
+
+</head>
+<body>
+<script>
+bMoor.constructor.factory({
+	name : 'HelloWorld',
+	factory : function( message, definition ){
+		return new definition( message );
+	},
+	construct : function( message ){
+		this.log( message );
+	},
+	properties : {
+		log : function( message ){
+			console.log( message );
+		}
+	}
+});
+
+var hw = helloWorld('HelloWorld');
+console.log( '--===--' );
+hw.log( 'HelloAgain' );
+
+</script>
+
+</body>
+</html>

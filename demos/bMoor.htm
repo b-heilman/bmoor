@@ -1,0 +1,48 @@
+<html>
+<head>
+
+<script src="../src/bMoor.js"></script>
+<script src="../src/bmoor/defer/Basic.js"></script>
+<script src="../src/bmoor/defer/Group.js"></script>
+
+</head>
+<body>
+
+<script>
+var 
+	uno,
+	tres,
+	root = {
+		eins : 1, 
+		zwei : {
+			drei : 3
+		}
+	};
+
+bMoor.inject(['eins','zwei.drei', function(foo, bar){
+	uno = foo;
+	tres = bar;
+}], root);
+
+console.log( uno, '=', 1 );
+console.log( tres, '=', 3 );
+
+bMoor.inject(['eins','zwei.drei', function(foo, bar){
+	uno = foo;
+	tres = bar;
+}], root, true);
+
+console.log( uno, '=', 1 );
+console.log( tres, '=', 3 );
+
+bMoor.inject(['eins','zwei.drei', function(foo, bar){
+	uno = foo;
+	tres = bar;
+}], root, false);
+
+console.log( uno, '=', 1 );
+console.log( tres, '=', 3 );
+
+</script>
+</body>
+</html>
