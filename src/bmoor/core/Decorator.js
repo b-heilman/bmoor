@@ -26,9 +26,6 @@
 
 	bMoor.define({
 		name : 'bmoor.core.Decorator',
-		require : [
-			'bmoor.build.Decorate'
-		],
 		postMake : function( inst ){
 			inst.$singleton = new inst();
 		},

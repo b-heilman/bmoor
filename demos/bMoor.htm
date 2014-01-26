@@ -2,8 +2,6 @@
 <head>
 
 <script src="../src/bMoor.js"></script>
-<script src="../src/bmoor/defer/Basic.js"></script>
-<script src="../src/bmoor/defer/Group.js"></script>
 
 </head>
 <body>
@@ -12,6 +10,7 @@
 var 
 	uno,
 	tres,
+	quat,
 	root = {
 		eins : 1, 
 		zwei : {
@@ -19,13 +18,15 @@ var
 		}
 	};
 
-bMoor.inject(['eins','zwei.drei', function(foo, bar){
+bMoor.inject(['eins','zwei.drei','derp', function(foo, bar, derp){
 	uno = foo;
 	tres = bar;
+	quat = derp;
 }], root);
 
 console.log( uno, '=', 1 );
 console.log( tres, '=', 3 );
+console.log( quat, '=', null );
 
 bMoor.inject(['eins','zwei.drei', function(foo, bar){
 	uno = foo;

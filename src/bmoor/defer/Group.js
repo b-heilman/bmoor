@@ -25,11 +25,11 @@
 			this.promise = this.defer.promise;
 		},
 		properties : {
-			add : function( defered ){
+			add : function( promise ){
 				var dis = this;
 				this.count++;
 
-				defered.then(
+				promise.then(
 					function(){
 						rtn.call( dis );
 					},

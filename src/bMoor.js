@@ -1,11 +1,22 @@
 ;(function( global, undefined ){
 	"use strict";
 
-	var bMoor = global.bMoor || {},
+	var msie,
+		bMoor = global.bMoor || {},
 		bmoor = global.bmoor || {},
 		aliases = {},
 		Defer,
 		DeferGroup;
+
+	/**
+	 * TODO : I really want to have an env variable, but right now not needed
+	 * IE 11 changed the format of the UserAgent string.
+	 * See http://msdn.microsoft.com/en-us/library/ms537503.aspx
+	 */
+	msie = parseInt((/msie (\d+)/.exec(navigator.userAgent.toLowerCase()) || [])[1], 10);
+	if (isNaN(msie)) {
+	  msie = parseInt((/trident\/.*; rv:(\d+)/.exec(navigator.userAgent.toLowerCase()) || [])[1], 10);
+	}
 
 	/**
 	Namespace set up
@@ -140,17 +151,16 @@
 	}
 
 	function dwrap( value ){
-		var d = new Defer(); 
-		d.resolve( value ); 
+		var d;
+
+		if ( value.$defer ){
+			d = value.$defer;
+		}else{
+			d = new Defer(); 
+			d.resolve( value );
+		}
+		
 		return d.promise;
-	}
-
-	function require( space, root ){ 
-		return find( space, root ); 
-	} // alias for get here
-
-	function request( space, root, notAClass ){ 
-		return dwrap( require(space, root) ); 
 	}
 
 	function isUndefined(value) {
@@ -236,14 +246,16 @@
 	}
 
 	function forEach( obj, fn, scope ){
-		if ( obj.forEach && obj.forEach !== forEach ){
-			obj.forEach( fn, scope );
-		}else if ( isArrayLike(obj) ){
-			loop( obj, fn, scope );
-		}else if ( isFunction(obj) ){
-			iterate( obj, fn, scope );
-		}else{
-			each( obj, fn, scope );
+		if ( obj ){
+			if ( obj.forEach && obj.forEach !== forEach ){
+				obj.forEach( fn, scope );
+			}else if ( isArrayLike(obj) ){
+				loop( obj, fn, scope );
+			}else if ( isFunction(obj) ){
+				iterate( obj, fn, scope );
+			}else{
+				each( obj, fn, scope );
+			}
 		}
 	}
 
@@ -349,67 +361,8 @@
 		return false;
 	}
 
-	function translate( arr, async, root ){
-		var rtn = [],
-			group;
-
-		if ( async ){
-			group = new DeferGroup();
-
-			loop( arr, function( value, key ){
-				group.add( request(value,root).then(function( obj ){ rtn[key] = obj; }) );
-			});
-
-			group.run();
-
-			return group.promise.then(
-				function(){ return rtn; },
-				function( errors ){
-					error( 'translation failure', errors );
-					throw 'unable to request for translation';
-				}
-			);
-		}else{
-			loop( arr, function( value, key ){
-				rtn[key] = exists( value, root );
-			});
-
-			return rtn;
-		}
-	}
-
-	function inject( arr, async, context, root ){
-		var func,
-			res;
-
-		if ( isFunction(arr) ){
-			func = arr;
-			arr = [];
-		}else if ( isArray(arr) ){
-			func = arr.pop();
-		}else{
-			throw 'inject needs arr to be either Array or Function';
-		}
-
-		res = translate( arr, async, root );
-		arr.push( func ); // put it back on...
-
-		if ( async ){
-			return res.then(
-				function( trans ){ return func.apply( context, trans ); },
-				function( errors ){ error( 'injection error', errors ); }
-			);
-		}else{
-			return func.apply( context, res );
-		}
-	}
-
-	function plugin( plugin, obj ){ 
-		set( plugin, obj, bMoor ); 
-	}
-
 	function makeQuark( namespace, withDefer ){
-		function Quark ( args ){ 
+		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
 			if ( this._construct && Quark.$construct ){
 				if ( args && args.$arguments ){
 					this._construct.apply( this,args );
@@ -424,6 +377,7 @@
 		}
 		
 		Quark.$construct = true;
+		Quark.prototype.__class = namespace;
 
 		set( namespace, Quark );
 
@@ -443,12 +397,168 @@
 		}
 	}
 
+	function request( request, clean ){
+		var rtn,
+			obj;
+
+		if ( isString(request) ){
+			obj = ensure( request, clean );
+
+			if ( obj.$defer ){
+				// was created by the system
+				return obj.$defer.promise;
+			}else{
+				// some other object, need to play nice
+				return dwrap( obj );
+			}
+		}else if ( isArrayLike(request) ){
+			rtn = new DeferGroup();
+			obj = [];
+			obj.$inject;
+
+			loop( request, function( req, key ){
+				var o;
+
+				o = ensure( req, clean );
+
+				if ( o.$defer ){
+					rtn.add( o.$defer.promise );
+				}
+
+				obj[key] = o;
+			});
+
+			return rtn.promise.then(function(){
+				return obj;
+			});
+		}else{
+			// TODO : need an error class
+			throw {
+				message : 'Request needs a string or array passed in'
+			};
+		}
+	}
+
+	function translate( arr, root ){
+		var rtn = [];
+
+		loop( arr, function( value, key ){
+			rtn[key] = exists( value, root );
+		});
+
+		return rtn;
+	}
+
+	function inject( arr, root, context ){
+		var func,
+			res;
+
+		if ( isFunction(arr) ){
+			func = arr;
+			arr = [];
+		}else if ( isArray(arr) ){
+			func = arr.pop();
+		}else{
+			throw 'inject needs arr to be either Array or Function';
+		}
+
+		res = translate( arr, root );
+		arr.push( func ); // put it back on...
+
+		return func.apply( context, res );
+	}
+
+	function plugin( plugin, obj ){ 
+		set( plugin, obj, bMoor ); 
+	}
+
+	/**
+	 * Borrowed From Angular : I can't write it better
+	 * ----------------------------------------
+	 *
+	 * Implementation Notes for non-IE browsers
+	 * ----------------------------------------
+	 * Assigning a URL to the href property of an anchor DOM node, even one attached to the DOM,
+	 * results both in the normalizing and parsing of the URL.  Normalizing means that a relative
+	 * URL will be resolved into an absolute URL in the context of the application document.
+	 * Parsing means that the anchor node's host, hostname, protocol, port, pathname and related
+	 * properties are all populated to reflect the normalized URL.  This approach has wide
+	 * compatibility - Safari 1+, Mozilla 1+, Opera 7+,e etc.  See
+	 * http://www.aptana.com/reference/html/api/HTMLAnchorElement.html
+	 *
+	 * Implementation Notes for IE
+	 * ---------------------------
+	 * IE >= 8 and <= 10 normalizes the URL when assigned to the anchor node similar to the other
+	 * browsers.  However, the parsed components will not be set if the URL assigned did not specify
+	 * them.  (e.g. if you assign a.href = "foo", then a.protocol, a.host, etc. will be empty.)  We
+	 * work around that by performing the parsing in a 2nd step by taking a previously normalized
+	 * URL (e.g. by assigning to a.href) and assigning it a.href again.  This correctly populates the
+	 * properties such as protocol, hostname, port, etc.
+	 *
+	 * IE7 does not normalize the URL when assigned to an anchor node.  (Apparently, it does, if one
+	 * uses the inner HTML approach to assign the URL as part of an HTML snippet -
+	 * http://stackoverflow.com/a/472729)  However, setting img[src] does normalize the URL.
+	 * Unfortunately, setting img[src] to something like "javascript:foo" on IE throws an exception.
+	 * Since the primary usage for normalizing URLs is to sanitize such URLs, we can't use that
+	 * method and IE < 8 is unsupported.
+	 *
+	 * References:
+	 *   http://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement
+	 *   http://www.aptana.com/reference/html/api/HTMLAnchorElement.html
+	 *   http://url.spec.whatwg.org/#urlutils
+	 *   https://github.com/angular/angular.js/pull/2902
+	 *   http://james.padolsey.com/javascript/parsing-urls-with-the-dom/
+	 *
+	 * @function
+	 * @param {string} url The URL to be parsed.
+	 * @description Normalizes and parses a URL.
+	 * @returns {object} Returns the normalized URL as a dictionary.
+	 *
+	 *   | member name   | Description    |
+	 *   |---------------|----------------|
+	 *   | href          | A normalized version of the provided URL if it was not an absolute URL |
+	 *   | protocol      | The protocol including the trailing colon                              |
+	 *   | host          | The host and port (if the port is non-default) of the normalizedUrl    |
+	 *   | search        | The search params, minus the question mark                             |
+	 *   | hash          | The hash string, minus the hash symbol
+	 *   | hostname      | The hostname
+	 *   | port          | The port, without ":"
+	 *   | pathname      | The pathname, beginning with "/"
+	 *
+	 */
+	function urlResolve(url, base) {
+		var href = url,
+			urlParsingNode = document.createElement("a");
+
+		if (msie) {
+			// Normalize before parse.  Refer Implementation Notes on why this is
+			// done in two steps on IE.
+			urlParsingNode.setAttribute("href", href);
+			href = urlParsingNode.href;
+		}
+
+		urlParsingNode.setAttribute('href', href);
+
+		// urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
+		return {
+			href: urlParsingNode.href,
+			protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
+			host: urlParsingNode.host,
+			search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
+			hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
+			hostname: urlParsingNode.hostname,
+			port: urlParsingNode.port,
+			pathname: (urlParsingNode.pathname.charAt(0) === '/') ? 
+				urlParsingNode.pathname : '/' + urlParsingNode.pathname
+		};
+	}
 	/**
 	Externalizing the functionality
 	**/
 	extend( bMoor, {
 		// namespace interactions
-		"parse"       : parse,
+		"parseNS"     : parse,
+		"dwrap"       : dwrap,
 		"set"         : set,
 		"get"         : get,
 		"exists"      : exists,
@@ -456,13 +566,12 @@
 		"check"       : check,
 		"find"        : find,
 		"install"     : install,
-		"require"     : require, // alias for find here
+		"ensure"      : ensure,
 		"request"     : request, // wraps require with a defer
 		"translate"   : translate,
 		"inject"      : inject,
 		"plugin"      : plugin,
 		"makeQuark"   : makeQuark,
-		"ensure"      : ensure,
 		// object stuff
 		"create"      : create,
 		"extend"      : extend,
@@ -486,7 +595,9 @@
 		// string functionality
 		"trim"        : trim,
 		// error handling and logging
-		"error"       : error
+		"error"       : error,
+		// other utils
+		"urlResolve"  : urlResolve
 	});
 
 	set( 'bMoor', bMoor );
@@ -496,10 +607,19 @@
 	DeferGroup = ensure('bmoor.defer.Group', true);
 
 	// chicken before the egg... so bootstrap
-	Defer.prototype.resolve = function(){};
+	Defer.prototype.resolve = function( r ){
+		loop( this.promise.waiting, function(func){ func(r); });
+		this.promise.waiting = r;
+	};
 	Defer.prototype.promise = {
+		waiting : [],
 		then : function JunkPromise( callback ){
-			callback();
+			if ( this.waiting.push ){
+				this.waiting.push( callback );
+			}else{
+				callback( this.waiting );
+			}
+			
 			return Defer.prototype.promise;
 		}
 	};

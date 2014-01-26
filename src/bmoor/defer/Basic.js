@@ -1,4 +1,4 @@
-(function(){
+(function( undefined ){
 	function _then( callback, errback ){
 		var dis = this,
 			sub = this.sub(),
@@ -36,7 +36,11 @@
 		if ( value && value.then ) return value;
 		return {
 			then: function ResolutionPromise( callback ){
-				callback( value );
+				if ( bMoor.isArrayLike(value) && value.$inject ){
+					callback.apply( undefined, value );
+				}else{
+					callback( value );
+				}
 			}
 		};
 	}

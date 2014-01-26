@@ -2,10 +2,10 @@
 <head>
 <script src="../../src/bMoor.js"></script>
 <script src="../../spec/config.js"></script>
-<script src="../../src/bmoor/build/Compiler.js"></script>
 <script src="../../src/bmoor/build/ModConstruct.js"></script>
 <script src="../../src/bmoor/build/ModInherit.js"></script>
 <script src="../../src/bmoor/build/ModProperties.js"></script>
+<script src="../../src/bmoor/build/Compiler.js"></script>
 <script src="../../src/bmoor/build/ModFinalize.js"></script>
 <script src="../../src/bmoor/build/ModSingleton.js"></script>
 <script src="../../src/bmoor/build/ModFactory.js"></script>
@@ -69,7 +69,8 @@ bMoor.define({
 
 console.log( foo.bar2 );
 
-foo.bar2.unos('3');
+foo.Bar2.$instance.unos('3');
+foo.Bar2.$make();
 
 var t = new foo.Bar3();
 t.unos();

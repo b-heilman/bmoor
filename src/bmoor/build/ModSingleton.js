@@ -1,22 +1,19 @@
-(function( compiler ){
+(function(){
 
-compiler.addModule( 5, 'bmoor.build.Singleton', ['singleton', 'mount', 'name', 
-	function( singleton, namespace, name ){
+	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
+		Compiler.$instance.addModule( 5, 'bmoor.build.ModeSingleton', ['singleton', function( singleton ){
+			var obj = this;
 
-	var obj = this,
-		def;
+			if ( singleton ){
+				if ( !bMoor.isArray(singleton) ){
+					singleton = [];
+				}
 
-	name = name.charAt(0).toLowerCase() + name.slice(1);
-	
-	if ( singleton ){
-		if ( !bMoor.isArray(singleton) ){
-			singleton = [];
-		}
+				singleton.$arguments = true;
 
-		singleton.$arguments = true;
+				obj.$instance = new obj( singleton );
+			}
+		}]);
+	});
 
-		obj.$singleton = namespace[ name ] = new obj( singleton );
-	}
-}]);
-
-}( bMoor.compiler ));
+}());

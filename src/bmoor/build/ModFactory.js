@@ -1,18 +1,18 @@
-(function( compiler ){
+(function(){
 
-	compiler.addModule( 5, 'bmoor.build.ModFactory', ['factory', 'mount', 
-		function( factory, namespace ){
+	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
+		Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', ['factory', function( factory ){
 
-		var obj = this,
-			def;
+			var obj = this;
 
-		if ( factory ){
-			namespace[ factory ] = function(){
-				var args = arguments;
-				args.$arguments = true;
-				return new obj( args );
-			};
-		}
-	}]);
+			if ( factory ){
+				obj.$make = function(){
+					var args = arguments;
+					args.$arguments = true;
+					return new obj( args );
+				};
+			}
+		}]);
+	});
 
-}( bMoor.compiler ));
+}());

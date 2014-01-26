@@ -1,9 +1,10 @@
 (function( bMoor, undefined ){
 
 	var instance,
-		Defer = bMoor.ensure('bmoor.defer.Basic');
+		Defer = bMoor.ensure('bmoor.defer.Basic'),
+		Compiler = bMoor.ensure('bmoor.build.Compiler');
 
-	function Compiler(){
+	Compiler.prototype._construct = function(){
 		this.stack = [];
 		this.clean = true;
 	}
@@ -34,7 +35,7 @@
 		
 		if ( bMoor.isString(settings.name) ){
 			settings.id = settings.name;
-			settings.namespace = bMoor.parse( settings.name );
+			settings.namespace = bMoor.parseNS( settings.name );
 		}else if ( bMoor.isArray(settings.name) ){
 			settings.namespace = settings.name;
 			settings.id = settings.name.join('.');
@@ -57,30 +58,33 @@
 
 		bMoor.loop( this.stack, function( maker ){
 			promise = promise.then(function(){ 
-				bMoor.inject( maker.module, false, obj, settings ); 
+				bMoor.inject( maker.module, settings, obj ); 
 			});
 		});
 
-
-		return promise.then(function(){
+		promise.then(function(){
 			if ( obj.prototype.__postMake ){
 				obj.prototype.__postMake( obj );
 			}
 
 			if ( obj.$defer ){
-				obj.$defer.resolve( true );
-				delete obj.$defer;
+				obj.$defer.resolve( obj );
+				obj.$loaded = true; // what do I use this for?  Thinking vestigial
 			}
 
 			return obj;
 		});
+
+		return obj
 	};
 
 	instance = new Compiler();
 
+	Compiler.$instance = instance;
+	Compiler.$defer.resolve( Compiler );
+
 	bMoor.install( 'bmoor.build.Compiler', Compiler );
-	bMoor.plugin( ['compiler'], instance );
-	bMoor.plugin( ['define'], function( settings ){
+	bMoor.plugin( 'define', function( settings ){
 		return instance.make( settings );
 	});
 
