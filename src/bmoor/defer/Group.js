@@ -43,6 +43,33 @@
 				this.loaded = true;
 				check.call( this );
 			}
+		},
+		plugins : {
+			'allDone' : function(){
+				var inst = this,
+					group = new inst(),
+					promises;
+
+				if ( arguments.length > 1 ){
+					promises = arguments;
+				}else{
+					promises = arguments[0];
+				}
+
+				if ( bMoor.isArrayLike(promises) ){
+					bMoor.loop(promises, function(p){
+						group.add( p );
+					});
+				}else{
+					bMoor.iterate(promises, function(p){
+						group.add( p );
+					});
+				}
+
+				group.run();
+
+				return group.promise;
+			}
 		}
 	});
 

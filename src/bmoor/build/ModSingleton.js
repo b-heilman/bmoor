@@ -1,7 +1,9 @@
 (function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 5, 'bmoor.build.ModeSingleton', ['singleton', function( singleton ){
+		Compiler.$instance.addModule( 5, 'bmoor.build.ModSingleton', 
+			['singleton', 'name', 'mount',function( singleton, name, mount ){
+
 			var obj = this;
 
 			if ( singleton ){
@@ -11,7 +13,7 @@
 
 				singleton.$arguments = true;
 
-				obj.$instance = new obj( singleton );
+				obj.$instance = mount[ '$'+name.toLowerCase() ] = new obj( singleton );
 			}
 		}]);
 	});

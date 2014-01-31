@@ -1,37 +1,5 @@
 (function( undefined ){
-	function _then( callback, errback ){
-		var dis = this,
-			sub = this.sub(),
-			tCallback,
-			tErrback;
-
-		tCallback = function( value ){
-			try{
-				sub.resolve( (callback||dis.defaultSuccess)(value) );
-			}catch( ex ){
-				sub.reject( ex );
-				dis.handler( ex );
-			}
-		};
-
-		tErrback = function( value ){
-			try{
-				sub.resolve( (errback||dis.defaultFailure)(value) );
-			}catch( ex ){
-				sub.reject( ex );
-				dis.handler( ex );
-			}
-		};
-
-		if ( this.value ){
-			this.value.then( tCallback, tErrback );
-		}else{
-			this.callbacks.push( [tCallback, tErrback] );
-		}
-
-		return sub.promise;
-	}
-
+	
 	function resolution( value ){
 		if ( value && value.then ) return value;
 		return {
@@ -59,20 +27,18 @@
 			this.handler = exceptionHandler || this.defaultHandler;
 			this.callbacks = [];
 			this.value = null;
-			this.init();
+			this.promise = new bmoor.defer.Promise( this );
 		},
 		properties : {
 			defaultHandler : function( ex ){ bMoor.error(ex); },
 			defaultSuccess : function( value ){ return value; },
 			defaultFailure : function( message ){ return undefined; },
-			init : function(){
-				var dis = this;
-
-				this.promise = {
-					then :  function BasicPromise( callback, errback ){
-						return _then.call( dis, callback, errback );
-					}
-				};
+			register : function( callback, failure ){
+				if ( this.value ){
+					this.value.then( callback, failure );
+				}else{
+					this.callbacks.push( [callback, failure] );
+				}
 			},
 			resolve : function( value ){
 				var callbacks,

@@ -7,7 +7,7 @@
 	Compiler.prototype._construct = function(){
 		this.stack = [];
 		this.clean = true;
-	}
+	};
 
 	Compiler.prototype.addModule = function( rank, namePath, injection ){
 		this.clean = false;
@@ -75,7 +75,7 @@
 			return obj;
 		});
 
-		return obj
+		return obj;
 	};
 
 	instance = new Compiler();
@@ -84,6 +84,7 @@
 	Compiler.$defer.resolve( Compiler );
 
 	bMoor.install( 'bmoor.build.Compiler', Compiler );
+	bMoor.install( 'bmoor.build.$compiler', instance );
 	bMoor.plugin( 'define', function( settings ){
 		return instance.make( settings );
 	});

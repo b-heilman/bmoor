@@ -1,0 +1,39 @@
+<html>
+<head>
+	<script src="../../src/bMoor.js"></script>
+	<script src="../../src/bmoor/build/ModConstruct.js"></script>
+	<script src="../../src/bmoor/build/ModInherit.js"></script>
+	<script src="../../src/bmoor/build/ModProperties.js"></script>
+	<script src="../../src/bmoor/build/Compiler.js"></script>
+	<script src="../../src/bmoor/build/ModFinalize.js"></script>
+	<script src="../../src/bmoor/build/ModSingleton.js"></script>
+	<script src="../../src/bmoor/build/ModFactory.js"></script>
+	<script src="../../src/bmoor/build/ModDecorate.js"></script>
+	<script src="../../src/bmoor/build/ModPlugin.js"></script>
+	<script src="../../src/bmoor/build/ModRequire.js"></script>
+
+	<script src="../../src/bmoor/defer/Promise.js"></script>
+	<script src="../../src/bmoor/defer/Basic.js"></script>
+	<script src="../../src/bmoor/defer/Group.js"></script>
+	<script src="../../src/bmoor/core/Decorator.js"></script>
+
+	<script>bMoor.root = 'script';</script>
+
+	<script src="../../src/bmoor/comm/Http.js"></script>
+	<script src="../../src/bmoor/comm/Script.js"></script>
+	<script src="../../src/bmoor/comm/Style.js"></script>
+	<script src="../../src/bmoor/comm/Resource.js"></script>
+	<script src="../../src/bmoor/comm/Connector.js"></script>
+	<script src="../../src/bmoor/comm/Registry.js"></script>
+	<script src="../../src/bmoor/comm/Require.js"></script>
+</head>
+<body>
+	<script>
+		var t = bMoor.require('test.Alert');
+		new t('woot');
+
+		var t2 = bMoor.require('test.Composite');
+		new t2('woot');
+	</script>
+</body>
+</html>

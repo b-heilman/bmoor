@@ -1,0 +1,68 @@
+<html>
+<head>
+<script src="../../src/bMoor.js"></script>
+<script src="../../spec/config.js"></script>
+<script src="../../src/bmoor/build/ModConstruct.js"></script>
+<script src="../../src/bmoor/build/ModInherit.js"></script>
+<script src="../../src/bmoor/build/ModProperties.js"></script>
+<script src="../../src/bmoor/build/Compiler.js"></script>
+<script src="../../src/bmoor/build/ModFinalize.js"></script>
+<script src="../../src/bmoor/build/ModSingleton.js"></script>
+<script src="../../src/bmoor/build/ModFactory.js"></script>
+<script src="../../src/bmoor/build/ModDecorate.js"></script>
+<script src="../../src/bmoor/build/ModPlugin.js"></script>
+
+<script src="../../src/bmoor/defer/Promise.js"></script>
+<script src="../../src/bmoor/defer/Basic.js"></script>
+<script src="../../src/bmoor/defer/Group.js"></script>
+<script src="../../src/bmoor/core/Decorator.js"></script>
+
+<script src="../../src/bmoor/comm/Http.js"></script>
+<script src="../../src/bmoor/comm/Resource.js"></script>
+<script src="../../src/bmoor/comm/Script.js"></script>
+<script src="../../src/bmoor/comm/Style.js"></script>
+</head>
+<body>
+
+<script>
+	var script1, script2;
+
+	console.log( 'before' );
+	script1 = new bmoor.comm.Script('test/alert.js', true),
+	script1.$defer.promise.then(
+		function(content){
+			console.log( 'script1', 'loaded' );
+		},
+		function(){
+			console.log( 'script1', 'fail whale' );
+		}
+	);
+	console.log( 'after' );
+
+	console.log( 'before' );
+	script2 = new bmoor.comm.Script('test/alert.js', false),
+	script2.$defer.promise.then(
+		function(content){
+			console.log( 'script2', 'loaded' );
+		},
+		function(){
+			console.log( 'script2', 'fail whale' );
+		}
+	);
+	console.log( 'after' );
+
+	console.log( 'before' );
+	script2 = new bmoor.comm.Script('test/alert3.js', true),
+	script2.$defer.promise.then(
+		function(content){
+			console.log( 'script3', 'loaded' );
+		},
+		function(){
+			console.log( 'script3', 'fail whale' );
+		}
+	);
+	console.log( 'after' );
+</script>
+
+</body>
+</html>

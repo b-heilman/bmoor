@@ -1,8 +1,8 @@
 (function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 1, 'bmoor.build.ModFinalize', ['namespace','name', 'mount', 'postMake', 
-			function( namespace, name, mount, postMake ){
+		Compiler.$instance.addModule( 1, 'bmoor.build.ModFinalize', 
+			['namespace','name', 'mount', 'postMake', function( namespace, name, mount, postMake ){
 
 			var obj = this,
 				old,

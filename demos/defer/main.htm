@@ -1,0 +1,47 @@
+<html>
+<head>
+	<script src="../../src/bMoor.js"></script>
+	<script src="../../src/bmoor/build/ModConstruct.js"></script>
+	<script src="../../src/bmoor/build/ModInherit.js"></script>
+	<script src="../../src/bmoor/build/ModProperties.js"></script>
+	<script src="../../src/bmoor/build/Compiler.js"></script>
+	<script src="../../src/bmoor/build/ModFinalize.js"></script>
+	<script src="../../src/bmoor/build/ModSingleton.js"></script>
+	<script src="../../src/bmoor/build/ModFactory.js"></script>
+	<script src="../../src/bmoor/build/ModDecorate.js"></script>
+	<script src="../../src/bmoor/build/ModPlugin.js"></script>
+	<script src="../../src/bmoor/build/ModRequire.js"></script>
+
+	<script src="../../src/bmoor/defer/Promise.js"></script>
+	<script src="../../src/bmoor/defer/Basic.js"></script>
+	<script src="../../src/bmoor/defer/Group.js"></script>
+</head>
+<body>
+	<script>
+		var d1 = new bmoor.defer.Basic(),
+			d2 = new bmoor.defer.Basic(),
+			d3 = new bmoor.defer.Basic(),
+			p = d1.promise;
+
+		console.log('--1--');
+
+		p.then(function(){
+			console.log('--2--');
+		});
+
+		console.log('--3--');
+		d1.resolve('woot');
+
+		console.log('--4--');
+
+		bMoor.allDone([ p, d2.promise, d3.promise ]).then(function(){
+			console.log('--5--');
+		});
+
+		d2.resolve('woot2');
+		console.log('--6--');
+		d3.resolve('woot3');
+		console.log('--7--');
+	</script>
+</body>
+</html>
