@@ -9,7 +9,7 @@
 			this.hash = {};
 		},
 		properties : {
-			set : function( interval, func ){
+			set : function( func,interval ){
 				var list = this.timeouts[interval],
 					hk = this._c++,
 					lhk;

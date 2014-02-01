@@ -68,11 +68,9 @@
 			}
 
 			if ( obj.$defer ){
-				obj.$defer.resolve( obj );
 				obj.$loaded = true; // what do I use this for?  Thinking vestigial
+				obj.$defer.resolve( obj );
 			}
-
-			return obj;
 		});
 
 		return obj;
@@ -85,6 +83,7 @@
 
 	bMoor.install( 'bmoor.build.Compiler', Compiler );
 	bMoor.install( 'bmoor.build.$compiler', instance );
+
 	bMoor.plugin( 'define', function( settings ){
 		return instance.make( settings );
 	});

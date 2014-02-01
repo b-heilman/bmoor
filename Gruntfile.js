@@ -20,9 +20,13 @@ module.exports = function(grunt) {
 				src: [
 					'src/bMoor.js',
 					'src/bmoor/build/**.js',
-					'src/bmoor/defer/**.js',
+					'src/bmoor/defer/Promise.js',
+					'src/bmoor/defer/Basic.js',
+					'src/bmoor/defer/Group.js',
+					'src/bmoor/defer/Stack.js',
 					'src/bmoor/comm/**.js',
-					'src/bmoor/core/Decorator.js'
+					'src/bmoor/core/**.js',
+					'src/bmoor/model/**.js'
 				],
 				dest: 'build/bmoor.js',
 			},
@@ -37,9 +41,13 @@ module.exports = function(grunt) {
 					'src/bMoor.js',
 					'spec/config.js',
 					'src/bmoor/build/**.js',
-					'src/bmoor/defer/**.js',
+					'src/bmoor/defer/Promise.js',
+					'src/bmoor/defer/Basic.js',
+					'src/bmoor/defer/Group.js',
+					'src/bmoor/defer/Stack.js',
 					'src/bmoor/comm/**.js',
-					'src/bmoor/core/Decorator.js'
+					'src/bmoor/core/**.js',
+					'src/bmoor/model/**.js'
 				],
 				options : {
 					specs : [

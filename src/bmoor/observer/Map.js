@@ -1,10 +1,58 @@
 ;(function( global, undefined ){
-	var snapId = 0;
+	var snapId = 0,
+		instances = {};
 
 	bMoor.define({
 		name : 'snap.observer.Map',
-		construct : function( obj ){
+		require : 'bmoor.core.Interval',
+		construct : function( model ){
 			this.snapId = snapId++;
+
+			this.observe( model );
+			this.start();
+		},
+		properties : {
+			observe : function( model ){
+				if ( this.model ){
+					delete model._$[ this.snapId ];
+				}
+
+				this.model = model;
+
+				if ( !model._$ ){
+					model._$ = {};
+				}
+
+				model._$[ this.snapId ] = this;
+			},
+			watch : function( model, func ){
+				
+				// registers what the observe monitors 
+			},
+			check : function(){
+				// see if anything has changed in the model
+				this.checking = true;
+			},
+			notify : function(){
+				// pushes out 
+			},
+			start : function(){
+				instances[ this.snapId ] = thiss;
+			},
+			stop : function(){
+				delete instances[ this.snapId ];
+			}
+		},
+		postMake : function(){
+			bmoor.core.Interval.set(function(){
+				bMoor.iterate( instances, function( inst ){
+					try{
+						inst.check();
+					}catch( e ){
+						// I have no idea...
+					}
+				});
+			}, 30);
 		}
 	});
 /*

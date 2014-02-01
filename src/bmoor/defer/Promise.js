@@ -1,5 +1,5 @@
 (function( undefined ){
-	console.log( '==+==' );
+	
 	bMoor.define({
 		name : 'bmoor.defer.Promise',
 		construct : function( defer ){
@@ -35,13 +35,16 @@
 				return sub.promise;
 			},
 			"done": function(callback){
-				return this.then( callback );
+				this.then( callback );
+				return this; // for chaining with the defer
 			},
 			"fail": function(callback){
-				return this.then( null, callback );
+				this.then( null, callback );
+				return this; 
 			},
 			"always": function(callback){
-				return this['finally']( callback );
+				this['finally']( callback );
+				return this;
 			},
 			"catch": function(callback) {
 				return this.then(null, callback);
@@ -92,4 +95,5 @@
 			}
 		}
 	});
+
 }());

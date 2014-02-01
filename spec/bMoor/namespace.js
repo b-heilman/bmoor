@@ -7,11 +7,11 @@ describe("Testing namespace functions", function() {
 	});
 
 	it("should parse namespaces correctly", function(){
-		expect( bMoor.parse(null) ).toEqual( [] );
- 		expect( bMoor.parse('eins.zwei') ).toEqual( ['eins','zwei'] );
- 		expect( bMoor.parse(['derp','boo']) ).toEqual( ['derp','boo'] );
- 		expect( bMoor.parse(1) ).toBe( 1 );
- 		expect( bMoor.parse({}) ).toEqual( {} );
+		expect( bMoor.parseNS(null) ).toEqual( [] );
+ 		expect( bMoor.parseNS('eins.zwei') ).toEqual( ['eins','zwei'] );
+ 		expect( bMoor.parseNS(['derp','boo']) ).toEqual( ['derp','boo'] );
+ 		expect( bMoor.parseNS(1) ).toBe( 1 );
+ 		expect( bMoor.parseNS({}) ).toEqual( {} );
 	});
 
 	it("should allow getting and setting of variables", function(){

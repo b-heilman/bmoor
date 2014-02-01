@@ -12,7 +12,7 @@ describe("Testing basic functionality", function() {
 		bMoor.inject(['eins','zwei.drei', function(foo, bar){
 			uno = foo;
 			tres = bar;
-		}], false, undefined, root);
+		}], root);
 
 		expect( uno ).toBe( 1 );
 		expect( tres ).toBe( 3 );

@@ -24,6 +24,7 @@
 	bMoor.define({
 		name : 'bmoor.defer.Basic',
 		construct : function( exceptionHandler ){
+			var dis = this;
 			this.handler = exceptionHandler || this.defaultHandler;
 			this.callbacks = [];
 			this.value = null;
@@ -65,4 +66,5 @@
 			}
 		}
 	});
+
 }());

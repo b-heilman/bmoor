@@ -695,11 +695,9 @@
 			}
 
 			if ( obj.$defer ){
-				obj.$defer.resolve( obj );
 				obj.$loaded = true; // what do I use this for?  Thinking vestigial
+				obj.$defer.resolve( obj );
 			}
-
-			return obj;
 		});
 
 		return obj;
@@ -712,6 +710,7 @@
 
 	bMoor.install( 'bmoor.build.Compiler', Compiler );
 	bMoor.install( 'bmoor.build.$compiler', instance );
+
 	bMoor.plugin( 'define', function( settings ){
 		return instance.make( settings );
 	});
@@ -932,6 +931,105 @@
 
 }());;(function( undefined ){
 	
+	bMoor.define({
+		name : 'bmoor.defer.Promise',
+		construct : function( defer ){
+			this.defer = defer;
+		},
+		properties : {
+			"then" :  function( callback, errback ){
+				var defer = this.defer,
+					sub = this.defer.sub(),
+					tCallback,
+					tErrback;
+
+				tCallback = function( value ){
+					try{
+						sub.resolve( (callback||defer.defaultSuccess)(value) );
+					}catch( ex ){
+						sub.reject( ex );
+						defer.handler( ex );
+					}
+				};
+
+				tErrback = function( value ){
+					try{
+						sub.resolve( (errback||defer.defaultFailure)(value) );
+					}catch( ex ){
+						sub.reject( ex );
+						defer.handler( ex );
+					}
+				};
+
+				defer.register( tCallback, tErrback );
+
+				return sub.promise;
+			},
+			"done": function(callback){
+				this.then( callback );
+				return this; // for chaining with the defer
+			},
+			"fail": function(callback){
+				this.then( null, callback );
+				return this; 
+			},
+			"always": function(callback){
+				this['finally']( callback );
+				return this;
+			},
+			"catch": function(callback) {
+				return this.then(null, callback);
+			},
+			"finally": function(callback) {
+				function makePromise(value, resolved) {
+					var result = bmoor.defer.Basic();
+
+					if (resolved) {
+						result.resolve(value);
+					} else {
+						result.reject(value);
+					}
+
+					return result.promise;
+				}
+
+				function handleCallback(value, isResolved) {
+					var callbackOutput = null;
+					try {
+						callbackOutput = (callback || dis.defaultSuccess)();
+					} catch(e) {
+						return makePromise(e, false);
+					}
+
+					if (callbackOutput && bMoor.isFunction(callbackOutput.then)) {
+						return callbackOutput.then(
+							function() {
+								return makePromise(value, isResolved);
+							}, 
+							function(error) {
+								return makePromise(error, false);
+							}
+						);
+					} else {
+						return makePromise(value, isResolved);
+					}
+				}
+
+				return this.then(
+					function(value) {
+						return handleCallback(value, true);
+					}, 
+					function(error) {
+						return handleCallback(error, false);
+					}
+				);
+			}
+		}
+	});
+
+}());
+;(function( undefined ){
+	
 	function resolution( value ){
 		if ( value && value.then ) return value;
 		return {
@@ -956,6 +1054,7 @@
 	bMoor.define({
 		name : 'bmoor.defer.Basic',
 		construct : function( exceptionHandler ){
+			var dis = this;
 			this.handler = exceptionHandler || this.defaultHandler;
 			this.callbacks = [];
 			this.value = null;
@@ -997,6 +1096,7 @@
 			}
 		}
 	});
+
 }());
 ;(function(){
 	
@@ -1073,102 +1173,7 @@
 		}
 	});
 
-}());;(function( undefined ){
-	console.log( '==+==' );
-	bMoor.define({
-		name : 'bmoor.defer.Promise',
-		construct : function( defer ){
-			this.defer = defer;
-		},
-		properties : {
-			"then" :  function( callback, errback ){
-				var defer = this.defer,
-					sub = this.defer.sub(),
-					tCallback,
-					tErrback;
-
-				tCallback = function( value ){
-					try{
-						sub.resolve( (callback||defer.defaultSuccess)(value) );
-					}catch( ex ){
-						sub.reject( ex );
-						defer.handler( ex );
-					}
-				};
-
-				tErrback = function( value ){
-					try{
-						sub.resolve( (errback||defer.defaultFailure)(value) );
-					}catch( ex ){
-						sub.reject( ex );
-						defer.handler( ex );
-					}
-				};
-
-				defer.register( tCallback, tErrback );
-
-				return sub.promise;
-			},
-			"done": function(callback){
-				return this.then( callback );
-			},
-			"fail": function(callback){
-				return this.then( null, callback );
-			},
-			"always": function(callback){
-				return this['finally']( callback );
-			},
-			"catch": function(callback) {
-				return this.then(null, callback);
-			},
-			"finally": function(callback) {
-				function makePromise(value, resolved) {
-					var result = bmoor.defer.Basic();
-
-					if (resolved) {
-						result.resolve(value);
-					} else {
-						result.reject(value);
-					}
-
-					return result.promise;
-				}
-
-				function handleCallback(value, isResolved) {
-					var callbackOutput = null;
-					try {
-						callbackOutput = (callback || dis.defaultSuccess)();
-					} catch(e) {
-						return makePromise(e, false);
-					}
-
-					if (callbackOutput && bMoor.isFunction(callbackOutput.then)) {
-						return callbackOutput.then(
-							function() {
-								return makePromise(value, isResolved);
-							}, 
-							function(error) {
-								return makePromise(error, false);
-							}
-						);
-					} else {
-						return makePromise(value, isResolved);
-					}
-				}
-
-				return this.then(
-					function(value) {
-						return handleCallback(value, true);
-					}, 
-					function(error) {
-						return handleCallback(error, false);
-					}
-				);
-			}
-		}
-	});
-}());
-;(function(){
+}());;(function(){
 	
 	function stackOn( func, args ){
 		return this.promise.then(function(){
@@ -1797,4 +1802,169 @@ parseTemplate : function( template ){
 		}
 	});
 
-}( this.bMoor ));
+}( this.bMoor ));;(function(){
+	
+	bMoor.define({
+		name : 'bmoor.core.Interval',
+		singleton : true,
+		construct : function(){
+			this._c = 0;
+			this.timeouts = {};
+			this.hash = {};
+		},
+		properties : {
+			set : function( func,interval ){
+				var list = this.timeouts[interval],
+					hk = this._c++,
+					lhk;
+
+				if ( !list ){
+					list = this.timeouts[interval] = { _c : 0 };
+
+					list._hk = setInterval(function(){
+						bmoor.iterate( list, function( f ){
+							f();
+						});
+					}, interval);
+				}
+
+				lhk = list._c++;
+				list[ lhk ] = func;
+
+				this.hash[ hk ] = { hk : list._c, val : interval };
+
+				return hk;
+			},
+			clear : function( hk ){
+				var lhk = this.hash[ hk ];
+				if ( lhk ){
+					delete this.timeouts[ lhk.val ][ lhk.hk ];
+					delete this.hash[ hk ];
+				}
+			}
+		},
+		plugins : {
+			'setInterval' : 'set',
+			'clearInterval' : 'clear'
+		}
+	});
+
+}());;(function( global, undefined ){
+
+	function merge( from, to ){
+		var key, f, t;
+
+		// merge in the 'from'
+		for( key in from ){
+			if ( from.hasOwnProperty(key) ){
+				f = from[key];
+				t = to[key];
+
+				if ( t === undefined ){
+					to[key] = f;
+				}else if ( angular.isArray(f) ){
+					if ( !angular.isArray(t) ){
+						t = to[key] = [];
+					}
+
+					arrayMerge( f, t );
+				}else if ( angular.isObject(f) ){
+					if ( !angular.isObject(t) ){
+						t = to[key] = {};
+					}
+
+					merge( f, t );
+				}else if ( f != t ){
+					to[key] = f;
+				}
+			}
+		}
+
+		// now we prune the 'to'
+		for( key in to ){
+			if ( to.hasOwnProperty(key) ){
+				if ( from[key] === undefined ){
+					delete to[key];
+				}
+			}
+		}
+
+		return to;
+	}
+
+	function arrayMerge( from, to ){
+		var i, c,
+			f,
+			t;
+
+		for( i = 0, c = from.length; i < c; i++ ){
+			f = from[i];
+			t = to[i];
+
+			if ( t === undefined ){
+				to[ i ] = f;
+			}else if ( angular.isObject(f) ){
+				if ( !angular.isObject(t) ){
+					t = to[i] = {};
+				}
+
+				merge( f, t );
+			}else if ( angular.isArray(f) ){
+				if ( !anguar.isArray(t) ){
+					t = to[i] = [];
+				}
+
+				arrayMerge( f, t );
+			}else if ( f !== t ){
+				to[ i ] = f;
+			}
+		}
+
+		for( i = c, c = to.length; i < c; i++ ){
+			to.pop();
+		}
+	}
+
+	bMoor.define({
+		name : "bmoor.model.Basic",
+		construct : function( content ){
+			var key, i, c;
+
+			for( key in content ){
+				if ( content.hasOwnProperty(key) ){
+					this[ key ] = content[ key ];
+				}
+			}
+
+			this._inflate();
+		},
+		properties : {
+			_validate : function(){ return null; },
+			_inflate : function(){},
+			_deflate : function(){},
+			_update : function( content ){
+				merge( content, this );
+				this._inflate();
+			},
+			_toObject : function(){
+				var key,
+                    content = {};
+
+				this._deflate();
+
+				for( key in this ){
+					if ( this.hasOwnProperty(key) && key.charAt(0) !== '_' ){
+						content[ key ] = this[ key ];
+					}
+				}
+
+				return content;
+			},
+			_toJson : function(){
+				return JSON.stringify( this._toObject() );
+			}
+		}
+	});
+
+}( this ));
+

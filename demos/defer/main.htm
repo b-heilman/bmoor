@@ -27,6 +27,9 @@
 
 		p.then(function(){
 			console.log('--2--');
+			return '--promise--';
+		}).then(function(msg){
+			console.log(msg);
 		});
 
 		console.log('--3--');
@@ -36,6 +39,9 @@
 
 		bMoor.allDone([ p, d2.promise, d3.promise ]).then(function(){
 			console.log('--5--');
+			return '--allDone--';
+		}).then(function(msg){ 
+			console.log(msg);
 		});
 
 		d2.resolve('woot2');

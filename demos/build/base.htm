@@ -27,7 +27,8 @@ bMoor.define({
 		dos : 2,
 		tres : 'three'
 	}
-}).then(function(obj){
+}).$defer.promise.then(function(obj){
+	console.log( obj );
 	var t = new obj();
 
 	console.log( 'foo.Bar', t );
@@ -43,7 +44,7 @@ bMoor.define({
 	properties : {
 		dos : '--2--'
 	}
-}).then(function(obj){ 
+}).$defer.promise.then(function(obj){ 
 	var t = new obj();
 
 	console.log( 'foo.Bar2', t );
@@ -70,7 +71,7 @@ bMoor.define({
 	]
 });
 
-console.log( foo.bar2 );
+console.log( foo.$bar2 );
 
 foo.Bar2.$instance.unos('3');
 foo.Bar2.$make();
