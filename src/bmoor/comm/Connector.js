@@ -59,8 +59,14 @@
 					src = $( src )[0].src;
 				}
 				
+				// TODO : what about failure?
 				img.onload = function(){
-					$d.resolve( true );
+					$d.resolve({
+						data : img,
+						valid : true,
+						status : 200,
+						headers : undefined
+					});
 				};
 				img.src = src;
 

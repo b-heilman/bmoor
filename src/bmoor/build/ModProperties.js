@@ -9,7 +9,7 @@
 			}
 		}
 
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModPropertoes', ['properties', function( properties ){
+		Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', ['properties', function( properties ){
 			var dis = this;
 
 			if ( bMoor.isArray(properties) ){

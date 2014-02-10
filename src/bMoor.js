@@ -543,6 +543,95 @@
 				urlParsingNode.pathname : '/' + urlParsingNode.pathname
 		};
 	}
+
+	/**
+	String functions
+	**/
+	function trim( str ){
+		if ( str.trim ){
+			str.trim();
+		}else{
+			str.replace( /^\s+|\s+$/g, '' );
+		}
+	}
+
+	/**
+	Array functions
+	**/
+	function indexOf( arr, searchElement, fromIndex ){
+		if ( arr.indexOf ){
+			return arr.indexOf( searchElement, fromIndex );
+		} else {
+			var length = arr.length >>> 0; // Hack to convert object.length to a UInt32
+
+			fromIndex = +fromIndex || 0;
+
+			if (Math.abs(fromIndex) === Infinity){
+				fromIndex = 0;
+			}
+
+			if (fromIndex < 0){
+				fromIndex += length;
+				if (fromIndex < 0) {
+					fromIndex = 0;
+				}
+			}
+
+			for ( ; fromIndex < length; fromIndex++ ){
+				if ( arr[fromIndex] === searchElement ){
+					return fromIndex;
+				}
+			}
+
+			return -1;
+		}
+	}
+
+	function remove( arr, searchElement, fromIndex ){
+		var pos = indexOf( arr, searchElement, fromIndex );
+
+		if ( pos > -1 ){
+			arr.splice( pos, 1 );
+		}
+	}
+
+	function removeAll( arr, searchElement, fromIndex ){
+		var pos = indexOf( arr, searchElement, fromIndex );
+
+		if ( pos > -1 ){
+			arr.splice( pos, 1 );
+			removeAll( arr, searchElement, pos );
+		}
+	}
+
+	function filter( arr, func, thisArg ){
+		if ( arr.filter ){
+			return arr.filter( func, thisArg );
+		}else{
+			var i,
+				val,
+				t = Object(this),
+				c = t.length >>> 0,
+				res = [];
+
+			if (typeof func != "function"){
+				throw 'func needs to be a function';
+			}
+
+			for ( i = 0; i < c; i++ ){
+				if ( i in t ){
+					val = t[i];
+
+					if ( func.call(thisArg, val, i, t) ){
+						res.push( val );
+					}
+				}
+			}
+
+			return res;
+		}
+	}
+
 	/**
 	Externalizing the functionality
 	**/
@@ -585,71 +674,14 @@
 		"isString"    : isString,
 		// string functionality 
 		"string"      : {
-			trim : function trim( str ){
-				if ( str.trim ){
-					str.trim();
-				}else{
-					str.replace( /^\s+|\s+$/g, '' );
-				}
-			}
+			"trim" : trim 
 		},
 		// array functionality
 		"array"       : {
-			indexOf : function( arr, searchElement, fromIndex ){
-				if ( arr.indexOf ){
-					return arr.indexOf( searchElement, fromIndex );
-				} else {
-					var length = arr.length >>> 0; // Hack to convert object.length to a UInt32
-
-					fromIndex = +fromIndex || 0;
-
-					if (Math.abs(fromIndex) === Infinity){
-						fromIndex = 0;
-					}
-
-					if (fromIndex < 0){
-						fromIndex += length;
-						if (fromIndex < 0) {
-							fromIndex = 0;
-						}
-					}
-
-					for ( ; fromIndex < length; fromIndex++ ){
-						if ( arr[fromIndex] === searchElement ){
-							return fromIndex;
-						}
-					}
-
-					return -1;
-				}
-			},
-			filter : function( arr, func, thisArg ){
-				if ( arr.filter ){
-					return arr.filter( func, thisArg );
-				}else{
-					var i,
-						val,
-						t = Object(this),
-						c = t.length >>> 0,
-						res = [];
-
-					if (typeof func != "function"){
-						throw 'func needs to be a function';
-					}
-
-					for ( i = 0; i < c; i++ ){
-						if ( i in t ){
-							val = t[i];
-
-							if ( func.call(thisArg, val, i, t) ){
-								res.push( val );
-							}
-						}
-					}
-
-					return res;
-				}
-			}
+			"indexOf" : indexOf,
+			"remove" : remove,
+			"removeAll" : removeAll,
+			"filter" : filter
 		},
 		// error handling and logging : TODO : move verbose error handling
 		"error"       : error,

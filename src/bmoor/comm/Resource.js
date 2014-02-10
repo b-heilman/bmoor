@@ -14,29 +14,42 @@
 				'async' : async
 			})).$defer.promise.then( 
 				function resourceSuccess( response ){
-					dis.apply( response.data );
-					dis.success();
+					try{
+						dis.success( dis.apply(response) );
+					}catch( ex ){
+						dis.failure( ex );
+					}
 				},
-				function resourceFailure(){ 
+				function resourceFailure(){
 					dis.failure();
 				}
 			);
 		},
 		properties : {
-			apply : function( content ){},
-			success : function(){
+			apply : function( content ){
+				return content;
+			},
+			success : function( data ){
 				this.status = 200;
-				this.resolve();
+				this.resolve( data );
 			},
-			failure : function(){
+			failure : function( data ){
 				this.status = 404;
-				this.resolve();
+				this.resolve( data );
 			},
-			resolve : function(){
+			resolve : function( data ){
 				if ( this.status === 200 ){
-					this.$defer.resolve();
+					this.$defer.resolve({
+						data : data,
+						status : this.status,
+						headers : undefined
+					});
 				}else{
-					this.$defer.reject();
+					this.$defer.reject({
+						data : data,
+						status : this.status,
+						headers : undefined
+					});
 				}
 			}
 		}

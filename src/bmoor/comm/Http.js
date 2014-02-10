@@ -44,7 +44,7 @@
 				xhr.responseType = options.responseType;
 			}
 
-			this.url = bMoor.urlResolve(options.url);
+			this.url = bMoor.urlResolve( options.url );
 			this.status = null;
 			this.connection = xhr;
 			this.$defer = new bmoor.defer.Basic();
@@ -80,8 +80,10 @@
 				}
 			},
 			resolve : function( response, headers ){
-				var action,
+				var r,
+					action,
 					status = this.status,
+					valid = ( 200 <= status && status < 300 ),
 					protocol = this.url.protocol;
 
 				this.connection = null;
@@ -91,15 +93,22 @@
 
 				// normalize IE bug (http://bugs.jquery.com/ticket/1450)
 				status = status == 1223 ? 204 : status;
+				action = valid ? 'resolve' : 'reject';
 
-				action = ( 200 <= status && status < 300 ) ? 'resolve' : 'reject';
+				r = [ response, status, headers ];
+				r.$inject = true;
 
-				this.$defer[action]({
-					data : response,
-					status : status,
-					headers : headers
-				});
+				this.$defer[action]( r );
 			}
-		} 
+		},
+		plugins : {
+			'$http' : function( options ){
+				var dis;
+
+				dis = new dis( options );
+
+				return dis.$defer.promise;
+			}
+		}
 	});
 }());

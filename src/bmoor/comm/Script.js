@@ -9,6 +9,8 @@
 
 				script.text = content;
 				document.body.appendChild( script );
+
+				return;
 			}
 		}
 	});

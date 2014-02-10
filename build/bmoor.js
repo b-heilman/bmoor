@@ -543,6 +543,95 @@
 				urlParsingNode.pathname : '/' + urlParsingNode.pathname
 		};
 	}
+
+	/**
+	String functions
+	**/
+	function trim( str ){
+		if ( str.trim ){
+			str.trim();
+		}else{
+			str.replace( /^\s+|\s+$/g, '' );
+		}
+	}
+
+	/**
+	Array functions
+	**/
+	function indexOf( arr, searchElement, fromIndex ){
+		if ( arr.indexOf ){
+			return arr.indexOf( searchElement, fromIndex );
+		} else {
+			var length = arr.length >>> 0; // Hack to convert object.length to a UInt32
+
+			fromIndex = +fromIndex || 0;
+
+			if (Math.abs(fromIndex) === Infinity){
+				fromIndex = 0;
+			}
+
+			if (fromIndex < 0){
+				fromIndex += length;
+				if (fromIndex < 0) {
+					fromIndex = 0;
+				}
+			}
+
+			for ( ; fromIndex < length; fromIndex++ ){
+				if ( arr[fromIndex] === searchElement ){
+					return fromIndex;
+				}
+			}
+
+			return -1;
+		}
+	}
+
+	function remove( arr, searchElement, fromIndex ){
+		var pos = indexOf( arr, searchElement, fromIndex );
+
+		if ( pos > -1 ){
+			arr.splice( pos, 1 );
+		}
+	}
+
+	function removeAll( arr, searchElement, fromIndex ){
+		var pos = indexOf( arr, searchElement, fromIndex );
+
+		if ( pos > -1 ){
+			arr.splice( pos, 1 );
+			removeAll( arr, searchElement, pos );
+		}
+	}
+
+	function filter( arr, func, thisArg ){
+		if ( arr.filter ){
+			return arr.filter( func, thisArg );
+		}else{
+			var i,
+				val,
+				t = Object(this),
+				c = t.length >>> 0,
+				res = [];
+
+			if (typeof func != "function"){
+				throw 'func needs to be a function';
+			}
+
+			for ( i = 0; i < c; i++ ){
+				if ( i in t ){
+					val = t[i];
+
+					if ( func.call(thisArg, val, i, t) ){
+						res.push( val );
+					}
+				}
+			}
+
+			return res;
+		}
+	}
+
 	/**
 	Externalizing the functionality
 	**/
@@ -585,71 +674,14 @@
 		"isString"    : isString,
 		// string functionality 
 		"string"      : {
-			trim : function trim( str ){
-				if ( str.trim ){
-					str.trim();
-				}else{
-					str.replace( /^\s+|\s+$/g, '' );
-				}
-			}
+			"trim" : trim 
 		},
 		// array functionality
 		"array"       : {
-			indexOf : function( arr, searchElement, fromIndex ){
-				if ( arr.indexOf ){
-					return arr.indexOf( searchElement, fromIndex );
-				} else {
-					var length = arr.length >>> 0; // Hack to convert object.length to a UInt32
-
-					fromIndex = +fromIndex || 0;
-
-					if (Math.abs(fromIndex) === Infinity){
-						fromIndex = 0;
-					}
-
-					if (fromIndex < 0){
-						fromIndex += length;
-						if (fromIndex < 0) {
-							fromIndex = 0;
-						}
-					}
-
-					for ( ; fromIndex < length; fromIndex++ ){
-						if ( arr[fromIndex] === searchElement ){
-							return fromIndex;
-						}
-					}
-
-					return -1;
-				}
-			},
-			filter : function( arr, func, thisArg ){
-				if ( arr.filter ){
-					return arr.filter( func, thisArg );
-				}else{
-					var i,
-						val,
-						t = Object(this),
-						c = t.length >>> 0,
-						res = [];
-
-					if (typeof func != "function"){
-						throw 'func needs to be a function';
-					}
-
-					for ( i = 0; i < c; i++ ){
-						if ( i in t ){
-							val = t[i];
-
-							if ( func.call(thisArg, val, i, t) ){
-								res.push( val );
-							}
-						}
-					}
-
-					return res;
-				}
-			}
+			"indexOf" : indexOf,
+			"remove" : remove,
+			"removeAll" : removeAll,
+			"filter" : filter
 		},
 		// error handling and logging : TODO : move verbose error handling
 		"error"       : error,
@@ -911,7 +943,7 @@
 			}
 		}
 
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModPropertoes', ['properties', function( properties ){
+		Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', ['properties', function( properties ){
 			var dis = this;
 
 			if ( bMoor.isArray(properties) ){
@@ -962,6 +994,117 @@
 			}
 
 			return group.promise;
+		}]);
+	});
+
+}());
+;(function(){
+
+	/***
+	- FuncName
+		-- Setup
+		- massage : takes in arguments passed in, allows for modification of data object
+		- validation : validated data object being sent, can reject via throw
+		-- Connect
+		- responseType
+		- url : function or string
+		- request : use this to send the request rather than the http object (returns defer) 
+		- http : the connection object to send
+		- headers
+		- cached : defaults to false
+		- method : get,post
+		-- Response
+		- success : handles unchanged results
+		- failure : handles unchanged results
+		- process : modifies results in either case (shorthand), changes response
+	***/
+
+	var cache = {};
+
+	function makeServiceCall( service, options ){
+		var success,
+			failure;
+
+		if ( options.success ){
+			success = function serviceSuccess(){
+				return options.success.apply( service, arguments );
+			};
+		} 
+
+		if ( options.failure ){
+			failure = function serviceFailure(){
+				return options.failure.apply( service, arguments );
+			};
+		}
+
+		return function(){
+			var args = arguments,
+				r,
+				http,
+				url,
+				content,
+				response;
+
+			if ( bMoor.isString(options) ){
+				options = {
+					url : options
+				};
+			}
+			// data setup
+			if ( options.massage ){
+				args[ args.length - 1 ] = options.massage.apply( service, args );
+			}
+
+			if ( !options.validation || options.validation.apply(service,args) ){
+				// make the request
+				url = bMoor.isFunction( options.url ) ? options.url.apply( service, args ) : options.url;
+
+				if ( !options.cached || !cache[url] ){
+					// respond
+					content = args[ args.length - 1 ];
+
+					if ( options.request ){
+						response = new bmoor.defer.Basic();
+
+						r = [
+							options.request.call( service,content ),
+							200
+						];
+						r.$inject = true;
+						response.resolve( r );
+
+						response = response.promise;
+					}else{
+						http = bMoor.get( options.http || 'bmoor.comm.Http' );
+						response = ( 
+								new http({
+									url : url,
+									headers : options.headers,
+									method : options.type || 'GET',
+									responseType : options.responseType
+								}) 
+							).$defer.promise;
+					}
+
+					if ( options.cached ){
+						cache[ url ] = response;
+					}
+				}else{
+					response = cache[ url ];
+				}
+			}
+
+			return response.then( success, failure );
+		};
+	}
+
+	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
+		Compiler.$instance.addModule( 10, 'bmoor.build.ModServices', ['services', function( services ){
+			var dis = this;
+
+			bMoor.iterate( services, function( service, name ){
+				dis.prototype[name] = makeServiceCall( dis, service );
+			});
 		}]);
 	});
 
@@ -1338,8 +1481,14 @@
 					src = $( src )[0].src;
 				}
 				
+				// TODO : what about failure?
 				img.onload = function(){
-					$d.resolve( true );
+					$d.resolve({
+						data : img,
+						valid : true,
+						status : 200,
+						headers : undefined
+					});
 				};
 				img.src = src;
 
@@ -1416,7 +1565,7 @@ parseTemplate : function( template ){
 				xhr.responseType = options.responseType;
 			}
 
-			this.url = bMoor.urlResolve(options.url);
+			this.url = bMoor.urlResolve( options.url );
 			this.status = null;
 			this.connection = xhr;
 			this.$defer = new bmoor.defer.Basic();
@@ -1452,8 +1601,10 @@ parseTemplate : function( template ){
 				}
 			},
 			resolve : function( response, headers ){
-				var action,
+				var r,
+					action,
 					status = this.status,
+					valid = ( 200 <= status && status < 300 ),
 					protocol = this.url.protocol;
 
 				this.connection = null;
@@ -1463,16 +1614,23 @@ parseTemplate : function( template ){
 
 				// normalize IE bug (http://bugs.jquery.com/ticket/1450)
 				status = status == 1223 ? 204 : status;
+				action = valid ? 'resolve' : 'reject';
 
-				action = ( 200 <= status && status < 300 ) ? 'resolve' : 'reject';
+				r = [ response, status, headers ];
+				r.$inject = true;
 
-				this.$defer[action]({
-					data : response,
-					status : status,
-					headers : headers
-				});
+				this.$defer[action]( r );
 			}
-		} 
+		},
+		plugins : {
+			'$http' : function( options ){
+				var dis;
+
+				dis = new dis( options );
+
+				return dis.$defer.promise;
+			}
+		}
 	});
 }());
 ;(function( bMoor, undefined ){
@@ -1744,29 +1902,42 @@ parseTemplate : function( template ){
 				'async' : async
 			})).$defer.promise.then( 
 				function resourceSuccess( response ){
-					dis.apply( response.data );
-					dis.success();
+					try{
+						dis.success( dis.apply(response) );
+					}catch( ex ){
+						dis.failure( ex );
+					}
 				},
-				function resourceFailure(){ 
+				function resourceFailure(){
 					dis.failure();
 				}
 			);
 		},
 		properties : {
-			apply : function( content ){},
-			success : function(){
+			apply : function( content ){
+				return content;
+			},
+			success : function( data ){
 				this.status = 200;
-				this.resolve();
+				this.resolve( data );
 			},
-			failure : function(){
+			failure : function( data ){
 				this.status = 404;
-				this.resolve();
+				this.resolve( data );
 			},
-			resolve : function(){
+			resolve : function( data ){
 				if ( this.status === 200 ){
-					this.$defer.resolve();
+					this.$defer.resolve({
+						data : data,
+						status : this.status,
+						headers : undefined
+					});
 				}else{
-					this.$defer.reject();
+					this.$defer.reject({
+						data : data,
+						status : this.status,
+						headers : undefined
+					});
 				}
 			}
 		}
@@ -1783,6 +1954,8 @@ parseTemplate : function( template ){
 
 				script.text = content;
 				document.body.appendChild( script );
+
+				return;
 			}
 		}
 	});
@@ -1803,6 +1976,8 @@ parseTemplate : function( template ){
 				}
 				
 				document.body.appendChild( style );
+
+				return;
 			}
 		}
 	});
