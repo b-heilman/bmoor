@@ -33,7 +33,7 @@
 		properties : {
 			defaultHandler : function( ex ){ bMoor.error(ex); },
 			defaultSuccess : function( value ){ return value; },
-			defaultFailure : function( message ){ return undefined; },
+			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
 			register : function( callback, failure ){
 				if ( this.value ){
 					this.value.then( callback, failure );

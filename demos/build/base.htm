@@ -20,6 +20,71 @@
 <body>
 
 <script>
+// Basic declaration	
+var obj = bMoor.define({
+	name : 'foo.Hello',
+	properties : {
+		hello : function(){ 
+			console.log('world'); 
+		}
+	}
+});
+
+( new obj() ).hello();
+
+// Define a singleton
+bMoor.define({
+	name : 'foo.Woot',
+	singleton : true,
+	properties : {
+		say : function( something ){ 
+			console.log( something ); 
+		}
+	}
+});
+
+foo.$woot.say( 'hello to my little friend' );
+
+// Define a factory
+bMoor.define({
+	name : 'foo.Dog',
+	factory : true,
+	construct : function( whatToSay ){
+		this.something = whatToSay;
+	},
+	properties : {
+		speak : function(){ 
+			console.log( this.something ); 
+		}
+	}
+});
+
+obj = foo.Dog.$make('woof');
+obj.speak();
+
+// Decoration
+bMoor.define({
+	name : 'foo.Decorator1',
+	parent : 'bmoor.core.Decorator',
+	properties : {
+		speak : function(){
+			this.$wrapped();
+			console.log('now roll over');
+		}
+	} 
+});
+
+obj = bMoor.define({
+	name : 'foo.Pheonix',
+	parent : 'foo.Dog',
+	decorators : [
+		'foo.Decorator1'
+	]
+});
+
+( new obj('woofie woof') ).speak();
+
+// --- other craziness
 bMoor.define({
 	name : 'foo.Bar',
 	properties : {
@@ -74,6 +139,7 @@ bMoor.define({
 console.log( foo.$bar2 );
 
 foo.Bar2.$instance.unos('3');
+foo.$bar2.unos('3.1');
 foo.Bar2.$make();
 
 var t = new foo.Bar3();

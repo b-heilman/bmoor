@@ -13,7 +13,7 @@
 
 				singleton.$arguments = true;
 
-				obj.$instance = mount[ '$'+name.toLowerCase() ] = new obj( singleton );
+				obj.$instance = mount[ '$'+name[0].toLowerCase() + name.substr(1) ] = new obj( singleton );
 			}
 		}]);
 	});
