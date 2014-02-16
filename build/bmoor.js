@@ -139,8 +139,14 @@
 	Messaging functions
 	**/
 	function error( error ){
-		//console.trace();
-		console.log( error );
+		if ( isObject(error) ){
+			console.log( error );
+			console.log( error.stack );
+		}else{
+			console.log( error );
+			console.trace();
+		}
+		
 	}
 
 	/**
@@ -354,12 +360,10 @@
 
 	function makeQuark( namespace, withDefer ){
 		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
-			if ( this._construct && Quark.$construct ){
-				if ( args && args.$arguments ){
-					this._construct.apply( this,args );
-				}else{
-					this._construct.apply( this,arguments );
-				}
+			if ( args && args.$arguments ){
+				this._construct.apply( this,args );
+			}else{
+				this._construct.apply( this,arguments );
 			}
 		}
 
@@ -367,8 +371,8 @@
 			Quark.$defer = new Defer();
 		}
 		
-		Quark.$construct = true;
 		Quark.prototype.__class = namespace;
+		Quark.prototype._construct = function(){};
 
 		set( namespace, Quark );
 
@@ -774,7 +778,7 @@
 
 		bMoor.loop( this.stack, function( maker ){
 			promise = promise.then(function(){ 
-				bMoor.inject( maker.module, settings, obj ); 
+				return bMoor.inject( maker.module, settings, obj ); 
 			});
 		});
 
@@ -892,21 +896,21 @@
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
 		Compiler.$instance.addModule( 90, 'bmoor.build.ModInherit', ['parent', function( parent ){
-			var className;
+			var dis = this,
+				t,
+				Parent,
+				className;
 
 			if ( parent ){
 				Parent = bMoor.ensure( parent );
 				className = Parent.prototype.__class;
-
-				if ( Parent.$construct !== undefined ){
-					Parent.$construct = false;
-					this.prototype = new Parent();
-					Parent.$construct = true;
-				}else{
-					this.prototype = new Parent();
-				}
 				
-				this.prototype.constructor = this;
+				t = function(){ 
+					this.constructor = dis; // once called, define
+				};
+				t.prototype = Parent.prototype;
+				this.prototype = new t();
+
 				this.prototype[ className ] = Parent.prototype;
 			}
 		}]);
@@ -980,8 +984,8 @@
 				}else if ( bMoor.isArrayLike(require) ){
 					classes = require;
 				}else{
-					classes = require.classes;
-					aliases = require.aliases;
+					classes = require.classes || [];
+					aliases = require.aliases || {};
 				}
 				
 				bMoor.loop( classes, function( namespace ){
@@ -989,8 +993,12 @@
 				});
 
 				bMoor.iterate( aliases, function( namespace, alias ){
-					group.add( bmoor.comm.$require.one(namespace, true, alias) );
+					group.add( bmoor.comm.$require.one(alias, true, namespace) );
 				});
+			}
+
+			if ( group.run ){
+				group.run();
 			}
 
 			return group.promise;
@@ -1124,7 +1132,7 @@
 
 				singleton.$arguments = true;
 
-				obj.$instance = mount[ '$'+name.toLowerCase() ] = new obj( singleton );
+				obj.$instance = mount[ '$'+name[0].toLowerCase() + name.substr(1) ] = new obj( singleton );
 			}
 		}]);
 	});
@@ -1263,7 +1271,7 @@
 		properties : {
 			defaultHandler : function( ex ){ bMoor.error(ex); },
 			defaultSuccess : function( value ){ return value; },
-			defaultFailure : function( message ){ return undefined; },
+			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
 			register : function( callback, failure ){
 				if ( this.value ){
 					this.value.then( callback, failure );
@@ -1382,7 +1390,7 @@
 	}
 
 	bMoor.define({
-		name : 'bmoor.defer.Group',
+		name : 'bmoor.defer.Stack',
 		construct : function(){
 			this.promise = null;
 		},
@@ -1824,7 +1832,7 @@ parseTemplate : function( template ){
 
 				if ( !req ){
 					req = new bmoor.comm.Script( 
-						bMoor.ns.locate(alias||requirement)+'.js', 
+						alias || bMoor.ns.locate(requirement)+'.js', 
 						this.forceSync ? false : async 
 					);
 
@@ -1833,7 +1841,7 @@ parseTemplate : function( template ){
 					}else{
 						return req.$defer.promise.then(function(){
 							var t = bMoor.exists( requirement );
-
+							
 							if ( t.$defer ){
 								return t.$defer.promise;
 							}else{
@@ -1901,15 +1909,18 @@ parseTemplate : function( template ){
 				'url' : src,
 				'async' : async
 			})).$defer.promise.then( 
-				function resourceSuccess( response ){
+				function resourceSuccess( response, status ){
 					try{
+						dis.status = 200;
 						dis.success( dis.apply(response) );
 					}catch( ex ){
+						dis.status = 17003;
 						dis.failure( ex );
 					}
 				},
-				function resourceFailure(){
-					dis.failure();
+				function resourceFailure( response, status, headers ){
+					dis.status = status;
+					dis.failure( response );
 				}
 			);
 		},
@@ -1918,11 +1929,11 @@ parseTemplate : function( template ){
 				return content;
 			},
 			success : function( data ){
-				this.status = 200;
+				this.status = this.status || 200;
 				this.resolve( data );
 			},
 			failure : function( data ){
-				this.status = 404;
+				this.status = this.status || 19129;
 				this.resolve( data );
 			},
 			resolve : function( data ){

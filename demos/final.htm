@@ -1,0 +1,91 @@
+<html>
+
+<head>
+	<script src="../build/bmoor.js"></script>
+</head>
+<body>
+<script>
+
+// Basic declaration	
+var obj = bMoor.define({
+	name : 'foo.Hello',
+	properties : {
+		hello : function(){ 
+			console.log('world'); 
+		}
+	}
+});
+
+( new obj() ).hello();
+
+// Define a singleton
+bMoor.define({
+	name : 'foo.Woot',
+	singleton : true,
+	properties : {
+		say : function( something ){ 
+			console.log( something ); 
+		}
+	}
+});
+
+foo.$woot.say( 'hello to my little friend' );
+
+// Define a factory
+bMoor.define({
+	name : 'foo.Dog',
+	factory : true,
+	construct : function( whatToSay ){
+		this.something = whatToSay;
+	},
+	properties : {
+		speak : function(){ 
+			console.log( this.something ); 
+		}
+	}
+});
+
+obj = foo.Dog.$make('woof');
+obj.speak();
+
+// Decoration
+bMoor.define({
+	name : 'foo.Decorator1',
+	parent : 'bmoor.core.Decorator',
+	properties : {
+		speak : function(){
+			this.$wrapped();
+			console.log('now roll over');
+		}
+	} 
+});
+
+obj = bMoor.define({
+	name : 'foo.Pheonix',
+	parent : 'foo.Dog',
+	decorators : [
+		'foo.Decorator1'
+	]
+});
+
+( new obj('woofie woof') ).speak();
+
+// Requiring
+bMoor.define({
+	name : 'foo.Body',
+	require : {
+		aliases : {
+			'jQuery' : '//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'
+		}
+	},
+	construct : function(){
+		jQuery('body').append('<span>Was Loaded and Created</span>');
+	}
+}).$defer.promise.then(function( obj ){
+	new obj();
+});
+
+</script>
+</body>
+
+</html>

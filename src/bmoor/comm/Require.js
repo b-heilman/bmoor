@@ -12,7 +12,7 @@
 
 				if ( !req ){
 					req = new bmoor.comm.Script( 
-						bMoor.ns.locate(alias||requirement)+'.js', 
+						alias || bMoor.ns.locate(requirement)+'.js', 
 						this.forceSync ? false : async 
 					);
 
@@ -21,7 +21,7 @@
 					}else{
 						return req.$defer.promise.then(function(){
 							var t = bMoor.exists( requirement );
-
+							
 							if ( t.$defer ){
 								return t.$defer.promise;
 							}else{

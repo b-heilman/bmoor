@@ -7,7 +7,7 @@
 	}
 
 	bMoor.define({
-		name : 'bmoor.defer.Group',
+		name : 'bmoor.defer.Stack',
 		construct : function(){
 			this.promise = null;
 		},

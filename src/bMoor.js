@@ -139,8 +139,14 @@
 	Messaging functions
 	**/
 	function error( error ){
-		//console.trace();
-		console.log( error );
+		if ( isObject(error) ){
+			console.log( error );
+			console.log( error.stack );
+		}else{
+			console.log( error );
+			console.trace();
+		}
+		
 	}
 
 	/**
@@ -354,12 +360,10 @@
 
 	function makeQuark( namespace, withDefer ){
 		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
-			if ( this._construct && Quark.$construct ){
-				if ( args && args.$arguments ){
-					this._construct.apply( this,args );
-				}else{
-					this._construct.apply( this,arguments );
-				}
+			if ( args && args.$arguments ){
+				this._construct.apply( this,args );
+			}else{
+				this._construct.apply( this,arguments );
 			}
 		}
 
@@ -367,8 +371,8 @@
 			Quark.$defer = new Defer();
 		}
 		
-		Quark.$construct = true;
 		Quark.prototype.__class = namespace;
+		Quark.prototype._construct = function(){};
 
 		set( namespace, Quark );
 

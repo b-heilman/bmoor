@@ -58,7 +58,7 @@
 
 		bMoor.loop( this.stack, function( maker ){
 			promise = promise.then(function(){ 
-				bMoor.inject( maker.module, settings, obj ); 
+				return bMoor.inject( maker.module, settings, obj ); 
 			});
 		});
 

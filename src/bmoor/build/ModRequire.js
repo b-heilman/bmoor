@@ -12,8 +12,8 @@
 				}else if ( bMoor.isArrayLike(require) ){
 					classes = require;
 				}else{
-					classes = require.classes;
-					aliases = require.aliases;
+					classes = require.classes || [];
+					aliases = require.aliases || {};
 				}
 				
 				bMoor.loop( classes, function( namespace ){
@@ -21,8 +21,12 @@
 				});
 
 				bMoor.iterate( aliases, function( namespace, alias ){
-					group.add( bmoor.comm.$require.one(namespace, true, alias) );
+					group.add( bmoor.comm.$require.one(alias, true, namespace) );
 				});
+			}
+
+			if ( group.run ){
+				group.run();
 			}
 
 			return group.promise;

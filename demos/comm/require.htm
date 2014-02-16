@@ -32,8 +32,23 @@
 		var t = bMoor.require('test.Alert');
 		new t('woot');
 
-		var t2 = bMoor.require('test.Composite');
-		new t2('woot');
+		bMoor.define({
+			name : 'foo.Body',
+			require : {
+				classes : [
+					'test.Composite'
+				],
+				aliases : {
+					'jQuery' : '//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js',//http://code.jquery.com/jquery-2.1.0.min.js'
+				}
+			},
+			construct : function(){
+				new test.Composite('woot');
+				jQuery('body').append('<span>Was Loaded and Created</span>');
+			}
+		}).$defer.promise.then(function( obj ){
+			new obj();
+		});
 	</script>
 </body>
 </html>

@@ -11,6 +11,8 @@
 			new test.Piece1();
 			new test.Piece2();
 		}
+	}).$defer.promise.then(function(){
+		console.log('composite defined');
 	});
 
 }());

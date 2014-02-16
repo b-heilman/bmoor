@@ -10,6 +10,7 @@
 <script src="../../src/bmoor/build/ModSingleton.js"></script>
 <script src="../../src/bmoor/build/ModFactory.js"></script>
 <script src="../../src/bmoor/build/ModDecorate.js"></script>
+<script src="../../src/bmoor/build/ModRequire.js"></script>
 
 <script src="../../src/bmoor/defer/Promise.js"></script>
 <script src="../../src/bmoor/defer/Basic.js"></script>
@@ -20,71 +21,7 @@
 <body>
 
 <script>
-// Basic declaration	
-var obj = bMoor.define({
-	name : 'foo.Hello',
-	properties : {
-		hello : function(){ 
-			console.log('world'); 
-		}
-	}
-});
 
-( new obj() ).hello();
-
-// Define a singleton
-bMoor.define({
-	name : 'foo.Woot',
-	singleton : true,
-	properties : {
-		say : function( something ){ 
-			console.log( something ); 
-		}
-	}
-});
-
-foo.$woot.say( 'hello to my little friend' );
-
-// Define a factory
-bMoor.define({
-	name : 'foo.Dog',
-	factory : true,
-	construct : function( whatToSay ){
-		this.something = whatToSay;
-	},
-	properties : {
-		speak : function(){ 
-			console.log( this.something ); 
-		}
-	}
-});
-
-obj = foo.Dog.$make('woof');
-obj.speak();
-
-// Decoration
-bMoor.define({
-	name : 'foo.Decorator1',
-	parent : 'bmoor.core.Decorator',
-	properties : {
-		speak : function(){
-			this.$wrapped();
-			console.log('now roll over');
-		}
-	} 
-});
-
-obj = bMoor.define({
-	name : 'foo.Pheonix',
-	parent : 'foo.Dog',
-	decorators : [
-		'foo.Decorator1'
-	]
-});
-
-( new obj('woofie woof') ).speak();
-
-// --- other craziness
 bMoor.define({
 	name : 'foo.Bar',
 	properties : {

@@ -13,15 +13,18 @@
 				'url' : src,
 				'async' : async
 			})).$defer.promise.then( 
-				function resourceSuccess( response ){
+				function resourceSuccess( response, status ){
 					try{
+						dis.status = 200;
 						dis.success( dis.apply(response) );
 					}catch( ex ){
+						dis.status = 17003;
 						dis.failure( ex );
 					}
 				},
-				function resourceFailure(){
-					dis.failure();
+				function resourceFailure( response, status, headers ){
+					dis.status = status;
+					dis.failure( response );
 				}
 			);
 		},
@@ -30,11 +33,11 @@
 				return content;
 			},
 			success : function( data ){
-				this.status = 200;
+				this.status = this.status || 200;
 				this.resolve( data );
 			},
 			failure : function( data ){
-				this.status = 404;
+				this.status = this.status || 19129;
 				this.resolve( data );
 			},
 			resolve : function( data ){
