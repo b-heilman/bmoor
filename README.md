@@ -24,7 +24,7 @@ Patterns Simplified
 Examples - full examples can be found in demos
 --------------------------------------------------
 
-## Basic declaration	
+### Basic declaration	
 	var obj = bMoor.define({
 		name : 'foo.Hello',
 		properties : {
@@ -36,7 +36,7 @@ Examples - full examples can be found in demos
 
 	( new obj() ).hello();
 
-## Define a singleton
+### Define a singleton
 	bMoor.define({
 		name : 'foo.Woot',
 		singleton : true,
@@ -49,7 +49,7 @@ Examples - full examples can be found in demos
 
 	foo.$woot.say( 'hello to my little friend' );
 
-## Define a factory
+### Define a factory
 	bMoor.define({
 		name : 'foo.Dog',
 		factory : true,
@@ -66,7 +66,7 @@ Examples - full examples can be found in demos
 	obj = foo.Dog.$make('woof');
 	obj.speak();
 
-## Decoration
+### Decoration
 	bMoor.define({
 		name : 'foo.Decorator1',
 		parent : 'bmoor.core.Decorator',
@@ -88,7 +88,7 @@ Examples - full examples can be found in demos
 
 	( new obj('woofie woof') ).speak();
 
-## Requirements
+### Requirements
 	bMoor.define({
 		name : 'foo.Body',
 		require : {
