@@ -84,9 +84,8 @@
 	/*
 		returns back the space or null
 	*/
-	function exists( space, root ){
-		var curSpace = root || global,
-			position,
+	function _exists( space, curSpace ){
+		var position,
 			name;
 		
 		if ( isString(space) || isArrayLike(space) ){
@@ -107,6 +106,25 @@
 			return space;
 		}else{
 			return null;
+		}
+	}
+
+	function exists( space, root ){
+		var i, c,
+			res;
+
+		if ( root ){
+			if ( isArrayLike(root) ){
+				for( i = 0, c = root.length; i < c && !res; i++ ){
+					res = _exists( space, root[i] );
+				}
+
+				return res;
+			}else{
+				return _exists( space, root );
+			}
+		}else{
+			return _exists( space, global );
 		}
 	}
 
@@ -210,6 +228,10 @@
 		if ( !scope ){
 			scope = arr;
 		}
+
+		//if ( isUndefined(arr) || isUndefined(arr.length) ){
+		//	console.trace();
+		//}
 
 		for ( i = 0, c = arr.length; i < c; ++i ) if ( i in arr ) {
 			fn.call(scope, arr[i], i, arr);
@@ -358,7 +380,7 @@
 		return false;
 	}
 
-	function makeQuark( namespace, withDefer ){
+	function makeQuark( namespace ){
 		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
 			if ( args && args.$arguments ){
 				this._construct.apply( this,args );
@@ -367,7 +389,7 @@
 			}
 		}
 
-		if ( withDefer ){
+		if ( Defer ){
 			Quark.$defer = new Defer();
 		}
 		
@@ -379,25 +401,26 @@
 		return Quark;
 	}
 
-	function ensure( namespace, clean ){
-		var obj;
+	// check to see if the element exists, if not, create a Quark in its place
+	function ensure( namespace, root ){
+		var obj = exists( namespace, root );
+		if ( !namespace ){
+			console.trace();
+		}
 
-		obj = find( namespace );
-		
-		// TODO : handle collisions better
 		if ( !obj ){
-			return makeQuark( namespace, !clean );
+			return makeQuark( namespace );
 		}else{
 			return obj;
 		}
 	}
 
-	function request( request, clean ){
+	function request( request, root ){
 		var rtn,
 			obj;
 
 		if ( isString(request) ){
-			obj = ensure( request, clean );
+			obj = ensure( request, root );
 
 			if ( obj.$defer ){
 				// was created by the system
@@ -414,7 +437,7 @@
 			loop( request, function( req, key ){
 				var o;
 
-				o = ensure( req, clean );
+				o = ensure( req );
 
 				if ( o.$defer ){
 					rtn.add( o.$defer.promise );
@@ -435,17 +458,37 @@
 	}
 
 	function translate( arr, root ){
-		var rtn = [];
+		var lead,
+			rtn = [];
 
 		loop( arr, function( value, key ){
-			rtn[key] = exists( value, root );
+			if ( isString(value) ){
+				lead = value.charAt( 0 );
+
+				if ( lead === '-' ){
+					rtn[key] = exists( value.substr(1), root );
+				}else if ( lead === '@' ){
+					// uses alias
+					rtn[key] = check( value.substr(1) );
+				}else{
+					// ensure
+					rtn[key] = ensure( value, root );
+				}
+			}else{
+				rtn[key] = value;
+			}
 		});
 
 		return rtn;
 	}
 
+	function isInjectable( obj ){
+		return isFunction( obj ) || ( isArray(obj) && isFunction(obj[obj.length-1]) );
+	}
+
 	function inject( arr, root, context ){
-		var func,
+		var i, c,
+			func,
 			res;
 
 		if ( isFunction(arr) ){
@@ -636,6 +679,53 @@
 		}
 	}
 
+	// I can't assume sorting...
+	// compare -> < 0 : a less; 0 : equal ; > 0 : b less
+	function compare( arr1, arr2, compare ){
+		var m,
+            cmp,
+            left = [],
+            right = [],
+            leftI = [],
+            rightI = [];
+
+        arr1 = arr1.slice(0);
+        arr2 = arr2.slice(0);
+
+        arr1.sort( compare );
+        arr2.sort( compare );
+
+        while( arr1.length > 0 && arr2.length > 0 ){
+            cmp = compare( arr1[0], arr2[0] );
+
+            if ( cmp < 0 ){
+                left.push( arr1.shift() );
+            }else if ( cmp > 0 ){
+                right.push( arr2.shift() );
+            }else{
+                leftI.push( arr1.shift() );
+                rightI.push( arr2.shift() );
+            }
+        }
+
+        while( arr1.length ){
+            left.push( arr1.shift() );
+        }
+
+        while( arr2.length ){
+            right.push( arr2.shift() );
+        }
+
+        return {
+            left : left,
+            intersection : {
+                left : leftI,
+                right : rightI
+            },
+            right : right
+        };
+	}
+
 	/**
 	Externalizing the functionality
 	**/
@@ -656,11 +746,6 @@
 		"inject"      : inject,
 		"plugin"      : plugin,
 		"makeQuark"   : makeQuark,
-		// object stuff
-		"create"      : create,
-		"extend"      : extend,
-		"copy"        : copy,
-		"equals"      : equals,
 		// allow a type expectation
 		"loop"        : loop, // array
 		"each"        : each, // object
@@ -676,45 +761,69 @@
 		"isFunction"  : isFunction,
 		"isNumber"    : isNumber,
 		"isString"    : isString,
+		"isInjectable" : isInjectable,
+		// object stuff
+		"object" : {
+			"create"      : create,
+			"extend"      : extend,
+			"copy"        : copy,
+			"equals"      : equals
+		},
 		// string functionality 
 		"string"      : {
 			"trim" : trim 
 		},
 		// array functionality
 		"array"       : {
+			"compare" : compare,
 			"indexOf" : indexOf,
 			"remove" : remove,
 			"removeAll" : removeAll,
 			"filter" : filter
 		},
 		// error handling and logging : TODO : move verbose error handling
-		"error"       : error,
+		"error"       : {
+			report : error
+		},
 		// other utils - TODO : move out
-		"urlResolve"  : urlResolve
+		"url" : {
+			"resolve"  : urlResolve
+		}
 	});
+
+	register( 'global', global );
+	register( 'undefined', undefined );
 
 	set( 'bMoor', bMoor );
 	set( 'bmoor', bmoor );
 
-	Defer = ensure('bmoor.defer.Basic', true);
-	DeferGroup = ensure('bmoor.defer.Group', true);
+	inject(['bmoor.defer.Basic', 'bmoor.defer.Group', function( b, g ){
+		var c = 0;
 
-	// chicken before the egg... so bootstrap
-	Defer.prototype.resolve = function( r ){
-		loop( this.promise.waiting, function(func){ func(r); });
-		this.promise.waiting = r;
-	};
-	Defer.prototype.promise = {
-		waiting : [],
-		then : function JunkPromise( callback ){
-			if ( this.waiting.push ){
-				this.waiting.push( callback );
-			}else{
-				callback( this.waiting );
+		Defer = b;
+		DeferGroup = g;
+
+		// chicken before the egg... so bootstrap
+		Defer.prototype._construct = function(){
+			this.promise = {
+				count : c++,
+				then : function JunkPromise( callback ){
+					if ( this.waiting && this.waiting.push ){
+						this.waiting.push( callback );
+					}else{
+						callback( this.waiting );
+					}
+					
+					return this;
+				},
+				waiting : []
 			}
-			
-			return Defer.prototype.promise;
-		}
-	};
+		};
+
+		Defer.prototype.resolve = function( r ){
+			loop( this.promise.waiting, function(func){ func(r); });
+			this.promise.waiting = r;
+		};
+	}]);
 
 }( this ));

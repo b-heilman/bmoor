@@ -1,5 +1,4 @@
-(function(){
-
+bMoor.define( 'bmoor.core.Service', [function(){
 	/***
 	- FuncName
 		-- Setup
@@ -18,7 +17,7 @@
 		- failure : handles unchanged results
 		- process : modifies results in either case (shorthand), changes response
 	***/
-
+	
 	var cache = {};
 
 	function makeServiceCall( service, options ){
@@ -98,14 +97,13 @@
 		};
 	}
 
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModServices', ['services', function( services ){
-			var dis = this;
-
-			bMoor.iterate( services, function( service, name ){
-				dis.prototype[name] = makeServiceCall( dis, service );
+	return {
+		onMake : function( definition ){
+			var obj = this;
+			console.log( definition );
+			bMoor.iterate( definition.services, function( service, name ){
+				obj.prototype[name] = makeServiceCall( obj, service );
 			});
-		}]);
-	});
-
-}());
+		}
+	};
+}]);

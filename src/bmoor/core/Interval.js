@@ -1,7 +1,6 @@
 (function(){
 	
-	bMoor.define({
-		name : 'bmoor.core.Interval',
+	bMoor.define( 'bmoor.core.Interval', {
 		singleton : true,
 		construct : function(){
 			this._c = 0;

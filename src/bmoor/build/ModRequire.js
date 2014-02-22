@@ -1,7 +1,7 @@
 (function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 100, 'bmoor.build.ModRequire', ['require', function( require ){
+		Compiler.$instance.addModule( 100, 'bmoor.build.ModRequire', ['-require', function( require ){
 			var group = new bmoor.defer.Group(),
 				classes,
 				aliases;

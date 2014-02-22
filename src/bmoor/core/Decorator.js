@@ -24,10 +24,14 @@
 		}
 	}
 
-	bMoor.define({
-		name : 'bmoor.core.Decorator',
-		postMake : function( inst ){
-			inst.$singleton = new inst();
+	bMoor.define( 'bmoor.core.Decorator', {
+		onMake : function(){
+			var inst = this,
+				t = new inst();
+
+			inst.$decorate = function Decoration( obj ){
+				t.$decorate( obj );
+			};
 		},
 		properties : {
 			$decorate : function( obj ){
@@ -37,9 +41,6 @@
 					if ( key === '_construct' || key === '$decorate' ){
 						// 
 						continue;
-					}else if ( key === '__construct' ){
-						// the default override is post
-						override( '_construct', obj, this[key] );
 					}else if ( obj[key] ){
 						// the default override is post
 						override( key, obj, this[key] );

@@ -1,49 +1,109 @@
 ;(function( global, undefined ){
-	var snapId = 0,
+	var $snapId = 0,
 		instances = {};
 
 	bMoor.define({
 		name : 'snap.observer.Map',
 		require : 'bmoor.core.Interval',
 		construct : function( model ){
-			this.snapId = snapId++;
+			this.$snapId = $snapId++;
 
+			this.watching = {};
 			this.observe( model );
 			this.start();
 		},
 		properties : {
 			observe : function( model ){
 				if ( this.model ){
-					delete model._$[ this.snapId ];
+					delete this.model.$observers[ this.$snapId ];
 				}
 
 				this.model = model;
 
-				if ( !model._$ ){
-					model._$ = {};
+				if ( !model.$observers ){
+					model.$observers = {};
 				}
 
-				model._$[ this.snapId ] = this;
+				model.$observers[ this.$snapId ] = this;
 			},
-			watch : function( model, func ){
-				
-				// registers what the observe monitors 
+			watch : function( variable, func ){
+				// registers what the observe monitors
+				if ( !this.watching[variable] ){
+					this.watching[variable] = {
+						path : variable.split('.'),
+						value : undefined,
+						calls : []
+					};
+				}
+
+				this.watching[ variable ].push( func );
+			},
+			evaluate : function( path ){
+				var i, c,
+					val = this.model;
+
+				if ( bMoor.isString(path) ){
+					path = path.split('.');
+				}
+
+				for( i = 0, c = path.length; i < c && val !== undefined; i++ ){
+					val = val[ path[i] ];
+				}
+
+				return val;
 			},
 			check : function(){
+				var dis = this;
+
 				// see if anything has changed in the model
 				this.checking = true;
-			},
-			notify : function(){
-				// pushes out 
+				bMoor.iterate( this.watching, function( watch ){
+					var i, c,
+						val = dis.evaluate( watch.path );
+
+					if ( val !== watch.value ){
+						for( i = 0, c = watch.calls.length; i < c; i++ ){
+							watch.calls[ i ]( val, watch.value );
+						}
+					}
+				});
 			},
 			start : function(){
-				instances[ this.snapId ] = thiss;
+				instances[ this.$snapId ] = this;
 			},
 			stop : function(){
-				delete instances[ this.snapId ];
+				delete instances[ this.$snapId ];
+			},
+			simplify : function(){
+				var key,
+					model = this.model,
+					simple = {};
+
+				// TODO : what about models inside of models?
+				for( key in model ) if ( model.hasOwnProperty(key) && key[0] !== '_' && key[0] !== '$' ){
+					val = model[ key ];
+
+					if ( bMoor.isFunction(val) ){
+						val = model[ key ]();
+					}
+
+					simple[ key ] = val;
+				}
+
+				return simple;
+			},
+			isEmpty : function(){
+				var model = this.model,
+					key;
+
+				for( key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' && key[0] != '$' ){
+					return false;
+				}
+
+				return true;
 			}
 		},
-		postMake : function(){
+		onMake : function(){
 			bmoor.core.Interval.set(function(){
 				bMoor.iterate( instances, function( inst ){
 					try{
@@ -86,36 +146,6 @@
 				}else{
 					this.flush( {modelSwitch:true} );
 				}
-			},
-			simplify : function(){
-				var 
-					key,
-					model = this.model,
-					simple = {};
-
-				// TODO : what about models inside of models?
-				for( key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' && key[0] != '$' ){
-					val = model[ key ];
-
-					if ( typeof(val) == 'function' ){
-						val = model[ key ]();
-					}
-
-					simple[ key ] = val;
-				}
-
-				return simple;
-			},
-			isEmpty : function(){
-				var 
-					model = this.model,
-					key;
-
-				for( key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' && key[0] != '$' ){
-					return false;
-				}
-
-				return true;
 			},
 			start : function( interval ){
 				var 

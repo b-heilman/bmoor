@@ -7,8 +7,7 @@
 			throw 'error' /* TODO : error */;
 		};
 
-	bMoor.define({
-		name : 'bmoor.comm.Http',
+	bMoor.define( 'bmoor.comm.Http', {
 		construct : function( options ){
 			var dis = this,
 				xhr = this.makeXHR( 
@@ -44,7 +43,7 @@
 				xhr.responseType = options.responseType;
 			}
 
-			this.url = bMoor.urlResolve( options.url );
+			this.url = bMoor.url.resolve( options.url );
 			this.status = null;
 			this.connection = xhr;
 			this.$defer = new bmoor.defer.Basic();

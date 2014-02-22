@@ -18,7 +18,7 @@ var
 		}
 	};
 
-bMoor.inject(['eins','zwei.drei','derp', function(foo, bar, derp){
+bMoor.inject(['eins','zwei.drei','-derp', function(foo, bar, derp){
 	uno = foo;
 	tres = bar;
 	quat = derp;
@@ -43,6 +43,27 @@ bMoor.inject(['eins','zwei.drei', function(foo, bar){
 
 console.log( uno, '=', 1 );
 console.log( tres, '=', 3 );
+
+console.log( bMoor.array.compare(
+	[
+		{ val : 1 },
+		{ val : 3 },
+		{ val : 9 },
+		{ val : 5 },
+		{ val : 6 }
+	],
+	[
+		{ val : 2 },
+		{ val : 4 },
+		{ val : 5 },
+		{ val : 1 },
+		{ val : 9 },
+		{ val : 10 }
+	],
+	function( a, b ){
+		return a.val - b.val;
+	}
+) );
 
 </script>
 </body>

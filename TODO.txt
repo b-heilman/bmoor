@@ -1,7 +1,4 @@
 - DOM wrapper / Fake DOM
-
 - could move some utils out to a lib directory
-
 - Error handling
-
-- Allow for mapping of core classes to mapped to internal classed?  For when core classes are implemented natively in browsers
+- Finish the observers

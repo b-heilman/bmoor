@@ -32,8 +32,7 @@
 		var t = bMoor.require('test.Alert');
 		new t('woot');
 
-		bMoor.define({
-			name : 'foo.Body',
+		bMoor.define( 'foo.Body', {
 			require : {
 				classes : [
 					'test.Composite'

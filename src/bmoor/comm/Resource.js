@@ -1,8 +1,7 @@
 (function( undefined ){
 	"use strict";
 
-	bMoor.define({
-		name : 'bmoor.comm.Resource',
+	bMoor.define( 'bmoor.comm.Resource', {
 		construct : function( src, async ){
 			var dis = this;
 

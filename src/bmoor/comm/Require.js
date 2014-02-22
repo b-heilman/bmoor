@@ -1,7 +1,6 @@
 (function( undefined ){
 
-	bMoor.define({
-		name : 'bmoor.comm.Require',
+	bMoor.define( 'bmoor.comm.Require', {
 		singleton : true,
 		properties : {
 			forceSync : false,

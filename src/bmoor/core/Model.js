@@ -1,5 +1,4 @@
-(function( global, undefined ){
-
+bMoor.define( "bmoor.core.Model", [function(){
 	function merge( from, to ){
 		var key, f, t;
 
@@ -74,8 +73,7 @@
 		}
 	}
 
-	bMoor.define({
-		name : "bmoor.model.Basic",
+	return {
 		construct : function( content ){
 			var key, i, c;
 
@@ -113,7 +111,6 @@
 				return JSON.stringify( this._toObject() );
 			}
 		}
-	});
-
-}( this ));
+	};
+}]);
 

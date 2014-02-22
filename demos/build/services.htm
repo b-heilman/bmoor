@@ -10,7 +10,8 @@
 <script src="../../src/bmoor/build/ModFactory.js"></script>
 <script src="../../src/bmoor/build/ModDecorate.js"></script>
 <script src="../../src/bmoor/build/ModPlugin.js"></script>
-<script src="../../src/bmoor/build/ModServices.js"></script>
+
+<script src="../../src/bmoor/core/Service.js"></script>
 
 <script src="../../src/bmoor/defer/Promise.js"></script>
 <script src="../../src/bmoor/defer/Basic.js"></script>
@@ -23,8 +24,8 @@
 <body>
 
 <script>
-var t = bMoor.define({
-	name : 'foo.Bar',
+var t = bMoor.define( 'foo.Bar', {
+	parent : 'bmoor.core.Service',
 	services : {
 		getPeople : 'test/people.js',
 		getJobs : {

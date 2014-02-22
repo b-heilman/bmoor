@@ -6,8 +6,7 @@
 		});
 	}
 
-	bMoor.define({
-		name : 'bmoor.defer.Stack',
+	bMoor.define( 'bmoor.defer.Stack', {
 		construct : function(){
 			this.promise = null;
 		},

@@ -1,7 +1,6 @@
 (function(){
 
-	bMoor.define({
-		name : 'bmoor.comm.Style',
+	bMoor.define( 'bmoor.comm.Style', {
 		parent : 'bmoor.comm.Resource',
 		properties : {
 			apply : function styleApply( content ){

@@ -2,29 +2,29 @@
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
 		Compiler.$instance.addModule( 1, 'bmoor.build.ModFinalize', 
-			['namespace','name', 'mount', 'postMake', function( namespace, name, mount, postMake ){
+			['-onMake', '-parent', function( onMake, parent ){
 
 			var obj = this,
-				old,
 				proto = obj.prototype;
 
-			proto.__namespace = namespace;
-			proto.__name = name;
-			proto.__mount = mount;
+			if ( parent ){
+				return bMoor.request( parent ).then(function( p ){
+					if ( onMake ){
+						obj.$onMake = onMake;
 
-			if ( postMake ){
-				if ( proto.__postMake ){
-					old = proto.__postMake;
-					proto.__postMake = function(){
-						old( obj );
-						
-						if ( postMake ){
-							postMake( obj );
+						if ( p.$parentMakes ){
+							obj.$parentMakes = bMoor.create( p.$parentMakes );
+						}else{
+							obj.$parentMakes = {};
 						}
-					};
-				}else{
-					proto.__postMake = postMake;
-				}
+
+						obj.$parentMakes[ p.prototype.__class ] = p.$onMake;
+					}else{
+						obj.$onMake = p.$onMake;
+					}
+				}); // TODO : make this a request?
+			}else if ( onMake ){
+				obj.$onMake = onMake;
 			}
 		}]);
 	});

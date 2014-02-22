@@ -1,7 +1,6 @@
 (function(){
 	
-	bMoor.define({
-		name : 'bmoor.comm.Connector',
+	bMoor.define( 'bmoor.comm.Connector', {
 		properties : {
 			request : function( type, options ){
 				var request = new bmoor.comm[type]( options );

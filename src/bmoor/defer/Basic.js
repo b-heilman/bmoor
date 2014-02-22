@@ -21,8 +21,7 @@
 		};
 	}
 
-	bMoor.define({
-		name : 'bmoor.defer.Basic',
+	bMoor.define( 'bmoor.defer.Basic', {
 		construct : function( exceptionHandler ){
 			var dis = this;
 			this.handler = exceptionHandler || this.defaultHandler;
@@ -31,7 +30,7 @@
 			this.promise = new bmoor.defer.Promise( this );
 		},
 		properties : {
-			defaultHandler : function( ex ){ bMoor.error(ex); },
+			defaultHandler : function( ex ){ bMoor.error.report(ex); },
 			defaultSuccess : function( value ){ return value; },
 			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
 			register : function( callback, failure ){

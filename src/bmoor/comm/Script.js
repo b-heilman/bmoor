@@ -1,7 +1,6 @@
 (function(){
 
-	bMoor.define({
-		name : 'bmoor.comm.Script',
+	bMoor.define( 'bmoor.comm.Script', {
 		parent : 'bmoor.comm.Resource',
 		properties : {
 			apply : function scriptApply( content ){

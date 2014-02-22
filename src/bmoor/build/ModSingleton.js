@@ -2,7 +2,7 @@
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
 		Compiler.$instance.addModule( 5, 'bmoor.build.ModSingleton', 
-			['singleton', 'name', 'mount',function( singleton, name, mount ){
+			['-singleton', '-name', '-mount',function( singleton, name, mount ){
 
 			var obj = this;
 

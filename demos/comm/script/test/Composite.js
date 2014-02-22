@@ -1,7 +1,6 @@
 (function(){
 
-	bMoor.define({
-		name : 'test.Composite',
+	bMoor.define( 'test.Composite', {
 		require : [
 			'test.Piece1',
 			'test.Piece2'

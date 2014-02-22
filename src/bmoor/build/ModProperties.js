@@ -1,23 +1,16 @@
 (function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		function def( obj, properties ){
+		
+		Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', ['-properties', function( properties ){
 			var name;
 
-			for( name in properties ){
-				obj.prototype[name] = properties[name];
+			if ( bMoor.isInjectable(properties) ){
+				properties = bMoor.inject( properties );
 			}
-		}
 
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', ['properties', function( properties ){
-			var dis = this;
-
-			if ( bMoor.isArray(properties) ){
-				return bMoor.inject( properties, true ).then(function( props ){
-					def( dis, props );
-				});
-			}else{
-				def( this, properties );
+			for( name in properties ){
+				this.prototype[ name ] = properties[ name ];
 			}
 		}]);
 	});

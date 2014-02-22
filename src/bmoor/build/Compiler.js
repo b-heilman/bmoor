@@ -1,8 +1,5 @@
-(function( bMoor, undefined ){
-
-	var instance,
-		Defer = bMoor.ensure('bmoor.defer.Basic'),
-		Compiler = bMoor.ensure('bmoor.build.Compiler');
+bMoor.inject(['bmoor.defer.Basic','bmoor.build.Compiler','@global', function( Defer, Compiler, global ){
+	var instance;
 
 	Compiler.prototype._construct = function(){
 		this.stack = [];
@@ -24,7 +21,7 @@
 		});
 	};
 
-	Compiler.prototype.make = function( settings ){
+	Compiler.prototype.make = function( name, definition ){
 		var dis = this,
 			stillDoing = true,
 			$d = new Defer(),
@@ -32,20 +29,29 @@
 			obj,
 			i, c,
 			maker;
-		
-		if ( bMoor.isString(settings.name) ){
-			settings.id = settings.name;
-			settings.namespace = bMoor.parseNS( settings.name );
-		}else if ( bMoor.isArray(settings.name) ){
-			settings.namespace = settings.name;
-			settings.id = settings.name.join('.');
-		}else{
-			throw 'you need to define a name and needs to be either a string or an array';
+
+		if ( arguments.length !== 2 ) {
+			throw 'you need to define a name and a definition';
 		}
 
-		obj = bMoor.ensure( settings.id );
-		settings.name = settings.namespace.pop();
-		settings.mount = bMoor.get( settings.namespace );
+		if ( bMoor.isInjectable(definition) ){
+			definition = bMoor.inject( definition );
+		}
+
+		if ( bMoor.isString(name) ){
+			definition.id = name;
+			definition.namespace = bMoor.parseNS( name );
+		}else if ( bMoor.isArray(name) ){
+			definition.namespace = name;
+			definition.id = name.join('.');
+		}else{
+			throw JSON.stringify(name) + ' > ' + JSON.stringify(definition) + ' > ' +
+				'message : you need to define a name and needs to be either a string or an array';
+		}
+
+		obj = bMoor.ensure( definition.id );
+		definition.name = definition.namespace.pop();
+		definition.mount = bMoor.get( definition.namespace );
 
 		if ( !this.clean ){
 			this.stack.sort(function( a, b ){
@@ -54,17 +60,17 @@
 			this.clean = true;
 		}
 
-		$d.resolve( obj );
+		$d.resolve();
 
 		bMoor.loop( this.stack, function( maker ){
-			promise = promise.then(function(){ 
-				return bMoor.inject( maker.module, settings, obj ); 
+			promise = promise.then(function(){
+				return bMoor.inject( maker.module, definition, obj ); 
 			});
 		});
 
 		promise.then(function(){
-			if ( obj.prototype.__postMake ){
-				obj.prototype.__postMake( obj );
+			if ( obj.$onMake ){
+				obj.$onMake( definition );
 			}
 
 			if ( obj.$defer ){
@@ -79,13 +85,11 @@
 	instance = new Compiler();
 
 	Compiler.$instance = instance;
-	Compiler.$defer.resolve( Compiler );
-
-	bMoor.install( 'bmoor.build.Compiler', Compiler );
 	bMoor.install( 'bmoor.build.$compiler', instance );
 
-	bMoor.plugin( 'define', function( settings ){
-		return instance.make( settings );
+	bMoor.plugin( 'define', function( name, definition ){
+		return instance.make( name, definition );
 	});
 
-}( bMoor ));
+	Compiler.$defer.resolve( Compiler );
+}]);

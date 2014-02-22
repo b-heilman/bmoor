@@ -1,7 +1,6 @@
 (function( undefined ){
 	
-	bMoor.define({
-		name : 'bmoor.defer.Promise',
+	bMoor.define( 'bmoor.defer.Promise', {
 		construct : function( defer ){
 			this.defer = defer;
 		},

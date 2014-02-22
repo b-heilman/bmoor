@@ -27,8 +27,7 @@ describe("Testing the builds compiler", function() {
 	it("should run plugins in the correct order", function(){
 		log = [];
 
-		compiler.make({
-			name : 'Aname',
+		compiler.make( 'Aname', {
 			foobar : 3,
 			foo : 1,
 			bar : 2

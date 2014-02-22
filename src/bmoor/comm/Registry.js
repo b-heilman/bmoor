@@ -1,8 +1,7 @@
 (function( bMoor, undefined ){
 	"use strict";
 
-	bMoor.define({
-		'name' : 'bmoor.comm.Registry',
+	bMoor.define( 'bmoor.comm.Registry', {
 		singleton: true,
 		construct : function(){
 			var scripts,

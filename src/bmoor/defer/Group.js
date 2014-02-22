@@ -15,8 +15,7 @@
 		check.call( this );
 	}
 
-	bMoor.define({
-		name : 'bmoor.defer.Group',
+	bMoor.define( 'bmoor.defer.Group', {
 		construct : function(){
 			this.count = 0;
 			this.loaded = false;

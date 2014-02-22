@@ -84,9 +84,8 @@
 	/*
 		returns back the space or null
 	*/
-	function exists( space, root ){
-		var curSpace = root || global,
-			position,
+	function _exists( space, curSpace ){
+		var position,
 			name;
 		
 		if ( isString(space) || isArrayLike(space) ){
@@ -107,6 +106,25 @@
 			return space;
 		}else{
 			return null;
+		}
+	}
+
+	function exists( space, root ){
+		var i, c,
+			res;
+
+		if ( root ){
+			if ( isArrayLike(root) ){
+				for( i = 0, c = root.length; i < c && !res; i++ ){
+					res = _exists( space, root[i] );
+				}
+
+				return res;
+			}else{
+				return _exists( space, root );
+			}
+		}else{
+			return _exists( space, global );
 		}
 	}
 
@@ -210,6 +228,10 @@
 		if ( !scope ){
 			scope = arr;
 		}
+
+		//if ( isUndefined(arr) || isUndefined(arr.length) ){
+		//	console.trace();
+		//}
 
 		for ( i = 0, c = arr.length; i < c; ++i ) if ( i in arr ) {
 			fn.call(scope, arr[i], i, arr);
@@ -358,7 +380,7 @@
 		return false;
 	}
 
-	function makeQuark( namespace, withDefer ){
+	function makeQuark( namespace ){
 		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
 			if ( args && args.$arguments ){
 				this._construct.apply( this,args );
@@ -367,7 +389,7 @@
 			}
 		}
 
-		if ( withDefer ){
+		if ( Defer ){
 			Quark.$defer = new Defer();
 		}
 		
@@ -379,25 +401,26 @@
 		return Quark;
 	}
 
-	function ensure( namespace, clean ){
-		var obj;
+	// check to see if the element exists, if not, create a Quark in its place
+	function ensure( namespace, root ){
+		var obj = exists( namespace, root );
+		if ( !namespace ){
+			console.trace();
+		}
 
-		obj = find( namespace );
-		
-		// TODO : handle collisions better
 		if ( !obj ){
-			return makeQuark( namespace, !clean );
+			return makeQuark( namespace );
 		}else{
 			return obj;
 		}
 	}
 
-	function request( request, clean ){
+	function request( request, root ){
 		var rtn,
 			obj;
 
 		if ( isString(request) ){
-			obj = ensure( request, clean );
+			obj = ensure( request, root );
 
 			if ( obj.$defer ){
 				// was created by the system
@@ -414,7 +437,7 @@
 			loop( request, function( req, key ){
 				var o;
 
-				o = ensure( req, clean );
+				o = ensure( req );
 
 				if ( o.$defer ){
 					rtn.add( o.$defer.promise );
@@ -435,17 +458,37 @@
 	}
 
 	function translate( arr, root ){
-		var rtn = [];
+		var lead,
+			rtn = [];
 
 		loop( arr, function( value, key ){
-			rtn[key] = exists( value, root );
+			if ( isString(value) ){
+				lead = value.charAt( 0 );
+
+				if ( lead === '-' ){
+					rtn[key] = exists( value.substr(1), root );
+				}else if ( lead === '@' ){
+					// uses alias
+					rtn[key] = check( value.substr(1) );
+				}else{
+					// ensure
+					rtn[key] = ensure( value, root );
+				}
+			}else{
+				rtn[key] = value;
+			}
 		});
 
 		return rtn;
 	}
 
+	function isInjectable( obj ){
+		return isFunction( obj ) || ( isArray(obj) && isFunction(obj[obj.length-1]) );
+	}
+
 	function inject( arr, root, context ){
-		var func,
+		var i, c,
+			func,
 			res;
 
 		if ( isFunction(arr) ){
@@ -636,6 +679,53 @@
 		}
 	}
 
+	// I can't assume sorting...
+	// compare -> < 0 : a less; 0 : equal ; > 0 : b less
+	function compare( arr1, arr2, compare ){
+		var m,
+            cmp,
+            left = [],
+            right = [],
+            leftI = [],
+            rightI = [];
+
+        arr1 = arr1.slice(0);
+        arr2 = arr2.slice(0);
+
+        arr1.sort( compare );
+        arr2.sort( compare );
+
+        while( arr1.length > 0 && arr2.length > 0 ){
+            cmp = compare( arr1[0], arr2[0] );
+
+            if ( cmp < 0 ){
+                left.push( arr1.shift() );
+            }else if ( cmp > 0 ){
+                right.push( arr2.shift() );
+            }else{
+                leftI.push( arr1.shift() );
+                rightI.push( arr2.shift() );
+            }
+        }
+
+        while( arr1.length ){
+            left.push( arr1.shift() );
+        }
+
+        while( arr2.length ){
+            right.push( arr2.shift() );
+        }
+
+        return {
+            left : left,
+            intersection : {
+                left : leftI,
+                right : rightI
+            },
+            right : right
+        };
+	}
+
 	/**
 	Externalizing the functionality
 	**/
@@ -656,11 +746,6 @@
 		"inject"      : inject,
 		"plugin"      : plugin,
 		"makeQuark"   : makeQuark,
-		// object stuff
-		"create"      : create,
-		"extend"      : extend,
-		"copy"        : copy,
-		"equals"      : equals,
 		// allow a type expectation
 		"loop"        : loop, // array
 		"each"        : each, // object
@@ -676,53 +761,74 @@
 		"isFunction"  : isFunction,
 		"isNumber"    : isNumber,
 		"isString"    : isString,
+		"isInjectable" : isInjectable,
+		// object stuff
+		"object" : {
+			"create"      : create,
+			"extend"      : extend,
+			"copy"        : copy,
+			"equals"      : equals
+		},
 		// string functionality 
 		"string"      : {
 			"trim" : trim 
 		},
 		// array functionality
 		"array"       : {
+			"compare" : compare,
 			"indexOf" : indexOf,
 			"remove" : remove,
 			"removeAll" : removeAll,
 			"filter" : filter
 		},
 		// error handling and logging : TODO : move verbose error handling
-		"error"       : error,
+		"error"       : {
+			report : error
+		},
 		// other utils - TODO : move out
-		"urlResolve"  : urlResolve
+		"url" : {
+			"resolve"  : urlResolve
+		}
 	});
+
+	register( 'global', global );
+	register( 'undefined', undefined );
 
 	set( 'bMoor', bMoor );
 	set( 'bmoor', bmoor );
 
-	Defer = ensure('bmoor.defer.Basic', true);
-	DeferGroup = ensure('bmoor.defer.Group', true);
+	inject(['bmoor.defer.Basic', 'bmoor.defer.Group', function( b, g ){
+		var c = 0;
 
-	// chicken before the egg... so bootstrap
-	Defer.prototype.resolve = function( r ){
-		loop( this.promise.waiting, function(func){ func(r); });
-		this.promise.waiting = r;
-	};
-	Defer.prototype.promise = {
-		waiting : [],
-		then : function JunkPromise( callback ){
-			if ( this.waiting.push ){
-				this.waiting.push( callback );
-			}else{
-				callback( this.waiting );
+		Defer = b;
+		DeferGroup = g;
+
+		// chicken before the egg... so bootstrap
+		Defer.prototype._construct = function(){
+			this.promise = {
+				count : c++,
+				then : function JunkPromise( callback ){
+					if ( this.waiting && this.waiting.push ){
+						this.waiting.push( callback );
+					}else{
+						callback( this.waiting );
+					}
+					
+					return this;
+				},
+				waiting : []
 			}
-			
-			return Defer.prototype.promise;
-		}
-	};
+		};
+
+		Defer.prototype.resolve = function( r ){
+			loop( this.promise.waiting, function(func){ func(r); });
+			this.promise.waiting = r;
+		};
+	}]);
 
 }( this ));
-;(function( bMoor, undefined ){
-
-	var instance,
-		Defer = bMoor.ensure('bmoor.defer.Basic'),
-		Compiler = bMoor.ensure('bmoor.build.Compiler');
+;bMoor.inject(['bmoor.defer.Basic','bmoor.build.Compiler','@global', function( Defer, Compiler, global ){
+	var instance;
 
 	Compiler.prototype._construct = function(){
 		this.stack = [];
@@ -744,7 +850,7 @@
 		});
 	};
 
-	Compiler.prototype.make = function( settings ){
+	Compiler.prototype.make = function( name, definition ){
 		var dis = this,
 			stillDoing = true,
 			$d = new Defer(),
@@ -752,20 +858,29 @@
 			obj,
 			i, c,
 			maker;
-		
-		if ( bMoor.isString(settings.name) ){
-			settings.id = settings.name;
-			settings.namespace = bMoor.parseNS( settings.name );
-		}else if ( bMoor.isArray(settings.name) ){
-			settings.namespace = settings.name;
-			settings.id = settings.name.join('.');
-		}else{
-			throw 'you need to define a name and needs to be either a string or an array';
+
+		if ( arguments.length !== 2 ) {
+			throw 'you need to define a name and a definition';
 		}
 
-		obj = bMoor.ensure( settings.id );
-		settings.name = settings.namespace.pop();
-		settings.mount = bMoor.get( settings.namespace );
+		if ( bMoor.isInjectable(definition) ){
+			definition = bMoor.inject( definition );
+		}
+
+		if ( bMoor.isString(name) ){
+			definition.id = name;
+			definition.namespace = bMoor.parseNS( name );
+		}else if ( bMoor.isArray(name) ){
+			definition.namespace = name;
+			definition.id = name.join('.');
+		}else{
+			throw JSON.stringify(name) + ' > ' + JSON.stringify(definition) + ' > ' +
+				'message : you need to define a name and needs to be either a string or an array';
+		}
+
+		obj = bMoor.ensure( definition.id );
+		definition.name = definition.namespace.pop();
+		definition.mount = bMoor.get( definition.namespace );
 
 		if ( !this.clean ){
 			this.stack.sort(function( a, b ){
@@ -774,17 +889,17 @@
 			this.clean = true;
 		}
 
-		$d.resolve( obj );
+		$d.resolve();
 
 		bMoor.loop( this.stack, function( maker ){
-			promise = promise.then(function(){ 
-				return bMoor.inject( maker.module, settings, obj ); 
+			promise = promise.then(function(){
+				return bMoor.inject( maker.module, definition, obj ); 
 			});
 		});
 
 		promise.then(function(){
-			if ( obj.prototype.__postMake ){
-				obj.prototype.__postMake( obj );
+			if ( obj.$onMake ){
+				obj.$onMake( definition );
 			}
 
 			if ( obj.$defer ){
@@ -799,20 +914,18 @@
 	instance = new Compiler();
 
 	Compiler.$instance = instance;
-	Compiler.$defer.resolve( Compiler );
-
-	bMoor.install( 'bmoor.build.Compiler', Compiler );
 	bMoor.install( 'bmoor.build.$compiler', instance );
 
-	bMoor.plugin( 'define', function( settings ){
-		return instance.make( settings );
+	bMoor.plugin( 'define', function( name, definition ){
+		return instance.make( name, definition );
 	});
 
-}( bMoor ));
+	Compiler.$defer.resolve( Compiler );
+}]);
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 20, 'bmoor.build.ModConstruct', ['construct', 'id', function( construct, id ){
+		Compiler.$instance.addModule( 20, 'bmoor.build.ModConstruct', ['-construct', '-id', function( construct, id ){
 			if ( construct ){
 				this.prototype._construct = construct;
 			}
@@ -823,7 +936,7 @@
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 9, 'bmoor.build.ModDecorate', ['decorators', function( decorators ){
+		Compiler.$instance.addModule( 9, 'bmoor.build.ModDecorate', ['-decorators', function( decorators ){
 			var obj = this.prototype;
 
 			if ( decorators ){
@@ -846,7 +959,7 @@
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', ['factory', function( factory ){
+		Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', ['-factory', function( factory ){
 
 			var obj = this;
 
@@ -864,29 +977,29 @@
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
 		Compiler.$instance.addModule( 1, 'bmoor.build.ModFinalize', 
-			['namespace','name', 'mount', 'postMake', function( namespace, name, mount, postMake ){
+			['-onMake', '-parent', function( onMake, parent ){
 
 			var obj = this,
-				old,
 				proto = obj.prototype;
 
-			proto.__namespace = namespace;
-			proto.__name = name;
-			proto.__mount = mount;
+			if ( parent ){
+				return bMoor.request( parent ).then(function( p ){
+					if ( onMake ){
+						obj.$onMake = onMake;
 
-			if ( postMake ){
-				if ( proto.__postMake ){
-					old = proto.__postMake;
-					proto.__postMake = function(){
-						old( obj );
-						
-						if ( postMake ){
-							postMake( obj );
+						if ( p.$parentMakes ){
+							obj.$parentMakes = bMoor.create( p.$parentMakes );
+						}else{
+							obj.$parentMakes = {};
 						}
-					};
-				}else{
-					proto.__postMake = postMake;
-				}
+
+						obj.$parentMakes[ p.prototype.__class ] = p.$onMake;
+					}else{
+						obj.$onMake = p.$onMake;
+					}
+				}); // TODO : make this a request?
+			}else if ( onMake ){
+				obj.$onMake = onMake;
 			}
 		}]);
 	});
@@ -895,11 +1008,13 @@
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 90, 'bmoor.build.ModInherit', ['parent', function( parent ){
-			var dis = this,
-				t,
+		Compiler.$instance.addModule( 90, 'bmoor.build.ModInherit', 
+		['-id','-namespace','-name', '-mount','-parent', 
+		function( id, namespace, name, mount, parent){
+			var t,
 				Parent,
-				className;
+				className,
+				dis = this;
 
 			if ( parent ){
 				Parent = bMoor.ensure( parent );
@@ -913,6 +1028,11 @@
 
 				this.prototype[ className ] = Parent.prototype;
 			}
+
+			this.prototype.__class = id;
+			this.prototype.__namespace = namespace;
+			this.prototype.__name = name;
+			this.prototype.__mount = mount;
 		}]);
 	});
 
@@ -920,7 +1040,7 @@
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 4, 'bmoor.build.ModPlugin', ['plugins', function( plugins ){
+		Compiler.$instance.addModule( 4, 'bmoor.build.ModPlugin', ['-plugins', function( plugins ){
 			var obj = this.$instance || this;
 
 			bMoor.iterate( plugins, function( func, plugin ){
@@ -939,23 +1059,16 @@
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		function def( obj, properties ){
+		
+		Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', ['-properties', function( properties ){
 			var name;
 
-			for( name in properties ){
-				obj.prototype[name] = properties[name];
+			if ( bMoor.isInjectable(properties) ){
+				properties = bMoor.inject( properties );
 			}
-		}
 
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', ['properties', function( properties ){
-			var dis = this;
-
-			if ( bMoor.isArray(properties) ){
-				return bMoor.inject( properties, true ).then(function( props ){
-					def( dis, props );
-				});
-			}else{
-				def( this, properties );
+			for( name in properties ){
+				this.prototype[ name ] = properties[ name ];
 			}
 		}]);
 	});
@@ -964,7 +1077,7 @@
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 0, 'bmoor.build.ModRegister', ['id', function( id ){
+		Compiler.$instance.addModule( 0, 'bmoor.build.ModRegister', ['-id', function( id ){
 			bMoor.register( id, this );
 		}]);
 	});
@@ -973,7 +1086,7 @@
 ;(function(){
 
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 100, 'bmoor.build.ModRequire', ['require', function( require ){
+		Compiler.$instance.addModule( 100, 'bmoor.build.ModRequire', ['-require', function( require ){
 			var group = new bmoor.defer.Group(),
 				classes,
 				aliases;
@@ -1008,120 +1121,9 @@
 }());
 ;(function(){
 
-	/***
-	- FuncName
-		-- Setup
-		- massage : takes in arguments passed in, allows for modification of data object
-		- validation : validated data object being sent, can reject via throw
-		-- Connect
-		- responseType
-		- url : function or string
-		- request : use this to send the request rather than the http object (returns defer) 
-		- http : the connection object to send
-		- headers
-		- cached : defaults to false
-		- method : get,post
-		-- Response
-		- success : handles unchanged results
-		- failure : handles unchanged results
-		- process : modifies results in either case (shorthand), changes response
-	***/
-
-	var cache = {};
-
-	function makeServiceCall( service, options ){
-		var success,
-			failure;
-
-		if ( options.success ){
-			success = function serviceSuccess(){
-				return options.success.apply( service, arguments );
-			};
-		} 
-
-		if ( options.failure ){
-			failure = function serviceFailure(){
-				return options.failure.apply( service, arguments );
-			};
-		}
-
-		return function(){
-			var args = arguments,
-				r,
-				http,
-				url,
-				content,
-				response;
-
-			if ( bMoor.isString(options) ){
-				options = {
-					url : options
-				};
-			}
-			// data setup
-			if ( options.massage ){
-				args[ args.length - 1 ] = options.massage.apply( service, args );
-			}
-
-			if ( !options.validation || options.validation.apply(service,args) ){
-				// make the request
-				url = bMoor.isFunction( options.url ) ? options.url.apply( service, args ) : options.url;
-
-				if ( !options.cached || !cache[url] ){
-					// respond
-					content = args[ args.length - 1 ];
-
-					if ( options.request ){
-						response = new bmoor.defer.Basic();
-
-						r = [
-							options.request.call( service,content ),
-							200
-						];
-						r.$inject = true;
-						response.resolve( r );
-
-						response = response.promise;
-					}else{
-						http = bMoor.get( options.http || 'bmoor.comm.Http' );
-						response = ( 
-								new http({
-									url : url,
-									headers : options.headers,
-									method : options.type || 'GET',
-									responseType : options.responseType
-								}) 
-							).$defer.promise;
-					}
-
-					if ( options.cached ){
-						cache[ url ] = response;
-					}
-				}else{
-					response = cache[ url ];
-				}
-			}
-
-			return response.then( success, failure );
-		};
-	}
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModServices', ['services', function( services ){
-			var dis = this;
-
-			bMoor.iterate( services, function( service, name ){
-				dis.prototype[name] = makeServiceCall( dis, service );
-			});
-		}]);
-	});
-
-}());
-;(function(){
-
 	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
 		Compiler.$instance.addModule( 5, 'bmoor.build.ModSingleton', 
-			['singleton', 'name', 'mount',function( singleton, name, mount ){
+			['-singleton', '-name', '-mount',function( singleton, name, mount ){
 
 			var obj = this;
 
@@ -1137,10 +1139,27 @@
 		}]);
 	});
 
-}());;(function( undefined ){
+}());;(function(){
+
+	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
+		
+		Compiler.$instance.addModule( 10, 'bmoor.build.ModStatics', ['-statics', function( statics ){
+			var name;
+
+			if ( bMoor.isInjectable(statics) ){
+				statics = bMoor.inject( statics );
+			}
+
+			for( name in statics ){
+				this.prototype[ name ] = statics[ name ];
+			}
+		}]);
+	});
+
+}());
+;(function( undefined ){
 	
-	bMoor.define({
-		name : 'bmoor.defer.Promise',
+	bMoor.define( 'bmoor.defer.Promise', {
 		construct : function( defer ){
 			this.defer = defer;
 		},
@@ -1259,8 +1278,7 @@
 		};
 	}
 
-	bMoor.define({
-		name : 'bmoor.defer.Basic',
+	bMoor.define( 'bmoor.defer.Basic', {
 		construct : function( exceptionHandler ){
 			var dis = this;
 			this.handler = exceptionHandler || this.defaultHandler;
@@ -1269,7 +1287,7 @@
 			this.promise = new bmoor.defer.Promise( this );
 		},
 		properties : {
-			defaultHandler : function( ex ){ bMoor.error(ex); },
+			defaultHandler : function( ex ){ bMoor.error.report(ex); },
 			defaultSuccess : function( value ){ return value; },
 			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
 			register : function( callback, failure ){
@@ -1323,8 +1341,7 @@
 		check.call( this );
 	}
 
-	bMoor.define({
-		name : 'bmoor.defer.Group',
+	bMoor.define( 'bmoor.defer.Group', {
 		construct : function(){
 			this.count = 0;
 			this.loaded = false;
@@ -1389,8 +1406,7 @@
 		});
 	}
 
-	bMoor.define({
-		name : 'bmoor.defer.Stack',
+	bMoor.define( 'bmoor.defer.Stack', {
 		construct : function(){
 			this.promise = null;
 		},
@@ -1430,8 +1446,7 @@
 
 }());;(function(){
 	
-	bMoor.define({
-		name : 'bmoor.comm.Connector',
+	bMoor.define( 'bmoor.comm.Connector', {
 		properties : {
 			request : function( type, options ){
 				var request = new bmoor.comm[type]( options );
@@ -1536,8 +1551,7 @@ parseTemplate : function( template ){
 			throw 'error' /* TODO : error */;
 		};
 
-	bMoor.define({
-		name : 'bmoor.comm.Http',
+	bMoor.define( 'bmoor.comm.Http', {
 		construct : function( options ){
 			var dis = this,
 				xhr = this.makeXHR( 
@@ -1573,7 +1587,7 @@ parseTemplate : function( template ){
 				xhr.responseType = options.responseType;
 			}
 
-			this.url = bMoor.urlResolve( options.url );
+			this.url = bMoor.url.resolve( options.url );
 			this.status = null;
 			this.connection = xhr;
 			this.$defer = new bmoor.defer.Basic();
@@ -1644,8 +1658,7 @@ parseTemplate : function( template ){
 ;(function( bMoor, undefined ){
 	"use strict";
 
-	bMoor.define({
-		'name' : 'bmoor.comm.Registry',
+	bMoor.define( 'bmoor.comm.Registry', {
 		singleton: true,
 		construct : function(){
 			var scripts,
@@ -1820,8 +1833,7 @@ parseTemplate : function( template ){
 
 }( bMoor ));;(function( undefined ){
 
-	bMoor.define({
-		name : 'bmoor.comm.Require',
+	bMoor.define( 'bmoor.comm.Require', {
 		singleton : true,
 		properties : {
 			forceSync : false,
@@ -1897,8 +1909,7 @@ parseTemplate : function( template ){
 ;(function( undefined ){
 	"use strict";
 
-	bMoor.define({
-		name : 'bmoor.comm.Resource',
+	bMoor.define( 'bmoor.comm.Resource', {
 		construct : function( src, async ){
 			var dis = this;
 
@@ -1956,8 +1967,7 @@ parseTemplate : function( template ){
 
 }());;(function(){
 
-	bMoor.define({
-		name : 'bmoor.comm.Script',
+	bMoor.define( 'bmoor.comm.Script', {
 		parent : 'bmoor.comm.Resource',
 		properties : {
 			apply : function scriptApply( content ){
@@ -1973,8 +1983,7 @@ parseTemplate : function( template ){
 
 }());;(function(){
 
-	bMoor.define({
-		name : 'bmoor.comm.Style',
+	bMoor.define( 'bmoor.comm.Style', {
 		parent : 'bmoor.comm.Resource',
 		properties : {
 			apply : function styleApply( content ){
@@ -2018,10 +2027,14 @@ parseTemplate : function( template ){
 		}
 	}
 
-	bMoor.define({
-		name : 'bmoor.core.Decorator',
-		postMake : function( inst ){
-			inst.$singleton = new inst();
+	bMoor.define( 'bmoor.core.Decorator', {
+		onMake : function(){
+			var inst = this,
+				t = new inst();
+
+			inst.$decorate = function Decoration( obj ){
+				t.$decorate( obj );
+			};
 		},
 		properties : {
 			$decorate : function( obj ){
@@ -2031,9 +2044,6 @@ parseTemplate : function( template ){
 					if ( key === '_construct' || key === '$decorate' ){
 						// 
 						continue;
-					}else if ( key === '__construct' ){
-						// the default override is post
-						override( '_construct', obj, this[key] );
 					}else if ( obj[key] ){
 						// the default override is post
 						override( key, obj, this[key] );
@@ -2047,8 +2057,7 @@ parseTemplate : function( template ){
 
 }( this.bMoor ));;(function(){
 	
-	bMoor.define({
-		name : 'bmoor.core.Interval',
+	bMoor.define( 'bmoor.core.Interval', {
 		singleton : true,
 		construct : function(){
 			this._c = 0;
@@ -2092,8 +2101,7 @@ parseTemplate : function( template ){
 		}
 	});
 
-}());;(function( global, undefined ){
-
+}());;bMoor.define( "bmoor.core.Model", [function(){
 	function merge( from, to ){
 		var key, f, t;
 
@@ -2168,8 +2176,7 @@ parseTemplate : function( template ){
 		}
 	}
 
-	bMoor.define({
-		name : "bmoor.model.Basic",
+	return {
 		construct : function( content ){
 			var key, i, c;
 
@@ -2207,7 +2214,115 @@ parseTemplate : function( template ){
 				return JSON.stringify( this._toObject() );
 			}
 		}
-	});
+	};
+}]);
 
-}( this ));
+;bMoor.define( 'bmoor.core.Service', [function(){
+	/***
+	- FuncName
+		-- Setup
+		- massage : takes in arguments passed in, allows for modification of data object
+		- validation : validated data object being sent, can reject via throw
+		-- Connect
+		- responseType
+		- url : function or string
+		- request : use this to send the request rather than the http object (returns defer) 
+		- http : the connection object to send
+		- headers
+		- cached : defaults to false
+		- method : get,post
+		-- Response
+		- success : handles unchanged results
+		- failure : handles unchanged results
+		- process : modifies results in either case (shorthand), changes response
+	***/
+	
+	var cache = {};
 
+	function makeServiceCall( service, options ){
+		var success,
+			failure;
+
+		if ( options.success ){
+			success = function serviceSuccess(){
+				return options.success.apply( service, arguments );
+			};
+		} 
+
+		if ( options.failure ){
+			failure = function serviceFailure(){
+				return options.failure.apply( service, arguments );
+			};
+		}
+
+		return function(){
+			var args = arguments,
+				r,
+				http,
+				url,
+				content,
+				response;
+
+			if ( bMoor.isString(options) ){
+				options = {
+					url : options
+				};
+			}
+			// data setup
+			if ( options.massage ){
+				args[ args.length - 1 ] = options.massage.apply( service, args );
+			}
+
+			if ( !options.validation || options.validation.apply(service,args) ){
+				// make the request
+				url = bMoor.isFunction( options.url ) ? options.url.apply( service, args ) : options.url;
+
+				if ( !options.cached || !cache[url] ){
+					// respond
+					content = args[ args.length - 1 ];
+
+					if ( options.request ){
+						response = new bmoor.defer.Basic();
+
+						r = [
+							options.request.call( service,content ),
+							200
+						];
+						r.$inject = true;
+						response.resolve( r );
+
+						response = response.promise;
+					}else{
+						http = bMoor.get( options.http || 'bmoor.comm.Http' );
+						response = ( 
+								new http({
+									url : url,
+									headers : options.headers,
+									method : options.type || 'GET',
+									responseType : options.responseType
+								}) 
+							).$defer.promise;
+					}
+
+					if ( options.cached ){
+						cache[ url ] = response;
+					}
+				}else{
+					response = cache[ url ];
+				}
+			}
+
+			return response.then( success, failure );
+		};
+	}
+
+	return {
+		onMake : function( definition ){
+			var obj = this;
+			console.log( definition );
+			bMoor.iterate( definition.services, function( service, name ){
+				obj.prototype[name] = makeServiceCall( obj, service );
+			});
+		}
+	};
+}]);

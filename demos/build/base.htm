@@ -22,8 +22,7 @@
 
 <script>
 
-bMoor.define({
-	name : 'foo.Bar',
+bMoor.define( 'foo.Bar', {
 	properties : {
 		unos : function( eh ){ console.log('woot '+this.dos+(eh||'')); },
 		dos : 2,
@@ -38,8 +37,7 @@ bMoor.define({
 	t.unos();
 });
 
-bMoor.define({
-	name : 'foo.Bar2',
+bMoor.define('foo.Bar2', {
 	singleton : true,
 	factory : 'fac',
 	parent : 'foo.Bar',
@@ -54,8 +52,7 @@ bMoor.define({
 	t.unos();
 });
 
-bMoor.define({
-	name : 'Decorator1',
+bMoor.define( 'Decorator1', {
 	parent : 'bmoor.core.Decorator',
 	properties : {
 		unos : function(){
@@ -65,8 +62,7 @@ bMoor.define({
 	} 
 });
 
-bMoor.define({
-	name : 'foo.Bar3',
+bMoor.define( 'foo.Bar3', {
 	parent : 'foo.Bar2',
 	decorators : [
 		'Decorator1'
