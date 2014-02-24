@@ -11,72 +11,100 @@
 <script src="../../src/bmoor/build/ModFactory.js"></script>
 <script src="../../src/bmoor/build/ModDecorate.js"></script>
 <script src="../../src/bmoor/build/ModRequire.js"></script>
+<script src="../../src/bmoor/build/ModTraits.js"></script>
 
 <script src="../../src/bmoor/defer/Promise.js"></script>
 <script src="../../src/bmoor/defer/Basic.js"></script>
 <script src="../../src/bmoor/defer/Group.js"></script>
 
 <script src="../../src/bmoor/core/Decorator.js"></script>
+<script src="../../src/bmoor/core/Trait.js"></script>
 </head>
 <body>
 
 <script>
-
-bMoor.define( 'foo.Bar', {
-	properties : {
-		unos : function( eh ){ console.log('woot '+this.dos+(eh||'')); },
-		dos : 2,
-		tres : 'three'
-	}
-}).$defer.promise.then(function(obj){
-	console.log( obj );
-	var t = new obj();
-
-	console.log( 'foo.Bar', t );
-	
-	t.unos();
-});
-
-bMoor.define('foo.Bar2', {
-	singleton : true,
-	factory : 'fac',
-	parent : 'foo.Bar',
-	properties : {
-		dos : '--2--'
-	}
-}).$defer.promise.then(function(obj){ 
-	var t = new obj();
-
-	console.log( 'foo.Bar2', t );
-
-	t.unos();
-});
-
-bMoor.define( 'Decorator1', {
-	parent : 'bmoor.core.Decorator',
-	properties : {
-		unos : function(){
-			console.log('wrapped content:');
-			this.$wrapped();
+	bMoor.define( 'foo.Bar', {
+		properties : {
+			unos : function( eh ){ console.log('woot|'+this.dos+'|'+(eh||'')+'|'); },
+			dos : 2,
+			tres : 'three'
 		}
-	} 
-});
+	}).$defer.promise.then(function(obj){
+		console.log( obj );
+		var t = new obj();
 
-bMoor.define( 'foo.Bar3', {
-	parent : 'foo.Bar2',
-	decorators : [
-		'Decorator1'
-	]
-});
+		console.log( 'foo.Bar', t );
+		
+		t.unos();
+	});
 
-console.log( foo.$bar2 );
+	bMoor.define('foo.Bar2', {
+		singleton : true,
+		factory : 'fac',
+		parent : 'foo.Bar',
+		properties : {
+			dos : '--2--'
+		}
+	}).$defer.promise.then(function(obj){ 
+		var t = new obj();
 
-foo.Bar2.$instance.unos('3');
-foo.$bar2.unos('3.1');
-foo.Bar2.$make();
+		console.log( 'foo.Bar2', t );
 
-var t = new foo.Bar3();
-t.unos();
+		t.unos();
+	});
+
+	bMoor.define( 'Decorator1', {
+		parent : 'bmoor.core.Decorator',
+		properties : {
+			unos : function(){
+				console.log('wrapped content:');
+				this.$wrapped();
+			}
+		} 
+	});
+
+	bMoor.define( 'foo.Bar3', {
+		parent : 'foo.Bar2',
+		decorators : [
+			'Decorator1'
+		]
+	});
+
+	console.log( foo.$bar2 );
+
+	foo.Bar2.$instance.unos('3');
+	foo.$bar2.unos('3.1');
+	foo.Bar2.$make();
+
+	var t = new foo.Bar3();
+	t.unos('hey now');
+
+	bMoor.define( 'Trait1', {
+		parent : 'bmoor.core.Trait',
+		properties : {
+			unos : function(){
+				console.log( '__---__');
+			},
+			hello : function(){
+				console.log('world');
+			}
+		}
+	});
+
+	console.log(bmoor.core.Trait);
+	console.log(Trait1);
+
+	bMoor.define( 'foo.Bar4', {
+		parent : 'foo.Bar3',
+		traits : [
+			'Trait1'
+		]
+	});
+
+	t = new foo.Bar4();
+
+	t.unos();
+	t.hello();
 </script>
 
 </body>

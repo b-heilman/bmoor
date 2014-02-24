@@ -1,5 +1,4 @@
-(function( bMoor ){
-
+bMoor.define( 'bmoor.core.Decorator', [function(){
 	function override( key, el, action ){
 		var 
 			type = typeof(action),
@@ -24,32 +23,24 @@
 		}
 	}
 
-	bMoor.define( 'bmoor.core.Decorator', {
+	return {
 		onMake : function(){
-			var inst = this,
+			var key,
+				inst = this,
 				t = new inst();
 
-			inst.$decorate = function Decoration( obj ){
-				t.$decorate( obj );
-			};
-		},
-		properties : {
-			$decorate : function( obj ){
-				var key;
-				
-				for( key in this ){
-					if ( key === '_construct' || key === '$decorate' ){
-						// 
+			inst.$wrap = function Decoration( obj ){
+				for( key in t ){
+					if ( key === '_construct' ){
 						continue;
 					}else if ( obj[key] ){
 						// the default override is post
-						override( key, obj, this[key] );
+						override( key, obj, t[key] );
 					}else{
-						obj[key] = this[key];
+						obj[key] = t[key];
 					}
 				}
-			}
+			};
 		}
-	});
-
-}( this.bMoor ));
+	};
+}]);

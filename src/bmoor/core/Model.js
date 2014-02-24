@@ -74,41 +74,46 @@ bMoor.define( "bmoor.core.Model", [function(){
 	}
 
 	return {
-		construct : function( content ){
-			var key, i, c;
-
-			for( key in content ){
-				if ( content.hasOwnProperty(key) ){
-					this[ key ] = content[ key ];
-				}
-			}
-
-			this._inflate();
-		},
+		parent : 'bmoor.model.Trait',
 		properties : {
-			_validate : function(){ return null; },
-			_inflate : function(){},
-			_deflate : function(){},
-			_update : function( content ){
-				merge( content, this );
-				this._inflate();
+			merge : function( from ){
+				if ( bMoor.isArray(from) ){
+					arrayMerge( from, this );
+				}else{
+					merge( from, this );
+				}
+
+				return this;
 			},
-			_toObject : function(){
+			validate : function(){ 
+				return this.null; 
+			},
+			inflate : function( obj ){
+				return obj;
+			},
+			deflate : function(){
+				return this.$wrapped(); 
+			},
+			update : function( content ){
+				this.merge( content, this );
+			},
+			simplify : function(){
 				var key,
                     content = {};
 
 				this._deflate();
 
 				for( key in this ){
-					if ( this.hasOwnProperty(key) && key.charAt(0) !== '_' ){
+					if ( this.hasOwnProperty(key) && key.charAt(0) !== '&' ){
 						content[ key ] = this[ key ];
 					}
 				}
 
 				return content;
 			},
-			_toJson : function(){
-				return JSON.stringify( this._toObject() );
+			
+			toJson : function(){
+				return JSON.stringify( this.simplify() );
 			}
 		}
 	};

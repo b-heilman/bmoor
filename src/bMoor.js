@@ -433,18 +433,17 @@
 			rtn = new DeferGroup();
 			obj = [];
 			obj.$inject;
-
+			
 			loop( request, function( req, key ){
-				var o;
-
-				o = ensure( req );
-
+				var o = ensure( req );
 				if ( o.$defer ){
 					rtn.add( o.$defer.promise );
 				}
 
 				obj[key] = o;
 			});
+
+			rtn.run();
 
 			return rtn.promise.then(function(){
 				return obj;
