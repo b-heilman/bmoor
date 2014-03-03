@@ -5,16 +5,18 @@
 			this.defer = defer;
 		},
 		properties : {
-			"then" :  function( callback, errback ){
+			"then" : function( callback, errback ){
 				var defer = this.defer,
-					sub = this.defer.sub(),
+					sub = this.sub = this.defer.sub(),
 					tCallback,
 					tErrback;
 
 				tCallback = function( value ){
 					try{
 						sub.resolve( (callback||defer.defaultSuccess)(value) );
+						this.sub = null;
 					}catch( ex ){
+						this.sub = null;
 						sub.reject( ex );
 						defer.handler( ex );
 					}
@@ -23,7 +25,9 @@
 				tErrback = function( value ){
 					try{
 						sub.resolve( (errback||defer.defaultFailure)(value) );
+						this.sub = null;
 					}catch( ex ){
+						this.sub = null;
 						sub.reject( ex );
 						defer.handler( ex );
 					}
@@ -32,6 +36,14 @@
 				defer.register( tCallback, tErrback );
 
 				return sub.promise;
+			},
+			"reject" : function( error ){
+				// a short cut that allows you to not need to throw inside the then
+				if ( this.sub ){
+					this.sub.reject( error );
+				}else{
+					throw 'must reject from inside a then';
+				}
 			},
 			"done": function(callback){
 				this.then( callback );

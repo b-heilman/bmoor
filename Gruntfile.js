@@ -26,7 +26,7 @@ module.exports = function(grunt) {
 					'src/bmoor/defer/Stack.js',
 					'src/bmoor/comm/**.js',
 					'src/bmoor/core/**.js',
-					'src/bmoor/model/**.js'
+					'src/bmoor/error/**.js'
 				],
 				dest: 'build/bmoor.js',
 			},
@@ -39,7 +39,7 @@ module.exports = function(grunt) {
 			main : {
 				src : [
 					'src/bMoor.js',
-					'spec/config.js',
+					'test/config.js',
 					'src/bmoor/build/**.js',
 					'src/bmoor/defer/Promise.js',
 					'src/bmoor/defer/Basic.js',
@@ -47,11 +47,11 @@ module.exports = function(grunt) {
 					'src/bmoor/defer/Stack.js',
 					'src/bmoor/comm/**.js',
 					'src/bmoor/core/**.js',
-					'src/bmoor/model/**.js'
+					'src/bmoor/error/**.js'
 				],
 				options : {
 					specs : [
-						'spec/**/*.js'
+						'test/spec/**/*.js'
 					]
 				}
 			}

@@ -1,9 +1,7 @@
-;(function( $, global, undefined ){
+/*
 	// TODO : allow traits, so I can pull in functionality from Model.js
-	bMoor.constructor.mutate({
-		name : 'Collection',
-		namespace : ['snap','observer'],
-		parent: ['snap','observer','Map'],
+	bMoor.constructor.define('snap.observer.CollectionObserver', {
+		parent: 'snap.core.MapObserver'],
 		construct : function( model ){
 			var 
 				dis = this;
@@ -170,4 +168,4 @@
 			},
 		}
 	});
-}( jQuery, this ));
+*/

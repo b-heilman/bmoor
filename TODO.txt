@@ -1,7 +1,3 @@
-- models and collections
-	- model and collection properties
-		- simplify : reduce the object to its simplest form
-
 - could move some utils out to a lib directory
 - Error handling
 - Finish the observers

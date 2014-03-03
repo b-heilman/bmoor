@@ -5,6 +5,7 @@ bMoor.define( 'bmoor.core.Trait', {
 		
 		inst.$wrap = function Trait( obj ){
 			var key;
+			
 			for( key in t ){
 				if ( !obj[key] ){
 					obj[key] = t[key];

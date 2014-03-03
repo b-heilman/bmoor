@@ -1,10 +1,11 @@
-;(function( global, undefined ){
-	var $snapId = 0,
-		instances = {};
 
-	bMoor.define({
-		name : 'snap.observer.Map',
-		require : 'bmoor.core.Interval',
+	
+
+bMoor.define( 'bmoor.core.MapObserver', 
+	['bmoor.core.Interval',function( Interval ){
+		var $snapId = 0,
+		instances = {};
+	return {
 		construct : function( model ){
 			this.$snapId = $snapId++;
 
@@ -104,7 +105,7 @@
 			}
 		},
 		onMake : function(){
-			bmoor.core.Interval.set(function(){
+			Interval.$instance.set(function(){
 				bMoor.iterate( instances, function( inst ){
 					try{
 						inst.check();
@@ -114,7 +115,8 @@
 				});
 			}, 30);
 		}
-	});
+	};
+}]);
 /*
 	bMoor.constructor.define({
 		name : 'Map',
@@ -253,4 +255,3 @@
 		}
 	});
 */
-}( this ));

@@ -25,11 +25,12 @@ bMoor.define( 'bmoor.core.Decorator', [function(){
 
 	return {
 		onMake : function(){
-			var key,
-				inst = this,
+			var inst = this,
 				t = new inst();
 
 			inst.$wrap = function Decoration( obj ){
+				var key;
+				
 				for( key in t ){
 					if ( key === '_construct' ){
 						continue;

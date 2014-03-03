@@ -16,11 +16,13 @@
 				if ( !list ){
 					list = this.timeouts[interval] = { _c : 0 };
 
-					list._hk = setInterval(function(){
-						bmoor.iterate( list, function( f ){
-							f();
-						});
-					}, interval);
+					if ( !bMoor.testMode ){
+						list._hk = setInterval(function(){
+							bMoor.iterate( list, function( f ){
+								f();
+							});
+						}, interval);
+					}
 				}
 
 				lhk = list._c++;
@@ -29,6 +31,13 @@
 				this.hash[ hk ] = { hk : list._c, val : interval };
 
 				return hk;
+			},
+			flush : function(){
+				bMoor.iterate(this.timeouts, function( list ){
+					bMoor.iterate( list, function( f ){
+						f();
+					});
+				});
 			},
 			clear : function( hk ){
 				var lhk = this.hash[ hk ];

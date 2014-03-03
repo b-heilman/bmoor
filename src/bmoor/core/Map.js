@@ -4,25 +4,24 @@ bMoor.define( 'bmoor.core.Map', [function(){
 			'bmoor.core.Model'
 		],
 		construct : function( content ){
-			this.merge( this.inflate(content) );
+			this._merge( this._inflate(content) );
 		},
 		properties : {
-			simplify : function(){
+			_simplify : function(){
 				var key,
-                    content = {};
+                    rtn = {},
+                    content = this.deflate();
 
-				this._deflate();
-
-				for( key in this ){
-					if ( this.hasOwnProperty(key) && key.charAt(0) !== '&' ){
-						content[ key ] = this[ key ];
+				for( key in content ){
+					if ( content.hasOwnProperty(key) && key.charAt(0) !== '$' ){
+						rtn[ key ] = content[ key ];
 					}
 				}
 
-				return content;
+				return rtn;
 			},
 			toJson : function(){
-				return JSON.stringify( this.simplify() );
+				return JSON.stringify( this._simplify() );
 			}
 		}
 	};

@@ -17,11 +17,11 @@
 				}
 				
 				bMoor.loop( classes, function( namespace ){
-					group.add( bmoor.comm.$require.one(namespace) );
+					group.add( bmoor.comm.$require.get(namespace) );
 				});
 
 				bMoor.iterate( aliases, function( namespace, alias ){
-					group.add( bmoor.comm.$require.one(alias, true, namespace) );
+					group.add( bmoor.comm.$require.get(alias, true, namespace) );
 				});
 			}
 

@@ -84,15 +84,15 @@ Examples - full examples can be found in demos
 	( new obj('woofie woof') ).speak();
 	
 ### Requirements
-	bMoor.define( 'foo.Body', {
-		require : {
-			aliases : {
-				'jQuery' : '//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'
-			}
-		},
-		construct : function(){
-			jQuery('body').append('<span>Was Loaded and Created</span>');
+	bMoor.define( 'foo.Body', [
+		'>jQuery>//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js',
+		function( $ ){
+			return {
+				construct : function(){
+					$('body').append('<span>Was Loaded and Created</span>');
+				}
+			};
 		}
-	}).$defer.promise.then(function( obj ){
+	]).$defer.promise.then(function( obj ){
 		new obj();
 	});

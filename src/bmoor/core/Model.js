@@ -74,9 +74,9 @@ bMoor.define( "bmoor.core.Model", [function(){
 	}
 
 	return {
-		parent : 'bmoor.model.Trait',
+		parent : 'bmoor.core.Trait',
 		properties : {
-			merge : function( from ){
+			_merge : function( from ){
 				if ( bMoor.isArray(from) ){
 					arrayMerge( from, this );
 				}else{
@@ -85,35 +85,23 @@ bMoor.define( "bmoor.core.Model", [function(){
 
 				return this;
 			},
-			validate : function(){ 
-				return this.null; 
+			_validate : function(){ 
+				return null; 
 			},
-			inflate : function( obj ){
-				return obj;
-			},
-			deflate : function(){
-				return this.$wrapped(); 
-			},
-			update : function( content ){
-				this.merge( content, this );
-			},
-			simplify : function(){
-				var key,
-                    content = {};
-
-				this._deflate();
-
-				for( key in this ){
-					if ( this.hasOwnProperty(key) && key.charAt(0) !== '&' ){
-						content[ key ] = this[ key ];
-					}
-				}
-
+			_inflate : function( content ){
 				return content;
 			},
-			
+			_deflate : function(){
+				return this; 
+			},
+			_update : function( content ){
+				this._merge( content, this );
+			},
+			_simplify : function(){
+				return this._deflate();
+			},
 			toJson : function(){
-				return JSON.stringify( this.simplify() );
+				return JSON.stringify( this._simplify() );
 			}
 		}
 	};

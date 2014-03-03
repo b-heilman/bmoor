@@ -258,9 +258,13 @@
 			scope = obj;
 		}
 
-		for( key in obj ) if ( key !== 'prototype' && key !== 'length' && key !== 'name' &&
-			obj.hasOwnProperty(key) ){
-			fn.call( scope, obj[key], key, obj );
+		for( key in obj ){ 
+			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' && 
+				key !== 'prototype' && key !== 'length' && 
+				key !== 'name' 
+			){
+				fn.call( scope, obj[key], key, obj );
+			}
 		}
 	}
 
@@ -382,6 +386,10 @@
 
 	function makeQuark( namespace ){
 		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
+			if ( this === global ){
+				throw 'You forgot to new...';
+			}
+
 			if ( args && args.$arguments ){
 				this._construct.apply( this,args );
 			}else{
@@ -462,16 +470,22 @@
 
 		loop( arr, function( value, key ){
 			if ( isString(value) ){
-				lead = value.charAt( 0 );
-
-				if ( lead === '-' ){
-					rtn[key] = exists( value.substr(1), root );
-				}else if ( lead === '@' ){
-					// uses alias
-					rtn[key] = check( value.substr(1) );
-				}else{
-					// ensure
-					rtn[key] = ensure( value, root );
+				switch( value.charAt(0) ){
+					case '@' :
+						// uses alias
+						rtn[key] = check( value.substr(1) );
+						break;
+					case '-' :
+						// from global scope, undefined it no match
+						rtn[key] = exists( value.substr(1), root );
+						break;
+					case '+' :
+						// will be a bMoor construct
+						value = value.substr( 1 );
+					default :
+						// pull from global scope
+						rtn[key] = ensure( value, root );
+						break;
 				}
 			}else{
 				rtn[key] = value;
@@ -488,21 +502,20 @@
 	function inject( arr, root, context ){
 		var i, c,
 			func,
-			res;
+			args;
 
 		if ( isFunction(arr) ){
 			func = arr;
 			arr = [];
 		}else if ( isArray(arr) ){
-			func = arr.pop();
+			func = arr[ arr.length - 1 ];
 		}else{
 			throw 'inject needs arr to be either Array or Function';
 		}
 
-		res = translate( arr, root );
-		arr.push( func ); // put it back on...
+		args = translate( arr, root );
 
-		return func.apply( context, res );
+		return func.apply( context, args );
 	}
 
 	function plugin( plugin, obj ){ 
@@ -678,9 +691,7 @@
 		}
 	}
 
-	// I can't assume sorting...
-	// compare -> < 0 : a less; 0 : equal ; > 0 : b less
-	function compare( arr1, arr2, compare ){
+	function compareFunc( arr1, arr2, func ){
 		var m,
             cmp,
             left = [],
@@ -691,11 +702,11 @@
         arr1 = arr1.slice(0);
         arr2 = arr2.slice(0);
 
-        arr1.sort( compare );
-        arr2.sort( compare );
+        arr1.sort( func );
+        arr2.sort( func );
 
         while( arr1.length > 0 && arr2.length > 0 ){
-            cmp = compare( arr1[0], arr2[0] );
+            cmp = func( arr1[0], arr2[0] );
 
             if ( cmp < 0 ){
                 left.push( arr1.shift() );
@@ -774,7 +785,7 @@
 		},
 		// array functionality
 		"array"       : {
-			"compare" : compare,
+			"compare" : compareFunc,
 			"indexOf" : indexOf,
 			"remove" : remove,
 			"removeAll" : removeAll,

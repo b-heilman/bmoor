@@ -1,95 +1,109 @@
-bMoor.inject(['bmoor.defer.Basic','bmoor.build.Compiler','@global', function( Defer, Compiler, global ){
-	var instance;
+bMoor.inject(
+	['bmoor.defer.Basic','bmoor.build.Compiler','@global', 
+	function( Defer, Compiler, global ){
+		var instance;
 
-	Compiler.prototype._construct = function(){
-		this.stack = [];
-		this.clean = true;
-	};
+		function make( obj, name, definition ){
+			var i, c,
+				dis = this,
+				stillDoing = true,
+				$d = new Defer(),
+				promise = $d.promise,
+				maker;
 
-	Compiler.prototype.addModule = function( rank, namePath, injection ){
-		this.clean = false;
+			if ( bMoor.isString(name) ){
+				definition.id = name;
+				definition.namespace = bMoor.parseNS( name );
+			}else if ( bMoor.isArray(name) ){
+				definition.namespace = name;
+				definition.id = name.join('.');
+			}else{
+				throw JSON.stringify(name) + ' > ' + JSON.stringify(definition) + ' > ' +
+					'message : you need to define a name and needs to be either a string or an array';
+			}
 
-		if ( arguments.length < 3 ){
-			injection = namePath;
-		}else{
-			bMoor.install( namePath, injection[injection.length-1] );
-		}
+			definition.name = definition.namespace.pop();
+			definition.mount = bMoor.get( definition.namespace );
 
-		this.stack.push({
-			rank : parseInt(rank,10),
-			module : injection
-		});
-	};
+			if ( !this.clean ){
+				this.stack.sort(function( a, b ){
+					return b.rank - a.rank;
+				});
+				this.clean = true;
+			}
 
-	Compiler.prototype.make = function( name, definition ){
-		var dis = this,
-			stillDoing = true,
-			$d = new Defer(),
-			promise = $d.promise,
-			obj,
-			i, c,
-			maker;
+			$d.resolve();
 
-		if ( arguments.length !== 2 ) {
-			throw 'you need to define a name and a definition';
-		}
-
-		if ( bMoor.isInjectable(definition) ){
-			definition = bMoor.inject( definition );
-		}
-
-		if ( bMoor.isString(name) ){
-			definition.id = name;
-			definition.namespace = bMoor.parseNS( name );
-		}else if ( bMoor.isArray(name) ){
-			definition.namespace = name;
-			definition.id = name.join('.');
-		}else{
-			throw JSON.stringify(name) + ' > ' + JSON.stringify(definition) + ' > ' +
-				'message : you need to define a name and needs to be either a string or an array';
-		}
-
-		obj = bMoor.ensure( definition.id );
-		definition.name = definition.namespace.pop();
-		definition.mount = bMoor.get( definition.namespace );
-
-		if ( !this.clean ){
-			this.stack.sort(function( a, b ){
-				return b.rank - a.rank;
+			bMoor.loop( this.stack, function( maker ){
+				promise = promise.then(function(){
+					return bMoor.inject( maker.module, definition, obj ); 
+				});
 			});
+
+			promise.then(function(){
+				if ( obj.$onMake ){
+					obj.$onMake( definition );
+				}
+
+				if ( obj.$defer ){
+					obj.$loaded = true; // what do I use this for?  Thinking vestigial
+					obj.$defer.resolve( obj );
+				}
+			});
+		}
+
+		Compiler.prototype._construct = function(){
+			this.stack = [];
 			this.clean = true;
-		}
+		};
 
-		$d.resolve();
+		Compiler.prototype.addModule = function( rank, namePath, injection ){
+			this.clean = false;
 
-		bMoor.loop( this.stack, function( maker ){
-			promise = promise.then(function(){
-				return bMoor.inject( maker.module, definition, obj ); 
+			if ( arguments.length < 3 ){
+				injection = namePath;
+			}else{
+				bMoor.install( namePath, injection[injection.length-1] );
+			}
+
+			this.stack.push({
+				rank : parseInt(rank,10),
+				module : injection
 			});
-		});
+		};
 
-		promise.then(function(){
-			if ( obj.$onMake ){
-				obj.$onMake( definition );
+		Compiler.prototype.make = function( name, definition ){
+			var dis = this,
+				obj = bMoor.ensure( name );
+
+			if ( arguments.length !== 2 ) {
+				throw 'you need to define a name and a definition';
+			}
+			
+			if ( bMoor.isInjectable(definition) ){
+				if ( bMoor.require ){
+					bMoor.require.inject( definition ).then(function( def ){
+						make.call( dis, obj, name, def );
+					});
+				}else{
+					make.call( this, obj, name, bMoor.inject(definition) );
+				}
+			}else{
+				make.call( this, obj, name, definition );
 			}
 
-			if ( obj.$defer ){
-				obj.$loaded = true; // what do I use this for?  Thinking vestigial
-				obj.$defer.resolve( obj );
-			}
+			return obj;
+		};
+
+		instance = new Compiler();
+
+		Compiler.$instance = instance;
+		bMoor.install( 'bmoor.build.$compiler', instance );
+
+		bMoor.plugin( 'define', function( name, definition ){
+			return instance.make( name, definition );
 		});
 
-		return obj;
-	};
-
-	instance = new Compiler();
-
-	Compiler.$instance = instance;
-	bMoor.install( 'bmoor.build.$compiler', instance );
-
-	bMoor.plugin( 'define', function( name, definition ){
-		return instance.make( name, definition );
-	});
-
-	Compiler.$defer.resolve( Compiler );
-}]);
+		Compiler.$defer.resolve( Compiler );
+	}
+]);

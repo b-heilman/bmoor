@@ -100,7 +100,7 @@ bMoor.define( 'bmoor.core.Service', [function(){
 	return {
 		onMake : function( definition ){
 			var obj = this;
-			console.log( definition );
+			
 			bMoor.iterate( definition.services, function( service, name ){
 				obj.prototype[name] = makeServiceCall( obj, service );
 			});

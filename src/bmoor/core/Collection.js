@@ -8,8 +8,8 @@ bMoor.define( 'bmoor.core.Collection', [function(){
 			this.merge( this.inflate(content) );
 		},
 		properties : {
-			toJson : function(){
-				return JSON.stringify( this.simplify() );
+			simplify : function(){
+				return this.deflate().hslice( 0 );
 			}
 		}
 	};
