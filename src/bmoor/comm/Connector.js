@@ -5,7 +5,7 @@
 			request : function( type, options ){
 				var request = new bmoor.comm[type]( options );
 
-				return request.$defer.promise;
+				return request.$.promise;
 			},
 			http : function( options ){
 				return this.request( 'Http', options );

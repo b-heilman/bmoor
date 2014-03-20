@@ -11,12 +11,11 @@
 <script src="../../src/bmoor/build/ModDecorate.js"></script>
 <script src="../../src/bmoor/build/ModPlugin.js"></script>
 
-<script src="../../src/bmoor/core/Service.js"></script>
-
 <script src="../../src/bmoor/defer/Promise.js"></script>
 <script src="../../src/bmoor/defer/Basic.js"></script>
 <script src="../../src/bmoor/defer/Group.js"></script>
 
+<script src="../../src/bmoor/core/Service.js"></script>
 <script src="../../src/bmoor/core/Decorator.js"></script>
 
 <script src="../../src/bmoor/comm/Http.js"></script>
@@ -24,7 +23,7 @@
 <body>
 
 <script>
-var t = bMoor.define( 'foo.Bar', {
+bMoor.define( 'foo.Bar', {
 	parent : 'bmoor.core.Service',
 	services : {
 		getPeople : 'test/people.js',
@@ -72,25 +71,27 @@ var t = bMoor.define( 'foo.Bar', {
 			}
 		}
 	}
+}).then(function( t ){
+	t = new t();
+
+	t.getPeople().then(function( result ){
+		console.log( result );
+	});
+
+	t.getJobs().then(function( jobs ){
+		console.log( jobs );
+	});
+
+	t.getOtherJobs().then(function( jobs ){
+		console.log( jobs );
+	});
+
+	t.getSomething().then(function( dude ){
+		console.log( dude );
+	});
 });
 
-t = new t();
 
-t.getPeople().then(function( result ){
-	console.log( result );
-});
-
-t.getJobs().then(function( jobs ){
-	console.log( jobs );
-});
-
-t.getOtherJobs().then(function( jobs ){
-	console.log( jobs );
-});
-
-t.getSomething().then(function( dude ){
-	console.log( dude );
-});
 </script>
 
 </body>

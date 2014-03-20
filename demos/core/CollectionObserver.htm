@@ -27,23 +27,38 @@
 	<script src="../../src/bmoor/core/Trait.js"></script>
 	<script src="../../src/bmoor/core/Model.js"></script>
 	<script src="../../src/bmoor/core/Map.js"></script>
+	<script src="../../src/bmoor/core/CollectionObserver.js"></script>
 	<script src="../../src/bmoor/core/MapObserver.js"></script>
 	<script src="../../src/bmoor/core/Interval.js"></script>
 </head>
 <body>
 	<script>
-	var map = {},
-		obs = new bmoor.core.MapObserver( map );
+	var collection = [],
+		obs = new bmoor.core.CollectionObserver( collection );
 
 	obs.watch('woot', function(newVal,oldVal){
 		console.log( newVal, '->', oldVal );
 	});
 
-	map.woot = 'initialized';
+	obs.watchChanges(function(changes){
+		console.log( changes );
+	});
+
+	collection.woot = 'initialized';
 
 	setTimeout(function(){
-		map.woot = 'timeouted';
+		collection.woot = 'timeouted';
 	},300);
+
+	setTimeout(function(){
+		collection.push( {woot:1} );
+		collection.unshift( {woot:2} );
+		collection[ collection.length-1 ] = {woot:3};
+	}, 600);
+
+	setTimeout(function(){
+		collection.push( collection.shift() );
+	}, 1000);
 	</script>
 </body>
 </html>

@@ -177,14 +177,30 @@
 	function dwrap( value ){
 		var d;
 
-		if ( value.$defer ){
-			d = value.$defer;
+		if ( value.$ ){
+			d = value.$.promise;
 		}else{
 			d = new Defer(); 
 			d.resolve( value );
 		}
 		
 		return d.promise;
+	}
+
+	function isEmpty( obj ){
+		var key;
+
+		if ( isObject(obj) ){
+			for( key in obj ){ 
+				if ( obj.hasOwnProperty(key) ){
+					return false;
+				}
+			}
+		}else if ( isArrayLike(obj) ){
+			return obj.length === 0;
+		}
+
+		return true;
 	}
 
 	function isUndefined(value) {
@@ -211,10 +227,14 @@
 		return value  && typeof value === 'object';
 	}
 
+	function isBoolean(value){
+		return typeof value === 'boolean';
+	}
+
 	// type  checks
 	function isArrayLike(obj) {
 		// for me, if you have a length, I'm assuming you're array like, might change
-		return ( obj && (typeof obj.length === 'number') && (obj.length != 1 || obj[0]) ) ;
+		return obj && (typeof obj.length === 'number') && obj.push;
 	}
 
 	function isArray(value) {
@@ -390,6 +410,8 @@
 				throw 'You forgot to new...';
 			}
 
+			this.$ = {}; // The instance mount position for all framework specific things
+
 			if ( args && args.$arguments ){
 				this._construct.apply( this,args );
 			}else{
@@ -397,8 +419,11 @@
 			}
 		}
 
+		Quark.$ = {}; // class based mount position for all framework specific things
+
 		if ( Defer ){
-			Quark.$defer = new Defer();
+			Quark.$.defer = new Defer();
+			Quark.$.promise = Quark.$.defer.promise;
 		}
 		
 		Quark.prototype.__class = namespace;
@@ -420,47 +445,6 @@
 			return makeQuark( namespace );
 		}else{
 			return obj;
-		}
-	}
-
-	function request( request, root ){
-		var rtn,
-			obj;
-
-		if ( isString(request) ){
-			obj = ensure( request, root );
-
-			if ( obj.$defer ){
-				// was created by the system
-				return obj.$defer.promise;
-			}else{
-				// some other object, need to play nice
-				return dwrap( obj );
-			}
-		}else if ( isArrayLike(request) ){
-			rtn = new DeferGroup();
-			obj = [];
-			obj.$inject;
-			
-			loop( request, function( req, key ){
-				var o = ensure( req );
-				if ( o.$defer ){
-					rtn.add( o.$defer.promise );
-				}
-
-				obj[key] = o;
-			});
-
-			rtn.run();
-
-			return rtn.promise.then(function(){
-				return obj;
-			});
-		}else{
-			// TODO : need an error class
-			throw {
-				message : 'Request needs a string or array passed in'
-			};
 		}
 	}
 
@@ -495,14 +479,57 @@
 		return rtn;
 	}
 
+	function request( request, root ){
+		var obj;
+
+		console.log( request );
+		if ( isString(request) ){
+			obj = ensure( request, root );
+
+			if ( obj.$ ){
+				// was created by the system
+				return obj.$.promise;
+			}else{
+				// some other object, need to play nice
+				return dwrap( obj );
+			}
+		}else if( isArrayLike(request) ){
+			obj = new DeferGroup();
+
+			loop( request, function( req, key ){
+				if ( isString(req) ){
+					req = ensure( req, root );
+					request[ key ] = req;
+				}
+
+				if ( req && req.$ ){
+					obj.add( req.$.promise );
+				}
+			});
+
+			obj.run();
+
+			return obj.promise.then(function(){
+				return request;
+			});
+		}
+	}
+
 	function isInjectable( obj ){
 		return isFunction( obj ) || ( isArray(obj) && isFunction(obj[obj.length-1]) );
 	}
 
-	function inject( arr, root, context ){
+	function inject( arr, root, context, waiting ){
 		var i, c,
+			rtn,
 			func,
 			args;
+
+		waiting = arguments[ arguments.length - 1 ]; 
+			
+		if ( !isBoolean(waiting) ){
+			waiting = false;
+		}
 
 		if ( isFunction(arr) ){
 			func = arr;
@@ -515,9 +542,15 @@
 
 		args = translate( arr, root );
 
-		return func.apply( context, args );
+		if ( waiting ){
+			return request( args ).then(function(){
+				return func.apply( context, args );
+			});
+		}else{
+			return func.apply( context, args );
+		}
 	}
-
+	
 	function plugin( plugin, obj ){ 
 		set( plugin, obj, bMoor ); 
 	}
@@ -751,7 +784,7 @@
 		"find"        : find,
 		"install"     : install,
 		"ensure"      : ensure,
-		"request"     : request, // wraps require with a defer
+		"request"     : request,
 		"translate"   : translate,
 		"inject"      : inject,
 		"plugin"      : plugin,
@@ -763,6 +796,7 @@
 		// general looping
 		"forEach"     : forEach,
 		// all the is tests
+		"isBoolean"   : isBoolean,
 		"isDefined"   : isDefined,
 		"isUndefined" : isUndefined,
 		"isArray"     : isArray,
@@ -772,6 +806,7 @@
 		"isNumber"    : isNumber,
 		"isString"    : isString,
 		"isInjectable" : isInjectable,
+		"isEmpty"     : isEmpty, 
 		// object stuff
 		"object" : {
 			"create"      : create,
@@ -834,13 +869,17 @@
 			loop( this.promise.waiting, function(func){ func(r); });
 			this.promise.waiting = r;
 		};
+
+		DeferGroup.prototype.run = function(){
+		};
 	}]);
 
 }( this ));
 ;bMoor.inject(
 	['bmoor.defer.Basic','bmoor.build.Compiler','@global', 
 	function( Defer, Compiler, global ){
-		var instance;
+		var defer = Compiler.$.defer,
+			instance;
 
 		function make( obj, name, definition ){
 			var i, c,
@@ -848,7 +887,10 @@
 				stillDoing = true,
 				$d = new Defer(),
 				promise = $d.promise,
+				defer = obj.$.defer,
 				maker;
+
+			obj.$.defer = null;
 
 			if ( bMoor.isString(name) ){
 				definition.id = name;
@@ -884,9 +926,8 @@
 					obj.$onMake( definition );
 				}
 
-				if ( obj.$defer ){
-					obj.$loaded = true; // what do I use this for?  Thinking vestigial
-					obj.$defer.resolve( obj );
+				if ( defer ){
+					defer.resolve( obj );
 				}
 			});
 		}
@@ -925,13 +966,15 @@
 						make.call( dis, obj, name, def );
 					});
 				}else{
-					make.call( this, obj, name, bMoor.inject(definition) );
+					bMoor.inject( definition, true ).then(function( def ){
+						make.call( dis, obj, name, def );
+					});
 				}
 			}else{
 				make.call( this, obj, name, definition );
 			}
 
-			return obj;
+			return obj.$.promise;
 		};
 
 		instance = new Compiler();
@@ -943,7 +986,8 @@
 			return instance.make( name, definition );
 		});
 
-		Compiler.$defer.resolve( Compiler );
+		Compiler.$.defer = null;
+		defer.resolve( Compiler );
 	}
 ]);
 ;(function(){
@@ -1042,27 +1086,32 @@
 		['-id','-namespace','-name', '-mount','-parent', 
 		function( id, namespace, name, mount, parent){
 			var t,
-				Parent,
 				className,
 				dis = this;
 
 			if ( parent ){
-				Parent = bMoor.ensure( parent );
-				className = Parent.prototype.__class;
-				
-				t = function(){ 
-					this.constructor = dis; // once called, define
-				};
-				t.prototype = Parent.prototype;
-				this.prototype = new t();
+				return bMoor.inject([parent, function(Parent){
+					className = Parent.prototype.__class;
+					
+					t = function(){ 
+						this.constructor = dis; // once called, define
+					};
+					t.prototype = Parent.prototype;
+					dis.prototype = new t();
 
-				this.prototype[ className ] = Parent.prototype;
+					dis.prototype[ className ] = Parent.prototype;
+
+					dis.prototype.__class = id;
+					dis.prototype.__namespace = namespace;
+					dis.prototype.__name = name;
+					dis.prototype.__mount = mount;
+				}]);
+			}else{
+				this.prototype.__class = id;
+				this.prototype.__namespace = namespace;
+				this.prototype.__name = name;
+				this.prototype.__mount = mount;
 			}
-
-			this.prototype.__class = id;
-			this.prototype.__namespace = namespace;
-			this.prototype.__name = name;
-			this.prototype.__mount = mount;
 		}]);
 	});
 
@@ -1163,7 +1212,6 @@
 				}
 
 				singleton.$arguments = true;
-
 				obj.$instance = mount[ '$'+name[0].toLowerCase() + name.substr(1) ] = new obj( singleton );
 			}
 		}]);
@@ -1517,7 +1565,7 @@
 			request : function( type, options ){
 				var request = new bmoor.comm[type]( options );
 
-				return request.$defer.promise;
+				return request.$.promise;
 			},
 			http : function( options ){
 				return this.request( 'Http', options );
@@ -1656,7 +1704,8 @@ parseTemplate : function( template ){
 			this.url = bMoor.url.resolve( options.url );
 			this.status = null;
 			this.connection = xhr;
-			this.$defer = new bmoor.defer.Basic();
+			this.$.defer = new bmoor.defer.Basic();
+			this.$.promise = this.$.defer.promise;
 
 			xhr.send(options.data || null);
 		},
@@ -1707,7 +1756,7 @@ parseTemplate : function( template ){
 				r = [ response, status, headers ];
 				r.$inject = true;
 
-				this.$defer[action]( r );
+				this.$.defer[action]( r );
 			}
 		},
 		plugins : {
@@ -1716,7 +1765,7 @@ parseTemplate : function( template ){
 
 				dis = new dis( options );
 
-				return dis.$defer.promise;
+				return dis.$.promise;
 			}
 		}
 	});
@@ -1944,7 +1993,9 @@ parseTemplate : function( template ){
 		}
 
 		return translate.call( this, arr, root ).then(function( args ){
-			return func.apply( context, args );
+			return bMoor.request( args ).then(function(){
+				return func.apply( context, args );
+			});
 		});
 	}
 
@@ -1966,11 +2017,11 @@ parseTemplate : function( template ){
 					if ( async === false ){
 						return bMoor.exists( requirement );
 					}else{
-						return req.$defer.promise.then(function(){
+						return req.$.promise.then(function(){
 							var t = bMoor.exists( requirement );
 							
-							if ( t.$defer ){
-								return t.$defer.promise;
+							if ( t.$.defer ){
+								return t.$.promise;
 							}else{
 								return t;
 							}
@@ -1980,8 +2031,8 @@ parseTemplate : function( template ){
 					if ( async === false ){
 						return req;
 					}else{
-						if ( req.$defer ) {
-							return req.$defer.promise;
+						if ( req.$.defer ) {
+							return req.$.promise;
 						}else{
 							return bMoor.dwrap( req );
 						}
@@ -2031,13 +2082,13 @@ parseTemplate : function( template ){
 		construct : function( src, async ){
 			var dis = this;
 
-			this.$defer = new bmoor.defer.Basic();
+			this.$.defer = new bmoor.defer.Basic();
 
 			(new bmoor.comm.Http({
 				'method' : 'GET',
 				'url' : src,
 				'async' : async
-			})).$defer.promise.then( 
+			})).$.promise.then( 
 				function resourceSuccess( response, status ){
 					try{
 						dis.status = 200;
@@ -2067,13 +2118,13 @@ parseTemplate : function( template ){
 			},
 			resolve : function( data ){
 				if ( this.status === 200 ){
-					this.$defer.resolve({
+					this.$.defer.resolve({
 						data : data,
 						status : this.status,
 						headers : undefined
 					});
 				}else{
-					this.$defer.reject({
+					this.$.defer.reject({
 						data : data,
 						status : this.status,
 						headers : undefined
@@ -2130,96 +2181,92 @@ parseTemplate : function( template ){
 		},
 		properties : {
 			simplify : function(){
-				return this.deflate().hslice( 0 );
+				return this.deflate().slice( 0 );
 			}
 		}
 	};
-}]);;/*
-	// TODO : allow traits, so I can pull in functionality from Model.js
-	bMoor.constructor.define('snap.observer.CollectionObserver', {
-		parent: 'snap.core.MapObserver'],
-		construct : function( model ){
-			var 
-				dis = this;
+}]);;bMoor.define('bmoor.core.CollectionObserver', 
+[function(){
+	return {
+		parent : 'bmoor.core.MapObserver',
+		construct : function( collection ){
+			this['bmoor.core.MapObserver']._construct.call( this, collection );
 
-			this['snap.observer.Map'].__construct.call( this, model );
-
+			// I want to add code to grab elements that are removed
 			this.removals = [];
-
-			// Need to inject so we can observe removals
-			model.pop = function(){
-				var t = Array.prototype.pop.call( this );
-
-				if ( t.$markRemoval === undefined ){
-					t.$markRemoval = dis.removals.length;
-				}
-
-				dis.removals.push( t );
-
-				return t;
+			this.watches = [];
+			this.changes = {
+				moves : [],
+				removals : []
 			};
-
-			model.shift = function(){
-				var t = Array.prototype.shift.call( this );
-
-				if ( t.$markRemoval === undefined ){
-					t.$markRemoval = dis.removals.length;
-				}
-
-				dis.removals.push( t );
-
-				return t;
-			};
-
-			model.splice = function(){
-				var 
-					i,
-					c,
-					t = Array.prototype.splice.apply(this, arguments);
-
-				for( i = 0, c = t.length; i < c; i++ ){
-					if ( t[i].$markRemoval === undefined ){
-						t[i].$markRemoval = dis.removals.length + i;
-					}
-				}
-
-				dis.removals = dis.removals.concat( t );
-
-				return t;
-			};
+			this._wrapCollection( collection )
 		},
 		properties : {
-			remove : function( obj ){
-				var index = this.find( obj );
+			_wrapCollection : function( collection ){
+				var dis = this;
 				
-				if ( index != -1 ){
-					return this.model.splice( index, 1 )[0];
-				}
-			},
-			find : function( obj, fromIndex ){
-				var 
-					i, 
-					j,
-					model = this.model;
+				collection.pop = function(){
+					var t = Array.prototype.pop.call( this );
 
-				if ( model.indexOf ){
-					return model.indexOf( obj, fromIndex );
-				}else{
-					if (fromIndex === null) {
-						fromIndex = 0;
-					} else if (fromIndex < 0) {
-						fromIndex = Math.max(0, model.length + fromIndex);
+					if ( t.$markRemoval === undefined ){
+						t.$markRemoval = dis.removals.length;
 					}
 
-					for ( i = fromIndex, j = model.length; i < j; i++ ) {
-						if ( model[i] === obj )
-							return i;
+					dis.removals.push( t );
+
+					return t;
+				};
+
+				collection.shift = function(){
+					var t = Array.prototype.shift.call( this );
+
+					if ( t.$markRemoval === undefined ){
+						t.$markRemoval = dis.removals.length;
 					}
 
-					return -1;
-				}
+					dis.removals.push( t );
+
+					return t;
+				};
+
+				collection.splice = function(){
+					var 
+						i,
+						c,
+						t = Array.prototype.splice.apply(this, arguments);
+
+					for( i = 0, c = t.length; i < c; i++ ){
+						if ( t[i].$markRemoval === undefined ){
+							t[i].$markRemoval = dis.removals.length + i;
+						}
+					}
+
+					dis.removals = dis.removals.concat( t );
+
+					return t;
+				};
 			},
-			_clean : function(){
+			watchChanges : function( func ){
+				this.watches.push( func );
+			},
+			check : function(){
+				var i, c,
+					dis = this;
+				
+				if ( !this.checking ){
+					this['bmoor.core.MapObserver'].check.call( this );
+					
+					this.checking = true;
+					this.changes = this.checkChanges();
+					if ( this._needNotify(this.changes) ){
+						bMoor.loop( this.watches, function( f ){
+							f( dis.changes );
+						});
+					}
+					this.checking = false;
+				}
+			}, 
+			checkChanges : function(){
 				var
 					i,
 					val,
@@ -2231,44 +2278,41 @@ parseTemplate : function( template ){
 					removals,
 					moves = {};
 
-				for( key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' ){
-					val = model[key];
-					
-					if ( typeof(val) == 'function' ){
-						continue;
-					} else {
-						i = parseInt( key, 10 );
-
-						if ( isNaN(i) ){
-							if ( val != cleaned[key] ){
-								changes[ key ] = true;
-								cleaned[ key ] = val;
-							}
+				for( key in model ) {
+					if ( model.hasOwnProperty(key) && key[0] !== '_' ){
+						val = model[key];
+						
+						if ( typeof(val) == 'function' ){
+							continue;
 						} else {
-							// TODO : do i really want to do this?
-							if ( !val._ ){
-								new snap.observer.Map( val );
-							}
+							i = parseInt( key, 10 );
 
-							if ( val.$remove ){
-								// allow for a model to force its own removal
-								this.model.splice( i, 1 );
-							}else if ( val._.index === undefined ){
-								// new row added
-								moves[ key ] = val;
-							}else if ( val._.index != i ){
-								moves[ key ] = val;
-								if ( val.$markRemoval !== undefined ){
-									this.removals[ val.$markRemoval ] = undefined;
-									delete val.$markRemoval;
+							if ( !isNaN(i) ){
+								// TODO : do i really want to do this?
+								if ( !val._co ){
+									val._co = {};
 								}
+
+								if ( val.$remove ){
+									// allow for a model to force its own removal
+									this.model.splice( i, 1 );
+								}else if ( val._co.index === undefined ){
+									// new row added
+									moves[ key ] = val;
+								}else if ( val._co.index != i ){
+									moves[ key ] = val;
+									if ( val.$markRemoval !== undefined ){
+										this.removals[ val.$markRemoval ] = undefined;
+										delete val.$markRemoval;
+									}
+								}
+								
+								val._co.index = i;
 							}
-							
-							val._.index = i;
 						}
 					}
 				}
-
+				
 				changes.removals = this.removals;
 				changes.moves = moves;
 
@@ -2279,32 +2323,28 @@ parseTemplate : function( template ){
 			_needNotify : function( changes ){
 				var key;
 
-				for( key in changes ) if ( changes.hasOwnProperty(key) ){
-					if ( key == 'removals' ){
-						if ( changes.removals.length ){
+				for( key in changes ) {
+					if ( changes.hasOwnProperty(key) ){
+						if ( key == 'removals' ){
+							if ( changes.removals.length ){
+								return true;
+							}
+						}else if ( key == 'moves' ){
+							if ( !bMoor.isEmpty(changes.moves) ){
+								return true;
+							}
+						}else{
 							return true;
 						}
-					}else if ( key == 'moves' ){
-						if ( !$.isEmptyObject(changes.moves) ){
-							return true;
-						}
-					}else{
-						return true;
 					}
 				}
 
 				return false;
-			},
-			_onBind : function( func ){
-				// TODO : maybe change the list to play nice with the binding setting
-				this.run( func, {binding:true, moves:this.model} );
-			},
-			run : function( func, changes ){
-				func.call( this, changes );
-			},
+			}
 		}
-	});
-*/
+	};
+}]);
+
 ;bMoor.define( 'bmoor.core.Decorator', [function(){
 	function override( key, el, action ){
 		var 
@@ -2436,16 +2476,24 @@ parseTemplate : function( template ){
 }]);
 
 ;
-	
-
 bMoor.define( 'bmoor.core.MapObserver', 
 	['bmoor.core.Interval',function( Interval ){
-		var $snapId = 0,
+		var $snapMO = 0,
 		instances = {};
+
 	return {
 		construct : function( model ){
-			this.$snapId = $snapId++;
+			if ( $snapMO === 0 ){
+				Interval.$instance.set(function(){
+					bMoor.iterate( instances, function( inst ){
+						inst.check();
+					});
+				}, 30);
+			}
+			
+			this.$snapMO = $snapMO++;
 
+			this.checking = false;
 			this.watching = {};
 			this.observe( model );
 			this.start();
@@ -2453,7 +2501,7 @@ bMoor.define( 'bmoor.core.MapObserver',
 		properties : {
 			observe : function( model ){
 				if ( this.model ){
-					delete this.model.$observers[ this.$snapId ];
+					delete this.model.$observers[ this.$snapMO ];
 				}
 
 				this.model = model;
@@ -2462,19 +2510,26 @@ bMoor.define( 'bmoor.core.MapObserver',
 					model.$observers = {};
 				}
 
-				model.$observers[ this.$snapId ] = this;
+				model.$observers[ this.$snapMO ] = this;
 			},
 			watch : function( variable, func ){
-				// registers what the observe monitors
+				var p, 
+					t; // registers what the observe monitors
 				if ( !this.watching[variable] ){
+					p = variable.split('.');
+
 					this.watching[variable] = {
-						path : variable.split('.'),
-						value : undefined,
+						path : p,
+						value : this.evaluate( p ),
 						calls : []
 					};
 				}
 
-				this.watching[ variable ].push( func );
+				t = this.watching[ variable ];
+
+				func( t.value, undefined ); // call when first inserted
+				
+				t.calls.push( func );
 			},
 			evaluate : function( path ){
 				var i, c,
@@ -2503,195 +2558,21 @@ bMoor.define( 'bmoor.core.MapObserver',
 						for( i = 0, c = watch.calls.length; i < c; i++ ){
 							watch.calls[ i ]( val, watch.value );
 						}
+
+						watch.value = val;
 					}
 				});
+				this.checking = false;
 			},
 			start : function(){
-				instances[ this.$snapId ] = this;
+				instances[ this.$snapMO ] = this;
 			},
 			stop : function(){
-				delete instances[ this.$snapId ];
-			},
-			simplify : function(){
-				var key,
-					model = this.model,
-					simple = {};
-
-				// TODO : what about models inside of models?
-				for( key in model ) if ( model.hasOwnProperty(key) && key[0] !== '_' && key[0] !== '$' ){
-					val = model[ key ];
-
-					if ( bMoor.isFunction(val) ){
-						val = model[ key ]();
-					}
-
-					simple[ key ] = val;
-				}
-
-				return simple;
-			},
-			isEmpty : function(){
-				var model = this.model,
-					key;
-
-				for( key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' && key[0] != '$' ){
-					return false;
-				}
-
-				return true;
+				delete instances[ this.$snapMO ];
 			}
-		},
-		onMake : function(){
-			Interval.$instance.set(function(){
-				bMoor.iterate( instances, function( inst ){
-					try{
-						inst.check();
-					}catch( e ){
-						// I have no idea...
-					}
-				});
-			}, 30);
 		}
 	};
 }]);
-/*
-	bMoor.constructor.define({
-		name : 'Map',
-		namespace : ['snap','observer'],
-		// this will use the observer pattern to allow element to bind to a model
-		construct : function( model ){
-			this.snapid = snapid++;
-			this.cleaned = {};
-			this.listeners = [];
-			this.interval = null;
-			this.root = this;
-			
-			this.init( model );
-		},
-		properties : {
-			init : function( model ){
-				this.spy( model );
-				model._ = this;
-			},
-			spy : function( model ){
-				if ( this.model && this.model._ == this ){
-					delete this.model._;
-				}
-
-				this.model = model;
-
-				if ( !this.interval ){
-					this.start();
-				}else{
-					this.flush( {modelSwitch:true} );
-				}
-			},
-			start : function( interval ){
-				var 
-					dis = this,
-					val;
-				
-				if ( !this.interval ){
-					this._clean();
-					
-					this.flush( {start:true} );
-
-					this.interval = setInterval( function(){ dis.flush( {} ); }, interval || 50 );
-				}
-				
-				return this;
-			},
-			stop : function(){
-				clearInterval( this.interval );
-				this.interval = null;
-				
-				this.flush( {stop:true} );
-
-				return this;
-			},
-			flush : function( settings ){
-				var 
-					changes,
-					key;
-
-				changes = this._clean();
-
-				if ( this._needNotify(changes) ){
-					for( key in settings ){
-						changes[ key ] = settings[ key ];
-					}
-					
-					this._notify( changes );
-				}
-			},
-			bind : function( func, noFlush ){
-				this.listeners.push( func );
-				
-				// if we are running, then we should make a call back
-				if ( !noFlush ){
-					this._onBind( func );
-				}
-				
-				return this;
-			},
-			_cleanse : function(){
-				return this.model;
-			},
-			_clean : function(){
-				var
-					list,
-					i,
-					c,
-					val,
-					model = this._cleanse(),
-					changes = {},
-					cleaned = this.cleaned;
-				
-				for( var key in model ) if ( model.hasOwnProperty(key) && key[0] != '_' ){
-					val = model[key];
-
-					if ( typeof(val) == 'function' ){
-						continue;
-					}else{
-						// TODO : how do I detect deletion?
-						if ( val !== cleaned[key] ){
-							changes[ key ] = true;
-
-							if ( val === undefined ){
-								delete cleaned[ key ];
-							}else{
-								cleaned[ key ] = val;
-							}
-						}
-					}
-				}
-
-				return changes;
-			},
-			_needNotify : function( changes ){
-				return !$.isEmptyObject( changes );
-			},
-			run : function( func, changes ){
-				func.call( this, changes );
-			},
-			_notify : function( changes ){
-				var
-					list,
-					i,
-					c;
-				
-				for( i = 0, list = this.listeners, c = list.length; i < c; i++ ){ 
-					this.run( list[i], changes );
-				}
-
-				return this;
-			},
-			_onBind : function( func ){
-				this.run( func, {binding:true} );
-			}
-		}
-	});
-*/
 ;bMoor.define( "bmoor.core.Model", [function(){
 	function merge( from, to ){
 		var key, f, t;
@@ -2885,7 +2766,7 @@ bMoor.define( 'bmoor.core.MapObserver',
 									method : options.type || 'GET',
 									responseType : options.responseType
 								}) 
-							).$defer.promise;
+							).$.promise;
 					}
 
 					if ( options.cached ){

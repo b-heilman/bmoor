@@ -28,22 +28,6 @@ console.log( uno, '=', 1 );
 console.log( tres, '=', 3 );
 console.log( quat, '=', null );
 
-bMoor.inject(['eins','zwei.drei', function(foo, bar){
-	uno = foo;
-	tres = bar;
-}], root, true);
-
-console.log( uno, '=', 1 );
-console.log( tres, '=', 3 );
-
-bMoor.inject(['eins','zwei.drei', function(foo, bar){
-	uno = foo;
-	tres = bar;
-}], root, false);
-
-console.log( uno, '=', 1 );
-console.log( tres, '=', 3 );
-
 console.log( bMoor.array.compare(
 	[
 		{ val : 1 },

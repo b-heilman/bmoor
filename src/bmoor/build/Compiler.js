@@ -1,7 +1,8 @@
 bMoor.inject(
 	['bmoor.defer.Basic','bmoor.build.Compiler','@global', 
 	function( Defer, Compiler, global ){
-		var instance;
+		var defer = Compiler.$.defer,
+			instance;
 
 		function make( obj, name, definition ){
 			var i, c,
@@ -9,7 +10,10 @@ bMoor.inject(
 				stillDoing = true,
 				$d = new Defer(),
 				promise = $d.promise,
+				defer = obj.$.defer,
 				maker;
+
+			obj.$.defer = null;
 
 			if ( bMoor.isString(name) ){
 				definition.id = name;
@@ -45,9 +49,8 @@ bMoor.inject(
 					obj.$onMake( definition );
 				}
 
-				if ( obj.$defer ){
-					obj.$loaded = true; // what do I use this for?  Thinking vestigial
-					obj.$defer.resolve( obj );
+				if ( defer ){
+					defer.resolve( obj );
 				}
 			});
 		}
@@ -86,13 +89,15 @@ bMoor.inject(
 						make.call( dis, obj, name, def );
 					});
 				}else{
-					make.call( this, obj, name, bMoor.inject(definition) );
+					bMoor.inject( definition, true ).then(function( def ){
+						make.call( dis, obj, name, def );
+					});
 				}
 			}else{
 				make.call( this, obj, name, definition );
 			}
 
-			return obj;
+			return obj.$.promise;
 		};
 
 		instance = new Compiler();
@@ -104,6 +109,7 @@ bMoor.inject(
 			return instance.make( name, definition );
 		});
 
-		Compiler.$defer.resolve( Compiler );
+		Compiler.$.defer = null;
+		defer.resolve( Compiler );
 	}
 ]);

@@ -93,6 +93,6 @@ Examples - full examples can be found in demos
 				}
 			};
 		}
-	]).$defer.promise.then(function( obj ){
+	]).$.promise.then(function( obj ){
 		new obj();
 	});

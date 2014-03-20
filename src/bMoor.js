@@ -177,14 +177,30 @@
 	function dwrap( value ){
 		var d;
 
-		if ( value.$defer ){
-			d = value.$defer;
+		if ( value.$ ){
+			d = value.$.promise;
 		}else{
 			d = new Defer(); 
 			d.resolve( value );
 		}
 		
 		return d.promise;
+	}
+
+	function isEmpty( obj ){
+		var key;
+
+		if ( isObject(obj) ){
+			for( key in obj ){ 
+				if ( obj.hasOwnProperty(key) ){
+					return false;
+				}
+			}
+		}else if ( isArrayLike(obj) ){
+			return obj.length === 0;
+		}
+
+		return true;
 	}
 
 	function isUndefined(value) {
@@ -211,10 +227,14 @@
 		return value  && typeof value === 'object';
 	}
 
+	function isBoolean(value){
+		return typeof value === 'boolean';
+	}
+
 	// type  checks
 	function isArrayLike(obj) {
 		// for me, if you have a length, I'm assuming you're array like, might change
-		return ( obj && (typeof obj.length === 'number') && (obj.length != 1 || obj[0]) ) ;
+		return obj && (typeof obj.length === 'number') && obj.push;
 	}
 
 	function isArray(value) {
@@ -390,6 +410,8 @@
 				throw 'You forgot to new...';
 			}
 
+			this.$ = {}; // The instance mount position for all framework specific things
+
 			if ( args && args.$arguments ){
 				this._construct.apply( this,args );
 			}else{
@@ -397,8 +419,11 @@
 			}
 		}
 
+		Quark.$ = {}; // class based mount position for all framework specific things
+
 		if ( Defer ){
-			Quark.$defer = new Defer();
+			Quark.$.defer = new Defer();
+			Quark.$.promise = Quark.$.defer.promise;
 		}
 		
 		Quark.prototype.__class = namespace;
@@ -420,47 +445,6 @@
 			return makeQuark( namespace );
 		}else{
 			return obj;
-		}
-	}
-
-	function request( request, root ){
-		var rtn,
-			obj;
-
-		if ( isString(request) ){
-			obj = ensure( request, root );
-
-			if ( obj.$defer ){
-				// was created by the system
-				return obj.$defer.promise;
-			}else{
-				// some other object, need to play nice
-				return dwrap( obj );
-			}
-		}else if ( isArrayLike(request) ){
-			rtn = new DeferGroup();
-			obj = [];
-			obj.$inject;
-			
-			loop( request, function( req, key ){
-				var o = ensure( req );
-				if ( o.$defer ){
-					rtn.add( o.$defer.promise );
-				}
-
-				obj[key] = o;
-			});
-
-			rtn.run();
-
-			return rtn.promise.then(function(){
-				return obj;
-			});
-		}else{
-			// TODO : need an error class
-			throw {
-				message : 'Request needs a string or array passed in'
-			};
 		}
 	}
 
@@ -495,14 +479,57 @@
 		return rtn;
 	}
 
+	function request( request, root ){
+		var obj;
+
+		console.log( request );
+		if ( isString(request) ){
+			obj = ensure( request, root );
+
+			if ( obj.$ ){
+				// was created by the system
+				return obj.$.promise;
+			}else{
+				// some other object, need to play nice
+				return dwrap( obj );
+			}
+		}else if( isArrayLike(request) ){
+			obj = new DeferGroup();
+
+			loop( request, function( req, key ){
+				if ( isString(req) ){
+					req = ensure( req, root );
+					request[ key ] = req;
+				}
+
+				if ( req && req.$ ){
+					obj.add( req.$.promise );
+				}
+			});
+
+			obj.run();
+
+			return obj.promise.then(function(){
+				return request;
+			});
+		}
+	}
+
 	function isInjectable( obj ){
 		return isFunction( obj ) || ( isArray(obj) && isFunction(obj[obj.length-1]) );
 	}
 
-	function inject( arr, root, context ){
+	function inject( arr, root, context, waiting ){
 		var i, c,
+			rtn,
 			func,
 			args;
+
+		waiting = arguments[ arguments.length - 1 ]; 
+			
+		if ( !isBoolean(waiting) ){
+			waiting = false;
+		}
 
 		if ( isFunction(arr) ){
 			func = arr;
@@ -515,9 +542,15 @@
 
 		args = translate( arr, root );
 
-		return func.apply( context, args );
+		if ( waiting ){
+			return request( args ).then(function(){
+				return func.apply( context, args );
+			});
+		}else{
+			return func.apply( context, args );
+		}
 	}
-
+	
 	function plugin( plugin, obj ){ 
 		set( plugin, obj, bMoor ); 
 	}
@@ -751,7 +784,7 @@
 		"find"        : find,
 		"install"     : install,
 		"ensure"      : ensure,
-		"request"     : request, // wraps require with a defer
+		"request"     : request,
 		"translate"   : translate,
 		"inject"      : inject,
 		"plugin"      : plugin,
@@ -763,6 +796,7 @@
 		// general looping
 		"forEach"     : forEach,
 		// all the is tests
+		"isBoolean"   : isBoolean,
 		"isDefined"   : isDefined,
 		"isUndefined" : isUndefined,
 		"isArray"     : isArray,
@@ -772,6 +806,7 @@
 		"isNumber"    : isNumber,
 		"isString"    : isString,
 		"isInjectable" : isInjectable,
+		"isEmpty"     : isEmpty, 
 		// object stuff
 		"object" : {
 			"create"      : create,
@@ -833,6 +868,9 @@
 		Defer.prototype.resolve = function( r ){
 			loop( this.promise.waiting, function(func){ func(r); });
 			this.promise.waiting = r;
+		};
+
+		DeferGroup.prototype.run = function(){
 		};
 	}]);
 

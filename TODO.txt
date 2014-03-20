@@ -3,3 +3,5 @@
 - Finish the observers
 
 ? bmoor-dom
+
+- Allow for named classes

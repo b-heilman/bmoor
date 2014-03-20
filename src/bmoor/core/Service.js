@@ -82,7 +82,7 @@ bMoor.define( 'bmoor.core.Service', [function(){
 									method : options.type || 'GET',
 									responseType : options.responseType
 								}) 
-							).$defer.promise;
+							).$.promise;
 					}
 
 					if ( options.cached ){

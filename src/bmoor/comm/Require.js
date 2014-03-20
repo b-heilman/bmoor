@@ -45,7 +45,9 @@ bMoor.define( 'bmoor.comm.Require', function(){
 		}
 
 		return translate.call( this, arr, root ).then(function( args ){
-			return func.apply( context, args );
+			return bMoor.request( args ).then(function(){
+				return func.apply( context, args );
+			});
 		});
 	}
 
@@ -67,11 +69,11 @@ bMoor.define( 'bmoor.comm.Require', function(){
 					if ( async === false ){
 						return bMoor.exists( requirement );
 					}else{
-						return req.$defer.promise.then(function(){
+						return req.$.promise.then(function(){
 							var t = bMoor.exists( requirement );
 							
-							if ( t.$defer ){
-								return t.$defer.promise;
+							if ( t.$.defer ){
+								return t.$.promise;
 							}else{
 								return t;
 							}
@@ -81,8 +83,8 @@ bMoor.define( 'bmoor.comm.Require', function(){
 					if ( async === false ){
 						return req;
 					}else{
-						if ( req.$defer ) {
-							return req.$defer.promise;
+						if ( req.$.defer ) {
+							return req.$.promise;
 						}else{
 							return bMoor.dwrap( req );
 						}

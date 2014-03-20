@@ -29,7 +29,7 @@
 			dos : 2,
 			tres : 'three'
 		}
-	}).$defer.promise.then(function(obj){
+	}).then(function(obj){
 		console.log( obj );
 		var t = new obj();
 
@@ -45,7 +45,7 @@
 		properties : {
 			dos : '--2--'
 		}
-	}).$defer.promise.then(function(obj){ 
+	}).then(function(obj){ 
 		var t = new obj();
 
 		console.log( 'foo.Bar2', t );

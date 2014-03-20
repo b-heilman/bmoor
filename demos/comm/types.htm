@@ -38,7 +38,7 @@
 		style1 = new bmoor.comm.Style('test/red.css'),
 		style2 = new bmoor.comm.Style('test/red2.css');
 
-	con1.$defer.promise.then(
+	con1.$.promise.then(
 		function(content){
 			console.log( 'content', content );
 		},
@@ -47,7 +47,7 @@
 		}
 	);
 
-	con2.$defer.promise.then(
+	con2.$.promise.then(
 		function(content){
 			console.log( 'content2', content );
 		},
@@ -56,7 +56,7 @@
 		}
 	);
 
-	script1.$defer.promise.then(
+	script1.$.promise.then(
 		function(content){
 			console.log( 'script', 'loaded' );
 		},
@@ -65,7 +65,7 @@
 		}
 	);
 
-	script2.$defer.promise.then(
+	script2.$.promise.then(
 		function(content){
 			console.log( 'script2', 'loaded' );
 		},
@@ -74,7 +74,7 @@
 		}
 	);
 
-	style1.$defer.promise.then(
+	style1.$.promise.then(
 		function(content){
 			console.log( 'style', 'loaded' );
 		},
@@ -83,7 +83,7 @@
 		}
 	);
 
-	style2.$defer.promise.then(
+	style2.$.promise.then(
 		function(content){
 			console.log( 'style2', 'loaded' );
 		},

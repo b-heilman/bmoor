@@ -29,7 +29,7 @@
 
 	console.log( 'before' );
 	script1 = new bmoor.comm.Script('test/alert.js', true),
-	script1.$defer.promise.then(
+	script1.$.promise.then(
 		function(content){
 			console.log( 'script1', 'loaded' );
 		},
@@ -41,7 +41,7 @@
 
 	console.log( 'before' );
 	script2 = new bmoor.comm.Script('test/alert.js', false),
-	script2.$defer.promise.then(
+	script2.$.promise.then(
 		function(content){
 			console.log( 'script2', 'loaded' );
 		},
@@ -53,7 +53,7 @@
 
 	console.log( 'before' );
 	script2 = new bmoor.comm.Script('test/alert3.js', true),
-	script2.$defer.promise.then(
+	script2.$.promise.then(
 		function(content){
 			console.log( 'script3', 'loaded' );
 		},

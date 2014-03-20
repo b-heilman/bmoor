@@ -9,7 +9,7 @@ bMoor.define( 'bmoor.core.Collection', [function(){
 		},
 		properties : {
 			simplify : function(){
-				return this.deflate().hslice( 0 );
+				return this.deflate().slice( 0 );
 			}
 		}
 	};

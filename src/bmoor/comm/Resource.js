@@ -5,13 +5,13 @@
 		construct : function( src, async ){
 			var dis = this;
 
-			this.$defer = new bmoor.defer.Basic();
+			this.$.defer = new bmoor.defer.Basic();
 
 			(new bmoor.comm.Http({
 				'method' : 'GET',
 				'url' : src,
 				'async' : async
-			})).$defer.promise.then( 
+			})).$.promise.then( 
 				function resourceSuccess( response, status ){
 					try{
 						dis.status = 200;
@@ -41,13 +41,13 @@
 			},
 			resolve : function( data ){
 				if ( this.status === 200 ){
-					this.$defer.resolve({
+					this.$.defer.resolve({
 						data : data,
 						status : this.status,
 						headers : undefined
 					});
 				}else{
-					this.$defer.reject({
+					this.$.defer.reject({
 						data : data,
 						status : this.status,
 						headers : undefined

@@ -46,7 +46,8 @@
 			this.url = bMoor.url.resolve( options.url );
 			this.status = null;
 			this.connection = xhr;
-			this.$defer = new bmoor.defer.Basic();
+			this.$.defer = new bmoor.defer.Basic();
+			this.$.promise = this.$.defer.promise;
 
 			xhr.send(options.data || null);
 		},
@@ -97,7 +98,7 @@
 				r = [ response, status, headers ];
 				r.$inject = true;
 
-				this.$defer[action]( r );
+				this.$.defer[action]( r );
 			}
 		},
 		plugins : {
@@ -106,7 +107,7 @@
 
 				dis = new dis( options );
 
-				return dis.$defer.promise;
+				return dis.$.promise;
 			}
 		}
 	});

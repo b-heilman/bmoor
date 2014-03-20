@@ -5,27 +5,32 @@
 		['-id','-namespace','-name', '-mount','-parent', 
 		function( id, namespace, name, mount, parent){
 			var t,
-				Parent,
 				className,
 				dis = this;
 
 			if ( parent ){
-				Parent = bMoor.ensure( parent );
-				className = Parent.prototype.__class;
-				
-				t = function(){ 
-					this.constructor = dis; // once called, define
-				};
-				t.prototype = Parent.prototype;
-				this.prototype = new t();
+				return bMoor.inject([parent, function(Parent){
+					className = Parent.prototype.__class;
+					
+					t = function(){ 
+						this.constructor = dis; // once called, define
+					};
+					t.prototype = Parent.prototype;
+					dis.prototype = new t();
 
-				this.prototype[ className ] = Parent.prototype;
+					dis.prototype[ className ] = Parent.prototype;
+
+					dis.prototype.__class = id;
+					dis.prototype.__namespace = namespace;
+					dis.prototype.__name = name;
+					dis.prototype.__mount = mount;
+				}]);
+			}else{
+				this.prototype.__class = id;
+				this.prototype.__namespace = namespace;
+				this.prototype.__name = name;
+				this.prototype.__mount = mount;
 			}
-
-			this.prototype.__class = id;
-			this.prototype.__namespace = namespace;
-			this.prototype.__name = name;
-			this.prototype.__mount = mount;
 		}]);
 	});
 
