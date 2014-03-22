@@ -1,6 +1,5 @@
 - could move some utils out to a lib directory
 - Error handling
-- Finish the observers
 
 ? bmoor-dom
 
