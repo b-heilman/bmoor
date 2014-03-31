@@ -1,11 +1,12 @@
 ;(function( global, undefined ){
-	"use strict";
+	'use strict';
 
 	var msie,
 		bMoor = global.bMoor || {},
 		bmoor = global.bmoor || {},
 		aliases = {},
 		Defer,
+		Promise,
 		DeferGroup;
 
 	/**
@@ -33,28 +34,62 @@
 		}
 	}
 
-	function set( space, obj, root ){
-		var nextSpace,
+	function set( space, value, root ){
+		var old,
+			val,
+			nextSpace,
 			curSpace = root || global;
 		
 		if ( space && (isString(space) || isArrayLike(space)) ){
 			space = parse( space );
+
+			val = space.pop();
+
 			for( var i = 0; i < space.length; i++ ){
-				nextSpace = space[i];
+				nextSpace = space[ i ];
 					
-				if ( i === space.length - 1 ){
-					curSpace[nextSpace] = obj;
-				}else{
-					if ( !curSpace[nextSpace] ){
-						curSpace[nextSpace] = {};
-					}
-					
-					curSpace = curSpace[nextSpace];
+				if ( !curSpace[ nextSpace ] ){
+					curSpace[ nextSpace ] = {};
 				}
+					
+				curSpace = curSpace[ nextSpace ];
 			}
+
+			old = curSpace[ val ];
+			curSpace[ val ] = value;
 		}
+
+		return old;
 	}
 	
+	function del( space, root ){
+		var old,
+			val,
+			nextSpace,
+			curSpace = root || global;
+		
+		if ( space && (isString(space) || isArrayLike(space)) ){
+			space = parse( space );
+
+			val = space.pop();
+
+			for( var i = 0; i < space.length; i++ ){
+				nextSpace = space[ i ];
+					
+				if ( !curSpace[ nextSpace ] ){
+					curSpace[ nextSpace ] = {};
+				}
+					
+				curSpace = curSpace[ nextSpace ];
+			}
+
+			old = curSpace[ val ];
+			delete curSpace[ val ];
+		}
+
+		return old;
+	}
+
 	function get( space, root ){
 		var curSpace = root || global,
 			nextSpace,
@@ -80,6 +115,18 @@
 		}else{
 			return null;
 		}
+	}
+
+	function map( mappings, root ){
+		if ( !root ){
+			root = {};
+		}
+
+		iterate( mappings, function( obj, mapping ){
+			set( mapping, obj, root );
+		});
+
+		return root;
 	}
 	/*
 		returns back the space or null
@@ -405,6 +452,9 @@
 	}
 
 	function makeQuark( namespace ){
+		var path,
+			defer;
+
 		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
 			if ( this === global ){
 				throw 'You forgot to new...';
@@ -412,24 +462,42 @@
 
 			this.$ = {}; // The instance mount position for all framework specific things
 
+			// TODO : what do I need that for?
 			if ( args && args.$arguments ){
-				this._construct.apply( this,args );
+				this._construct.apply( this, args );
 			}else{
-				this._construct.apply( this,arguments );
+				this._construct.apply( this, arguments );
 			}
 		}
 
-		Quark.$ = {}; // class based mount position for all framework specific things
+		if ( namespace ){
+			path = parse( namespace )
 
-		if ( Defer ){
-			Quark.$.defer = new Defer();
-			Quark.$.promise = Quark.$.defer.promise;
+			if ( Defer ){
+				defer = new Defer();
+
+				Quark.$ = {
+					promise : defer.promise,
+					$ready : function( obj ){
+						if ( defer.resolve ){
+							defer.resolve( obj );
+						}
+
+						if ( path ){
+							set( path, obj );
+						}
+
+						delete this.$ready;
+						// delete this.promise;
+					}
+				}; // class based mount position for all framework specific things
+			}
+
+			Quark.prototype.__class = namespace;
+			Quark.prototype._construct = function(){};
+
+			set( path, Quark );
 		}
-		
-		Quark.prototype.__class = namespace;
-		Quark.prototype._construct = function(){};
-
-		set( namespace, Quark );
 
 		return Quark;
 	}
@@ -482,7 +550,6 @@
 	function request( request, root ){
 		var obj;
 
-		console.log( request );
 		if ( isString(request) ){
 			obj = ensure( request, root );
 
@@ -497,18 +564,18 @@
 			obj = new DeferGroup();
 
 			loop( request, function( req, key ){
-				if ( isString(req) ){
-					req = ensure( req, root );
-					request[ key ] = req;
-				}
-
-				if ( req && req.$ ){
+				if ( req && req.$ && req.$.promise ){
+					req.$.promise.then(function( o ){
+						request[ key ] = o;
+					});
 					obj.add( req.$.promise );
+				}else{
+					request[ key ] = req;
 				}
 			});
 
 			obj.run();
-
+			
 			return obj.promise.then(function(){
 				return request;
 			});
@@ -516,21 +583,16 @@
 	}
 
 	function isInjectable( obj ){
-		return isFunction( obj ) || ( isArray(obj) && isFunction(obj[obj.length-1]) );
+		return isArray(obj) && isFunction(obj[obj.length-1]);
 	}
 
-	function inject( arr, root, context, waiting ){
+	function inject( arr, root, context ){
 		var i, c,
 			rtn,
 			func,
 			args;
 
-		waiting = arguments[ arguments.length - 1 ]; 
-			
-		if ( !isBoolean(waiting) ){
-			waiting = false;
-		}
-
+		// TODO : is there a way to do a no wait injection?
 		if ( isFunction(arr) ){
 			func = arr;
 			arr = [];
@@ -540,15 +602,9 @@
 			throw 'inject needs arr to be either Array or Function';
 		}
 
-		args = translate( arr, root );
-
-		if ( waiting ){
-			return request( args ).then(function(){
-				return func.apply( context, args );
-			});
-		}else{
+		return request( translate(arr,root) ).then(function( args ){
 			return func.apply( context, args );
-		}
+		});
 	}
 	
 	function plugin( plugin, obj ){ 
@@ -573,7 +629,7 @@
 	 * ---------------------------
 	 * IE >= 8 and <= 10 normalizes the URL when assigned to the anchor node similar to the other
 	 * browsers.  However, the parsed components will not be set if the URL assigned did not specify
-	 * them.  (e.g. if you assign a.href = "foo", then a.protocol, a.host, etc. will be empty.)  We
+	 * them.  (e.g. if you assign a.href = 'foo', then a.protocol, a.host, etc. will be empty.)  We
 	 * work around that by performing the parsing in a 2nd step by taking a previously normalized
 	 * URL (e.g. by assigning to a.href) and assigning it a.href again.  This correctly populates the
 	 * properties such as protocol, hostname, port, etc.
@@ -581,7 +637,7 @@
 	 * IE7 does not normalize the URL when assigned to an anchor node.  (Apparently, it does, if one
 	 * uses the inner HTML approach to assign the URL as part of an HTML snippet -
 	 * http://stackoverflow.com/a/472729)  However, setting img[src] does normalize the URL.
-	 * Unfortunately, setting img[src] to something like "javascript:foo" on IE throws an exception.
+	 * Unfortunately, setting img[src] to something like 'javascript:foo' on IE throws an exception.
 	 * Since the primary usage for normalizing URLs is to sanitize such URLs, we can't use that
 	 * method and IE < 8 is unsupported.
 	 *
@@ -605,18 +661,18 @@
 	 *   | search        | The search params, minus the question mark                             |
 	 *   | hash          | The hash string, minus the hash symbol
 	 *   | hostname      | The hostname
-	 *   | port          | The port, without ":"
-	 *   | pathname      | The pathname, beginning with "/"
+	 *   | port          | The port, without ':'
+	 *   | pathname      | The pathname, beginning with '/'
 	 *
 	 */
 	function urlResolve(url, base) {
 		var href = url,
-			urlParsingNode = document.createElement("a");
+			urlParsingNode = document.createElement('a');
 
 		if (msie) {
 			// Normalize before parse.  Refer Implementation Notes on why this is
 			// done in two steps on IE.
-			urlParsingNode.setAttribute("href", href);
+			urlParsingNode.setAttribute('href', href);
 			href = urlParsingNode.href;
 		}
 
@@ -706,7 +762,7 @@
 				c = t.length >>> 0,
 				res = [];
 
-			if (typeof func != "function"){
+			if (typeof func != 'function'){
 				throw 'func needs to be a function';
 			}
 
@@ -769,109 +825,321 @@
         };
 	}
 
-	/**
-	Externalizing the functionality
-	**/
-	extend( bMoor, {
-		// namespace interactions
-		"parseNS"     : parse,
-		"dwrap"       : dwrap,
-		"set"         : set,
-		"get"         : get,
-		"exists"      : exists,
-		"register"    : register,
-		"check"       : check,
-		"find"        : find,
-		"install"     : install,
-		"ensure"      : ensure,
-		"request"     : request,
-		"translate"   : translate,
-		"inject"      : inject,
-		"plugin"      : plugin,
-		"makeQuark"   : makeQuark,
-		// allow a type expectation
-		"loop"        : loop, // array
-		"each"        : each, // object
-		"iterate"     : iterate, // object + safe
-		// general looping
-		"forEach"     : forEach,
-		// all the is tests
-		"isBoolean"   : isBoolean,
-		"isDefined"   : isDefined,
-		"isUndefined" : isUndefined,
-		"isArray"     : isArray,
-		"isArrayLike" : isArrayLike,
-		"isObject"    : isObject,
-		"isFunction"  : isFunction,
-		"isNumber"    : isNumber,
-		"isString"    : isString,
-		"isInjectable" : isInjectable,
-		"isEmpty"     : isEmpty, 
-		// object stuff
-		"object" : {
-			"create"      : create,
-			"extend"      : extend,
-			"copy"        : copy,
-			"equals"      : equals
-		},
-		// string functionality 
-		"string"      : {
-			"trim" : trim 
-		},
-		// array functionality
-		"array"       : {
-			"compare" : compareFunc,
-			"indexOf" : indexOf,
-			"remove" : remove,
-			"removeAll" : removeAll,
-			"filter" : filter
-		},
-		// error handling and logging : TODO : move verbose error handling
-		"error"       : {
-			report : error
-		},
-		// other utils - TODO : move out
-		"url" : {
-			"resolve"  : urlResolve
-		}
-	});
-
 	register( 'global', global );
 	register( 'undefined', undefined );
 
 	set( 'bMoor', bMoor );
 	set( 'bmoor', bmoor );
+	
+	Promise = ensure('bmoor.defer.Promise');
+	DeferGroup = ensure('bmoor.defer.Group');
+	Defer = ensure('bmoor.defer.Basic');
+	
+	extend( Promise.prototype, {
+		_construct : function( defer ){
+			this.defer = defer;
+		},
+		"then" : function( callback, errback ){
+			var dis = this,
+				defer = this.defer,
+				sub = this.sub = this.defer.sub(),
+				tCallback,
+				tErrback;
 
-	inject(['bmoor.defer.Basic', 'bmoor.defer.Group', function( b, g ){
-		var c = 0;
+			tCallback = function( value ){
+				try{
+					sub.resolve( (callback||defer.defaultSuccess)(value) );
+					dis.sub = null;
+				}catch( ex ){
+					dis.sub = null;
+					sub.reject( ex );
+					defer.handler( ex );
+				}
+			};
 
-		Defer = b;
-		DeferGroup = g;
+			tErrback = function( value ){
+				try{
+					sub.resolve( (errback||defer.defaultFailure)(value) );
+					dis.sub = null;
+				}catch( ex ){
+					dis.sub = null;
+					sub.reject( ex );
+					defer.handler( ex );
+				}
+			};
 
-		// chicken before the egg... so bootstrap
-		Defer.prototype._construct = function(){
-			this.promise = {
-				count : c++,
-				then : function JunkPromise( callback ){
-					if ( this.waiting && this.waiting.push ){
-						this.waiting.push( callback );
-					}else{
-						callback( this.waiting );
-					}
-					
-					return this;
-				},
-				waiting : []
+			defer.register( tCallback, tErrback );
+
+			return sub.promise;
+		},
+		"reject" : function( error ){
+			// a short cut that allows you to not need to throw inside the then
+			if ( this.sub ){
+				this.sub.reject( error );
+			}else{
+				throw 'must reject from inside a then';
 			}
-		};
+		},
+		"done": function(callback){
+			this.then( callback );
+			return this; // for chaining with the defer
+		},
+		"fail": function(callback){
+			this.then( null, callback );
+			return this; 
+		},
+		"always": function(callback){
+			this['finally']( callback );
+			return this;
+		},
+		"catch": function(callback) {
+			return this.then(null, callback);
+		},
+		"finally": function(callback) {
+			function makePromise(value, resolved) {
+				var result = bmoor.defer.Basic();
 
-		Defer.prototype.resolve = function( r ){
-			loop( this.promise.waiting, function(func){ func(r); });
-			this.promise.waiting = r;
-		};
+				if (resolved) {
+					result.resolve(value);
+				} else {
+					result.reject(value);
+				}
 
-		DeferGroup.prototype.run = function(){
-		};
-	}]);
+				return result.promise;
+			}
 
+			function handleCallback(value, isResolved) {
+				var callbackOutput = null;
+				try {
+					callbackOutput = (callback || dis.defaultSuccess)();
+				} catch(e) {
+					return makePromise(e, false);
+				}
+
+				if (callbackOutput && bMoor.isFunction(callbackOutput.then)) {
+					return callbackOutput.then(
+						function() {
+							return makePromise(value, isResolved);
+						}, 
+						function(error) {
+							return makePromise(error, false);
+						}
+					);
+				} else {
+					return makePromise(value, isResolved);
+				}
+			}
+
+			return this.then(
+				function(value) {
+					return handleCallback(value, true);
+				}, 
+				function(error) {
+					return handleCallback(error, false);
+				}
+			);
+		}
+	});
+
+	(function(){
+		function resolution( value ){
+			if ( value && value.then ) {
+				return value;
+			} return {
+				then: function ResolutionPromise( callback ){
+					if ( bMoor.isArrayLike(value) && value.$inject ){
+						callback.apply( undefined, value );
+					}else{
+						callback( value );
+					}
+				}
+			};
+		}
+
+		function rejection( reason ){
+			return {
+				then : function RejectionPromise( callback, errback ){
+					errback( reason );
+				}
+			};
+		}
+
+		extend( Defer.prototype, {
+			_construct : function( exceptionHandler ){
+				var dis = this;
+				this.handler = exceptionHandler || this.defaultHandler;
+				this.callbacks = [];
+				this.value = null;
+				this.promise = new Promise( this );
+			},
+			defaultHandler : function( ex ){ bMoor.error.report(ex); },
+			defaultSuccess : function( value ){ return value; },
+			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
+			register : function( callback, failure ){
+				if ( this.value ){
+					this.value.then( callback, failure );
+				}else{
+					this.callbacks.push( [callback, failure] );
+				}
+			},
+			resolve : function( value ){
+				var callbacks,
+					cbSet,
+					i,
+					c;
+
+				if ( this.callbacks ){
+					callbacks = this.callbacks;
+					this.callbacks = null;
+					this.value = resolution( value );
+
+					for( i = 0, c = callbacks.length; i < c; i++ ){
+						cbSet = callbacks[i];
+						this.value.then( cbSet[0], cbSet[1] );
+					}
+				}
+			},
+			reject : function( reason ){
+				this.resolve( rejection(reason) );
+			},
+			sub : function(){
+				return new bmoor.defer.Basic( this.handler );
+			}
+		});
+	}());
+
+	(function(){
+		function check(){
+			if ( this.count === 0 && this.loaded ){
+				if ( this.errors.length ){
+					this.defer.reject( errors );
+				}else{
+					this.defer.resolve( true );
+				}
+			}
+		}
+
+		function rtn(){
+			this.count--;
+			check.call( this );
+		}
+
+		extend( DeferGroup.prototype, {
+			_construct : function(){
+				this.count = 0;
+				this.loaded = false;
+				this.errors = [];
+				this.defer = new Defer();
+				this.promise = this.defer.promise;
+			},
+			add : function( promise ){
+				var dis = this;
+				this.count++;
+
+				promise.then(
+					function(){
+						rtn.call( dis );
+					},
+					function( error ){
+						dis.errors.push( error );
+						rtn.call( dis );
+					}
+				);
+			},
+			run : function(){
+				this.loaded = true;
+				check.call( this );
+			}
+		});
+	}());
+	/**
+	Externalizing the functionality
+	**/
+	extend( bMoor, {
+		// namespace interactions
+		'parseNS'     : parse,
+		'dwrap'       : dwrap,
+		'set'         : set,
+		'get'         : get,
+		'del'         : del,
+		'map'         : map,
+		'exists'      : exists,
+		'register'    : register,
+		'check'       : check,
+		'find'        : find,
+		'install'     : install,
+		'ensure'      : ensure,
+		'request'     : request,
+		'translate'   : translate,
+		'inject'      : inject,
+		'plugin'      : plugin,
+		'makeQuark'   : makeQuark,
+		// allow a type expectation
+		'loop'        : loop, // array
+		'each'        : each, // object
+		'iterate'     : iterate, // object + safe
+		// general looping
+		'forEach'     : forEach,
+		// all the is tests
+		'isBoolean'   : isBoolean,
+		'isDefined'   : isDefined,
+		'isUndefined' : isUndefined,
+		'isArray'     : isArray,
+		'isArrayLike' : isArrayLike,
+		'isObject'    : isObject,
+		'isFunction'  : isFunction,
+		'isNumber'    : isNumber,
+		'isString'    : isString,
+		'isInjectable' : isInjectable,
+		'isEmpty'     : isEmpty, 
+		// object stuff
+		'object' : {
+			'create'      : create,
+			'extend'      : extend,
+			'copy'        : copy,
+			'equals'      : equals
+		},
+		// string functionality 
+		'string'      : {
+			'trim' : trim 
+		},
+		// array functionality
+		'array'       : {
+			'compare' : compareFunc,
+			'indexOf' : indexOf,
+			'remove' : remove,
+			'removeAll' : removeAll,
+			'filter' : filter
+		},
+		// error handling and logging : TODO : move verbose error handling
+		'error'       : {
+			report : error
+		},
+		// other utils - TODO : move out
+		'url' : {
+			'resolve'  : urlResolve
+		},
+		// defer functions
+		'defer' : {
+			'all' : function(){
+				var inst = this,
+					group = new DeferGroup(),
+					promises;
+
+				if ( arguments.length > 1 ){
+					promises = arguments;
+				}else{
+					promises = arguments[0];
+				}
+
+				bMoor.forEach(promises, function(p){
+					group.add( p );
+				});
+
+				group.run();
+
+				return group.promise;
+			}
+		}
+	});
 }( this ));

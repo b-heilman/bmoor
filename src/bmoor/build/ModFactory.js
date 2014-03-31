@@ -1,8 +1,6 @@
-(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', ['-factory', function( factory ){
-
+bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', 
+		['-factory', function( factory ){
 			var obj = this;
 
 			if ( factory ){
@@ -12,7 +10,6 @@
 					return new obj( args );
 				};
 			}
-		}]);
-	});
-
-}());
+		}]
+	);
+}]);

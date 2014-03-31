@@ -19,38 +19,32 @@
 	<script src="../../src/bmoor/defer/Group.js"></script>
 	<script src="../../src/bmoor/defer/Stack.js"></script>
 
+	<script src="../../src/bmoor/comm/Connector.js"></script>
+	<script src="../../src/bmoor/comm/Http.js"></script>
+	<script src="../../src/bmoor/comm/Require.js"></script>
+	<script src="../../src/bmoor/comm/Resource.js"></script>
+
 	<script src="../../src/bmoor/core/Trait.js"></script>
 	<script src="../../src/bmoor/core/Model.js"></script>
 	<script src="../../src/bmoor/core/Map.js"></script>
+	<script src="../../src/bmoor/core/MapObserver.js"></script>
+	<script src="../../src/bmoor/core/SmartMapObserver.js"></script>
+	<script src="../../src/bmoor/core/Interval.js"></script>
 </head>
 <body>
 	<script>
-	bMoor.define('test.Map', ['bmoor.core.Map', function(Map){
-		return {
-			parent : ,
-			construct : function( content ){
-				this[ 'bmoor.core.Map' ]._construct.call( this, content );
-				this.woot = 'wootwoot';
-				this.name = this.firstName + ' ' + this.lastName;
-			},
-			properties : {
-				hello : function(){
-					console.log( this.woot );
-				}
-			}
-		};
-	}]);
+	var map = {},
+		obs = new bmoor.core.SmartMapObserver( map );
 
-	var t = new test.Map({
-		firstName : "John",
-		lastName : 'Doey',
-		eins : 1,
-		zwei : 2,
-		drei : 3
+	obs.watch('woot', function(newVal,oldVal){
+		console.log( newVal, '->', oldVal );
 	});
 
-	t.hello();
-	console.log( t );
+	map.$set('woot','initialized');
+
+	setTimeout(function(){
+		map.$set('woot','timeouted');
+	},300);
 	</script>
 </body>
 </html>

@@ -1,6 +1,9 @@
+- Allow for parent to be a reference, and injection is used to fetch it
+	- I no longer need to generate the inheritance chain 
+
 - could move some utils out to a lib directory
 - Error handling
 
 ? bmoor-dom
 
-- Allow for named classes
+? Allow for named classes

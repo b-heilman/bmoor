@@ -38,6 +38,7 @@ bMoor.define( 'bmoor.core.MapObserver',
 			watch : function( variable, func ){
 				var p, 
 					t; // registers what the observe monitors
+					
 				if ( !this.watching[variable] ){
 					p = variable.split('.');
 

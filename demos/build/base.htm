@@ -38,14 +38,26 @@
 		t.unos();
 	});
 
-	bMoor.define('foo.Bar2', {
-		singleton : true,
-		factory : 'fac',
-		parent : 'foo.Bar',
+	bMoor.define( 'mock.Bar', {
 		properties : {
-			dos : '--2--'
+			unos : function( eh ){ console.log('woot|mockery'); },
+			dos : 2,
+			tres : 'three'
 		}
-	}).then(function(obj){ 
+	});
+
+	bMoor.define('foo.Bar2', 
+		['foo.Bar',function( Bar ){
+			return {
+				parent : Bar,
+				singleton : true,
+				factory : 'fac',
+				properties : {
+					dos : '--2--'
+				}
+			};
+		}]
+	).then(function(obj){ 
 		var t = new obj();
 
 		console.log( 'foo.Bar2', t );
@@ -53,24 +65,32 @@
 		t.unos();
 	});
 
-	bMoor.define( 'Decorator1', {
-		parent : 'bmoor.core.Decorator',
-		properties : {
-			unos : function(){
-				console.log('wrapped content:');
-				this.$wrapped();
-			}
-		} 
-	});
+	bMoor.define( 'Decorator1', 
+		['bmoor.core.Decorator', function( Decorator ){
+			return {
+				parent : Decorator,
+				properties : {
+					unos : function(){
+						console.log('wrapped content:');
+						this.$wrapped();
+					}
+				}
+			};
+		}]
+	);
 
-	bMoor.define( 'foo.Bar3', {
-		parent : 'foo.Bar2',
-		decorators : [
-			'Decorator1'
-		]
-	});
+	bMoor.define( 'foo.Bar3',
+		['foo.Bar2','bmoor.core.Decorator',function( Bar2, Decorator ){
+			return {
+				parent : Bar2,
+				decorators : [
+					Decorator
+				]
+			};
+		}]
+	);
 
-	console.log( foo.$bar2 );
+	console.log( 'foo.Bar2', foo.Bar2, foo.$bar2 );
 
 	foo.Bar2.$instance.unos('3');
 	foo.$bar2.unos('3.1');
@@ -79,32 +99,66 @@
 	var t = new foo.Bar3();
 	t.unos('hey now');
 
-	bMoor.define( 'Trait1', {
-		parent : 'bmoor.core.Trait',
-		properties : {
-			unos : function(){
-				console.log( '__---__');
-			},
-			hello : function(){
-				console.log('world');
-			}
-		}
-	});
+	bMoor.define( 'Trait1', 
+		['bmoor.core.Trait',function( Trait ){
+			return {
+				parent : Trait,
+				properties : {
+					unos : function(){
+						console.log( '__---__');
+					},
+					hello : function(){
+						console.log('world');
+					}
+				}
+			};
+		}]
+	);
 
 	console.log(bmoor.core.Trait);
 	console.log(Trait1);
 
-	bMoor.define( 'foo.Bar4', {
-		parent : 'foo.Bar3',
-		traits : [
-			'Trait1'
-		]
-	});
+	bMoor.define( 'foo.Bar4', 
+		['foo.Bar3','Trait1', function( Bar3, Trait1 ){
+			return {
+				parent : Bar3,
+				traits : [
+					Trait1
+				]
+			};
+		}]
+	);
 
 	t = new foo.Bar4();
 
 	t.unos();
 	t.hello();
+
+	bMoor.define( 'foo.hello', 
+		[function(){
+			return function(){
+				return 'hello';
+			};
+		}]
+	);
+
+	console.log( 'say', foo.hello() );
+
+	bMoor.define( 'foo.helloToo', function(){
+		return 'hello too';
+	});
+
+	console.log( 'and once again', foo.helloToo() );
+
+	bMoor.mock('foo.Bar2', {
+		'foo.Bar' : mock.Bar
+	}).then(function( fake ){
+		var t = new fake();
+
+		console.log( 'fake:Bar2', t );
+
+		t.unos();
+	});
 </script>
 
 </body>

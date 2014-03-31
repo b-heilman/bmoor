@@ -46,22 +46,26 @@
 	obj.speak();
 
 	// Decoration
-	bMoor.define( 'foo.Decorator1', {
-		parent : 'bmoor.core.Decorator',
-		properties : {
-			speak : function(){
-				this.$wrapped();
-				console.log('now roll over');
+	bMoor.define( 'foo.Decorator1', ['bmoor.core.Decorator', function( Decorator ){
+		return {
+			parent : Decorator,
+			properties : {
+				speak : function(){
+					this.$wrapped();
+					console.log('now roll over');
+				}
 			}
-		} 
-	});
+		};
+	}]);
 
-	obj = bMoor.define( 'foo.Pheonix', {
-		parent : 'foo.Dog',
-		decorators : [
-			'foo.Decorator1'
-		]
-	});
+	bMoor.define( 'foo.Pheonix', ['foo.Dog', function( Dog ){
+		return {
+			parent : Dog,
+			decorators : [
+				'foo.Decorator1'
+			]
+		};
+	}]);
 
 	( new obj('woofie woof') ).speak();
 
@@ -75,7 +79,7 @@
 				}
 			};
 		}
-	]).$.promise.then(function( obj ){
+	]).then(function( obj ){
 		new obj();
 	});
 

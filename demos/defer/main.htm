@@ -40,7 +40,7 @@
 
 		console.log('--4--');
 
-		bMoor.allDone([ p, d2.promise, d3.promise ]).then(function(){
+		bMoor.defer.all([ p, d2.promise, d3.promise ]).then(function(){
 			console.log('--5--');
 			return '--allDone--';
 		}).then(function(msg){ 

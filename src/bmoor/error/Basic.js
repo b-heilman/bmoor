@@ -1,7 +1,7 @@
 bMoor.define( 'bmoor.error.Basic', 
 	['@undefined',function(undefined){
 	return {
-		parent: 'Error',
+		parent: Error,
 		construct : function( message, filename, lineNumber ){
 			var stack,
 				pos,

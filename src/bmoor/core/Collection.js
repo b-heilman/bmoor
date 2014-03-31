@@ -1,6 +1,6 @@
 bMoor.define( 'bmoor.core.Collection', [function(){
 	return {
-		parent : 'Array',
+		parent : Array,
 		traits : [
 			'bmoor.core.Model'
 		],

@@ -7,6 +7,10 @@
 			throw 'error' /* TODO : error */;
 		};
 
+	// TODO : need to handle headers better
+	// Accept: "application/json, text/plain, */*", 
+	// Content-Type: "application/json;charset=utf-8"}
+	// how to add better support for response types?
 	bMoor.define( 'bmoor.comm.Http', {
 		construct : function( options ){
 			var dis = this,
@@ -96,7 +100,7 @@
 				action = valid ? 'resolve' : 'reject';
 
 				r = [ response, status, headers ];
-				r.$inject = true;
+				r.$inject = true; // TODO : do I really need this?
 
 				this.$.defer[action]( r );
 			}
