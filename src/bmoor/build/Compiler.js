@@ -77,8 +77,7 @@ bMoor.inject(
 		};
 
 		Compiler.prototype.make = function( name, definition ){
-			var name, 
-				namespace,
+			var namespace,
 				dis = this,
 				obj;
 

@@ -1,11 +1,12 @@
 ;(function( global, undefined ){
-	"use strict";
+	'use strict';
 
 	var msie,
 		bMoor = global.bMoor || {},
 		bmoor = global.bmoor || {},
 		aliases = {},
 		Defer,
+		Promise,
 		DeferGroup;
 
 	/**
@@ -33,28 +34,62 @@
 		}
 	}
 
-	function set( space, obj, root ){
-		var nextSpace,
+	function set( space, value, root ){
+		var old,
+			val,
+			nextSpace,
 			curSpace = root || global;
 		
 		if ( space && (isString(space) || isArrayLike(space)) ){
 			space = parse( space );
+
+			val = space.pop();
+
 			for( var i = 0; i < space.length; i++ ){
-				nextSpace = space[i];
+				nextSpace = space[ i ];
 					
-				if ( i === space.length - 1 ){
-					curSpace[nextSpace] = obj;
-				}else{
-					if ( !curSpace[nextSpace] ){
-						curSpace[nextSpace] = {};
-					}
-					
-					curSpace = curSpace[nextSpace];
+				if ( !curSpace[ nextSpace ] ){
+					curSpace[ nextSpace ] = {};
 				}
+					
+				curSpace = curSpace[ nextSpace ];
 			}
+
+			old = curSpace[ val ];
+			curSpace[ val ] = value;
 		}
+
+		return old;
 	}
 	
+	function del( space, root ){
+		var old,
+			val,
+			nextSpace,
+			curSpace = root || global;
+		
+		if ( space && (isString(space) || isArrayLike(space)) ){
+			space = parse( space );
+
+			val = space.pop();
+
+			for( var i = 0; i < space.length; i++ ){
+				nextSpace = space[ i ];
+					
+				if ( !curSpace[ nextSpace ] ){
+					curSpace[ nextSpace ] = {};
+				}
+					
+				curSpace = curSpace[ nextSpace ];
+			}
+
+			old = curSpace[ val ];
+			delete curSpace[ val ];
+		}
+
+		return old;
+	}
+
 	function get( space, root ){
 		var curSpace = root || global,
 			nextSpace,
@@ -80,6 +115,18 @@
 		}else{
 			return null;
 		}
+	}
+
+	function map( mappings, root ){
+		if ( !root ){
+			root = {};
+		}
+
+		iterate( mappings, function( obj, mapping ){
+			set( mapping, obj, root );
+		});
+
+		return root;
 	}
 	/*
 		returns back the space or null
@@ -405,6 +452,9 @@
 	}
 
 	function makeQuark( namespace ){
+		var path,
+			defer;
+
 		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
 			if ( this === global ){
 				throw 'You forgot to new...';
@@ -412,24 +462,42 @@
 
 			this.$ = {}; // The instance mount position for all framework specific things
 
+			// TODO : what do I need that for?
 			if ( args && args.$arguments ){
-				this._construct.apply( this,args );
+				this._construct.apply( this, args );
 			}else{
-				this._construct.apply( this,arguments );
+				this._construct.apply( this, arguments );
 			}
 		}
 
-		Quark.$ = {}; // class based mount position for all framework specific things
+		if ( namespace ){
+			path = parse( namespace )
 
-		if ( Defer ){
-			Quark.$.defer = new Defer();
-			Quark.$.promise = Quark.$.defer.promise;
+			if ( Defer ){
+				defer = new Defer();
+
+				Quark.$ = {
+					promise : defer.promise,
+					$ready : function( obj ){
+						if ( defer.resolve ){
+							defer.resolve( obj );
+						}
+
+						if ( path ){
+							set( path, obj );
+						}
+
+						delete this.$ready;
+						// delete this.promise;
+					}
+				}; // class based mount position for all framework specific things
+			}
+
+			Quark.prototype.__class = namespace;
+			Quark.prototype._construct = function(){};
+
+			set( path, Quark );
 		}
-		
-		Quark.prototype.__class = namespace;
-		Quark.prototype._construct = function(){};
-
-		set( namespace, Quark );
 
 		return Quark;
 	}
@@ -482,7 +550,6 @@
 	function request( request, root ){
 		var obj;
 
-		console.log( request );
 		if ( isString(request) ){
 			obj = ensure( request, root );
 
@@ -497,18 +564,18 @@
 			obj = new DeferGroup();
 
 			loop( request, function( req, key ){
-				if ( isString(req) ){
-					req = ensure( req, root );
-					request[ key ] = req;
-				}
-
-				if ( req && req.$ ){
+				if ( req && req.$ && req.$.promise ){
+					req.$.promise.then(function( o ){
+						request[ key ] = o;
+					});
 					obj.add( req.$.promise );
+				}else{
+					request[ key ] = req;
 				}
 			});
 
 			obj.run();
-
+			
 			return obj.promise.then(function(){
 				return request;
 			});
@@ -516,21 +583,16 @@
 	}
 
 	function isInjectable( obj ){
-		return isFunction( obj ) || ( isArray(obj) && isFunction(obj[obj.length-1]) );
+		return isArray(obj) && isFunction(obj[obj.length-1]);
 	}
 
-	function inject( arr, root, context, waiting ){
+	function inject( arr, root, context ){
 		var i, c,
 			rtn,
 			func,
 			args;
 
-		waiting = arguments[ arguments.length - 1 ]; 
-			
-		if ( !isBoolean(waiting) ){
-			waiting = false;
-		}
-
+		// TODO : is there a way to do a no wait injection?
 		if ( isFunction(arr) ){
 			func = arr;
 			arr = [];
@@ -540,15 +602,9 @@
 			throw 'inject needs arr to be either Array or Function';
 		}
 
-		args = translate( arr, root );
-
-		if ( waiting ){
-			return request( args ).then(function(){
-				return func.apply( context, args );
-			});
-		}else{
+		return request( translate(arr,root) ).then(function( args ){
 			return func.apply( context, args );
-		}
+		});
 	}
 	
 	function plugin( plugin, obj ){ 
@@ -573,7 +629,7 @@
 	 * ---------------------------
 	 * IE >= 8 and <= 10 normalizes the URL when assigned to the anchor node similar to the other
 	 * browsers.  However, the parsed components will not be set if the URL assigned did not specify
-	 * them.  (e.g. if you assign a.href = "foo", then a.protocol, a.host, etc. will be empty.)  We
+	 * them.  (e.g. if you assign a.href = 'foo', then a.protocol, a.host, etc. will be empty.)  We
 	 * work around that by performing the parsing in a 2nd step by taking a previously normalized
 	 * URL (e.g. by assigning to a.href) and assigning it a.href again.  This correctly populates the
 	 * properties such as protocol, hostname, port, etc.
@@ -581,7 +637,7 @@
 	 * IE7 does not normalize the URL when assigned to an anchor node.  (Apparently, it does, if one
 	 * uses the inner HTML approach to assign the URL as part of an HTML snippet -
 	 * http://stackoverflow.com/a/472729)  However, setting img[src] does normalize the URL.
-	 * Unfortunately, setting img[src] to something like "javascript:foo" on IE throws an exception.
+	 * Unfortunately, setting img[src] to something like 'javascript:foo' on IE throws an exception.
 	 * Since the primary usage for normalizing URLs is to sanitize such URLs, we can't use that
 	 * method and IE < 8 is unsupported.
 	 *
@@ -605,18 +661,18 @@
 	 *   | search        | The search params, minus the question mark                             |
 	 *   | hash          | The hash string, minus the hash symbol
 	 *   | hostname      | The hostname
-	 *   | port          | The port, without ":"
-	 *   | pathname      | The pathname, beginning with "/"
+	 *   | port          | The port, without ':'
+	 *   | pathname      | The pathname, beginning with '/'
 	 *
 	 */
 	function urlResolve(url, base) {
 		var href = url,
-			urlParsingNode = document.createElement("a");
+			urlParsingNode = document.createElement('a');
 
 		if (msie) {
 			// Normalize before parse.  Refer Implementation Notes on why this is
 			// done in two steps on IE.
-			urlParsingNode.setAttribute("href", href);
+			urlParsingNode.setAttribute('href', href);
 			href = urlParsingNode.href;
 		}
 
@@ -706,7 +762,7 @@
 				c = t.length >>> 0,
 				res = [];
 
-			if (typeof func != "function"){
+			if (typeof func != 'function'){
 				throw 'func needs to be a function';
 			}
 
@@ -769,638 +825,153 @@
         };
 	}
 
-	/**
-	Externalizing the functionality
-	**/
-	extend( bMoor, {
-		// namespace interactions
-		"parseNS"     : parse,
-		"dwrap"       : dwrap,
-		"set"         : set,
-		"get"         : get,
-		"exists"      : exists,
-		"register"    : register,
-		"check"       : check,
-		"find"        : find,
-		"install"     : install,
-		"ensure"      : ensure,
-		"request"     : request,
-		"translate"   : translate,
-		"inject"      : inject,
-		"plugin"      : plugin,
-		"makeQuark"   : makeQuark,
-		// allow a type expectation
-		"loop"        : loop, // array
-		"each"        : each, // object
-		"iterate"     : iterate, // object + safe
-		// general looping
-		"forEach"     : forEach,
-		// all the is tests
-		"isBoolean"   : isBoolean,
-		"isDefined"   : isDefined,
-		"isUndefined" : isUndefined,
-		"isArray"     : isArray,
-		"isArrayLike" : isArrayLike,
-		"isObject"    : isObject,
-		"isFunction"  : isFunction,
-		"isNumber"    : isNumber,
-		"isString"    : isString,
-		"isInjectable" : isInjectable,
-		"isEmpty"     : isEmpty, 
-		// object stuff
-		"object" : {
-			"create"      : create,
-			"extend"      : extend,
-			"copy"        : copy,
-			"equals"      : equals
-		},
-		// string functionality 
-		"string"      : {
-			"trim" : trim 
-		},
-		// array functionality
-		"array"       : {
-			"compare" : compareFunc,
-			"indexOf" : indexOf,
-			"remove" : remove,
-			"removeAll" : removeAll,
-			"filter" : filter
-		},
-		// error handling and logging : TODO : move verbose error handling
-		"error"       : {
-			report : error
-		},
-		// other utils - TODO : move out
-		"url" : {
-			"resolve"  : urlResolve
-		}
-	});
-
 	register( 'global', global );
 	register( 'undefined', undefined );
 
 	set( 'bMoor', bMoor );
 	set( 'bmoor', bmoor );
-
-	inject(['bmoor.defer.Basic', 'bmoor.defer.Group', function( b, g ){
-		var c = 0;
-
-		Defer = b;
-		DeferGroup = g;
-
-		// chicken before the egg... so bootstrap
-		Defer.prototype._construct = function(){
-			this.promise = {
-				count : c++,
-				then : function JunkPromise( callback ){
-					if ( this.waiting && this.waiting.push ){
-						this.waiting.push( callback );
-					}else{
-						callback( this.waiting );
-					}
-					
-					return this;
-				},
-				waiting : []
-			}
-		};
-
-		Defer.prototype.resolve = function( r ){
-			loop( this.promise.waiting, function(func){ func(r); });
-			this.promise.waiting = r;
-		};
-
-		DeferGroup.prototype.run = function(){
-		};
-	}]);
-
-}( this ));
-;bMoor.inject(
-	['bmoor.defer.Basic','bmoor.build.Compiler','@global', 
-	function( Defer, Compiler, global ){
-		var defer = Compiler.$.defer,
-			instance;
-
-		function make( obj, name, definition ){
-			var i, c,
-				dis = this,
-				stillDoing = true,
-				$d = new Defer(),
-				promise = $d.promise,
-				defer = obj.$.defer,
-				maker;
-
-			obj.$.defer = null;
-
-			if ( bMoor.isString(name) ){
-				definition.id = name;
-				definition.namespace = bMoor.parseNS( name );
-			}else if ( bMoor.isArray(name) ){
-				definition.namespace = name;
-				definition.id = name.join('.');
-			}else{
-				throw JSON.stringify(name) + ' > ' + JSON.stringify(definition) + ' > ' +
-					'message : you need to define a name and needs to be either a string or an array';
-			}
-
-			definition.name = definition.namespace.pop();
-			definition.mount = bMoor.get( definition.namespace );
-
-			if ( !this.clean ){
-				this.stack.sort(function( a, b ){
-					return b.rank - a.rank;
-				});
-				this.clean = true;
-			}
-
-			$d.resolve();
-
-			bMoor.loop( this.stack, function( maker ){
-				promise = promise.then(function(){
-					return bMoor.inject( maker.module, definition, obj ); 
-				});
-			});
-
-			promise.then(function(){
-				if ( obj.$onMake ){
-					obj.$onMake( definition );
-				}
-
-				if ( defer ){
-					defer.resolve( obj );
-				}
-			});
-		}
-
-		Compiler.prototype._construct = function(){
-			this.stack = [];
-			this.clean = true;
-		};
-
-		Compiler.prototype.addModule = function( rank, namePath, injection ){
-			this.clean = false;
-
-			if ( arguments.length < 3 ){
-				injection = namePath;
-			}else{
-				bMoor.install( namePath, injection[injection.length-1] );
-			}
-
-			this.stack.push({
-				rank : parseInt(rank,10),
-				module : injection
-			});
-		};
-
-		Compiler.prototype.make = function( name, definition ){
-			var dis = this,
-				obj = bMoor.ensure( name );
-
-			if ( arguments.length !== 2 ) {
-				throw 'you need to define a name and a definition';
-			}
-			
-			if ( bMoor.isInjectable(definition) ){
-				if ( bMoor.require ){
-					bMoor.require.inject( definition ).then(function( def ){
-						make.call( dis, obj, name, def );
-					});
-				}else{
-					bMoor.inject( definition, true ).then(function( def ){
-						make.call( dis, obj, name, def );
-					});
-				}
-			}else{
-				make.call( this, obj, name, definition );
-			}
-
-			return obj.$.promise;
-		};
-
-		instance = new Compiler();
-
-		Compiler.$instance = instance;
-		bMoor.install( 'bmoor.build.$compiler', instance );
-
-		bMoor.plugin( 'define', function( name, definition ){
-			return instance.make( name, definition );
-		});
-
-		Compiler.$.defer = null;
-		defer.resolve( Compiler );
-	}
-]);
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 20, 'bmoor.build.ModConstruct', 
-		['-construct', '-abstract', '-id', function( construct, abstract, id ){
-			if ( abstract ){
-				this.prototype._construct = function(){
-					throw id+' is abstracted, either extend or use only static members';
-				};
-			}else if ( construct ){
-				this.prototype._construct = construct;
-			}
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 9, 'bmoor.build.ModDecorate', 
-			['-decorators', function( decorators ){
-			var proto = this.prototype;
-
-			if ( decorators ){
-				if ( !bMoor.isArray( decorators ) ){
-					throw 'the decoration list must be an array';
-				}
-				
-				return bMoor.request( decorators ).then(function( decs ){
-					bMoor.loop( decs, function( dec ){
-						if ( dec.$wrap ){
-							dec.$wrap( proto );
-						}
-					});
-				});
-			}
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', ['-factory', function( factory ){
-
-			var obj = this;
-
-			if ( factory ){
-				obj.$make = function(){
-					var args = arguments;
-					args.$arguments = true;
-					return new obj( args );
-				};
-			}
-		}]);
-	});
-
-}());;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 1, 'bmoor.build.ModFinalize', 
-			['-onMake', '-parent', function( onMake, parent ){
-
-			var obj = this,
-				proto = obj.prototype;
-
-			if ( parent ){
-				return bMoor.request( parent ).then(function( p ){
-					if ( onMake ){
-						obj.$onMake = onMake;
-
-						if ( p.$parentMakes ){
-							obj.$parentMakes = bMoor.create( p.$parentMakes );
-						}else{
-							obj.$parentMakes = {};
-						}
-
-						obj.$parentMakes[ p.prototype.__class ] = p.$onMake;
-					}else{
-						obj.$onMake = p.$onMake;
-					}
-				}); // TODO : make this a request?
-			}else if ( onMake ){
-				obj.$onMake = onMake;
-			}
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 90, 'bmoor.build.ModInherit', 
-		['-id','-namespace','-name', '-mount','-parent', 
-		function( id, namespace, name, mount, parent){
-			var t,
-				className,
-				dis = this;
-
-			if ( parent ){
-				return bMoor.inject([parent, function(Parent){
-					className = Parent.prototype.__class;
-					
-					t = function(){ 
-						this.constructor = dis; // once called, define
-					};
-					t.prototype = Parent.prototype;
-					dis.prototype = new t();
-
-					dis.prototype[ className ] = Parent.prototype;
-
-					dis.prototype.__class = id;
-					dis.prototype.__namespace = namespace;
-					dis.prototype.__name = name;
-					dis.prototype.__mount = mount;
-				}]);
-			}else{
-				this.prototype.__class = id;
-				this.prototype.__namespace = namespace;
-				this.prototype.__name = name;
-				this.prototype.__mount = mount;
-			}
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 4, 'bmoor.build.ModPlugin', ['-plugins', function( plugins ){
-			var obj = this.$instance || this;
-
-			bMoor.iterate( plugins, function( func, plugin ){
-				if ( bMoor.isString(func) ){
-					func = obj[ func ];
-				}
-
-				bMoor.plugin( plugin, function(){ 
-					return func.apply( obj, arguments ); 
-				});
-			});
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', ['-properties', function( properties ){
-			var name;
-
-			if ( bMoor.isInjectable(properties) ){
-				properties = bMoor.inject( properties );
-			}
-
-			for( name in properties ){
-				this.prototype[ name ] = properties[ name ];
-			}
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 0, 'bmoor.build.ModRegister', ['-id', function( id ){
-			bMoor.register( id, this );
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 100, 'bmoor.build.ModRequire', ['-require', function( require ){
-			var group = new bmoor.defer.Group(),
-				classes,
-				aliases;
-
-			if ( require ){
-				if ( bMoor.isString(require) ){
-					classes = [ require ];
-				}else if ( bMoor.isArrayLike(require) ){
-					classes = require;
-				}else{
-					classes = require.classes || [];
-					aliases = require.aliases || {};
-				}
-				
-				bMoor.loop( classes, function( namespace ){
-					group.add( bmoor.comm.$require.get(namespace) );
-				});
-
-				bMoor.iterate( aliases, function( namespace, alias ){
-					group.add( bmoor.comm.$require.get(alias, true, namespace) );
-				});
-			}
-
-			if ( group.run ){
-				group.run();
-			}
-
-			return group.promise;
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 5, 'bmoor.build.ModSingleton', 
-			['-singleton', '-name', '-mount',function( singleton, name, mount ){
-
-			var obj = this;
-
-			if ( singleton ){
-				if ( !bMoor.isArray(singleton) ){
-					singleton = [];
-				}
-
-				singleton.$arguments = true;
-				obj.$instance = mount[ '$'+name[0].toLowerCase() + name.substr(1) ] = new obj( singleton );
-			}
-		}]);
-	});
-
-}());;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		
-		Compiler.$instance.addModule( 10, 'bmoor.build.ModStatics', ['-statics', function( statics ){
-			var name;
-
-			if ( bMoor.isInjectable(statics) ){
-				statics = bMoor.inject( statics );
-			}
-
-			for( name in statics ){
-				this.prototype[ name ] = statics[ name ];
-			}
-		}]);
-	});
-
-}());
-;(function(){
-
-	bMoor.request('bmoor.build.Compiler').then(function( Compiler ){
-		Compiler.$instance.addModule( 8, 'bmoor.build.ModTraits', 
-			['-traits', function( traits ){
-			var proto = this.prototype;
-			
-			if ( traits ){
-				if ( !bMoor.isArray( traits ) ){
-					throw 'the traits list must be an array';
-				}
-
-				return bMoor.request( traits ).then(function( ts ){
-					bMoor.loop( ts, function( trait ){
-						if ( trait.$wrap ){
-							trait.$wrap( proto );
-						}
-					});
-				});
-			}
-		}]);
-	});
-
-}());
-;(function( undefined ){
 	
-	bMoor.define( 'bmoor.defer.Promise', {
-		construct : function( defer ){
+	Promise = ensure('bmoor.defer.Promise');
+	DeferGroup = ensure('bmoor.defer.Group');
+	Defer = ensure('bmoor.defer.Basic');
+	
+	extend( Promise.prototype, {
+		_construct : function( defer ){
 			this.defer = defer;
 		},
-		properties : {
-			"then" : function( callback, errback ){
-				var defer = this.defer,
-					sub = this.sub = this.defer.sub(),
-					tCallback,
-					tErrback;
+		"then" : function( callback, errback ){
+			var dis = this,
+				defer = this.defer,
+				sub = this.sub = this.defer.sub(),
+				tCallback,
+				tErrback;
 
-				tCallback = function( value ){
-					try{
-						sub.resolve( (callback||defer.defaultSuccess)(value) );
-						this.sub = null;
-					}catch( ex ){
-						this.sub = null;
-						sub.reject( ex );
-						defer.handler( ex );
-					}
-				};
-
-				tErrback = function( value ){
-					try{
-						sub.resolve( (errback||defer.defaultFailure)(value) );
-						this.sub = null;
-					}catch( ex ){
-						this.sub = null;
-						sub.reject( ex );
-						defer.handler( ex );
-					}
-				};
-
-				defer.register( tCallback, tErrback );
-
-				return sub.promise;
-			},
-			"reject" : function( error ){
-				// a short cut that allows you to not need to throw inside the then
-				if ( this.sub ){
-					this.sub.reject( error );
-				}else{
-					throw 'must reject from inside a then';
+			tCallback = function( value ){
+				try{
+					sub.resolve( (callback||defer.defaultSuccess)(value) );
+					dis.sub = null;
+				}catch( ex ){
+					dis.sub = null;
+					sub.reject( ex );
+					defer.handler( ex );
 				}
-			},
-			"done": function(callback){
-				this.then( callback );
-				return this; // for chaining with the defer
-			},
-			"fail": function(callback){
-				this.then( null, callback );
-				return this; 
-			},
-			"always": function(callback){
-				this['finally']( callback );
-				return this;
-			},
-			"catch": function(callback) {
-				return this.then(null, callback);
-			},
-			"finally": function(callback) {
-				function makePromise(value, resolved) {
-					var result = bmoor.defer.Basic();
+			};
 
-					if (resolved) {
-						result.resolve(value);
-					} else {
-						result.reject(value);
-					}
-
-					return result.promise;
+			tErrback = function( value ){
+				try{
+					sub.resolve( (errback||defer.defaultFailure)(value) );
+					dis.sub = null;
+				}catch( ex ){
+					dis.sub = null;
+					sub.reject( ex );
+					defer.handler( ex );
 				}
+			};
 
-				function handleCallback(value, isResolved) {
-					var callbackOutput = null;
-					try {
-						callbackOutput = (callback || dis.defaultSuccess)();
-					} catch(e) {
-						return makePromise(e, false);
-					}
+			defer.register( tCallback, tErrback );
 
-					if (callbackOutput && bMoor.isFunction(callbackOutput.then)) {
-						return callbackOutput.then(
-							function() {
-								return makePromise(value, isResolved);
-							}, 
-							function(error) {
-								return makePromise(error, false);
-							}
-						);
-					} else {
-						return makePromise(value, isResolved);
-					}
-				}
-
-				return this.then(
-					function(value) {
-						return handleCallback(value, true);
-					}, 
-					function(error) {
-						return handleCallback(error, false);
-					}
-				);
+			return sub.promise;
+		},
+		"reject" : function( error ){
+			// a short cut that allows you to not need to throw inside the then
+			if ( this.sub ){
+				this.sub.reject( error );
+			}else{
+				throw 'must reject from inside a then';
 			}
+		},
+		"done": function(callback){
+			this.then( callback );
+			return this; // for chaining with the defer
+		},
+		"fail": function(callback){
+			this.then( null, callback );
+			return this; 
+		},
+		"always": function(callback){
+			this['finally']( callback );
+			return this;
+		},
+		"catch": function(callback) {
+			return this.then(null, callback);
+		},
+		"finally": function(callback) {
+			function makePromise(value, resolved) {
+				var result = bmoor.defer.Basic();
+
+				if (resolved) {
+					result.resolve(value);
+				} else {
+					result.reject(value);
+				}
+
+				return result.promise;
+			}
+
+			function handleCallback(value, isResolved) {
+				var callbackOutput = null;
+				try {
+					callbackOutput = (callback || dis.defaultSuccess)();
+				} catch(e) {
+					return makePromise(e, false);
+				}
+
+				if (callbackOutput && bMoor.isFunction(callbackOutput.then)) {
+					return callbackOutput.then(
+						function() {
+							return makePromise(value, isResolved);
+						}, 
+						function(error) {
+							return makePromise(error, false);
+						}
+					);
+				} else {
+					return makePromise(value, isResolved);
+				}
+			}
+
+			return this.then(
+				function(value) {
+					return handleCallback(value, true);
+				}, 
+				function(error) {
+					return handleCallback(error, false);
+				}
+			);
 		}
 	});
 
-}());
-;(function( undefined ){
-	
-	function resolution( value ){
-		if ( value && value.then ) return value;
-		return {
-			then: function ResolutionPromise( callback ){
-				if ( bMoor.isArrayLike(value) && value.$inject ){
-					callback.apply( undefined, value );
-				}else{
-					callback( value );
+	(function(){
+		function resolution( value ){
+			if ( value && value.then ) {
+				return value;
+			} return {
+				then: function ResolutionPromise( callback ){
+					if ( bMoor.isArrayLike(value) && value.$inject ){
+						callback.apply( undefined, value );
+					}else{
+						callback( value );
+					}
 				}
-			}
-		};
-	}
+			};
+		}
 
-	function rejection( reason ){
-		return {
-			then : function RejectionPromise( callback, errback ){
-				errback( reason );
-			}
-		};
-	}
+		function rejection( reason ){
+			return {
+				then : function RejectionPromise( callback, errback ){
+					errback( reason );
+				}
+			};
+		}
 
-	bMoor.define( 'bmoor.defer.Basic', {
-		construct : function( exceptionHandler ){
-			var dis = this;
-			this.handler = exceptionHandler || this.defaultHandler;
-			this.callbacks = [];
-			this.value = null;
-			this.promise = new bmoor.defer.Promise( this );
-		},
-		properties : {
+		extend( Defer.prototype, {
+			_construct : function( exceptionHandler ){
+				var dis = this;
+				this.handler = exceptionHandler || this.defaultHandler;
+				this.callbacks = [];
+				this.value = null;
+				this.promise = new Promise( this );
+			},
 			defaultHandler : function( ex ){ bMoor.error.report(ex); },
 			defaultSuccess : function( value ){ return value; },
 			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
@@ -1434,36 +1005,33 @@
 			sub : function(){
 				return new bmoor.defer.Basic( this.handler );
 			}
-		}
-	});
+		});
+	}());
 
-}());
-;(function(){
-	
-	function check(){
-		if ( this.count === 0 && this.loaded ){
-			if ( this.errors.length ){
-				this.defer.reject( errors );
-			}else{
-				this.defer.resolve( true );
+	(function(){
+		function check(){
+			if ( this.count === 0 && this.loaded ){
+				if ( this.errors.length ){
+					this.defer.reject( errors );
+				}else{
+					this.defer.resolve( true );
+				}
 			}
 		}
-	}
 
-	function rtn(){
-		this.count--;
-		check.call( this );
-	}
+		function rtn(){
+			this.count--;
+			check.call( this );
+		}
 
-	bMoor.define( 'bmoor.defer.Group', {
-		construct : function(){
-			this.count = 0;
-			this.loaded = false;
-			this.errors = [];
-			this.defer = new bmoor.defer.Basic();
-			this.promise = this.defer.promise;
-		},
-		properties : {
+		extend( DeferGroup.prototype, {
+			_construct : function(){
+				this.count = 0;
+				this.loaded = false;
+				this.errors = [];
+				this.defer = new Defer();
+				this.promise = this.defer.promise;
+			},
 			add : function( promise ){
 				var dis = this;
 				this.count++;
@@ -1482,11 +1050,80 @@
 				this.loaded = true;
 				check.call( this );
 			}
+		});
+	}());
+	/**
+	Externalizing the functionality
+	**/
+	extend( bMoor, {
+		// namespace interactions
+		'parseNS'     : parse,
+		'dwrap'       : dwrap,
+		'set'         : set,
+		'get'         : get,
+		'del'         : del,
+		'map'         : map,
+		'exists'      : exists,
+		'register'    : register,
+		'check'       : check,
+		'find'        : find,
+		'install'     : install,
+		'ensure'      : ensure,
+		'request'     : request,
+		'translate'   : translate,
+		'inject'      : inject,
+		'plugin'      : plugin,
+		'makeQuark'   : makeQuark,
+		// allow a type expectation
+		'loop'        : loop, // array
+		'each'        : each, // object
+		'iterate'     : iterate, // object + safe
+		// general looping
+		'forEach'     : forEach,
+		// all the is tests
+		'isBoolean'   : isBoolean,
+		'isDefined'   : isDefined,
+		'isUndefined' : isUndefined,
+		'isArray'     : isArray,
+		'isArrayLike' : isArrayLike,
+		'isObject'    : isObject,
+		'isFunction'  : isFunction,
+		'isNumber'    : isNumber,
+		'isString'    : isString,
+		'isInjectable' : isInjectable,
+		'isEmpty'     : isEmpty, 
+		// object stuff
+		'object' : {
+			'create'      : create,
+			'extend'      : extend,
+			'copy'        : copy,
+			'equals'      : equals
 		},
-		plugins : {
-			'allDone' : function(){
+		// string functionality 
+		'string'      : {
+			'trim' : trim 
+		},
+		// array functionality
+		'array'       : {
+			'compare' : compareFunc,
+			'indexOf' : indexOf,
+			'remove' : remove,
+			'removeAll' : removeAll,
+			'filter' : filter
+		},
+		// error handling and logging : TODO : move verbose error handling
+		'error'       : {
+			report : error
+		},
+		// other utils - TODO : move out
+		'url' : {
+			'resolve'  : urlResolve
+		},
+		// defer functions
+		'defer' : {
+			'all' : function(){
 				var inst = this,
-					group = new inst(),
+					group = new DeferGroup(),
 					promises;
 
 				if ( arguments.length > 1 ){
@@ -1495,15 +1132,9 @@
 					promises = arguments[0];
 				}
 
-				if ( bMoor.isArrayLike(promises) ){
-					bMoor.loop(promises, function(p){
-						group.add( p );
-					});
-				}else{
-					bMoor.iterate(promises, function(p){
-						group.add( p );
-					});
-				}
+				bMoor.forEach(promises, function(p){
+					group.add( p );
+				});
 
 				group.run();
 
@@ -1511,8 +1142,320 @@
 			}
 		}
 	});
+}( this ));
+;bMoor.inject(
+	['bmoor.defer.Basic','@global', 
+	function( Defer, global ){
+		var Compiler = bMoor.ensure('bmoor.build.Compiler'),
+			definitions = {},
+			defer = Compiler.$.defer,
+			instance;
 
-}());;(function(){
+		function make( obj, name, definition ){
+			var i, c,
+				id = name.name,
+				namespace = name.namespace,
+				dis = this,
+				stillDoing = true,
+				$d = new Defer(),
+				promise = $d.promise,
+				maker;
+
+			if ( bMoor.isObject(definition) ){
+				// defines a class
+				definition.id = id;
+				definition.name = namespace.pop();
+				definition.mount = bMoor.get( namespace );
+				definition.namespace = namespace;
+				
+				if ( !this.clean ){
+					this.stack.sort(function( a, b ){
+						return b.rank - a.rank;
+					});
+					this.clean = true;
+				}
+
+				$d.resolve();
+
+				bMoor.loop( this.stack, function( maker ){
+					promise = promise.then(function(){
+						return bMoor.inject( maker.module, definition, obj ); 
+					});
+				});
+
+				return promise.then(function(){
+					// TODO : I really want to rethink this
+					if ( obj.$onMake ){
+						obj.$onMake( definition );
+					}
+
+					return obj;
+				});
+			}else if ( bMoor.isFunction(definition) ){
+				// defines a function
+				bMoor.set( namespace, definition );
+				
+				return bMoor.dwrap( definition );
+			}else{
+				throw 'Constructor has no idea how to handle as definition of ' + definition;
+			}
+		}
+
+		Compiler.prototype._construct = function(){
+			this.stack = [];
+			this.clean = true;
+		};
+
+		Compiler.prototype.addModule = function( rank, namePath, injection ){
+			this.clean = false;
+
+			if ( arguments.length < 3 ){
+				injection = namePath;
+			}else{
+				bMoor.install( namePath, injection[injection.length-1] );
+			}
+
+			this.stack.push({
+				rank : parseInt(rank,10),
+				module : injection
+			});
+		};
+
+		Compiler.prototype.make = function( name, definition ){
+			var namespace,
+				dis = this,
+				obj;
+
+			if ( arguments.length !== 2 ) {
+				throw 'you need to define a name and a definition';
+			}
+			
+			if ( bMoor.isString(name) ){
+				namespace = bMoor.parseNS( name );
+			}else if ( bMoor.isArray(name) ){
+				namespace = name;
+				name = name.join('.');
+			}else{
+				throw JSON.stringify(name) + ' > ' + JSON.stringify(definition) + ' > ' +
+					'message : you need to define a name and needs to be either a string or an array';
+			}
+
+			obj = bMoor.ensure( namespace );
+
+			definitions[ name ] = definition;
+
+			if ( bMoor.isInjectable(definition) ){
+				if ( bMoor.require ){
+					bMoor.require.inject( definition ).then(function( def ){
+						make.call( dis, obj, {name:name,namespace:namespace}, def ).then(function( defined ){
+							obj.$.$ready( defined );
+						});
+					});
+				}else{
+					bMoor.inject( definition ).then(function( def ){
+						make.call( dis, obj, {name:name,namespace:namespace}, def ).then(function( defined ){
+							obj.$.$ready( defined );
+						});
+					});
+				}
+			}else{
+				make.call( this, obj, {name:name,namespace:namespace}, definition ).then(function( defined ){
+					obj.$.$ready( defined );
+				});
+			}
+
+			return obj.$.promise;
+		};
+
+		Compiler.prototype.generate = function( name, mocks ){
+			var dis = this,
+				obj = bMoor.makeQuark();
+
+			return bMoor.inject( definitions[name], mocks ).then(function( def ){
+				return make.call( dis, obj, {name:'mock',namespace:['mock']}, def );
+			});
+		};
+
+		instance = new Compiler();
+
+		Compiler.$instance = instance;
+		bMoor.set( 'bmoor.build.$compiler', instance );
+
+		bMoor.plugin( 'define', function( name, definition ){
+			return instance.make( name, definition );
+		});
+		
+		bMoor.plugin( 'mock', function( name, mocks ){
+			return instance.generate( name, bMoor.map(mocks) );
+		});
+
+		Compiler.$.$ready( Compiler );
+	}
+]);
+;bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	Compiler.$instance.addModule( 20, 'bmoor.build.ModConstruct', 
+		['-construct', '-abstract', '-id', function( construct, abstract, id ){
+			if ( abstract ){
+				this.prototype._construct = function(){
+					throw id+' is abstracted, either extend or use only static members';
+				};
+			}else if ( construct ){
+				this.prototype._construct = construct;
+			}
+		}]
+	);
+}]);
+;bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	Compiler.$instance.addModule( 9, 'bmoor.build.ModDecorate', 
+		['-decorators', function( decorators ){
+			var proto = this.prototype;
+
+			if ( decorators ){
+				if ( !bMoor.isArray( decorators ) ){
+					throw 'the decoration list must be an array';
+				}
+				
+				bMoor.loop( decorators, function( dec ){
+					if ( dec.$wrap ){
+						dec.$wrap( proto );
+					}
+				});
+			}
+		}]
+	);
+}]);
+;bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', 
+		['-factory', function( factory ){
+			var obj = this;
+
+			if ( factory ){
+				obj.$make = function(){
+					var args = arguments;
+					args.$arguments = true;
+					return new obj( args );
+				};
+			}
+		}]
+	);
+}]);;bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	Compiler.$instance.addModule( 1, 'bmoor.build.ModFinalize', 
+		['-onMake', '-parent', function( onMake, parent ){
+			if ( onMake ){
+				this.$onMake = onMake;
+			}else if ( parent ){
+				this.$onMake = parent.$onMake;
+			}
+		}]
+	);
+}]);
+;bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	Compiler.$instance.addModule( 90, 'bmoor.build.ModInherit', 
+		['-id','-namespace','-name', '-mount','-parent', 
+		function( id, namespace, name, mount, parent){
+			var dis = this,
+				t;
+
+			if ( parent ){
+				t = function(){ 
+					this.constructor = dis; // once called, define
+				};
+				t.prototype = parent.prototype;
+				this.prototype = new t();
+			}
+				
+			this.prototype.__class = id;
+			this.prototype.__namespace = namespace;
+			this.prototype.__name = name;
+			this.prototype.__mount = mount;
+		}]
+	);
+}]);
+;bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	Compiler.$instance.addModule( 4, 'bmoor.build.ModPlugin', 
+		['-plugins', function( plugins ){
+			var obj = this.$instance || this;
+
+			bMoor.iterate( plugins, function( func, plugin ){
+				if ( bMoor.isString(func) ){
+					func = obj[ func ];
+				}
+
+				bMoor.plugin( plugin, function(){ 
+					return func.apply( obj, arguments ); 
+				});
+			});
+		}]
+	);
+}]);
+;bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', 
+		['-properties', function( properties ){
+			var name;
+
+			for( name in properties ){
+				this.prototype[ name ] = properties[ name ];
+			}
+		}]
+	);
+}]);
+;bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	Compiler.$instance.addModule( 0, 'bmoor.build.ModRegister', 
+		['-id', function( id ){
+			bMoor.register( id, this );
+		}]
+	);
+}]);
+;(function(){
+	// TODO : this is no longer needed
+}());
+;bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	Compiler.$instance.addModule( 5, 'bmoor.build.ModSingleton', 
+		['-singleton', '-name', '-mount',function( singleton, name, mount ){
+			var obj = this;
+
+			if ( singleton ){
+				// TODO : Do I want to do this better?
+				if ( !bMoor.isArray(singleton) ){
+					singleton = [];
+				}
+
+				singleton.$arguments = true;
+				obj.$instance = mount[ '$'+name[0].toLowerCase() + name.substr(1) ] = new obj( singleton );
+			}
+		}]
+	);
+}]);;bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	Compiler.$instance.addModule( 10, 'bmoor.build.ModStatics', 
+		['-statics', function( statics ){
+			var name;
+
+			for( name in statics ){
+				this.prototype[ name ] = statics[ name ];
+			}
+		}]
+	);
+}]);
+;bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	Compiler.$instance.addModule( 8, 'bmoor.build.ModTraits', 
+		['-traits', function( traits ){
+			var proto = this.prototype;
+			
+			if ( traits ){
+				if ( !bMoor.isArray( traits ) ){
+					throw 'the traits list must be an array';
+				}
+
+				bMoor.loop( traits, function( trait ){
+					if ( trait.$wrap ){
+						trait.$wrap( proto );
+					}
+				});
+			}
+		}]
+	);
+}]);
+;(function(){
 	
 	function stackOn( func, args ){
 		return this.promise.then(function(){
@@ -1665,6 +1608,10 @@ parseTemplate : function( template ){
 			throw 'error' /* TODO : error */;
 		};
 
+	// TODO : need to handle headers better
+	// Accept: "application/json, text/plain, */*", 
+	// Content-Type: "application/json;charset=utf-8"}
+	// how to add better support for response types?
 	bMoor.define( 'bmoor.comm.Http', {
 		construct : function( options ){
 			var dis = this,
@@ -1754,7 +1701,7 @@ parseTemplate : function( template ){
 				action = valid ? 'resolve' : 'reject';
 
 				r = [ response, status, headers ];
-				r.$inject = true;
+				r.$inject = true; // TODO : do I really need this?
 
 				this.$.defer[action]( r );
 			}
@@ -2134,23 +2081,23 @@ parseTemplate : function( template ){
 		}
 	});
 
-}());;(function(){
+}());;bMoor.define( 'bmoor.comm.Script', 
+	['bmoor.comm.Resource',function( Resource ){
+		return {
+			parent : Resource,
+			properties : {
+				apply : function scriptApply( content ){
+					var script = document.createElement( 'script' );
 
-	bMoor.define( 'bmoor.comm.Script', {
-		parent : 'bmoor.comm.Resource',
-		properties : {
-			apply : function scriptApply( content ){
-				var script = document.createElement( 'script' );
+					script.text = content;
+					document.body.appendChild( script );
 
-				script.text = content;
-				document.body.appendChild( script );
-
-				return;
+					return;
+				}
 			}
-		}
-	});
-
-}());;(function(){
+		};
+	}]
+);;(function(){
 
 	bMoor.define( 'bmoor.comm.Style', {
 		parent : 'bmoor.comm.Resource',
@@ -2172,7 +2119,7 @@ parseTemplate : function( template ){
 	});
 }());;bMoor.define( 'bmoor.core.Collection', [function(){
 	return {
-		parent : 'Array',
+		parent : Array,
 		traits : [
 			'bmoor.core.Model'
 		],
@@ -2186,164 +2133,162 @@ parseTemplate : function( template ){
 		}
 	};
 }]);;bMoor.define('bmoor.core.CollectionObserver', 
-[function(){
-	return {
-		parent : 'bmoor.core.MapObserver',
-		construct : function( collection ){
-			this['bmoor.core.MapObserver']._construct.call( this, collection );
-
-			// I want to add code to grab elements that are removed
-			this.removals = [];
-			this.watches = [];
-			this.changes = {
-				moves : [],
-				removals : []
-			};
-			this._wrapCollection( collection )
-		},
-		properties : {
-			_wrapCollection : function( collection ){
-				var dis = this;
-				
-				collection.pop = function(){
-					var t = Array.prototype.pop.call( this );
-
-					if ( t.$markRemoval === undefined ){
-						t.$markRemoval = dis.removals.length;
-					}
-
-					dis.removals.push( t );
-
-					return t;
-				};
-
-				collection.shift = function(){
-					var t = Array.prototype.shift.call( this );
-
-					if ( t.$markRemoval === undefined ){
-						t.$markRemoval = dis.removals.length;
-					}
-
-					dis.removals.push( t );
-
-					return t;
-				};
-
-				collection.splice = function(){
-					var 
-						i,
-						c,
-						t = Array.prototype.splice.apply(this, arguments);
-
-					for( i = 0, c = t.length; i < c; i++ ){
-						if ( t[i].$markRemoval === undefined ){
-							t[i].$markRemoval = dis.removals.length + i;
-						}
-					}
-
-					dis.removals = dis.removals.concat( t );
-
-					return t;
-				};
-			},
-			watchChanges : function( func ){
-				this.watches.push( func );
-			},
-			check : function(){
-				var i, c,
-					dis = this;
-				
-				if ( !this.checking ){
-					this['bmoor.core.MapObserver'].check.call( this );
+	['bmoor.core.MapObserver', function( MapObserver ){
+		return {
+			parent : MapObserver,
+			properties : {
+				observe : function( collection ){
+					var dis = this;
 					
-					this.checking = true;
-					this.changes = this.checkChanges();
-					if ( this._needNotify(this.changes) ){
-						bMoor.loop( this.watches, function( f ){
-							f( dis.changes );
-						});
-					}
-					this.checking = false;
-				}
-			}, 
-			checkChanges : function(){
-				var
-					i,
-					val,
-					key,
-					list,
-					model = this.model,
-					changes = {},
-					cleaned = this.cleaned,
-					removals,
-					moves = {};
+					this.removals = [];
+					this.watches = [];
+					this.changes = {
+						moves : [],
+						removals : []
+					};
 
-				for( key in model ) {
-					if ( model.hasOwnProperty(key) && key[0] !== '_' ){
-						val = model[key];
+					collection.pop = function(){
+						var t = Array.prototype.pop.call( this );
+
+						if ( t.$markRemoval === undefined ){
+							t.$markRemoval = dis.removals.length;
+						}
+
+						dis.removals.push( t );
+
+						return t;
+					};
+
+					collection.shift = function(){
+						var t = Array.prototype.shift.call( this );
+
+						if ( t.$markRemoval === undefined ){
+							t.$markRemoval = dis.removals.length;
+						}
+
+						dis.removals.push( t );
+
+						return t;
+					};
+
+					collection.splice = function(){
+						var 
+							i,
+							c,
+							t = Array.prototype.splice.apply(this, arguments);
+
+						for( i = 0, c = t.length; i < c; i++ ){
+							if ( t[i].$markRemoval === undefined ){
+								t[i].$markRemoval = dis.removals.length + i;
+							}
+						}
+
+						dis.removals = dis.removals.concat( t );
+
+						return t;
+					};
+
+					MapObserver.prototype.observe.call( this, collection );
+				},
+				watchChanges : function( func ){
+					this.watches.push( func );
+				},
+				check : function(){
+					var i, c,
+						dis = this;
+					
+					if ( !this.checking ){
+						MapObserver.prototype.check.call( this );
 						
-						if ( typeof(val) == 'function' ){
-							continue;
-						} else {
-							i = parseInt( key, 10 );
+						this.checking = true;
+						this.changes = this.checkChanges();
+						if ( this._needNotify(this.changes) ){
+							bMoor.loop( this.watches, function( f ){
+								f( dis.changes );
+							});
+						}
+						this.checking = false;
+					}
+				}, 
+				checkChanges : function(){
+					var
+						i,
+						val,
+						key,
+						list,
+						model = this.model,
+						changes = {},
+						cleaned = this.cleaned,
+						removals,
+						moves = {};
 
-							if ( !isNaN(i) ){
-								// TODO : do i really want to do this?
-								if ( !val._co ){
-									val._co = {};
-								}
+					for( key in model ) {
+						if ( model.hasOwnProperty(key) && key[0] !== '_' ){
+							val = model[key];
+							
+							if ( typeof(val) == 'function' ){
+								continue;
+							} else {
+								i = parseInt( key, 10 );
 
-								if ( val.$remove ){
-									// allow for a model to force its own removal
-									this.model.splice( i, 1 );
-								}else if ( val._co.index === undefined ){
-									// new row added
-									moves[ key ] = val;
-								}else if ( val._co.index != i ){
-									moves[ key ] = val;
-									if ( val.$markRemoval !== undefined ){
-										this.removals[ val.$markRemoval ] = undefined;
-										delete val.$markRemoval;
+								if ( !isNaN(i) ){
+									// TODO : do i really want to do this?
+									if ( !val._co ){
+										val._co = {};
 									}
+
+									if ( val.$remove ){
+										// allow for a model to force its own removal
+										this.model.splice( i, 1 );
+									}else if ( val._co.index === undefined ){
+										// new row added
+										moves[ key ] = val;
+									}else if ( val._co.index != i ){
+										moves[ key ] = val;
+										if ( val.$markRemoval !== undefined ){
+											this.removals[ val.$markRemoval ] = undefined;
+											delete val.$markRemoval;
+										}
+									}
+									
+									val._co.index = i;
 								}
-								
-								val._co.index = i;
 							}
 						}
 					}
-				}
-				
-				changes.removals = this.removals;
-				changes.moves = moves;
+					
+					changes.removals = this.removals;
+					changes.moves = moves;
 
-				this.removals = [];
+					this.removals = [];
 
-				return changes;
-			},
-			_needNotify : function( changes ){
-				var key;
+					return changes;
+				},
+				_needNotify : function( changes ){
+					var key;
 
-				for( key in changes ) {
-					if ( changes.hasOwnProperty(key) ){
-						if ( key == 'removals' ){
-							if ( changes.removals.length ){
+					for( key in changes ) {
+						if ( changes.hasOwnProperty(key) ){
+							if ( key == 'removals' ){
+								if ( changes.removals.length ){
+									return true;
+								}
+							}else if ( key == 'moves' ){
+								if ( !bMoor.isEmpty(changes.moves) ){
+									return true;
+								}
+							}else{
 								return true;
 							}
-						}else if ( key == 'moves' ){
-							if ( !bMoor.isEmpty(changes.moves) ){
-								return true;
-							}
-						}else{
-							return true;
 						}
 					}
-				}
 
-				return false;
+					return false;
+				}
 			}
-		}
-	};
-}]);
+		};
+	}]
+);
 
 ;bMoor.define( 'bmoor.core.Decorator', [function(){
 	function override( key, el, action ){
@@ -2446,10 +2391,10 @@ parseTemplate : function( template ){
 		}
 	});
 
-}());;bMoor.define( 'bmoor.core.Map', [function(){
+}());;bMoor.define( 'bmoor.core.Map', ['bmoor.core.Model', function( Model ){
 	return {
 		traits : [
-			'bmoor.core.Model'
+			Model
 		],
 		construct : function( content ){
 			this._merge( this._inflate(content) );
@@ -2515,6 +2460,7 @@ bMoor.define( 'bmoor.core.MapObserver',
 			watch : function( variable, func ){
 				var p, 
 					t; // registers what the observe monitors
+					
 				if ( !this.watching[variable] ){
 					p = variable.split('.');
 
@@ -2573,114 +2519,116 @@ bMoor.define( 'bmoor.core.MapObserver',
 		}
 	};
 }]);
-;bMoor.define( "bmoor.core.Model", [function(){
-	function merge( from, to ){
-		var key, f, t;
+;bMoor.define( "bmoor.core.Model", 
+	[ 'bmoor.core.Trait', function( Trait ){
+		function merge( from, to ){
+			var key, f, t;
 
-		// merge in the 'from'
-		for( key in from ){
-			if ( from.hasOwnProperty(key) ){
-				f = from[key];
-				t = to[key];
+			// merge in the 'from'
+			for( key in from ){
+				if ( from.hasOwnProperty(key) ){
+					f = from[key];
+					t = to[key];
+
+					if ( t === undefined ){
+						to[key] = f;
+					}else if ( angular.isArray(f) ){
+						if ( !angular.isArray(t) ){
+							t = to[key] = [];
+						}
+
+						arrayMerge( f, t );
+					}else if ( angular.isObject(f) ){
+						if ( !angular.isObject(t) ){
+							t = to[key] = {};
+						}
+
+						merge( f, t );
+					}else if ( f != t ){
+						to[key] = f;
+					}
+				}
+			}
+
+			// now we prune the 'to'
+			for( key in to ){
+				if ( to.hasOwnProperty(key) ){
+					if ( from[key] === undefined ){
+						delete to[key];
+					}
+				}
+			}
+
+			return to;
+		}
+
+		function arrayMerge( from, to ){
+			var i, c,
+				f,
+				t;
+
+			for( i = 0, c = from.length; i < c; i++ ){
+				f = from[i];
+				t = to[i];
 
 				if ( t === undefined ){
-					to[key] = f;
-				}else if ( angular.isArray(f) ){
-					if ( !angular.isArray(t) ){
-						t = to[key] = [];
-					}
-
-					arrayMerge( f, t );
+					to[ i ] = f;
 				}else if ( angular.isObject(f) ){
 					if ( !angular.isObject(t) ){
-						t = to[key] = {};
+						t = to[i] = {};
 					}
 
 					merge( f, t );
-				}else if ( f != t ){
-					to[key] = f;
+				}else if ( angular.isArray(f) ){
+					if ( !anguar.isArray(t) ){
+						t = to[i] = [];
+					}
+
+					arrayMerge( f, t );
+				}else if ( f !== t ){
+					to[ i ] = f;
 				}
+			}
+
+			for( i = c, c = to.length; i < c; i++ ){
+				to.pop();
 			}
 		}
 
-		// now we prune the 'to'
-		for( key in to ){
-			if ( to.hasOwnProperty(key) ){
-				if ( from[key] === undefined ){
-					delete to[key];
+		return {
+			parent : Trait,
+			properties : {
+				_merge : function( from ){
+					if ( bMoor.isArray(from) ){
+						arrayMerge( from, this );
+					}else{
+						merge( from, this );
+					}
+
+					return this;
+				},
+				_validate : function(){ 
+					return null; 
+				},
+				_inflate : function( content ){
+					return content;
+				},
+				_deflate : function(){
+					return this; 
+				},
+				_update : function( content ){
+					this._merge( content, this );
+				},
+				_simplify : function(){
+					return this._deflate();
+				},
+				toJson : function(){
+					return JSON.stringify( this._simplify() );
 				}
 			}
-		}
-
-		return to;
-	}
-
-	function arrayMerge( from, to ){
-		var i, c,
-			f,
-			t;
-
-		for( i = 0, c = from.length; i < c; i++ ){
-			f = from[i];
-			t = to[i];
-
-			if ( t === undefined ){
-				to[ i ] = f;
-			}else if ( angular.isObject(f) ){
-				if ( !angular.isObject(t) ){
-					t = to[i] = {};
-				}
-
-				merge( f, t );
-			}else if ( angular.isArray(f) ){
-				if ( !anguar.isArray(t) ){
-					t = to[i] = [];
-				}
-
-				arrayMerge( f, t );
-			}else if ( f !== t ){
-				to[ i ] = f;
-			}
-		}
-
-		for( i = c, c = to.length; i < c; i++ ){
-			to.pop();
-		}
-	}
-
-	return {
-		parent : 'bmoor.core.Trait',
-		properties : {
-			_merge : function( from ){
-				if ( bMoor.isArray(from) ){
-					arrayMerge( from, this );
-				}else{
-					merge( from, this );
-				}
-
-				return this;
-			},
-			_validate : function(){ 
-				return null; 
-			},
-			_inflate : function( content ){
-				return content;
-			},
-			_deflate : function(){
-				return this; 
-			},
-			_update : function( content ){
-				this._merge( content, this );
-			},
-			_simplify : function(){
-				return this._deflate();
-			},
-			toJson : function(){
-				return JSON.stringify( this._simplify() );
-			}
-		}
-	};
-}]);
+		};
+	}]
+);
 
 ;bMoor.define( 'bmoor.core.Service', [function(){
 	/***
@@ -2791,6 +2739,81 @@ bMoor.define( 'bmoor.core.MapObserver',
 		}
 	};
 }]);
+;bMoor.define('bmoor.core.SmartMapObserver', 
+	['@undefined', 'bmoor.core.MapObserver', function( undefined, MapObserver ){
+
+		function mapUpdate( update, value ){
+			var key, 
+				val,
+				model = this.model;
+
+			if ( bMoor.isString( update ) ){
+				// TODO : this isn't entirely right
+				this.updates[ update ] = bMoor.set( update, value, this.model );
+			}else if ( bMoor.isObject(update) ){
+				for( key in update ){
+					if ( update.hasOwnProperty(key) ){
+						mapUpdate.call( this, key, update[key] );
+					}
+				}
+			}
+		}
+
+		function mapDelete( deletion ){
+			var key, 
+				val,
+				model = this.model;
+
+			if ( bMoor.isString( deletion ) ){
+				// TODO : this isn't entirely right
+				this.updates[ update ] = bMoor.del( deletion, this.model );
+			}
+		}
+
+		return {
+			parent : MapObserver,
+			properties : {
+				observe : function( map ){
+					var dis = this;
+					
+					this.updates = {};
+
+					MapObserver.prototype.observe.call( this, map );
+
+					map.$set = function(){
+						mapUpdate.apply( dis, arguments );
+					};
+
+					map.$delete = function(){
+						mapDelete.apply( dis, arguments );
+					};
+				},
+				check : function(){
+					var dis = this,
+						key,
+						watch;
+
+					bMoor.iterate( this.updates, function( oValue, path ){
+						var i, c,
+							watch = dis.watching[ path ],
+							val;
+
+						if ( watch ){
+							val = dis.evaluate( path );
+
+							for( i = 0, c = watch.calls.length; i < c; i++ ){
+								watch.calls[ i ]( val, oValue );
+							}
+						}
+					});
+
+					this.updates = {};
+				}
+			}
+		};
+	}]
+);
+
 ;bMoor.define( 'bmoor.core.Trait', {
 	onMake : function(){
 		var inst = this,
@@ -2810,7 +2833,7 @@ bMoor.define( 'bmoor.core.MapObserver',
 ;bMoor.define( 'bmoor.error.Basic', 
 	['@undefined',function(undefined){
 	return {
-		parent: 'Error',
+		parent: Error,
 		construct : function( message, filename, lineNumber ){
 			var stack,
 				pos,

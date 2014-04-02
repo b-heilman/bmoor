@@ -1,7 +1,7 @@
-bMoor.define( 'bmoor.core.Map', [function(){
+bMoor.define( 'bmoor.core.Map', ['bmoor.core.Model', function( Model ){
 	return {
 		traits : [
-			'bmoor.core.Model'
+			Model
 		],
 		construct : function( content ){
 			this._merge( this._inflate(content) );

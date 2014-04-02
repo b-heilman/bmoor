@@ -2,19 +2,21 @@ describe('Testing bmoor.core.Map', function(){
 	var t,
 		result;
 
-	bMoor.define('test.Map', {
-		parent : 'bmoor.core.Map',
-		construct : function( content ){
-			this[ 'bmoor.core.Map' ]._construct.call( this, content );
-			this.woot = 'wootwoot';
-			this.name = this.firstName + ' ' + this.lastName;
-		},
-		properties : {
-			hello : function( io ){
-				result = io;
+	bMoor.define('test.Map', ['bmoor.core.Map', function( Map ){
+		return {
+			parent : Map,
+			construct : function( content ){
+				Map.prototype._construct.call( this, content );
+				this.woot = 'wootwoot';
+				this.name = this.firstName + ' ' + this.lastName;
+			},
+			properties : {
+				hello : function( io ){
+					result = io;
+				}
 			}
-		}
-	});
+		};
+	}]);
 
 	beforeEach(function(){
 		t = new test.Map({

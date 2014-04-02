@@ -1,24 +1,18 @@
 bMoor.define('bmoor.core.CollectionObserver', 
 	['bmoor.core.MapObserver', function( MapObserver ){
 		return {
-			parent : ,
-			construct : function( collection ){
-				MapObserver.prototype._construct.call( this, collection );
-
-				// I want to add code to grab elements that are removed
-				this.removals = [];
-				this.watches = [];
-				this.changes = {
-					moves : [],
-					removals : []
-				};
-				
-				this._wrapCollection( collection )
-			},
+			parent : MapObserver,
 			properties : {
-				_wrapCollection : function( collection ){
+				observe : function( collection ){
 					var dis = this;
 					
+					this.removals = [];
+					this.watches = [];
+					this.changes = {
+						moves : [],
+						removals : []
+					};
+
 					collection.pop = function(){
 						var t = Array.prototype.pop.call( this );
 
@@ -59,6 +53,8 @@ bMoor.define('bmoor.core.CollectionObserver',
 
 						return t;
 					};
+
+					MapObserver.prototype.observe.call( this, collection );
 				},
 				watchChanges : function( func ){
 					this.watches.push( func );
