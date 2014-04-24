@@ -1,17 +1,18 @@
 (function( undefined ){
 	"use strict";
 
-	bMoor.define( 'bmoor.comm.Resource', {
-		construct : function( src, async ){
+	bMoor.make( 'bmoor.comm.Resource', {
+		construct : function CommResource( src, async ){
 			var dis = this;
 
-			this.$.defer = new bmoor.defer.Basic();
+			this.$defer = new bmoor.defer.Basic();
+			this.promise = this.$defer.promise;
 
 			(new bmoor.comm.Http({
 				'method' : 'GET',
 				'url' : src,
 				'async' : async
-			})).$.promise.then( 
+			})).promise.then( 
 				function resourceSuccess( response, status ){
 					try{
 						dis.status = 200;
@@ -41,13 +42,13 @@
 			},
 			resolve : function( data ){
 				if ( this.status === 200 ){
-					this.$.defer.resolve({
+					this.$defer.resolve({
 						data : data,
 						status : this.status,
 						headers : undefined
 					});
 				}else{
-					this.$.defer.reject({
+					this.$defer.reject({
 						data : data,
 						status : this.status,
 						headers : undefined

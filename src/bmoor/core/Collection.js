@@ -1,10 +1,10 @@
-bMoor.define( 'bmoor.core.Collection', [function(){
+bMoor.make( 'bmoor.core.Collection', ['bmoor.core.Model', function( Model ){
 	return {
 		parent : Array,
 		traits : [
-			'bmoor.core.Model'
+			Model
 		],
-		construct : function( content ){
+		construct : function Collection( content ){
 			this.merge( this.inflate(content) );
 		},
 		properties : {

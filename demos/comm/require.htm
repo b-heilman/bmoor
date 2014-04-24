@@ -1,7 +1,7 @@
 <html>
 <head>
 	<script src="../../src/bMoor.js"></script>
-	<script src="../../src/bmoor/build/ModConstruct.js"></script>
+	
 	<script src="../../src/bmoor/build/ModInherit.js"></script>
 	<script src="../../src/bmoor/build/ModProperties.js"></script>
 	<script src="../../src/bmoor/build/Compiler.js"></script>
@@ -12,9 +12,6 @@
 	<script src="../../src/bmoor/build/ModPlugin.js"></script>
 	<script src="../../src/bmoor/build/ModRequire.js"></script>
 
-	<script src="../../src/bmoor/defer/Promise.js"></script>
-	<script src="../../src/bmoor/defer/Basic.js"></script>
-	<script src="../../src/bmoor/defer/Group.js"></script>
 	<script src="../../src/bmoor/core/Decorator.js"></script>
 
 	<script>bMoor.root = 'script';</script>
@@ -29,15 +26,18 @@
 </head>
 <body>
 	<script>
-		var t = bMoor.require('test.Alert');
-		new t('woot');
-
+		bMoor.require('test.Alert').then(function( t ){
+			console.log( 'loading test.Alert' );
+			new t('woot');
+		});
+		
 		bMoor.require.inject(['>test.Foo', function(Foo){
+			console.log( 'loading test.Foo' );
 			var t = new Foo();
 			t.bar();
 		}]);
 
-		bMoor.define( 'foo.Body', 
+		bMoor.make( 'foo.Body', 
 			['>test.Composite',
 			'>jQuery>//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js',
 			function( Composite, $ ){
@@ -48,7 +48,7 @@
 					}
 				};
 			}]
-		).$.promise.then(function( obj ){
+		).then(function( obj ){
 			new obj();
 		});
 	</script>

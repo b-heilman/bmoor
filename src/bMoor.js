@@ -34,6 +34,29 @@
 		}
 	}
 
+	function instantiate( obj, args ){
+		var i, c,
+			construct;
+
+		construct = 'return new obj(';
+
+		for( i = 0, c = args.length; i < c; i++ ){
+			if ( i ){
+				construct += ',';
+			}
+
+			construct += 'args['+i+']';
+		}
+
+		construct += ')';
+		/*jshint -W054 */
+		return ( new Function('obj','args',construct) )( obj, args );
+	}
+
+	/*
+		set a value for a root space
+		returns the old value
+	*/
 	function set( space, value, root ){
 		var old,
 			val,
@@ -62,6 +85,10 @@
 		return old;
 	}
 	
+	/*
+		delete a variable from a root space
+		return the value removed
+	*/
 	function del( space, root ){
 		var old,
 			val,
@@ -90,6 +117,9 @@
 		return old;
 	}
 
+	/*
+		get a variable from root space
+	*/
 	function get( space, root ){
 		var curSpace = root || global,
 			nextSpace,
@@ -113,10 +143,13 @@
 		}else if ( isObject(space) ){
 			return space;
 		}else{
-			return null;
+			throw 'unsupported type';
 		}
 	}
 
+	/*
+		map a hash into an object
+	*/
 	function map( mappings, root ){
 		if ( !root ){
 			root = {};
@@ -128,8 +161,9 @@
 
 		return root;
 	}
+
 	/*
-		returns back the space or null
+		returns back the space or undefined
 	*/
 	function _exists( space, curSpace ){
 		var position,
@@ -142,7 +176,7 @@
 				var nextSpace = space[i];
 					
 				if ( !curSpace[nextSpace] ){
-					return null;
+					return undefined;
 				}
 				
 				curSpace = curSpace[nextSpace];
@@ -152,10 +186,14 @@
 		}else if ( isObject(space) ){
 			return space;
 		}else{
-			return null;
+			throw 'unsupported type';
 		}
 	}
 
+	/*
+		return back the variable in the space, undefined otherwise
+		accepts a list of roots or just one
+	*/
 	function exists( space, root ){
 		var i, c,
 			res;
@@ -175,10 +213,16 @@
 		}
 	}
 
+	/**
+		register an alias
+	**/
 	function register( alias, obj ){ 
 		aliases[ alias ] = obj; 
 	}
 
+	/**
+		look to see if an alias is defined
+	**/
 	function check( alias ){
 		return aliases[ alias ];
 	}
@@ -204,11 +248,11 @@
 	Messaging functions
 	**/
 	function error( error ){
-		if ( isObject(error) ){
-			console.log( error );
-			console.log( error.stack );
+		if ( isObject(error) && error.stack ){
+			console.warn( error );
+			console.debug( error.stack );
 		}else{
-			console.log( error );
+			console.warn( error );
 			console.trace();
 		}
 		
@@ -224,14 +268,13 @@
 	function dwrap( value ){
 		var d;
 
-		if ( value.$ ){
-			d = value.$.promise;
+		if ( isQuark(value) ){
+			return value.$promise; // this way they get when the quark is ready
 		}else{
 			d = new Defer(); 
 			d.resolve( value );
+			return d.promise;
 		}
-		
-		return d.promise;
 	}
 
 	function isEmpty( obj ){
@@ -451,55 +494,40 @@
 		return false;
 	}
 
+	
+
+	function isQuark( def ){
+		return typeof(def) === 'function' && def.$isQuark;
+	}
+
 	function makeQuark( namespace ){
 		var path,
-			defer;
+			defer,
+			quark = function Quark ( args ){}
 
-		function Quark ( args ){ // TODO : I would love to name this to the class, camel cased.
-			if ( this === global ){
-				throw 'You forgot to new...';
-			}
+		quark.$isQuark = true;
 
-			this.$ = {}; // The instance mount position for all framework specific things
+		path = parse( namespace )
 
-			// TODO : what do I need that for?
-			if ( args && args.$arguments ){
-				this._construct.apply( this, args );
-			}else{
-				this._construct.apply( this, arguments );
-			}
+		if ( Defer ){
+			defer = new Defer();
+
+			quark.$promise = defer.promise;
+			quark.$ready = function( obj ){
+				if ( defer.resolve ){
+					defer.resolve( obj );
+				}
+
+				// replace yourself
+				if ( path ){
+					set( path, obj );
+				}
+			};
 		}
 
-		if ( namespace ){
-			path = parse( namespace )
+		set( path, quark );
 
-			if ( Defer ){
-				defer = new Defer();
-
-				Quark.$ = {
-					promise : defer.promise,
-					$ready : function( obj ){
-						if ( defer.resolve ){
-							defer.resolve( obj );
-						}
-
-						if ( path ){
-							set( path, obj );
-						}
-
-						delete this.$ready;
-						// delete this.promise;
-					}
-				}; // class based mount position for all framework specific things
-			}
-
-			Quark.prototype.__class = namespace;
-			Quark.prototype._construct = function(){};
-
-			set( path, Quark );
-		}
-
-		return Quark;
+		return quark;
 	}
 
 	// check to see if the element exists, if not, create a Quark in its place
@@ -553,9 +581,9 @@
 		if ( isString(request) ){
 			obj = ensure( request, root );
 
-			if ( obj.$ ){
+			if ( isQuark(obj) ){
 				// was created by the system
-				return obj.$.promise;
+				return obj.promise;
 			}else{
 				// some other object, need to play nice
 				return dwrap( obj );
@@ -564,11 +592,11 @@
 			obj = new DeferGroup();
 
 			loop( request, function( req, key ){
-				if ( req && req.$ && req.$.promise ){
-					req.$.promise.then(function( o ){
+				if ( isQuark(req) ){
+					req.$promise.then(function( o ){
 						request[ key ] = o;
 					});
-					obj.add( req.$.promise );
+					obj.add( req.$promise );
 				}else{
 					request[ key ] = req;
 				}
@@ -583,7 +611,7 @@
 	}
 
 	function isInjectable( obj ){
-		return isArray(obj) && isFunction(obj[obj.length-1]);
+		return isArray( obj ) && isFunction( obj[obj.length-1] );
 	}
 
 	function inject( arr, root, context ){
@@ -831,14 +859,13 @@
 	set( 'bMoor', bMoor );
 	set( 'bmoor', bmoor );
 	
-	Promise = ensure('bmoor.defer.Promise');
-	DeferGroup = ensure('bmoor.defer.Group');
-	Defer = ensure('bmoor.defer.Basic');
+	function Promise( defer ){
+		this.defer = defer;
+	}
 	
+	set( 'bmoor.defer.Promise', Promise );
+
 	extend( Promise.prototype, {
-		_construct : function( defer ){
-			this.defer = defer;
-		},
 		"then" : function( callback, errback ){
 			var dis = this,
 				defer = this.defer,
@@ -941,6 +968,17 @@
 		}
 	});
 
+	function Defer( exceptionHandler ){
+		var dis = this;
+
+		this.handler = exceptionHandler || this.defaultHandler;
+		this.callbacks = [];
+		this.value = null;
+		this.promise = new Promise( this );
+	}
+
+	set( 'bmoor.defer.Basic', Defer );
+
 	(function(){
 		function resolution( value ){
 			if ( value && value.then ) {
@@ -965,13 +1003,6 @@
 		}
 
 		extend( Defer.prototype, {
-			_construct : function( exceptionHandler ){
-				var dis = this;
-				this.handler = exceptionHandler || this.defaultHandler;
-				this.callbacks = [];
-				this.value = null;
-				this.promise = new Promise( this );
-			},
 			defaultHandler : function( ex ){ bMoor.error.report(ex); },
 			defaultSuccess : function( value ){ return value; },
 			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
@@ -1008,11 +1039,21 @@
 		});
 	}());
 
+	function DeferGroup(){
+		this.count = 0;
+		this.loaded = false;
+		this.errors = [];
+		this.defer = new Defer();
+		this.promise = this.defer.promise;
+	}
+
+	set( 'bmoor.defer.Group', DeferGroup );
+
 	(function(){
 		function check(){
 			if ( this.count === 0 && this.loaded ){
 				if ( this.errors.length ){
-					this.defer.reject( errors );
+					this.defer.reject( this.errors );
 				}else{
 					this.defer.resolve( true );
 				}
@@ -1025,13 +1066,6 @@
 		}
 
 		extend( DeferGroup.prototype, {
-			_construct : function(){
-				this.count = 0;
-				this.loaded = false;
-				this.errors = [];
-				this.defer = new Defer();
-				this.promise = this.defer.promise;
-			},
 			add : function( promise ){
 				var dis = this;
 				this.count++;
@@ -1074,6 +1108,7 @@
 		'inject'      : inject,
 		'plugin'      : plugin,
 		'makeQuark'   : makeQuark,
+		'instantiate' : instantiate,
 		// allow a type expectation
 		'loop'        : loop, // array
 		'each'        : each, // object
@@ -1092,6 +1127,7 @@
 		'isString'    : isString,
 		'isInjectable' : isInjectable,
 		'isEmpty'     : isEmpty, 
+		'isQuark'     : isQuark,
 		// object stuff
 		'object' : {
 			'create'      : create,

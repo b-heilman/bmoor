@@ -1,89 +1,31 @@
 <html>
 
 <head>
-	<script src="../build/bmoor.js"></script>
+	<script src="../src/bMoor.js"></script>
+	
+	<script src="../src/bmoor/build/ModInherit.js"></script>
+	<script src="../src/bmoor/build/ModProperties.js"></script>
+	<script src="../src/bmoor/build/Compiler.js"></script>
+	<script src="../src/bmoor/build/ModFinalize.js"></script>
+	<script src="../src/bmoor/build/ModSingleton.js"></script>
+	<script src="../src/bmoor/build/ModFactory.js"></script>
+	<script src="../src/bmoor/build/ModDecorate.js"></script>
+	<script src="../src/bmoor/build/ModPlugin.js"></script>
+	<script src="../src/bmoor/build/ModRequire.js"></script>
+	<script src="../src/bmoor/build/ModMixins.js"></script>
+
+	<script src="../src/bmoor/core/Decorator.js"></script>
+	
+	<script src="../src/bmoor/comm/Http.js"></script>
+	<script src="../src/bmoor/comm/Script.js"></script>
+	<script src="../src/bmoor/comm/Style.js"></script>
+	<script src="../src/bmoor/comm/Resource.js"></script>
+	<script src="../src/bmoor/comm/Connector.js"></script>
+	<script src="../src/bmoor/comm/Registry.js"></script>
+	<script src="../src/bmoor/comm/Require.js"></script>
 </head>
 <body>
-<script>
-
-	// Basic declaration	
-	var obj = bMoor.define( 'foo.Hello', {
-		properties : {
-			hello : function(){ 
-				console.log('world'); 
-			}
-		}
-	});
-
-	( new obj() ).hello();
-
-	// Define a singleton
-	bMoor.define( 'foo.Woot',{
-		singleton : true,
-		properties : {
-			say : function( something ){ 
-				console.log( something ); 
-			}
-		}
-	});
-
-	foo.$woot.say( 'hello to my little friend' );
-
-	// Define a factory
-	bMoor.define('foo.Dog', {
-		factory : true,
-		construct : function( whatToSay ){
-			this.something = whatToSay;
-		},
-		properties : {
-			speak : function(){ 
-				console.log( this.something ); 
-			}
-		}
-	});
-
-	obj = foo.Dog.$make('woof');
-	obj.speak();
-
-	// Decoration
-	bMoor.define( 'foo.Decorator1', ['bmoor.core.Decorator', function( Decorator ){
-		return {
-			parent : Decorator,
-			properties : {
-				speak : function(){
-					this.$wrapped();
-					console.log('now roll over');
-				}
-			}
-		};
-	}]);
-
-	bMoor.define( 'foo.Pheonix', ['foo.Dog', function( Dog ){
-		return {
-			parent : Dog,
-			decorators : [
-				'foo.Decorator1'
-			]
-		};
-	}]);
-
-	( new obj('woofie woof') ).speak();
-
-	// Requiring
-	bMoor.define( 'foo.Body', [
-		'>jQuery>//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js',
-		function( $ ){
-			return {
-				construct : function(){
-					$('body').append('<span>Was Loaded and Created</span>');
-				}
-			};
-		}
-	]).then(function( obj ){
-		new obj();
-	});
-
-</script>
+	<script src="test.js"></script>
 </body>
 
 </html>

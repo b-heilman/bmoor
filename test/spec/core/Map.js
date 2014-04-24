@@ -2,11 +2,11 @@ describe('Testing bmoor.core.Map', function(){
 	var t,
 		result;
 
-	bMoor.define('test.Map', ['bmoor.core.Map', function( Map ){
+	bMoor.make('test.Map', ['bmoor.core.Map', function( Map ){
 		return {
 			parent : Map,
 			construct : function( content ){
-				Map.prototype._construct.call( this, content );
+				Map.call( this, content );
 				this.woot = 'wootwoot';
 				this.name = this.firstName + ' ' + this.lastName;
 			},

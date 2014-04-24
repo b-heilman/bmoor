@@ -1,9 +1,11 @@
 (function( bMoor, undefined ){
 	"use strict";
 
-	bMoor.define( 'bmoor.comm.Registry', {
-		singleton: true,
-		construct : function(){
+	bMoor.make( 'bmoor.comm.Registry', {
+		singleton: {
+			instance : []
+		},
+		construct : function CommRegistry(){
 			var scripts,
 				scriptTag, // will be this script
 				match;
@@ -33,14 +35,17 @@
 
 			this.reset( bMoor.root );
 		},
-		plugins : {
-			'ns.locate' : function( ns ){
-				return this.locate( ns );
-			},
-			'ns.register' : function( className, path, settings, catchAll ){
-				return this.set( className, path, settings, catchAll );
+		plugins : [{
+			instance : 'instance',
+			funcs : {
+				'ns.locate' : function( ns ){
+					return this.locate( ns );
+				},
+				'ns.register' : function( className, path, settings, catchAll ){
+					return this.set( className, path, settings, catchAll );
+				}
 			}
-		},
+		}],
 		properties : {
 			// A multi level hash that allows for different libraries 
 			// to be located in different locations

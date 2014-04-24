@@ -1,4 +1,4 @@
-bMoor.define('bmoor.core.SmartMapObserver', 
+bMoor.make('bmoor.core.SmartMapObserver', 
 	['@undefined', 'bmoor.core.MapObserver', function( undefined, MapObserver ){
 
 		function mapUpdate( update, value ){
@@ -31,6 +31,9 @@ bMoor.define('bmoor.core.SmartMapObserver',
 
 		return {
 			parent : MapObserver,
+			construct : function SmartMapObserver(){
+				MapObserver.apply( this, arguments );
+			},
 			properties : {
 				observe : function( map ){
 					var dis = this;

@@ -1,6 +1,5 @@
 describe("Testing namespace functions", function() {
 	it("should allow setting and getting aliases", function(){
-		console.info( bMoor );
 		bMoor.register('woot', 123);
 		expect( bMoor.check('woot') ).toBe( 123 );
 		expect( bMoor.check('woot2') ).toBe( undefined );
@@ -26,7 +25,7 @@ describe("Testing namespace functions", function() {
 		expect( dis.dat.derp ).toBe( 'yay' );
 		expect( root.foo.bar.value ).toBe( true );
 
-		expect( bMoor.exists('derp2') ).toBe( null );
+		expect( bMoor.exists('derp2') ).toBe( undefined );
 		expect( bMoor.get('derp') ).toEqual( {} );
 	});
 });

@@ -1,6 +1,6 @@
 (function(){
 
-	bMoor.define( 'test.Alert', {
+	bMoor.make( 'test.Alert', {
 		construct : function( input ){
 			console.log( 'Alert.js', input );
 		}

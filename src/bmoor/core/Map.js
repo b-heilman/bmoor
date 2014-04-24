@@ -1,9 +1,9 @@
-bMoor.define( 'bmoor.core.Map', ['bmoor.core.Model', function( Model ){
+bMoor.make( 'bmoor.core.Map', ['bmoor.core.Model', function( Model ){
 	return {
 		traits : [
 			Model
 		],
-		construct : function( content ){
+		construct : function Map( content ){
 			this._merge( this._inflate(content) );
 		},
 		properties : {

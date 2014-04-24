@@ -1,9 +1,35 @@
-- Allow for parent to be a reference, and injection is used to fetch it
-	- I no longer need to generate the inheritance chain 
+- managing quarks
+	- see what are being waited on
+	- allow the fetching of any missing quarks
+
+- extend the Date object to improve
+
+- improve promise support
+	- group : manages when all are completed, allows handling if one fails out of bunch
+		* constructor decides if fault tolerant (default false)
+		* success - all completed
+		* failure - one failed
+	- stack : manages firing events in order, if one fails, it stops
+		* constructor decides if fault tolerant (default false)
+		* success - all completed
+		* failure - one failed
+	- improved interface
+		* watch( success, error ) : same as then, but doesn't change the output, returns the same promise
 
 - could move some utils out to a lib directory
+	- env  ( add to bmoor.Env )
+		- isIE
+	- object ( add to bmoor.Object )
+		- merge
+		- diff
+	- url ( add to bmoor.Url )
+		- resolve
+	- string ( add to bmoor.String )
+		- indexOf
+	- array ( add to bmoor.Array )
+ 		- remove
+		- removeAll
+		- filter
+		- diff (formerly compare)
+
 - Error handling
-
-? bmoor-dom
-
-? Allow for named classes

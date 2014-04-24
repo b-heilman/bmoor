@@ -1,7 +1,6 @@
 <html>
 <head>
 <script src="../../src/bMoor.js"></script>
-<script src="../../src/bmoor/build/ModConstruct.js"></script>
 <script src="../../src/bmoor/build/ModInherit.js"></script>
 <script src="../../src/bmoor/build/ModProperties.js"></script>
 <script src="../../src/bmoor/build/Compiler.js"></script>
@@ -11,10 +10,6 @@
 <script src="../../src/bmoor/build/ModDecorate.js"></script>
 <script src="../../src/bmoor/build/ModPlugin.js"></script>
 
-<script src="../../src/bmoor/defer/Promise.js"></script>
-<script src="../../src/bmoor/defer/Basic.js"></script>
-<script src="../../src/bmoor/defer/Group.js"></script>
-
 <script src="../../src/bmoor/core/Service.js"></script>
 <script src="../../src/bmoor/core/Decorator.js"></script>
 
@@ -23,7 +18,7 @@
 <body>
 
 <script>
-bMoor.define( 'foo.Bar', [ 'bmoor.core.Service', function( Service ){
+bMoor.make( 'foo.Bar', [ 'bmoor.core.Service', function( Service ){
 	return {
 		parent : Service,
 		services : {

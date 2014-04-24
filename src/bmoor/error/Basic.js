@@ -1,8 +1,8 @@
-bMoor.define( 'bmoor.error.Basic', 
+bMoor.make( 'bmoor.error.Basic', 
 	['@undefined',function(undefined){
 	return {
 		parent: Error,
-		construct : function( message, filename, lineNumber ){
+		construct : function ErrorBasic( message, filename, lineNumber ){
 			var stack,
 				pos,
 				err;

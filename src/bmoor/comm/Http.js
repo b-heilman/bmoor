@@ -11,8 +11,8 @@
 	// Accept: "application/json, text/plain, */*", 
 	// Content-Type: "application/json;charset=utf-8"}
 	// how to add better support for response types?
-	bMoor.define( 'bmoor.comm.Http', {
-		construct : function( options ){
+	bMoor.make( 'bmoor.comm.Http', {
+		construct : function CommHTTP( options ){
 			var dis = this,
 				xhr = this.makeXHR( 
 					options.method.toUpperCase(), 
@@ -50,8 +50,8 @@
 			this.url = bMoor.url.resolve( options.url );
 			this.status = null;
 			this.connection = xhr;
-			this.$.defer = new bmoor.defer.Basic();
-			this.$.promise = this.$.defer.promise;
+			this.$defer = new bmoor.defer.Basic();
+			this.promise = this.$defer.promise;
 
 			xhr.send(options.data || null);
 		},
@@ -100,19 +100,21 @@
 				action = valid ? 'resolve' : 'reject';
 
 				r = [ response, status, headers ];
-				r.$inject = true; // TODO : do I really need this?
+				r.$inject = true; // TODO : do I really need this? no, I should pass back an object
 
-				this.$.defer[action]( r );
+				this.$defer[action]( r );
 			}
 		},
-		plugins : {
-			'$http' : function( options ){
-				var dis;
+		plugins : [{
+			funcs : {
+				'$http' : function( options ){
+					var dis = this;
 
-				dis = new dis( options );
+					dis = new dis( options );
 
-				return dis.$.promise;
+					return dis.promise;
+				}
 			}
-		}
+		}]
 	});
 }());

@@ -1,11 +1,11 @@
 
-bMoor.define( 'bmoor.core.MapObserver', 
+bMoor.make( 'bmoor.core.MapObserver', 
 	['bmoor.core.Interval',function( Interval ){
 		var $snapMO = 0,
 		instances = {};
 
 	return {
-		construct : function( model ){
+		construct : function MapObserver( model ){
 			if ( $snapMO === 0 ){
 				Interval.$instance.set(function(){
 					bMoor.iterate( instances, function( inst ){

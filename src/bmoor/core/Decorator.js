@@ -1,4 +1,4 @@
-bMoor.define( 'bmoor.core.Decorator', [function(){
+bMoor.make( 'bmoor.core.Decorator', [function(){
 	function override( key, el, action ){
 		var 
 			type = typeof(action),
@@ -24,6 +24,7 @@ bMoor.define( 'bmoor.core.Decorator', [function(){
 	}
 
 	return {
+		construct : function Decorator(){},
 		onMake : function(){
 			var inst = this,
 				t = new inst();

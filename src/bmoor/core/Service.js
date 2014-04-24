@@ -1,4 +1,4 @@
-bMoor.define( 'bmoor.core.Service', [function(){
+bMoor.make( 'bmoor.core.Service', [function(){
 	/***
 	- FuncName
 		-- Setup
@@ -82,7 +82,7 @@ bMoor.define( 'bmoor.core.Service', [function(){
 									method : options.type || 'GET',
 									responseType : options.responseType
 								}) 
-							).$.promise;
+							).promise;
 					}
 
 					if ( options.cached ){

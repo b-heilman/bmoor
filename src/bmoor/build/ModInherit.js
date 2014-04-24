@@ -12,7 +12,8 @@ bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
 				t.prototype = parent.prototype;
 				this.prototype = new t();
 			}
-				
+			
+			this.prototype.$static = dis;	
 			this.prototype.__class = id;
 			this.prototype.__namespace = namespace;
 			this.prototype.__name = name;

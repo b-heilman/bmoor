@@ -1,8 +1,7 @@
 <html>
 <head>
 <script src="../../src/bMoor.js"></script>
-<script src="../../spec/config.js"></script>
-<script src="../../src/bmoor/build/ModConstruct.js"></script>
+
 <script src="../../src/bmoor/build/ModInherit.js"></script>
 <script src="../../src/bmoor/build/ModProperties.js"></script>
 <script src="../../src/bmoor/build/Compiler.js"></script>
@@ -11,19 +10,17 @@
 <script src="../../src/bmoor/build/ModFactory.js"></script>
 <script src="../../src/bmoor/build/ModDecorate.js"></script>
 <script src="../../src/bmoor/build/ModRequire.js"></script>
-<script src="../../src/bmoor/build/ModTraits.js"></script>
-
-<script src="../../src/bmoor/defer/Promise.js"></script>
-<script src="../../src/bmoor/defer/Basic.js"></script>
-<script src="../../src/bmoor/defer/Group.js"></script>
+<script src="../../src/bmoor/build/ModMixins.js"></script>
 
 <script src="../../src/bmoor/core/Decorator.js"></script>
-<script src="../../src/bmoor/core/Trait.js"></script>
 </head>
 <body>
 
 <script>
-	bMoor.define( 'foo.Bar', {
+	bMoor.make( 'foo.Bar', {
+		construct : function FooBar(){
+
+		},
 		properties : {
 			unos : function( eh ){ console.log('woot|'+this.dos+'|'+(eh||'')+'|'); },
 			dos : 2,
@@ -38,7 +35,8 @@
 		t.unos();
 	});
 
-	bMoor.define( 'mock.Bar', {
+	bMoor.make( 'mock.Bar', {
+		construct : function MockBar(){},
 		properties : {
 			unos : function( eh ){ console.log('woot|mockery'); },
 			dos : 2,
@@ -46,12 +44,23 @@
 		}
 	});
 
-	bMoor.define('foo.Bar2', 
+	bMoor.make('foo.Bar2', 
 		['foo.Bar',function( Bar ){
 			return {
 				parent : Bar,
-				singleton : true,
-				factory : 'fac',
+				construct : function FooBar2(){
+
+				},
+				singleton : {
+					instance : []
+				},
+				factory : {
+					'make' : function(){
+						var obj = this;
+
+						return new obj();
+					}
+				},
 				properties : {
 					dos : '--2--'
 				}
@@ -63,9 +72,11 @@
 		console.log( 'foo.Bar2', t );
 
 		t.unos();
+
+		console.log( obj.$instance.dos );
 	});
 
-	bMoor.define( 'Decorator1', 
+	bMoor.make( 'Decorator1', 
 		['bmoor.core.Decorator', function( Decorator ){
 			return {
 				parent : Decorator,
@@ -79,10 +90,13 @@
 		}]
 	);
 
-	bMoor.define( 'foo.Bar3',
+	bMoor.make( 'foo.Bar3',
 		['foo.Bar2','bmoor.core.Decorator',function( Bar2, Decorator ){
 			return {
 				parent : Bar2,
+				construct : function FooBar3(){
+
+				},
 				decorators : [
 					Decorator
 				]
@@ -90,40 +104,31 @@
 		}]
 	);
 
-	console.log( 'foo.Bar2', foo.Bar2, foo.$bar2 );
+	console.log( 'foo.Bar2', foo.Bar2, foo.Bar2.$instance );
 
 	foo.Bar2.$instance.unos('3');
-	foo.$bar2.unos('3.1');
 	foo.Bar2.$make();
 
 	var t = new foo.Bar3();
 	t.unos('hey now');
 
-	bMoor.define( 'Trait1', 
-		['bmoor.core.Trait',function( Trait ){
-			return {
-				parent : Trait,
-				properties : {
-					unos : function(){
-						console.log( '__---__');
-					},
-					hello : function(){
-						console.log('world');
-					}
-				}
-			};
-		}]
-	);
+	bMoor.define( 'Mixin1', {
+		unos : function(){
+			console.log( '__---__');
+		},
+		hello : function(){
+			console.log('world');
+		}
+	});
 
-	console.log(bmoor.core.Trait);
-	console.log(Trait1);
+	console.log(Mixin1);
 
-	bMoor.define( 'foo.Bar4', 
-		['foo.Bar3','Trait1', function( Bar3, Trait1 ){
+	bMoor.make( 'foo.Bar4', 
+		['foo.Bar3','Mixin1', function( Bar3, Mixin1 ){
 			return {
 				parent : Bar3,
-				traits : [
-					Trait1
+				mixins : [
+					Mixin1
 				]
 			};
 		}]
@@ -134,13 +139,11 @@
 	t.unos();
 	t.hello();
 
-	bMoor.define( 'foo.hello', 
-		[function(){
-			return function(){
-				return 'hello';
-			};
-		}]
-	);
+	bMoor.define( 'foo.hello', [function(){
+		return function(){
+			return 'hello';
+		};
+	}]);
 
 	console.log( 'say', foo.hello() );
 

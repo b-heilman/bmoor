@@ -1,7 +1,9 @@
 (function(){
 	
-	bMoor.define( 'bmoor.core.Interval', {
-		singleton : true,
+	bMoor.make( 'bmoor.core.Interval', {
+		singleton : {
+			instance : []
+		},
 		construct : function(){
 			this._c = 0;
 			this.timeouts = {};
@@ -47,10 +49,15 @@
 				}
 			}
 		},
-		plugins : {
-			'setInterval' : 'set',
-			'clearInterval' : 'clear'
-		}
+		plugins : [
+			{
+				instance : 'instance',
+				funcs : {
+					'setInterval' : 'set',
+					'clearInterval' : 'clear'
+				}
+			}
+		]
 	});
 
 }());

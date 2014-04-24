@@ -1,21 +1,25 @@
-(function(){
+bMoor.make( 'bmoor.comm.Style', 
+	['bmoor.comm.Resource', function( Resource ){
+		return {
+			parent : Resource,
+			construct : function CommStyle(){
+				Resource.apply( this, arguments );
+			},
+			properties : {
+				apply : function styleApply( content ){
+					var style = document.createElement( 'style' );
 
-	bMoor.define( 'bmoor.comm.Style', {
-		parent : 'bmoor.comm.Resource',
-		properties : {
-			apply : function styleApply( content ){
-				var style = document.createElement( 'style' );
+					if (style.styleSheet){
+						style.styleSheet.cssText = content;
+					} else {
+						style.appendChild( document.createTextNode(content) );
+					}
+					
+					document.body.appendChild( style );
 
-				if (style.styleSheet){
-					style.styleSheet.cssText = content;
-				} else {
-					style.appendChild( document.createTextNode(content) );
+					return;
 				}
-				
-				document.body.appendChild( style );
-
-				return;
 			}
-		}
-	});
-}());
+		};
+	}]
+);

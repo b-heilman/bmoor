@@ -13,10 +13,6 @@
 	<script src="../../src/bmoor/build/ModPlugin.js"></script>
 	<script src="../../src/bmoor/build/ModRequire.js"></script>
 
-	<script src="../../src/bmoor/defer/Promise.js"></script>
-	<script src="../../src/bmoor/defer/Basic.js"></script>
-	<script src="../../src/bmoor/defer/Group.js"></script>
-
 	<script src="../../src/bmoor/error/Basic.js"></script>
 </head>
 <body>
@@ -40,7 +36,7 @@
 		throw e;
 	</script>
 	<script>
-	var o = bMoor.define('someObject', {
+	bMoor.make('someObject', {
 		construct : function(){
 			throw new bmoor.error.Basic('hey');
 		},
@@ -49,11 +45,11 @@
 				throw new bmoor.error.Basic('ka boom');
 			}
 		}
+	}).then( function(o){
+		o = new o();
+
+		o.blowUp();
 	});
-
-	o = new o();
-
-	o.blowUp();
 
 	</script>
 </body>

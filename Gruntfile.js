@@ -20,9 +20,6 @@ module.exports = function(grunt) {
 				src: [
 					'src/bMoor.js',
 					'src/bmoor/build/**.js',
-					'src/bmoor/defer/Promise.js',
-					'src/bmoor/defer/Basic.js',
-					'src/bmoor/defer/Group.js',
 					'src/bmoor/defer/Stack.js',
 					'src/bmoor/comm/**.js',
 					'src/bmoor/core/**.js',
@@ -33,6 +30,7 @@ module.exports = function(grunt) {
 		},
 		jshint: {
 			jshintrc : true,
+			evil : true,
 			all : ['src/bmoor/**/*.js']
 		},
 		jasmine : {
@@ -41,9 +39,6 @@ module.exports = function(grunt) {
 					'src/bMoor.js',
 					'test/config.js',
 					'src/bmoor/build/**.js',
-					'src/bmoor/defer/Promise.js',
-					'src/bmoor/defer/Basic.js',
-					'src/bmoor/defer/Group.js',
 					'src/bmoor/defer/Stack.js',
 					'src/bmoor/comm/**.js',
 					'src/bmoor/core/**.js',

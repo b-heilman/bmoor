@@ -1,7 +1,6 @@
 <html>
 <head>
 <script src="../../src/bMoor.js"></script>
-<script src="../../spec/config.js"></script>
 <script src="../../src/bmoor/build/ModConstruct.js"></script>
 <script src="../../src/bmoor/build/ModInherit.js"></script>
 <script src="../../src/bmoor/build/ModProperties.js"></script>
@@ -12,9 +11,6 @@
 <script src="../../src/bmoor/build/ModDecorate.js"></script>
 <script src="../../src/bmoor/build/ModPlugin.js"></script>
 
-<script src="../../src/bmoor/defer/Promise.js"></script>
-<script src="../../src/bmoor/defer/Basic.js"></script>
-<script src="../../src/bmoor/defer/Group.js"></script>
 <script src="../../src/bmoor/core/Decorator.js"></script>
 
 <script src="../../src/bmoor/comm/Http.js"></script>
@@ -82,6 +78,7 @@
 		}
 	);
 
+	console.log( 'loading style' );
 	connector.style('test/red.css').then(
 		function(content){
 			console.log( 'style', 'loaded' );

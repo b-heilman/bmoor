@@ -25,7 +25,7 @@ Examples - full examples can be found in demos
 --------------------------------------------------
 
 ### Basic declaration	
-	var obj = bMoor.define( 'foo.Hello', {
+	var obj = bMoor.make( 'foo.Hello', {
 		properties : {
 			hello : function(){ 
 				console.log('world'); 
@@ -36,7 +36,7 @@ Examples - full examples can be found in demos
 	( new obj() ).hello();
 
 ### Define a singleton
-	bMoor.define( 'foo.Woot',{
+	bMoor.make( 'foo.Woot',{
 		singleton : true,
 		properties : {
 			say : function( something ){ 
@@ -48,7 +48,7 @@ Examples - full examples can be found in demos
 	foo.$woot.say( 'hello to my little friend' );
 
 ### Define a factory
-	bMoor.define('foo.Dog', {
+	bMoor.make('foo.Dog', {
 		factory : true,
 		construct : function( whatToSay ){
 			this.something = whatToSay;
@@ -64,7 +64,7 @@ Examples - full examples can be found in demos
 	obj.speak();
 
 ### Decoration
-	bMoor.define( 'foo.Decorator1', {
+	bMoor.make( 'foo.Decorator1', {
 		parent : 'bmoor.core.Decorator',
 		properties : {
 			speak : function(){
@@ -74,7 +74,7 @@ Examples - full examples can be found in demos
 		} 
 	});
 
-	obj = bMoor.define( 'foo.Pheonix', {
+	obj = bMoor.make( 'foo.Pheonix', {
 		parent : 'foo.Dog',
 		decorators : [
 			'foo.Decorator1'
@@ -84,7 +84,7 @@ Examples - full examples can be found in demos
 	( new obj('woofie woof') ).speak();
 	
 ### Requirements
-	bMoor.define( 'foo.Body', [
+	bMoor.make( 'foo.Body', [
 		'>jQuery>//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js',
 		function( $ ){
 			return {

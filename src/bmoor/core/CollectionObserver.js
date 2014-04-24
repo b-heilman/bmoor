@@ -1,7 +1,10 @@
-bMoor.define('bmoor.core.CollectionObserver', 
+bMoor.make('bmoor.core.CollectionObserver', 
 	['bmoor.core.MapObserver', function( MapObserver ){
 		return {
 			parent : MapObserver,
+			construct : function CollectionObserver(){
+				MapObserver.apply( this, arguments );
+			},
 			properties : {
 				observe : function( collection ){
 					var dis = this;

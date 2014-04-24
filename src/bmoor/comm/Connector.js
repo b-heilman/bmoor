@@ -1,11 +1,9 @@
 (function(){
 	
-	bMoor.define( 'bmoor.comm.Connector', {
+	bMoor.make( 'bmoor.comm.Connector', {
 		properties : {
 			request : function( type, options ){
-				var request = new bmoor.comm[type]( options );
-
-				return request.$.promise;
+				return ( new bmoor.comm[type](options) ).promise;
 			},
 			http : function( options ){
 				return this.request( 'Http', options );
