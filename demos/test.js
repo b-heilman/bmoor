@@ -133,11 +133,11 @@
 		t.saySomething();
 	});;
 
-	// Easily create mock objects
+	// Easily recreate with mock objects
 	console.log( 'foo.Mixin2' );
 	bMoor.define( 'foo.Mixin2', {
 		saySomething : function( words ){
-			console.log( words || 'else');
+			console.log( 'this is completely fake' );
 		}
 	});
 
@@ -154,6 +154,6 @@
 		console.log( t );
 		
 		t.hello();
-		t.saySomething( 'like this fake stuff' );
+		t.saySomething( 'like this' );
 	});
 }());
