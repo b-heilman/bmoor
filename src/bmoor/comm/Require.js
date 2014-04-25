@@ -55,19 +55,24 @@ bMoor.make( 'bmoor.comm.Require',
 					});
 				},
 				get : function( requirement, async, alias ){
-					var req;
+					var quark,
+						req;
 
 					req = bMoor.exists( requirement );
 
-					if ( !req ){
-						req = new Script( 
+					if ( req === undefined ){
+						quark = bMoor.ensure( requirement );
+
+						( new Script( 
 							alias || bMoor.ns.locate(requirement)+'.js', 
 							this.forceSync ? false : async 
-						);
-
-						return req.promise.then(function(){
-							return bMoor.exists( requirement );
+						) ).promise.then(function(){
+							quark.$ready( bMoor.exists(requirement) );
 						});
+
+						return quark.$promise;
+					}else if ( bMoor.isQuark(req) ){
+						return req.$promise;
 					}else{
 						return bMoor.dwrap( req );
 					}
