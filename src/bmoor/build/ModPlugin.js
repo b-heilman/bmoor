@@ -1,29 +1,27 @@
 bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
-	Compiler.$instance.addModule( 4, 'bmoor.build.ModPlugin', 
-		['-plugins','whenDefined', function( plugins, whenDefined ){
+	Compiler.$instance.addModule( -2, 'bmoor.build.ModPlugin', 
+		['-plugins', function( plugins ){
 			var obj = this;
 
 			if ( plugins ){
 				bMoor.loop( plugins, function( request ){
-					whenDefined.then(function(){
-						var o;
+					var o;
 
-						if ( !request.instance ){
-							o = obj;
-						}else if ( bMoor.isString(request.instance) ){
-							o = obj[ '$' + request.instance ]; // link to singletons
-						}else{
-							o = bMoor.instantiate( obj, request.instance );
-						} 
+					if ( !request.instance ){
+						o = obj;
+					}else if ( bMoor.isString(request.instance) ){
+						o = obj[ '$' + request.instance ]; // link to singletons
+					}else{
+						o = bMoor.instantiate( obj, request.instance );
+					} 
 
-						bMoor.iterate( request.funcs, function( func, plugin ){
-							if ( bMoor.isString(func) ){
-								func = obj[ func ];
-							}
+					bMoor.iterate( request.funcs, function( func, plugin ){
+						if ( bMoor.isString(func) ){
+							func = obj[ func ];
+						}
 
-							bMoor.plugin( plugin, function(){ 
-								return func.apply( o, arguments ); 
-							});
+						bMoor.plugin( plugin, function(){ 
+							return func.apply( o, arguments ); 
 						});
 					});
 				});

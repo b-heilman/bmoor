@@ -21,7 +21,8 @@ describe("Testing the builds compiler", function() {
 			log.push( foobar );
 		}] );
 
-		expect( compiler.stack.length ).toBe( 3 );
+		expect( compiler.preProcess.length ).toBe( 2 );
+		expect( compiler.postProcess.length ).toBe( 1 );
 	});
 
 	it("should run plugins in the correct order", function(){

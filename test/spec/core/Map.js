@@ -1,7 +1,7 @@
 describe('Testing bmoor.core.Map', function(){
 	var t,
 		result;
-
+	/*
 	bMoor.make('test.Map', ['bmoor.core.Map', function( Map ){
 		return {
 			parent : Map,
@@ -44,4 +44,5 @@ describe('Testing bmoor.core.Map', function(){
 		t.hello( 'woot' );
 		expect( result ).toBe( 'woot' );
 	});
+	*/
 });

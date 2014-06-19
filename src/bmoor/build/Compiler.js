@@ -1,9 +1,10 @@
 bMoor.inject(
 	['bmoor.defer.Basic','@global', 
 	function( Defer, global ){
-		var eCompiler = bMoor.ensure('bmoor.build.Compiler'),
+		var eCompiler = bMoor.makeQuark('bmoor.build.Compiler'),
 			Compiler = function(){
-				this.stack = [];
+				this.preProcess = [];
+				this.postProcess = [];
 				this.clean = true;
 			},
 			definitions = {},
@@ -41,15 +42,19 @@ bMoor.inject(
 				definition.whenDefined = quark.$promise;
 				
 				if ( !this.clean ){
-					this.stack.sort(function( a, b ){
+					this.preProcess.sort(function( a, b ){
 						return b.rank - a.rank;
 					});
+					this.postProcess.sort(function( a, b ){
+						return b.rank - a.rank;
+					});
+					
 					this.clean = true;
 				}
 
 				$d.resolve();
 
-				bMoor.loop( this.stack, function( maker ){
+				bMoor.loop( this.preProcess, function( maker ){
 					promise = promise.then(function(){
 						return bMoor.inject( maker.module, definition, obj ); 
 					});
@@ -69,6 +74,8 @@ bMoor.inject(
 		}
 
 		Compiler.prototype.addModule = function( rank, namePath, injection ){
+			rank = parseInt( rank, 10 );
+
 			this.clean = false;
 
 			if ( arguments.length < 3 ){
@@ -77,15 +84,42 @@ bMoor.inject(
 				bMoor.install( namePath, injection[injection.length-1] );
 			}
 
-			this.stack.push({
-				rank : parseInt(rank,10),
-				module : injection
-			});
+			if ( rank >= 0 ){
+				this.preProcess.push({
+					rank : rank,
+					module : injection
+				});
+			}else{
+				this.postProcess.push({
+					rank : rank,
+					module : injection
+				});
+			}
 		};
 
 		Compiler.prototype.make = function( name, definition ){
-			var namespace,
-				dis = this,
+			var dis = this,
+				postProcess = function( def ){
+					make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
+						var $d = new Defer(),
+							promise = $d.promise;
+
+						$d.resolve();
+
+						bMoor.loop( dis.postProcess, function( maker ){
+							promise = promise.then(function(){
+								return bMoor.inject( maker.module, def, defined ); 
+							});
+						});
+						
+						return promise.then(function(){
+							quark.$ready( defined );
+
+							return defined;
+						});
+					});
+				},
+				namespace,
 				quark;
 
 			if ( arguments.length !== 2 ) {
@@ -102,28 +136,18 @@ bMoor.inject(
 					'message : you need to define a name and needs to be either a string or an array';
 			}
 
-			quark = bMoor.ensure( namespace );
+			quark = bMoor.makeQuark( namespace );
 
 			definitions[ name ] = definition;
 
 			if ( bMoor.isInjectable(definition) ){
 				if ( bMoor.require ){
-					bMoor.require.inject( definition ).then(function( def ){
-						make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
-							quark.$ready( defined );
-						});
-					});
+					bMoor.require.inject( definition ).then( postProcess );
 				}else{
-					bMoor.inject( definition ).then(function( def ){
-						make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
-							quark.$ready( defined );
-						});
-					});
+					bMoor.inject( definition ).then( postProcess );
 				}
 			}else{
-				make.call( this, {name:name,namespace:namespace}, quark, definition ).then(function( defined ){
-					quark.$ready( defined );
-				});
+				postProcess( definition );
 			}
 
 			return quark.$promise;
@@ -136,17 +160,33 @@ bMoor.inject(
 					$promise : defer.promise
 				};
 
+			console.log( 'mocking', definitions[name], mocks );
 			return bMoor.inject( definitions[name], mocks ).then(function( def ){
-				return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( obj ){
-					defer.resolve( quark );
-					return obj;
+				console.log( 'making mock' );
+				return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
+					var $d = new Defer(),
+						promise = $d.promise;
+					console.log( 'postProcess mock' );
+					$d.resolve();
+
+					bMoor.loop( dis.postProcess, function( maker ){
+						promise = promise.then(function(){
+							return bMoor.inject( maker.module, def, defined ); 
+						});
+					});
+
+					return promise.then(function(){
+						defer.resolve( quark );
+
+						return defined;
+					});
 				});
 			});
 		};
 
 		Compiler.prototype.define = function( namespace, value ){
-			var quark = bMoor.ensure( namespace );
-
+			var quark = bMoor.makeQuark( namespace );
+			
 			if ( bMoor.isInjectable(value) ){
 				bMoor.inject( value ).then( function( v ){
 					quark.$ready( v );
@@ -157,8 +197,8 @@ bMoor.inject(
 		};
 
 		instance = new Compiler();
-
 		Compiler.$instance = instance;
+		
 		bMoor.install( 'bmoor.build.$compiler', instance );
 
 		bMoor.plugin( 'make', function( namespace, definition ){

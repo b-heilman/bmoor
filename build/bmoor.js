@@ -20,8 +20,17 @@
 	}
 
 	/**
-	Namespace set up
-	**/
+	 namespace
+	 **/
+
+	/**
+	 * Split each section of the namespace into an array
+	 *
+	 * @function parse
+	 * @namespace bMoor
+	 * @param {string|array} space The namespace
+	 * @return {array}
+	 **/
 	function parse( space ){
 		if ( !space ){
 			return [];
@@ -34,29 +43,16 @@
 		}
 	}
 
-	function instantiate( obj, args ){
-		var i, c,
-			construct;
-
-		construct = 'return new obj(';
-
-		for( i = 0, c = args.length; i < c; i++ ){
-			if ( i ){
-				construct += ',';
-			}
-
-			construct += 'args['+i+']';
-		}
-
-		construct += ')';
-		/*jshint -W054 */
-		return ( new Function('obj','args',construct) )( obj, args );
-	}
-
-	/*
-		set a value for a root space
-		returns the old value
-	*/
+	/**
+	 * Sets a value to a namespace, returns the old value
+	 *
+	 * @function set
+	 * @namespace bMoor
+	 * @param {string|array} space The namespace
+	 * @param {something} value The value to set the namespace to
+	 * @param {object} root The root of the namespace, global if not defined
+	 * @return {something}
+	 **/
 	function set( space, value, root ){
 		var old,
 			val,
@@ -85,10 +81,27 @@
 		return old;
 	}
 	
-	/*
-		delete a variable from a root space
-		return the value removed
-	*/
+	/**
+	 * Sets a value to a namespace, returns the old value, the namespace is always bMoor
+	 *
+	 * @function plugin
+	 * @namespace bMoor
+	 * @param {string|array} plugin The namespace
+	 * @param {something} obj The value to set the namespace to
+	 **/
+	function plugin( plugin, obj ){ 
+		set( plugin, obj, bMoor ); 
+	}
+
+	/**
+	 * Delete a namespace, returns the old value
+	 *
+	 * @function del
+	 * @namespace bMoor
+	 * @param {string|array} space The namespace
+	 * @param {object} root The root of the namespace, global if not defined
+	 * @return {something}
+	 **/
 	function del( space, root ){
 		var old,
 			val,
@@ -117,9 +130,15 @@
 		return old;
 	}
 
-	/*
-		get a variable from root space
-	*/
+	/**
+	 * get a value from a namespace, if it doesn't exist, the path will be created
+	 *
+	 * @function get
+	 * @namespace bMoor
+	 * @param {string|array} space The namespace
+	 * @param {object} root The root of the namespace, global if not defined
+	 * @return {array}
+	 **/
 	function get( space, root ){
 		var curSpace = root || global,
 			nextSpace,
@@ -147,26 +166,9 @@
 		}
 	}
 
-	/*
-		map a hash into an object
-	*/
-	function map( mappings, root ){
-		if ( !root ){
-			root = {};
-		}
-
-		iterate( mappings, function( obj, mapping ){
-			set( mapping, obj, root );
-		});
-
-		return root;
-	}
-
-	/*
-		returns back the space or undefined
-	*/
-	function _exists( space, curSpace ){
-		var position,
+	function _exists( space, root ){
+		var curSpace = root || global,
+			position,
 			name;
 		
 		if ( isString(space) || isArrayLike(space) ){
@@ -190,48 +192,70 @@
 		}
 	}
 
-	/*
-		return back the variable in the space, undefined otherwise
-		accepts a list of roots or just one
-	*/
+	/**
+	 * get a value from a namespace, undefinded if it doesn't exist
+	 *
+	 * @function exists
+	 * @namespace bMoor
+	 * @param {string|array} space The namespace
+	 * @param {object|array} root Array of roots to check, the root of the namespace, or global if not defined
+	 * @return {array}
+	 **/
 	function exists( space, root ){
 		var i, c,
 			res;
 
-		if ( root ){
-			if ( isArrayLike(root) ){
-				for( i = 0, c = root.length; i < c && !res; i++ ){
-					res = _exists( space, root[i] );
-				}
-
-				return res;
-			}else{
-				return _exists( space, root );
+		if ( isArrayLike(root) ){
+			for( i = 0, c = root.length; i < c && !res; i++ ){
+				res = _exists( space, root[i] );
 			}
+
+			return res;
 		}else{
-			return _exists( space, global );
+			return _exists( space, root );
 		}
 	}
 
 	/**
-		register an alias
-	**/
+	 * defines an alias
+	 *
+	 * @function register
+	 * @namespace bMoor
+	 * @param {string} alias The name of the alias
+	 * @param {object} obj The value to be aliased
+	 **/
 	function register( alias, obj ){ 
 		aliases[ alias ] = obj; 
 	}
 
 	/**
-		look to see if an alias is defined
-	**/
+	 * Returns back the alias value
+	 *
+	 * @function check
+	 * @namespace bMoor
+	 * @param {string} alias The name of the alias
+	 * @return {something}
+	 **/
 	function check( alias ){
 		return aliases[ alias ];
 	}
 
-	function find( alias, root ){
+	/**
+	 * first searches to see if an alias exists, then sees if the namespace exists
+	 *
+	 * TODO : does this really need to exist anymore?
+	 *
+	 * @function find
+	 * @namespace bMoor
+	 * @param {string|array} space The namespace
+	 * @param {object|array} root Array of roots to check, the root of the namespace, or global if not defined
+	 * @return {something}
+	 **/
+	function find( space, root ){
 		var t;
 		
 		if ( root === undefined ){
-			t = check( isArray(alias)?alias.join('.'):alias );
+			t = check( isArray(namespace)?namespace.join('.'):namespace );
 			if ( t ){
 				return t;
 			}
@@ -240,175 +264,113 @@
 		return exists( alias, root );
 	}
 
+	/**
+	 * first sets the variable to the namespace, then registers it as an alias
+	 *
+	 * TODO : does this really need to exist anymore?
+	 *
+	 * @function install
+	 * @namespace bMoor
+	 * @param {string|array} alias The namespace
+	 * @param {something} obj The thing being installed into the namespace
+	 **/
 	function install( alias, obj ){
 		set( alias, obj );
 		register( alias, obj );
 	}
+
 	/**
-	Messaging functions
-	**/
-	function error( error ){
-		if ( isObject(error) && error.stack ){
-			console.warn( error );
-			console.debug( error.stack );
-		}else{
-			console.warn( error );
-			console.trace();
+	 object
+	 **/
+
+	/**
+	 * Create a new instance from a constructor and some arguments
+	 *
+	 * @function instantiate
+	 * @namespace bMoor
+	 * @param {function} obj The constructor
+	 * @param {array} args The arguments to pass to the constructor
+	 **/
+	function instantiate( obj, args ){
+		var i, c,
+			construct;
+
+		construct = 'return new obj(';
+
+		if ( arguments.length > 1 ){
+			for( i = 0, c = args.length; i < c; i++ ){
+				if ( i ){
+					construct += ',';
+				}
+
+				construct += 'args['+i+']';
+			}
 		}
-		
+
+		construct += ')';
+		/*jshint -W054 */
+		return ( new Function('obj','args',construct) )( obj, args );
+	}
+	
+	/**
+	 * Takes a hash and uses the indexs as namespaces to add properties to an objs
+	 *
+	 * @function map
+	 * @namespace bMoor
+	 * @param {object} target The object to map the variables onto
+	 * @param {object} mappings An object orientended as [ namespace ] => value
+	 * @return {object} The object that has had content mapped into it
+	 **/
+	function map( target, mappings ){
+		if ( arguments.length === 1 ){
+			mappings = target;
+			target = {};
+		}
+
+		iterate( mappings, function( val, mapping ){
+			set( mapping, val, target );
+		});
+
+		return target;
 	}
 
 	/**
-	Library Functions
-	**/
+	 * Converts an object to a string
+	 *
+	 * @function toString
+	 * @namespace bMoor
+	 * @param {object} obj The object to convert
+	 **/
 	function toString( obj ){
 		return Object.prototype.toString.call( obj );
 	}
 
-	function dwrap( value ){
-		var d;
+	/**
+	 * Create a new instance from an object and some arguments
+	 *
+	 * @function mask
+	 * @namespace bMoor
+	 * @param {function} obj The basis for the constructor
+	 * @param {array} args The arguments to pass to the constructor
+	 * @return {object} The new object that has been constructed
+	 **/
+	function mask( obj ){
+		var T = function(){};
 
-		if ( isQuark(value) ){
-			return value.$promise; // this way they get when the quark is ready
-		}else{
-			d = new Defer(); 
-			d.resolve( value );
-			return d.promise;
-		}
+		T.prototype = obj;
+
+		return instantiate( T );
 	}
 
-	function isEmpty( obj ){
-		var key;
-
-		if ( isObject(obj) ){
-			for( key in obj ){ 
-				if ( obj.hasOwnProperty(key) ){
-					return false;
-				}
-			}
-		}else if ( isArrayLike(obj) ){
-			return obj.length === 0;
-		}
-
-		return true;
-	}
-
-	function isUndefined(value) {
-		return value === undefined;
-	}
-
-	function isDefined(value) {
-		return value !== undefined;
-	}
-
-	function isString(value){
-		return typeof value === 'string';
-	}
-
-	function isNumber(value){
-		return typeof value === 'number';
-	}
-
-	function isFunction(value){
-		return typeof value === 'function';
-	}
-
-	function isObject(value){
-		return value  && typeof value === 'object';
-	}
-
-	function isBoolean(value){
-		return typeof value === 'boolean';
-	}
-
-	// type  checks
-	function isArrayLike(obj) {
-		// for me, if you have a length, I'm assuming you're array like, might change
-		return obj && (typeof obj.length === 'number') && obj.push;
-	}
-
-	function isArray(value) {
-		return value && toString(value) === '[object Array]';
-	}
-
-	// array for
-	function loop( arr, fn, scope ){
-		var i, c;
-
-		if ( !scope ){
-			scope = arr;
-		}
-
-		//if ( isUndefined(arr) || isUndefined(arr.length) ){
-		//	console.trace();
-		//}
-
-		for ( i = 0, c = arr.length; i < c; ++i ) if ( i in arr ) {
-			fn.call(scope, arr[i], i, arr);
-		}
-	}
-
-	// obj functions
-	function each( obj, fn, scope ){
-		var key;
-
-		if ( !scope ){
-			scope = obj;
-		}
-
-		for( key in obj ) if ( obj.hasOwnProperty(key) ){
-			fn.call( scope, obj[key], key, obj );
-		}
-	}
-
-	function iterate( obj, fn, scope ){
-		var key;
-
-		if ( !scope ){
-			scope = obj;
-		}
-
-		for( key in obj ){ 
-			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' && 
-				key !== 'prototype' && key !== 'length' && 
-				key !== 'name' 
-			){
-				fn.call( scope, obj[key], key, obj );
-			}
-		}
-	}
-
-	function forEach( obj, fn, scope ){
-		if ( obj ){
-			if ( obj.forEach && obj.forEach !== forEach ){
-				obj.forEach( fn, scope );
-			}else if ( isArrayLike(obj) ){
-				loop( obj, fn, scope );
-			}else if ( isFunction(obj) ){
-				iterate( obj, fn, scope );
-			}else{
-				each( obj, fn, scope );
-			}
-		}
-	}
-
-	// basic framework constructs
-	function create( obj ){
-		if ( Object.create ){
-			return Object.create(obj);
-		}else{
-			var T = function(){};
-
-			if (arguments.length !== 1) {
-				throw new Error('create implementation only accepts one parameter.');
-			}
-
-			T.prototype = obj;
-
-			return new T();
-		}
-	}
-
+	/**
+	 * Create a new instance from an object and some arguments
+	 *
+	 * @function extend
+	 * @namespace bMoor
+	 * @param {object} obj Destination object.
+ 	 * @param {...object} src Source object(s).
+ 	 * @returns {object} Reference to `dst`.
+ 	 **/
 	function extend( obj ){
 		loop( arguments, function(cpy){
 			if ( cpy !== obj ) {
@@ -416,11 +378,21 @@
 					obj[key] = value;
 				});
 			}
-	  });
+		});
 
-	  return obj;
+		return obj;
 	}
 
+	/**
+	 * Copy content from one object into another
+	 *
+	 * @function copy
+	 * @namespace bMoor
+	 * @param {object} from The object to copy the content from
+ 	 * @param {object} to The object into which to copy the content
+ 	 * @param {boolean} deep Whether or not to deep copy the data
+ 	 * @returns {object} The object copied into
+ 	 **/
 	function copy( from, to, deep ){
 		if ( from === to ){
 			return to;
@@ -437,7 +409,7 @@
 				}
 			}
 		}else if ( to.copy ){
-			to.copy( from );
+			to.copy( from, deep );
 		}else{
 			if ( isArrayLike(from) ){
 				to.length = 0;  // this clears the array
@@ -453,6 +425,15 @@
 		return to;
 	}
 
+	/**
+	 * A general comparison algorithm to test if two objects are equal
+	 *
+	 * @function equals
+	 * @namespace bMoor
+	 * @param {object} obj1 The object to copy the content from
+ 	 * @param {object} obj2 The object into which to copy the content
+ 	 * @preturns {boolean}
+ 	 **/
 	function equals( obj1, obj2 ){
 		var t1 = typeof obj1,
 			t2 = typeof obj2,
@@ -494,59 +475,398 @@
 		return false;
 	}
 
-	
+	/**
+	 Messaging
+	**/
 
-	function isQuark( def ){
-		return typeof(def) === 'function' && def.$isQuark;
+	/**
+	 * Reports an error
+	 *
+	 * @function map
+	 * @namespace bMoor
+	 * @param {object} error The error to be reporting
+	 **/
+	function error( error ){
+		if ( isObject(error) && error.stack ){
+			console.warn( error );
+			console.debug( error.stack );
+		}else{
+			console.warn( error );
+			console.trace();
+		}
 	}
 
-	function makeQuark( namespace ){
-		var path,
+	/**
+	 * Library Functions
+	 **/
+	/**
+	 * Tests if the value is undefined
+	 *
+	 * @function isUndefined
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isUndefined( value ) {
+		return value === undefined;
+	}
+
+	/**
+	 * Tests if the value is not undefined
+	 *
+	 * @function isDefined
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isDefined( value ) {
+		return value !== undefined;
+	}
+
+	/**
+	 * Tests if the value is a string
+	 *
+	 * @function isString
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isString( value ){
+		return typeof value === 'string';
+	}
+
+	/**
+	 * Tests if the value is numeric
+	 *
+	 * @function isNumber
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isNumber( value ){
+		return typeof value === 'number';
+	}
+
+	/**
+	 * Tests if the value is a function
+	 *
+	 * @function isFuncion
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isFunction( value ){
+		return typeof value === 'function';
+	}
+
+	/**
+	 * Tests if the value is an object
+	 *
+	 * @function isObject
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isObject( value ){
+		return value  && typeof value === 'object';
+	}
+
+	/**
+	 * Tests if the value is a boolean
+	 *
+	 * @function isBoolean
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isBoolean( value ){
+		return typeof value === 'boolean';
+	}
+
+	/**
+	 * Tests if the value can be used as an array
+	 *
+	 * @function isArrayLike
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isArrayLike( value ) {
+		// for me, if you have a length, I'm assuming you're array like, might change
+		return value && (typeof value.length === 'number') && value.push;
+	}
+
+	/**
+	 * Tests if the value is an array
+	 *
+	 * @function isArray
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isArray( value ) {
+		return value && toString(value) === '[object Array]';
+	}
+
+	/**
+	 * Tests if the value is a Quark, a placeholder for code being loaded
+	 *
+	 * @function isQuark
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isQuark( value ){
+		return typeof(value) === 'function' && value.$isQuark;
+	}
+
+	/**
+	 * Tests if the value has no content.
+	 * If an object, has no own properties.
+	 * If array, has length == 0.
+	 * If other, is not defined
+	 *
+	 * @function isEmpty
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isEmpty( value ){
+		var key;
+
+		if ( isObject(value) ){
+			for( key in value ){ 
+				if ( value.hasOwnProperty(key) ){
+					return false;
+				}
+			}
+		}else if ( isArrayLike(value) ){
+			return value.length === 0;
+		}else{
+			return isUndefined( obj );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks to see if the variable is deferred 
+	 *
+	 * @function isDeferred
+	 * @namespace bMoor
+	 * @param {something} value The variable to test
+	 * @return {boolean}
+	 **/
+	function isDeferred( value ){
+		return isObject( value ) && value.then !== undefined;
+	}
+
+	/**
+	 * Tests if it is an array with the last element being a function.
+	 *
+	 * @function isInjectable
+	 * @namespace bMoor
+	 * @param {object} obj The object to test
+	 * @return {boolean}
+	 **/
+	function isInjectable( obj ){
+		return isArray( obj ) && isFunction( obj[obj.length-1] );
+	}
+
+	/**
+	 * Call a function against all elements of an array like object, from 0 to length.  
+	 *
+	 * @function loop
+	 * @namespace bMoor
+	 * @param {array} arr The array to iterate through
+	 * @param {function} fn The function to call against each element
+	 * @param {object} scope The scope to call each function against
+	 **/
+	function loop( arr, fn, scope ){
+		var i, c;
+
+		if ( !scope ){
+			scope = arr;
+		}
+
+		for ( i = 0, c = arr.length; i < c; ++i ) if ( i in arr ) {
+			fn.call(scope, arr[i], i, arr);
+		}
+	}
+
+	/**
+	 * Call a function against all own properties of an object.  
+	 *
+	 * @function each
+	 * @namespace bMoor
+	 * @param {object} arr The object to iterate through
+	 * @param {function} fn The function to call against each element
+	 * @param {object} scope The scope to call each function against
+	 **/
+	function each( obj, fn, scope ){
+		var key;
+
+		if ( !scope ){
+			scope = obj;
+		}
+
+		for( key in obj ) if ( obj.hasOwnProperty(key) ){
+			fn.call( scope, obj[key], key, obj );
+		}
+	}
+
+	/**
+	 * Call a function against all own properties of an object, skipping specific framework properties.  
+	 *
+	 * @function iterate
+	 * @namespace bMoor
+	 * @param {object} obj The object to iterate through
+	 * @param {function} fn The function to call against each element
+	 * @param {object} scope The scope to call each function against
+	 **/
+	function iterate( obj, fn, scope ){
+		var key;
+
+		if ( !scope ){
+			scope = obj;
+		}
+
+		for( key in obj ){ 
+			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' && 
+				key !== 'prototype' && key !== 'length' && 
+				key !== 'name' 
+			){
+				fn.call( scope, obj[key], key, obj );
+			}
+		}
+	}
+
+	/**
+	 * Unified looping function, tries to pick the function for the data type.
+	 *
+	 * @function iterate
+	 * @namespace bMoor
+	 * @param {object} obj The object to iterate through
+	 * @param {function} fn The function to call against each element
+	 * @param {object} scope The scope to call each function against
+	 **/
+	function forEach( obj, fn, scope ){
+		if ( obj ){
+			if ( obj.forEach && obj.forEach !== forEach ){
+				obj.forEach( fn, scope );
+			}else if ( isArrayLike(obj) ){
+				loop( obj, fn, scope );
+			}else if ( isFunction(obj) ){
+				iterate( obj, fn, scope );
+			}else{
+				each( obj, fn, scope );
+			}
+		}
+	}
+
+	/**
+	 * basic framework constructs
+	 **/
+	
+	/**
+	 * Wraps the value in a promise and returns the promise
+	 *
+	 * @function dwrap
+	 * @namespace bMoor
+	 * @param {something} value The value to be returned by the promise.
+	 * @return {bmoor.defer.Promise}
+	 **/
+	function dwrap( value ){
+		var d;
+
+		if ( isQuark(value) ){
+			return value.$promise; // this way they get when the quark is ready
+		}else{
+			d = new Defer(); 
+			d.resolve( value );
+			return d.promise;
+		}
+	}
+
+	/**
+	 * Wraps the value in a promise and returns the promise
+	 *
+	 * TODO : this should pass back the object of structure : { quark, ready } 
+	 *
+	 * @function makeQuark
+	 * @namespace bMoor
+	 * @param {string|array} namespace The path to the quark
+	 * @param {object} root The root of the namespace to position the quark, defaults to global
+	 * @return {Quark}
+	 **/
+	function makeQuark( namespace, root ){
+		var path = parse( namespace ),
+			t = exists( path ),
 			defer,
 			quark = function Quark ( args ){}
 
-		quark.$isQuark = true;
+		if ( isQuark(t) ){
+			return t;
+		}else{
+			root = root || global;
 
-		path = parse( namespace )
+			quark.$isQuark = true;
 
-		if ( Defer ){
-			defer = new Defer();
+			if ( Defer ){
+				defer = new Defer();
 
-			quark.$promise = defer.promise;
-			quark.$ready = function( obj ){
-				if ( defer.resolve ){
-					defer.resolve( obj );
-				}
+				quark.$promise = defer.promise;
+				quark.$ready = function( obj ){
+					if ( defer.resolve ){
+						defer.resolve( obj );
+					}
 
-				// replace yourself
-				if ( path ){
-					set( path, obj );
-				}
-			};
+					// replace yourself
+					if ( path ){
+						set( path, obj, root );
+					}
+				};
+			}
+
+			set( path, quark, root );
+
+			return quark;
 		}
-
-		set( path, quark );
-
-		return quark;
 	}
 
-	// check to see if the element exists, if not, create a Quark in its place
+	/**
+	 * Check to see if the element exists, if not, create a Quark in its place
+	 *
+	 * TODO : It might be better if this is set up to always return a promise?
+	 *
+	 * @function ensure
+	 * @namespace bMoor
+	 * @param {string|array} namespace The path to the quark
+	 * @param {object} root The root of the namespace to search, defaults to global
+	 * @return {Quark}
+	 **/
 	function ensure( namespace, root ){
 		var obj = exists( namespace, root );
-		if ( !namespace ){
-			console.trace();
-		}
-
-		if ( !obj ){
-			return makeQuark( namespace );
+		
+		if ( obj ){
+			return dwrap( obj );
 		}else{
-			return obj;
+			return makeQuark( namespace, root ).$promise;
 		}
 	}
 
+	/**
+	 * Accepts an array, and returns an array of the same size, but the values inside it translated to
+	 * values or object referenced by the string values
+	 *
+	 * @function translate
+	 * @namespace bMoor
+	 * @param {array} arr The array to be translated
+	 * @param {object} root The root of the namespace to search, defaults to global
+	 * @return {array}
+	 **/
 	function translate( arr, root ){
-		var lead,
-			rtn = [];
+		var rtn = [];
 
 		loop( arr, function( value, key ){
 			if ( isString(value) ){
@@ -575,28 +895,29 @@
 		return rtn;
 	}
 
+	/**
+	 * Prepares the requests for content and returns it in the resultant of a promise.
+	 *
+	 * @function request
+	 * @namespace bMoor
+	 * @param {array} request The array to be translated
+	 * @param {object} root The root of the namespace to search, defaults to global
+	 * @return {bmoor.defer.Promise}
+	 **/
 	function request( request, root ){
 		var obj;
 
 		if ( isString(request) ){
-			obj = ensure( request, root );
-
-			if ( isQuark(obj) ){
-				// was created by the system
-				return obj.promise;
-			}else{
-				// some other object, need to play nice
-				return dwrap( obj );
-			}
+			return ensure( request, root );
 		}else if( isArrayLike(request) ){
 			obj = new DeferGroup();
 
 			loop( request, function( req, key ){
-				if ( isQuark(req) ){
-					req.$promise.then(function( o ){
+				if ( isDeferred(req) ){
+					req.then(function( o ){
 						request[ key ] = o;
 					});
-					obj.add( req.$promise );
+					obj.add( req );
 				}else{
 					request[ key ] = req;
 				}
@@ -610,10 +931,16 @@
 		}
 	}
 
-	function isInjectable( obj ){
-		return isArray( obj ) && isFunction( obj[obj.length-1] );
-	}
-
+	/**
+	 * Will inject all requested variables into the function, returns a promise that will have the resultant of the function.
+	 *
+	 * @function inject
+	 * @namespace bMoor
+	 * @param {Injectable} arr An array with a function as the last value
+	 * @param {object} root The root of the namespace to search, defaults to global
+	 * @param {object} context The context to call the function against
+	 * @return {bmoor.defer.Promise}
+	 **/
 	function inject( arr, root, context ){
 		var i, c,
 			rtn,
@@ -624,10 +951,10 @@
 		if ( isFunction(arr) ){
 			func = arr;
 			arr = [];
-		}else if ( isArray(arr) ){
+		}else if ( isInjectable(arr) ){
 			func = arr[ arr.length - 1 ];
 		}else{
-			throw 'inject needs arr to be either Array or Function';
+			throw 'inject needs arr to be either Injectable or Function';
 		}
 
 		return request( translate(arr,root) ).then(function( args ){
@@ -635,10 +962,6 @@
 		});
 	}
 	
-	function plugin( plugin, obj ){ 
-		set( plugin, obj, bMoor ); 
-	}
-
 	/**
 	 * Borrowed From Angular : I can't write it better
 	 * ----------------------------------------
@@ -723,17 +1046,29 @@
 	/**
 	String functions
 	**/
+
+	// TODO
 	function trim( str ){
 		if ( str.trim ){
-			str.trim();
+			return str.trim();
 		}else{
-			str.replace( /^\s+|\s+$/g, '' );
+			return str.replace( /^\s+|\s+$/g, '' );
 		}
 	}
 
 	/**
 	Array functions
 	**/
+	/**
+	 * Search an array for an element, starting at the begining or a specified location
+	 *
+	 * @function indexOf
+	 * @namespace bMoor
+	 * @param {array} arr An array to be searched
+	 * @param {something} searchElement Content for which to be searched
+	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
+	 * @return {integer} -1 if not found, otherwise the location of the element
+	 **/
 	function indexOf( arr, searchElement, fromIndex ){
 		if ( arr.indexOf ){
 			return arr.indexOf( searchElement, fromIndex );
@@ -763,23 +1098,59 @@
 		}
 	}
 
+	/**
+	 * Search an array for an element and remove it, starting at the begining or a specified location
+	 *
+	 * @function remove
+	 * @namespace bMoor
+	 * @param {array} arr An array to be searched
+	 * @param {something} searchElement Content for which to be searched
+	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
+	 * @return {integer} number of elements removed
+	 **/
 	function remove( arr, searchElement, fromIndex ){
 		var pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
 			arr.splice( pos, 1 );
+			return 1;
+		}else{
+			return 0;
 		}
 	}
 
+	/**
+	 * Search an array for an element and remove all instances of it, starting at the begining or a specified location
+	 *
+	 * @function remove
+	 * @namespace bMoor
+	 * @param {array} arr An array to be searched
+	 * @param {something} searchElement Content for which to be searched
+	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
+	 * @return {integer} number of elements removed
+	 **/
 	function removeAll( arr, searchElement, fromIndex ){
-		var pos = indexOf( arr, searchElement, fromIndex );
+		var res,
+			pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
 			arr.splice( pos, 1 );
-			removeAll( arr, searchElement, pos );
+			return removeAll( arr, searchElement, pos ) + 1;
+		} else {
+			return 0;
 		}
 	}
 
+	/**
+	 * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
+	 *
+	 * @function remove
+	 * @namespace bMoor
+	 * @param {array} arr An array to be searched
+	 * @param {something} searchElement Content for which to be searched
+	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
+	 * @return {integer} number of elements removed
+	 **/
 	function filter( arr, func, thisArg ){
 		if ( arr.filter ){
 			return arr.filter( func, thisArg );
@@ -808,6 +1179,17 @@
 		}
 	}
 
+
+	/**
+	 * Compare two arrays, 
+	 *
+	 * @function remove
+	 * @namespace bMoor
+	 * @param {array} arr1 An array to be compared
+	 * @param {array} arr2 An array to be compared
+	 * @param {function} func The comparison function
+	 * @return {object} an object containing the elements unique to the left, matched, and unqiue to the right
+	 **/
 	function compareFunc( arr1, arr2, func ){
 		var m,
             cmp,
@@ -859,6 +1241,13 @@
 	set( 'bMoor', bMoor );
 	set( 'bmoor', bmoor );
 	
+	/**
+	 * The promise component for defered statements
+	 *
+	 * @class Promise 
+	 * @namespace bmoor.defer
+	 * @constructor
+	 **/
 	function Promise( defer ){
 		this.defer = defer;
 	}
@@ -866,6 +1255,14 @@
 	set( 'bmoor.defer.Promise', Promise );
 
 	extend( Promise.prototype, {
+		/**
+		 * Initializes the element for the instance
+		 * 
+		 * @method then
+		 * @param {function} callback The function called on success
+		 * @param {function} errback The function called on error
+		 * @return {bmoor.defer.Promise} A sub promise
+		 **/
 		"then" : function( callback, errback ){
 			var dis = this,
 				defer = this.defer,
@@ -899,43 +1296,66 @@
 
 			return sub.promise;
 		},
+		/**
+		 * Supplies a function to call on failure, it creates a new chain
+		 * 
+		 * @method catch
+		 * @param {function} callback The function called on failure
+		 * @return {this} Returns back the sub promise
+		 **/
+		"catch": function( callback ) {
+			return this.then( null, callback );
+		},
+		/**
+		 * A short cut that allows you to not need to throw inside the then
+		 * 
+		 * @method reject
+		 * @param {something} error The function called on success
+		 **/
 		"reject" : function( error ){
-			// a short cut that allows you to not need to throw inside the then
 			if ( this.sub ){
 				this.sub.reject( error );
 			}else{
 				throw 'must reject from inside a then';
 			}
 		},
-		"done": function(callback){
+		/**
+		 * Supplies a function to call on success, it doesn't create a new chain
+		 * 
+		 * @method done
+		 * @param {function} callback The function called on success
+		 * @return {this} Returns back the promise, not the generated sub promise
+		 **/
+		"done": function( callback ){
 			this.then( callback );
 			return this; // for chaining with the defer
 		},
-		"fail": function(callback){
+		/**
+		 * Supplies a function to call on failure, it doesn't create a new chain
+		 * 
+		 * @method fail
+		 * @param {function} callback The function called on failure
+		 * @return {this} Returns back the promise, not the generated sub promise
+		 **/
+		"fail": function( callback ){
 			this.then( null, callback );
 			return this; 
 		},
-		"always": function(callback){
-			this['finally']( callback );
-			return this;
-		},
-		"catch": function(callback) {
-			return this.then(null, callback);
-		},
-		"finally": function(callback) {
+		// TODO
+		"finally": function( callback ) {
 			function makePromise(value, resolved) {
 				var result = bmoor.defer.Basic();
 
 				if (resolved) {
-					result.resolve(value);
+					result.resolve( value );
 				} else {
-					result.reject(value);
+					result.reject( value );
 				}
 
 				return result.promise;
 			}
 
-			function handleCallback(value, isResolved) {
+			function handleCallback( value, isResolved ){
 				var callbackOutput = null;
 				try {
 					callbackOutput = (callback || dis.defaultSuccess)();
@@ -965,9 +1385,21 @@
 					return handleCallback(error, false);
 				}
 			);
+		},
+		// TODO
+		"always": function( callback ){
+			this['finally']( callback );
+			return this;
 		}
 	});
 
+	/**
+	 * The basic kind of defer statement
+	 *
+	 * @class Basic 
+	 * @namespace bmoor.defer
+	 * @constructor
+	 **/
 	function Defer( exceptionHandler ){
 		var dis = this;
 
@@ -1003,9 +1435,40 @@
 		}
 
 		extend( Defer.prototype, {
-			defaultHandler : function( ex ){ bMoor.error.report(ex); },
-			defaultSuccess : function( value ){ return value; },
-			defaultFailure : function( message ){ throw message; }, // keep passing the buck till someone stops it
+			/**
+			 * Called on the failure of a success or failure 
+			 * 
+			 * @method defaultHandler
+			 * @param {function} ex The value to be reported back
+			 **/
+			defaultHandler : function( ex ){ 
+				bMoor.error.report(ex);
+			},
+			/**
+			 * Called to handle a successful value 
+			 * 
+			 * @method defaultSuccess
+			 * @param {function} ex The value to be reported back
+			 **/
+			defaultSuccess : function( value ){ 
+				return value;
+			},
+			/**
+			 * Called to handle a failure value 
+			 * 
+			 * @method defaultFailure
+			 * @param {function} message The value to be reported back
+			 **/
+			defaultFailure : function( message ){ 
+				throw message; // keep passing the buck till someone stops it
+			}, 
+			/**
+			 * Set up functions to be called when value is resolved
+			 * 
+			 * @method register
+			 * @param {function} callback The value to be reported back
+			 * @param {function} failure The value to be reported back
+			 **/
 			register : function( callback, failure ){
 				if ( this.value ){
 					this.value.then( callback, failure );
@@ -1013,6 +1476,12 @@
 					this.callbacks.push( [callback, failure] );
 				}
 			},
+			/**
+			 * Issue the value for the promise
+			 * 
+			 * @method resolve
+			 * @param {something} value The value to be reported back
+			 **/
 			resolve : function( value ){
 				var callbacks,
 					cbSet,
@@ -1030,15 +1499,33 @@
 					}
 				}
 			},
+			/**
+			 * Issue the value for the promise
+			 * 
+			 * @method resolve
+			 * @param {something} reason The reason for rejection
+			 **/
 			reject : function( reason ){
 				this.resolve( rejection(reason) );
 			},
+			/**
+			 * Generate a sub promise
+			 * 
+			 * @method sub
+			 **/
 			sub : function(){
 				return new bmoor.defer.Basic( this.handler );
 			}
 		});
 	}());
 
+	/**
+	 * A collection of promises that can be grouped into one
+	 *
+	 * @class Group 
+	 * @namespace bmoor.defer
+	 * @constructor
+	 **/
 	function DeferGroup(){
 		this.count = 0;
 		this.loaded = false;
@@ -1066,6 +1553,12 @@
 		}
 
 		extend( DeferGroup.prototype, {
+			/**
+			 * Add a promise to the group
+			 * 
+			 * @method add
+			 * @param {bmoor.defer.Promise} promise A promise to add to the collection.
+			 **/
 			add : function( promise ){
 				var dis = this;
 				this.count++;
@@ -1080,42 +1573,75 @@
 					}
 				);
 			},
+			/**
+			 * Issue when all promises have been added
+			 * 
+			 * @method resolve
+			 * @param {something} reason The reason for rejection
+			 **/
 			run : function(){
 				this.loaded = true;
 				check.call( this );
 			}
 		});
 	}());
+
+	/**
+	 * Compare two arrays, 
+	 *
+	 * @function all
+	 * @namespace bmoor.defer
+	 * @param {...bmoor.promise.Defer} defer All of the promises to combine into one promise
+	 * @return {bmoor.promise.Defer} The result promise of a bmoor.defer.Group
+	 **/
+	set( 'bmoor.defer.all', function(){
+		var inst = this,
+			group = new DeferGroup(),
+			promises;
+
+		if ( arguments.length > 1 ){
+			promises = arguments;
+		}else{
+			promises = arguments[0];
+		}
+
+		bMoor.forEach(promises, function(p){
+			group.add( p );
+		});
+
+		group.run();
+
+		return group.promise;
+	});
+
 	/**
 	Externalizing the functionality
 	**/
 	extend( bMoor, {
-		// namespace interactions
+		// namespace
 		'parseNS'     : parse,
 		'dwrap'       : dwrap,
 		'set'         : set,
 		'get'         : get,
 		'del'         : del,
-		'map'         : map,
 		'exists'      : exists,
 		'register'    : register,
 		'check'       : check,
 		'find'        : find,
 		'install'     : install,
+		// injection
+		'makeQuark'   : makeQuark,
 		'ensure'      : ensure,
 		'request'     : request,
 		'translate'   : translate,
 		'inject'      : inject,
 		'plugin'      : plugin,
-		'makeQuark'   : makeQuark,
-		'instantiate' : instantiate,
-		// allow a type expectation
+		// loop
 		'loop'        : loop, // array
 		'each'        : each, // object
 		'iterate'     : iterate, // object + safe
-		// general looping
 		'forEach'     : forEach,
-		// all the is tests
+		// test
 		'isBoolean'   : isBoolean,
 		'isDefined'   : isDefined,
 		'isUndefined' : isUndefined,
@@ -1128,63 +1654,44 @@
 		'isInjectable' : isInjectable,
 		'isEmpty'     : isEmpty, 
 		'isQuark'     : isQuark,
-		// object stuff
+		// object
+		'instantiate' : instantiate,
+		'map'         : map,
 		'object' : {
-			'create'      : create,
-			'extend'      : extend,
-			'copy'        : copy,
-			'equals'      : equals
+			'mask'      : mask,
+			'extend'    : extend,
+			'copy'      : copy,
+			'equals'    : equals
 		},
-		// string functionality 
-		'string'      : {
+		// string
+		'string' : {
 			'trim' : trim 
 		},
-		// array functionality
-		'array'       : {
+		// array
+		'array' : {
 			'compare' : compareFunc,
 			'indexOf' : indexOf,
 			'remove' : remove,
 			'removeAll' : removeAll,
 			'filter' : filter
 		},
-		// error handling and logging : TODO : move verbose error handling
-		'error'       : {
+		// error
+		'error' : {
 			report : error
 		},
 		// other utils - TODO : move out
 		'url' : {
 			'resolve'  : urlResolve
-		},
-		// defer functions
-		'defer' : {
-			'all' : function(){
-				var inst = this,
-					group = new DeferGroup(),
-					promises;
-
-				if ( arguments.length > 1 ){
-					promises = arguments;
-				}else{
-					promises = arguments[0];
-				}
-
-				bMoor.forEach(promises, function(p){
-					group.add( p );
-				});
-
-				group.run();
-
-				return group.promise;
-			}
 		}
 	});
 }( this ));
 ;bMoor.inject(
 	['bmoor.defer.Basic','@global', 
 	function( Defer, global ){
-		var eCompiler = bMoor.ensure('bmoor.build.Compiler'),
+		var eCompiler = bMoor.makeQuark('bmoor.build.Compiler'),
 			Compiler = function(){
-				this.stack = [];
+				this.preProcess = [];
+				this.postProcess = [];
 				this.clean = true;
 			},
 			definitions = {},
@@ -1222,15 +1729,19 @@
 				definition.whenDefined = quark.$promise;
 				
 				if ( !this.clean ){
-					this.stack.sort(function( a, b ){
+					this.preProcess.sort(function( a, b ){
 						return b.rank - a.rank;
 					});
+					this.postProcess.sort(function( a, b ){
+						return b.rank - a.rank;
+					});
+					
 					this.clean = true;
 				}
 
 				$d.resolve();
 
-				bMoor.loop( this.stack, function( maker ){
+				bMoor.loop( this.preProcess, function( maker ){
 					promise = promise.then(function(){
 						return bMoor.inject( maker.module, definition, obj ); 
 					});
@@ -1250,6 +1761,8 @@
 		}
 
 		Compiler.prototype.addModule = function( rank, namePath, injection ){
+			rank = parseInt( rank, 10 );
+
 			this.clean = false;
 
 			if ( arguments.length < 3 ){
@@ -1258,15 +1771,42 @@
 				bMoor.install( namePath, injection[injection.length-1] );
 			}
 
-			this.stack.push({
-				rank : parseInt(rank,10),
-				module : injection
-			});
+			if ( rank >= 0 ){
+				this.preProcess.push({
+					rank : rank,
+					module : injection
+				});
+			}else{
+				this.postProcess.push({
+					rank : rank,
+					module : injection
+				});
+			}
 		};
 
 		Compiler.prototype.make = function( name, definition ){
-			var namespace,
-				dis = this,
+			var dis = this,
+				postProcess = function( def ){
+					make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
+						var $d = new Defer(),
+							promise = $d.promise;
+
+						$d.resolve();
+
+						bMoor.loop( dis.postProcess, function( maker ){
+							promise = promise.then(function(){
+								return bMoor.inject( maker.module, def, defined ); 
+							});
+						});
+						
+						return promise.then(function(){
+							quark.$ready( defined );
+
+							return defined;
+						});
+					});
+				},
+				namespace,
 				quark;
 
 			if ( arguments.length !== 2 ) {
@@ -1283,28 +1823,18 @@
 					'message : you need to define a name and needs to be either a string or an array';
 			}
 
-			quark = bMoor.ensure( namespace );
+			quark = bMoor.makeQuark( namespace );
 
 			definitions[ name ] = definition;
 
 			if ( bMoor.isInjectable(definition) ){
 				if ( bMoor.require ){
-					bMoor.require.inject( definition ).then(function( def ){
-						make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
-							quark.$ready( defined );
-						});
-					});
+					bMoor.require.inject( definition ).then( postProcess );
 				}else{
-					bMoor.inject( definition ).then(function( def ){
-						make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
-							quark.$ready( defined );
-						});
-					});
+					bMoor.inject( definition ).then( postProcess );
 				}
 			}else{
-				make.call( this, {name:name,namespace:namespace}, quark, definition ).then(function( defined ){
-					quark.$ready( defined );
-				});
+				postProcess( definition );
 			}
 
 			return quark.$promise;
@@ -1317,17 +1847,33 @@
 					$promise : defer.promise
 				};
 
+			console.log( 'mocking', definitions[name], mocks );
 			return bMoor.inject( definitions[name], mocks ).then(function( def ){
-				return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( obj ){
-					defer.resolve( quark );
-					return obj;
+				console.log( 'making mock' );
+				return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
+					var $d = new Defer(),
+						promise = $d.promise;
+					console.log( 'postProcess mock' );
+					$d.resolve();
+
+					bMoor.loop( dis.postProcess, function( maker ){
+						promise = promise.then(function(){
+							return bMoor.inject( maker.module, def, defined ); 
+						});
+					});
+
+					return promise.then(function(){
+						defer.resolve( quark );
+
+						return defined;
+					});
 				});
 			});
 		};
 
 		Compiler.prototype.define = function( namespace, value ){
-			var quark = bMoor.ensure( namespace );
-
+			var quark = bMoor.makeQuark( namespace );
+			
 			if ( bMoor.isInjectable(value) ){
 				bMoor.inject( value ).then( function( v ){
 					quark.$ready( v );
@@ -1338,8 +1884,8 @@
 		};
 
 		instance = new Compiler();
-
 		Compiler.$instance = instance;
+		
 		bMoor.install( 'bmoor.build.$compiler', instance );
 
 		bMoor.plugin( 'make', function( namespace, definition ){
@@ -1445,31 +1991,29 @@
 	);
 }]);
 ;bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
-	Compiler.$instance.addModule( 4, 'bmoor.build.ModPlugin', 
-		['-plugins','whenDefined', function( plugins, whenDefined ){
+	Compiler.$instance.addModule( -2, 'bmoor.build.ModPlugin', 
+		['-plugins', function( plugins ){
 			var obj = this;
 
 			if ( plugins ){
 				bMoor.loop( plugins, function( request ){
-					whenDefined.then(function(){
-						var o;
+					var o;
 
-						if ( !request.instance ){
-							o = obj;
-						}else if ( bMoor.isString(request.instance) ){
-							o = obj[ '$' + request.instance ]; // link to singletons
-						}else{
-							o = bMoor.instantiate( obj, request.instance );
-						} 
+					if ( !request.instance ){
+						o = obj;
+					}else if ( bMoor.isString(request.instance) ){
+						o = obj[ '$' + request.instance ]; // link to singletons
+					}else{
+						o = bMoor.instantiate( obj, request.instance );
+					} 
 
-						bMoor.iterate( request.funcs, function( func, plugin ){
-							if ( bMoor.isString(func) ){
-								func = obj[ func ];
-							}
+					bMoor.iterate( request.funcs, function( func, plugin ){
+						if ( bMoor.isString(func) ){
+							func = obj[ func ];
+						}
 
-							bMoor.plugin( plugin, function(){ 
-								return func.apply( o, arguments ); 
-							});
+						bMoor.plugin( plugin, function(){ 
+							return func.apply( o, arguments ); 
 						});
 					});
 				});
@@ -1499,15 +2043,13 @@
 	// TODO : this is no longer needed
 }());
 ;bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
-	Compiler.$instance.addModule( 5, 'bmoor.build.ModSingleton', 
-		['-singleton','whenDefined',function( singleton, whenDefined ){
+	Compiler.$instance.addModule( -1, 'bmoor.build.ModSingleton', 
+		['-singleton',function( singleton ){
 			var obj = this;
 
 			if ( singleton ){
 				bMoor.iterate( singleton, function( args /* arguments to construct with */, name /* string */ ){
-					whenDefined.then(function(){
-						obj[ '$'+name ] = bMoor.instantiate( obj, args );
-					});
+					obj[ '$'+name ] = bMoor.instantiate( obj, args );
 				});
 			}
 		}]
@@ -2023,19 +2565,24 @@ parseTemplate : function( template ){
 					});
 				},
 				get : function( requirement, async, alias ){
-					var req;
+					var quark,
+						req;
 
 					req = bMoor.exists( requirement );
 
-					if ( !req ){
-						req = new Script( 
+					if ( req === undefined ){
+						quark = bMoor.ensure( requirement );
+
+						( new Script( 
 							alias || bMoor.ns.locate(requirement)+'.js', 
 							this.forceSync ? false : async 
-						);
-
-						return req.promise.then(function(){
-							return bMoor.exists( requirement );
+						) ).promise.then(function(){
+							quark.$ready( bMoor.exists(requirement) );
 						});
+
+						return quark.$promise;
+					}else if ( bMoor.isQuark(req) ){
+						return req.$promise;
 					}else{
 						return bMoor.dwrap( req );
 					}

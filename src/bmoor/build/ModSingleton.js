@@ -1,13 +1,11 @@
 bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
-	Compiler.$instance.addModule( 5, 'bmoor.build.ModSingleton', 
-		['-singleton','whenDefined',function( singleton, whenDefined ){
+	Compiler.$instance.addModule( -1, 'bmoor.build.ModSingleton', 
+		['-singleton',function( singleton ){
 			var obj = this;
 
 			if ( singleton ){
 				bMoor.iterate( singleton, function( args /* arguments to construct with */, name /* string */ ){
-					whenDefined.then(function(){
-						obj[ '$'+name ] = bMoor.instantiate( obj, args );
-					});
+					obj[ '$'+name ] = bMoor.instantiate( obj, args );
 				});
 			}
 		}]
