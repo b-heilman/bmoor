@@ -82,18 +82,6 @@
 	}
 	
 	/**
-	 * Sets a value to a namespace, returns the old value, the namespace is always bMoor
-	 *
-	 * @function plugin
-	 * @namespace bMoor
-	 * @param {string|array} plugin The namespace
-	 * @param {something} obj The value to set the namespace to
-	 **/
-	function plugin( plugin, obj ){ 
-		set( plugin, obj, bMoor ); 
-	}
-
-	/**
 	 * Delete a namespace, returns the old value
 	 *
 	 * @function del
@@ -223,9 +211,22 @@
 	 * @namespace bMoor
 	 * @param {string} alias The name of the alias
 	 * @param {object} obj The value to be aliased
+	 * @param {object|array} root Array of roots to check, the root of the namespace, or global if not defined
 	 **/
-	function register( alias, obj ){ 
-		aliases[ alias ] = obj; 
+	function register( alias, obj, root ){
+		var a;
+
+		if ( root ){
+			if ( !root.$aliases ){
+				root.$aliases = {};
+			}
+
+			a = root.$aliases;
+		}else{
+			a = aliases;
+		}
+
+		a[ alias ] = obj; 
 	}
 
 	/**
@@ -234,16 +235,40 @@
 	 * @function check
 	 * @namespace bMoor
 	 * @param {string} alias The name of the alias
+	 * @param {object|array} root Array of roots to check, the root of the namespace, or global if not defined
 	 * @return {something}
 	 **/
-	function check( alias ){
-		return aliases[ alias ];
+	function check( alias, root ){
+		var a;
+
+		if ( root ){
+			if ( !root.$aliases ){
+				root.$aliases = {};
+			}
+
+			a = root.$aliases;
+		}else{
+			a = aliases;
+		}
+
+		return a[ alias ];
+	}
+
+	/**
+	 * Sets a value to a namespace, returns the old value, the namespace is always bMoor
+	 *
+	 * @function plugin
+	 * @namespace bMoor
+	 * @param {string|array} plugin The namespace
+	 * @param {something} obj The value to set the namespace to
+	 **/
+	// TODO : is this really needed?
+	function plugin( plugin, obj ){ 
+		set( plugin, obj, bMoor ); 
 	}
 
 	/**
 	 * first searches to see if an alias exists, then sees if the namespace exists
-	 *
-	 * TODO : does this really need to exist anymore?
 	 *
 	 * @function find
 	 * @namespace bMoor
@@ -251,7 +276,8 @@
 	 * @param {object|array} root Array of roots to check, the root of the namespace, or global if not defined
 	 * @return {something}
 	 **/
-	function find( space, root ){
+	// TODO : is this really needed?
+	function find( namespace, root ){
 		var t;
 		
 		if ( root === undefined ){
@@ -261,19 +287,18 @@
 			}
 		}
 
-		return exists( alias, root );
+		return exists( namespace, root );
 	}
 
 	/**
 	 * first sets the variable to the namespace, then registers it as an alias
-	 *
-	 * TODO : does this really need to exist anymore?
 	 *
 	 * @function install
 	 * @namespace bMoor
 	 * @param {string|array} alias The namespace
 	 * @param {something} obj The thing being installed into the namespace
 	 **/
+	// TODO : is this really needed?
 	function install( alias, obj ){
 		set( alias, obj );
 		register( alias, obj );
@@ -593,7 +618,7 @@
 	 **/
 	function isArrayLike( value ) {
 		// for me, if you have a length, I'm assuming you're array like, might change
-		return value && (typeof value.length === 'number') && value.push;
+		return (value && (typeof value.length === 'number')) == true ;
 	}
 
 	/**
@@ -605,7 +630,7 @@
 	 * @return {boolean}
 	 **/
 	function isArray( value ) {
-		return value && toString(value) === '[object Array]';
+		return (value && (toString(value) === '[object Array]')) == true ;
 	}
 
 	/**
@@ -643,7 +668,7 @@
 		}else if ( isArrayLike(value) ){
 			return value.length === 0;
 		}else{
-			return isUndefined( obj );
+			return isUndefined( value );
 		}
 
 		return true;
@@ -873,7 +898,7 @@
 				switch( value.charAt(0) ){
 					case '@' :
 						// uses alias
-						rtn[key] = check( value.substr(1) );
+						rtn[key] = check( value.substr(1), root );
 						break;
 					case '-' :
 						// from global scope, undefined it no match
@@ -901,10 +926,11 @@
 	 * @function request
 	 * @namespace bMoor
 	 * @param {array} request The array to be translated
+	 * @param {array} translate If unknown strings should be ensured
 	 * @param {object} root The root of the namespace to search, defaults to global
 	 * @return {bmoor.defer.Promise}
 	 **/
-	function request( request, root ){
+	function request( request, translate, root ){
 		var obj;
 
 		if ( isString(request) ){
@@ -913,6 +939,10 @@
 			obj = new DeferGroup();
 
 			loop( request, function( req, key ){
+				if ( translate && isString(req) ){
+					req = ensure( req ,root );
+				}
+
 				if ( isDeferred(req) ){
 					req.then(function( o ){
 						request[ key ] = o;
@@ -957,7 +987,7 @@
 			throw 'inject needs arr to be either Injectable or Function';
 		}
 
-		return request( translate(arr,root) ).then(function( args ){
+		return request( translate(arr,root), false, root ).then(function( args ){
 			return func.apply( context, args );
 		});
 	}
@@ -1106,16 +1136,15 @@
 	 * @param {array} arr An array to be searched
 	 * @param {something} searchElement Content for which to be searched
 	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
-	 * @return {integer} number of elements removed
+	 * @return {array} array containing removed element
 	 **/
 	function remove( arr, searchElement, fromIndex ){
 		var pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
-			arr.splice( pos, 1 );
-			return 1;
+			return [ arr.splice(pos,1) ];
 		}else{
-			return 0;
+			return [];
 		}
 	}
 
@@ -1130,14 +1159,19 @@
 	 * @return {integer} number of elements removed
 	 **/
 	function removeAll( arr, searchElement, fromIndex ){
-		var res,
+		var r,
+			res,
 			pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
-			arr.splice( pos, 1 );
-			return removeAll( arr, searchElement, pos ) + 1;
+			res = arr.splice( pos, 1 );
+			r = removeAll( arr, searchElement, pos );
+
+			r.unshift( res );
+
+			return r;
 		} else {
-			return 0;
+			return [];
 		}
 	}
 
@@ -1587,7 +1621,7 @@
 	}());
 
 	/**
-	 * Compare two arrays, 
+	 * externalized wrapper for bmoor.defer.Group
 	 *
 	 * @function all
 	 * @namespace bmoor.defer
@@ -1599,10 +1633,10 @@
 			group = new DeferGroup(),
 			promises;
 
-		if ( arguments.length > 1 ){
-			promises = arguments;
-		}else{
+		if ( isNumber(arguments[0].length) ){
 			promises = arguments[0];
+		}else{
+			promises = arguments;
 		}
 
 		bMoor.forEach(promises, function(p){
@@ -1685,7 +1719,14 @@
 		}
 	});
 }( this ));
-;bMoor.inject(
+;/**
+Allows for the compilation of object from a definition structure
+
+@class Compiler 
+@namespace bmoor.build
+@constructor
+**/
+bMoor.inject(
 	['bmoor.defer.Basic','@global', 
 	function( Defer, global ){
 		var eCompiler = bMoor.makeQuark('bmoor.build.Compiler'),
@@ -1697,6 +1738,9 @@
 			definitions = {},
 			instance;
 
+		/**
+		 * The internal construction engine for the system.  Generates the class and uses all modules.
+		 **/
 		function make( name, quark, definition ){
 			var i, c,
 				obj,
@@ -1760,6 +1804,16 @@
 			}
 		}
 
+		/**
+		 * Add a module to the build process
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access addModule
+		 *
+		 * @param {number} rank The time in the build stage to run the module, negative numbers are after build
+		 * @param {string} namePath Optional ability to install the module
+		 * @param {array} injection The injectable element to be used as a module for building
+		 */
 		Compiler.prototype.addModule = function( rank, namePath, injection ){
 			rank = parseInt( rank, 10 );
 
@@ -1784,7 +1838,19 @@
 			}
 		};
 
-		Compiler.prototype.make = function( name, definition ){
+		/**
+		 * Add a module to the build process
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access make
+		 *
+		 * @param {number} rank The time in the build stage to run the module, negative numbers are after build
+		 * @param {string} namePath Optional ability to install the module
+		 * @param {array} injection The injectable element to be used as a module for building
+		 *
+		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the defined object
+		 */
+		Compiler.prototype.make = function( name, definition, root ){
 			var dis = this,
 				postProcess = function( def ){
 					make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
@@ -1809,10 +1875,6 @@
 				namespace,
 				quark;
 
-			if ( arguments.length !== 2 ) {
-				throw 'you need to define a name and a definition';
-			}
-			
 			if ( bMoor.isString(name) ){
 				namespace = bMoor.parseNS( name );
 			}else if ( bMoor.isArray(name) ){
@@ -1823,55 +1885,87 @@
 					'message : you need to define a name and needs to be either a string or an array';
 			}
 
-			quark = bMoor.makeQuark( namespace );
+			quark = bMoor.makeQuark( namespace, root );
+
+			// if this is a simple definition, pass in 
+			if ( !bMoor.isInjectable(definition) ){
+				(function(){
+					var d = definition;
+					definition = [function(){
+						return d;
+					}];
+				}());
+			}
 
 			definitions[ name ] = definition;
 
-			if ( bMoor.isInjectable(definition) ){
-				if ( bMoor.require ){
-					bMoor.require.inject( definition ).then( postProcess );
-				}else{
-					bMoor.inject( definition ).then( postProcess );
-				}
+			if ( bMoor.require ){
+				bMoor.require.inject( definition, root ).then( postProcess );
 			}else{
-				postProcess( definition );
+				bMoor.inject( definition, root ).then( postProcess );
 			}
 
 			return quark.$promise;
 		};
 
-		Compiler.prototype.mock = function( name, mocks ){
+		/**
+		 * Create a mock of a previously defined object
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access mock
+		 *
+		 * @param {string} name The name of the definition to create a mock of
+		 * @param {object} mocks Hash containing the mocks to user to override in the build
+		 * @param {object} root The optional namespace to user, defaults to global
+		 *
+		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
+		 */
+		Compiler.prototype.mock = function( name, mocks, root ){
 			var dis = this,
 				defer = new Defer(),
 				quark = {
 					$promise : defer.promise
 				};
 
-			console.log( 'mocking', definitions[name], mocks );
-			return bMoor.inject( definitions[name], mocks ).then(function( def ){
-				console.log( 'making mock' );
-				return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
-					var $d = new Defer(),
-						promise = $d.promise;
-					console.log( 'postProcess mock' );
-					$d.resolve();
+			if ( !root ){
+				root = global;
+			}
+			
+			return bMoor.inject( definitions[name], bMoor.object.extend({},root,mocks) )
+				.then(function( def ){
+					return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
+						var $d = new Defer(),
+							promise = $d.promise;
+						
+						$d.resolve();
 
-					bMoor.loop( dis.postProcess, function( maker ){
-						promise = promise.then(function(){
-							return bMoor.inject( maker.module, def, defined ); 
+						bMoor.loop( dis.postProcess, function( maker ){
+							promise = promise.then(function(){
+								return bMoor.inject( maker.module, def, defined ); 
+							});
+						});
+
+						return promise.then(function(){
+							defer.resolve( quark );
+
+							return defined;
 						});
 					});
-
-					return promise.then(function(){
-						defer.resolve( quark );
-
-						return defined;
-					});
 				});
-			});
 		};
 
-		Compiler.prototype.define = function( namespace, value ){
+		/**
+		 * Set a value on the namespace, first placing a quark in its place
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access define
+		 *
+		 * @param {string} name The name of the value
+		 * @param {object} root The optional namespace to user, defaults to global
+		 *
+		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
+		 */
+		Compiler.prototype.define = function( name, value ){
 			var quark = bMoor.makeQuark( namespace );
 			
 			if ( bMoor.isInjectable(value) ){
@@ -2540,7 +2634,7 @@ parseTemplate : function( template ){
 					group.run();
 
 					return group.promise.then(function(){
-						return bMoor.translate( arr );
+						return bMoor.translate( arr, root );
 					});
 				},
 				inject : function( arr, root, context ){
@@ -2555,11 +2649,12 @@ parseTemplate : function( template ){
 						arr = arr.slice( 0 );
 						func = arr.pop();
 					}else{
+						console.trace();
 						throw 'inject needs arr to be either Array or Function';
 					}
 
 					return this.translate.call( this, arr, root ).then(function( args ){
-						return bMoor.request( args ).then(function(){
+						return bMoor.request( args, false, root ).then(function(){
 							return func.apply( context, args );
 						});
 					});
