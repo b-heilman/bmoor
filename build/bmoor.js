@@ -1966,7 +1966,7 @@ bMoor.inject(
 		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
 		 */
 		Compiler.prototype.define = function( name, value ){
-			var quark = bMoor.makeQuark( namespace );
+			var quark = bMoor.makeQuark( name );
 			
 			if ( bMoor.isInjectable(value) ){
 				bMoor.inject( value ).then( function( v ){
