@@ -30,7 +30,7 @@ bMoor.make( 'bmoor.comm.Require',
 					group.run();
 
 					return group.promise.then(function(){
-						return bMoor.translate( arr );
+						return bMoor.translate( arr, root );
 					});
 				},
 				inject : function( arr, root, context ){
@@ -45,11 +45,12 @@ bMoor.make( 'bmoor.comm.Require',
 						arr = arr.slice( 0 );
 						func = arr.pop();
 					}else{
+						console.trace();
 						throw 'inject needs arr to be either Array or Function';
 					}
 
 					return this.translate.call( this, arr, root ).then(function( args ){
-						return bMoor.request( args ).then(function(){
+						return bMoor.request( args, false, root ).then(function(){
 							return func.apply( context, args );
 						});
 					});

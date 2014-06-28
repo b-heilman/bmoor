@@ -33,22 +33,21 @@ module.exports = function(grunt) {
 			evil : true,
 			all : ['src/bmoor/**/*.js']
 		},
-		jasmine : {
-			main : {
-				src : [
-					'src/bMoor.js',
-					'test/config.js',
-					'src/bmoor/build/**.js',
-					'src/bmoor/defer/Stack.js',
-					'src/bmoor/comm/**.js',
-					'src/bmoor/core/**.js',
-					'src/bmoor/error/**.js'
-				],
-				options : {
-					specs : [
-						'test/spec/**/*.js'
-					]
-				}
+		karma: {
+			options: {
+				configFile: 'karma.conf.js'
+			},
+			simple:{
+				singleRun: true,
+				browsers: ['PhantomJS']
+			},
+			windows:{
+				singleRun: true,
+				browsers: ['Chrome','Firefox','Internet Explorer']
+			},
+			mac:{
+				singleRun: true,
+				browsers: ['Chrome','Firefox','Safari']
 			}
 		}
 	});
@@ -57,11 +56,11 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
-	grunt.loadNpmTasks('grunt-contrib-jasmine');
+	grunt.loadNpmTasks('grunt-karma');
 
 	// Default task(s).
-	grunt.registerTask('default', ['jshint:all','concat','uglify','jasmine:main']);
+	grunt.registerTask('default', ['jshint:all','concat','uglify','karma:simple']);
 	grunt.registerTask('hint', ['jshint:all']);
-	grunt.registerTask('test', ['jshint:all', 'jasmine:main']);
+	grunt.registerTask('test', ['karma:simple']);
 	grunt.registerTask('make', ['concat','uglify']);
 };

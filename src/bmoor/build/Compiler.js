@@ -1,3 +1,10 @@
+/**
+Allows for the compilation of object from a definition structure
+
+@class Compiler 
+@namespace bmoor.build
+@constructor
+**/
 bMoor.inject(
 	['bmoor.defer.Basic','@global', 
 	function( Defer, global ){
@@ -10,6 +17,9 @@ bMoor.inject(
 			definitions = {},
 			instance;
 
+		/**
+		 * The internal construction engine for the system.  Generates the class and uses all modules.
+		 **/
 		function make( name, quark, definition ){
 			var i, c,
 				obj,
@@ -73,6 +83,16 @@ bMoor.inject(
 			}
 		}
 
+		/**
+		 * Add a module to the build process
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access addModule
+		 *
+		 * @param {number} rank The time in the build stage to run the module, negative numbers are after build
+		 * @param {string} namePath Optional ability to install the module
+		 * @param {array} injection The injectable element to be used as a module for building
+		 */
 		Compiler.prototype.addModule = function( rank, namePath, injection ){
 			rank = parseInt( rank, 10 );
 
@@ -97,7 +117,19 @@ bMoor.inject(
 			}
 		};
 
-		Compiler.prototype.make = function( name, definition ){
+		/**
+		 * Add a module to the build process
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access make
+		 *
+		 * @param {number} rank The time in the build stage to run the module, negative numbers are after build
+		 * @param {string} namePath Optional ability to install the module
+		 * @param {array} injection The injectable element to be used as a module for building
+		 *
+		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the defined object
+		 */
+		Compiler.prototype.make = function( name, definition, root ){
 			var dis = this,
 				postProcess = function( def ){
 					make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
@@ -122,10 +154,6 @@ bMoor.inject(
 				namespace,
 				quark;
 
-			if ( arguments.length !== 2 ) {
-				throw 'you need to define a name and a definition';
-			}
-			
 			if ( bMoor.isString(name) ){
 				namespace = bMoor.parseNS( name );
 			}else if ( bMoor.isArray(name) ){
@@ -136,55 +164,87 @@ bMoor.inject(
 					'message : you need to define a name and needs to be either a string or an array';
 			}
 
-			quark = bMoor.makeQuark( namespace );
+			quark = bMoor.makeQuark( namespace, root );
+
+			// if this is a simple definition, pass in 
+			if ( !bMoor.isInjectable(definition) ){
+				(function(){
+					var d = definition;
+					definition = [function(){
+						return d;
+					}];
+				}());
+			}
 
 			definitions[ name ] = definition;
 
-			if ( bMoor.isInjectable(definition) ){
-				if ( bMoor.require ){
-					bMoor.require.inject( definition ).then( postProcess );
-				}else{
-					bMoor.inject( definition ).then( postProcess );
-				}
+			if ( bMoor.require ){
+				bMoor.require.inject( definition, root ).then( postProcess );
 			}else{
-				postProcess( definition );
+				bMoor.inject( definition, root ).then( postProcess );
 			}
 
 			return quark.$promise;
 		};
 
-		Compiler.prototype.mock = function( name, mocks ){
+		/**
+		 * Create a mock of a previously defined object
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access mock
+		 *
+		 * @param {string} name The name of the definition to create a mock of
+		 * @param {object} mocks Hash containing the mocks to user to override in the build
+		 * @param {object} root The optional namespace to user, defaults to global
+		 *
+		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
+		 */
+		Compiler.prototype.mock = function( name, mocks, root ){
 			var dis = this,
 				defer = new Defer(),
 				quark = {
 					$promise : defer.promise
 				};
 
-			console.log( 'mocking', definitions[name], mocks );
-			return bMoor.inject( definitions[name], mocks ).then(function( def ){
-				console.log( 'making mock' );
-				return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
-					var $d = new Defer(),
-						promise = $d.promise;
-					console.log( 'postProcess mock' );
-					$d.resolve();
+			if ( !root ){
+				root = global;
+			}
+			
+			return bMoor.inject( definitions[name], bMoor.object.extend({},root,mocks) )
+				.then(function( def ){
+					return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
+						var $d = new Defer(),
+							promise = $d.promise;
+						
+						$d.resolve();
 
-					bMoor.loop( dis.postProcess, function( maker ){
-						promise = promise.then(function(){
-							return bMoor.inject( maker.module, def, defined ); 
+						bMoor.loop( dis.postProcess, function( maker ){
+							promise = promise.then(function(){
+								return bMoor.inject( maker.module, def, defined ); 
+							});
+						});
+
+						return promise.then(function(){
+							defer.resolve( quark );
+
+							return defined;
 						});
 					});
-
-					return promise.then(function(){
-						defer.resolve( quark );
-
-						return defined;
-					});
 				});
-			});
 		};
 
-		Compiler.prototype.define = function( namespace, value ){
+		/**
+		 * Set a value on the namespace, first placing a quark in its place
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access define
+		 *
+		 * @param {string} name The name of the value
+		 * @param {object} root The optional namespace to user, defaults to global
+		 *
+		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
+		 */
+		Compiler.prototype.define = function( name, value ){
 			var quark = bMoor.makeQuark( namespace );
 			
 			if ( bMoor.isInjectable(value) ){

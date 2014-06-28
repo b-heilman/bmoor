@@ -618,7 +618,7 @@
 	 **/
 	function isArrayLike( value ) {
 		// for me, if you have a length, I'm assuming you're array like, might change
-		return value && (typeof value.length === 'number') && value.push;
+		return (value && (typeof value.length === 'number')) == true ;
 	}
 
 	/**
@@ -630,7 +630,7 @@
 	 * @return {boolean}
 	 **/
 	function isArray( value ) {
-		return value && toString(value) === '[object Array]';
+		return (value && (toString(value) === '[object Array]')) == true ;
 	}
 
 	/**
@@ -668,7 +668,7 @@
 		}else if ( isArrayLike(value) ){
 			return value.length === 0;
 		}else{
-			return isUndefined( obj );
+			return isUndefined( value );
 		}
 
 		return true;
@@ -987,7 +987,7 @@
 			throw 'inject needs arr to be either Injectable or Function';
 		}
 
-		return request( translate(arr,root), false ).then(function( args ){
+		return request( translate(arr,root), false, root ).then(function( args ){
 			return func.apply( context, args );
 		});
 	}
@@ -1136,16 +1136,15 @@
 	 * @param {array} arr An array to be searched
 	 * @param {something} searchElement Content for which to be searched
 	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
-	 * @return {integer} number of elements removed
+	 * @return {array} array containing removed element
 	 **/
 	function remove( arr, searchElement, fromIndex ){
 		var pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
-			arr.splice( pos, 1 );
-			return 1;
+			return [ arr.splice(pos,1) ];
 		}else{
-			return 0;
+			return [];
 		}
 	}
 
@@ -1160,14 +1159,19 @@
 	 * @return {integer} number of elements removed
 	 **/
 	function removeAll( arr, searchElement, fromIndex ){
-		var res,
+		var r,
+			res,
 			pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
-			arr.splice( pos, 1 );
-			return removeAll( arr, searchElement, pos ) + 1;
+			res = arr.splice( pos, 1 );
+			r = removeAll( arr, searchElement, pos );
+
+			r.unshift( res );
+
+			return r;
 		} else {
-			return 0;
+			return [];
 		}
 	}
 
