@@ -95,7 +95,7 @@ describe("Testing the builds compiler", function() {
 		space.foobar = 3;
 		space.foo = 1;
 		space.bar = 2;
-		
+
 		compiler.mock( 'Aname', {
 			foobar : 7,
 			bar : 6
@@ -108,5 +108,15 @@ describe("Testing the builds compiler", function() {
 		expect( t.prototype.foo ).toBe( 'foo' );
 		expect( t.prototype.bar ).toBe( true );
 		expect( t.prototype.foobar ).toBe( false );
+	});
+
+	it("should run allow for defining constants", function(){
+		compiler.define( 'Woot', 1, space );
+		compiler.define( 'Foo', {}, space );
+		compiler.define( 'Bar', true, space );
+
+		expect( space.Woot ).toBe( 1 );
+		expect( space.Foo ).toBeDefined();
+		expect( space.Bar ).toBe( true );
 	});
 });

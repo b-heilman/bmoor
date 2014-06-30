@@ -244,8 +244,8 @@ bMoor.inject(
 		 *
 		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
 		 */
-		Compiler.prototype.define = function( name, value ){
-			var quark = bMoor.makeQuark( name );
+		Compiler.prototype.define = function( name, value, root ){
+			var quark = bMoor.makeQuark( name, root );
 			
 			if ( bMoor.isInjectable(value) ){
 				bMoor.inject( value ).then( function( v ){
@@ -254,6 +254,8 @@ bMoor.inject(
 			}else{
 				quark.$ready( value );
 			}
+
+			return quark.$promise;
 		};
 
 		instance = new Compiler();

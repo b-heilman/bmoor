@@ -1,10 +1,12 @@
 bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
 	Compiler.$instance.addModule( 10, 'bmoor.build.ModStatics', 
 		['-statics', function( statics ){
-			var name;
+			var dis = this;
 
-			for( name in statics ){
-				this.prototype[ name ] = statics[ name ];
+			if ( statics ){
+				bMoor.iterate( statics, function( v, name ){
+					dis[ name ] = v;
+				});
 			}
 		}]
 	);
