@@ -1,10 +1,10 @@
-bMoor.make( 'bmoor.error.Basic', 
-	['@undefined',function(undefined){
+bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
+	'use strict';
+
 	return {
 		parent: Error,
 		construct : function ErrorBasic( message, filename, lineNumber ){
 			var stack,
-				pos,
 				err;
 
 			try{

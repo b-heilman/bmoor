@@ -8,29 +8,34 @@ module.exports = function(grunt) {
 				banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
 			},
 			build: {
-				src: 'build/bmoor.js',
+				src: 'build/bMoor.js',
 				dest: 'build/bmoor.min.js'
 			}
 		},
 		concat: {
 			options: {
 				separator: ';',
+				banner:';(function( g ){',
+				footer: '\n}( this ));',
 			},
 			dist: {
 				src: [
-					'src/bMoor.js',
-					'src/bmoor/build/**.js',
-					'src/bmoor/defer/Stack.js',
-					'src/bmoor/comm/**.js',
-					'src/bmoor/core/**.js',
-					'src/bmoor/error/**.js'
+					'src/bmoor/core.js',
+					'src/bmoor/build/*.js',
+					'src/bmoor/defer/*.js',
+					'src/bmoor/flow/*.js',
+					'src/bmoor/core/*.js',
+					'src/bmoor/data/*.js',
+					'src/bmoor/error/*.js'
 				],
 				dest: 'build/bmoor.js',
 			},
 		},
 		jshint: {
-			jshintrc : true,
-			evil : true,
+			options : {
+				jshintrc : true,
+				verbose : true
+			},
 			all : ['src/bmoor/**/*.js']
 		},
 		karma: {
@@ -60,7 +65,7 @@ module.exports = function(grunt) {
 
 	// Default task(s).
 	grunt.registerTask('default', ['jshint:all','concat','uglify','karma:simple']);
-	grunt.registerTask('hint', ['jshint:all']);
+	grunt.registerTask('lint', ['jshint:all']);
 	grunt.registerTask('test', ['karma:simple']);
 	grunt.registerTask('make', ['concat','uglify']);
 };

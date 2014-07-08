@@ -1,12 +1,13 @@
-(function(){
+bMoor.make( 'bmoor.defer.Stack', [function(){
+	'use strict';
 	
-	function stackOn( func, args ){
-		return this.promise.then(function(){
+	function stackOn( stack, func, args ){
+		return stack.promise.then(function(){
 			return func.apply( {}, args || [] );
 		});
 	}
 
-	bMoor.make( 'bmoor.defer.Stack', {
+	return {
 		construct : function(){
 			this.promise = null;
 		},
@@ -31,7 +32,7 @@
 			},
 			add : function( func, args ){
 				if ( this.promise ){
-					this.promise = stackOn.call( this, [func,args] );
+					this.promise = stackOn( this, func, args );
 				}else{
 					this.promise = func.apply( {}, args );
 					if ( !this.promise.then ){
@@ -42,6 +43,5 @@
 				return this.promise;
 			}
 		}
-	});
-
-}());
+	};
+}]);

@@ -1,4 +1,6 @@
 bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	'use strict';
+	
 	Compiler.$instance.addModule( 9, 'bmoor.build.ModDecorate', 
 		['-decorators', function( decorators ){
 			var proto = this.prototype;

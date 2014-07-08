@@ -1,16 +1,18 @@
 bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+	'use strict';
+
 	Compiler.$instance.addModule( 90, 'bmoor.build.ModInherit', 
 		['-id','-namespace','-name', '-mount','-parent', 
 		function( id, namespace, name, mount, parent){
 			var dis = this,
-				t;
+				T;
 
 			if ( parent ){
-				t = function(){ 
+				T = function(){ 
 					this.constructor = dis; // once called, define
 				};
-				t.prototype = parent.prototype;
-				this.prototype = new t();
+				T.prototype = parent.prototype;
+				this.prototype = new T();
 			}
 			
 			this.prototype.$static = dis;	

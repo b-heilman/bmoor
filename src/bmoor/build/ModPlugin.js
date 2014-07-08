@@ -1,4 +1,6 @@
 bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	'use strict';
+
 	Compiler.$instance.addModule( -2, 'bmoor.build.ModPlugin', 
 		['-plugins', function( plugins ){
 			var obj = this;

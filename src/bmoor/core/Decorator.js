@@ -1,10 +1,12 @@
 bMoor.make( 'bmoor.core.Decorator', [function(){
+	'use strict';
+
 	function override( key, el, action ){
 		var 
 			type = typeof(action),
 			old = el[key];
 		
-		if (  type == 'function' ){
+		if (  bMoor.isFunction(type) ){
 			el[key] = function(){
 				var backup = this._wrapped,
 					rtn;
@@ -17,7 +19,7 @@ bMoor.make( 'bmoor.core.Decorator', [function(){
 
 				return rtn;
 			};
-		}else if ( type == 'string' ){
+		}else if ( bMoor.isString(type) ){
 			// for now, I am just going to append the strings with a white space between...
 			el[key] += ' ' + action;
 		}
@@ -26,13 +28,14 @@ bMoor.make( 'bmoor.core.Decorator', [function(){
 	return {
 		construct : function Decorator(){},
 		onMake : function(){
-			var inst = this,
-				t = new inst();
+			var Inst = this,
+				t = new Inst();
 
-			inst.$wrap = function Decoration( obj ){
+			Inst.$wrap = function Decoration( obj ){
 				var key;
 				
 				for( key in t ){
+					// TODO : do I still need this, isn't it an artifact?
 					if ( key === '_construct' ){
 						continue;
 					}else if ( obj[key] ){

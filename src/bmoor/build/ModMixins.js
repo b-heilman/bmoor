@@ -1,4 +1,6 @@
 bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	'use strict';
+
 	Compiler.$instance.addModule( 8, 'bmoor.build.ModMixins', 
 		['-mixins', function( mixins ){
 			if ( mixins ){

@@ -1,4 +1,6 @@
 bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+	'use strict';
+
 	Compiler.$instance.addModule( 1, 'bmoor.build.ModFinalize', 
 		['-onMake', '-parent', function( onMake, parent ){
 			if ( onMake ){

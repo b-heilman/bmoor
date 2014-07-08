@@ -10,13 +10,13 @@ module.exports = function(config) {
         // testing framework to use (jasmine/mocha/qunit/...)
         frameworks: ['jasmine'],
         files: [
-			'src/bMoor.js',
-			'test/config.js',
-			'src/bmoor/build/**.js',
-			'src/bmoor/defer/Stack.js',
-			'src/bmoor/comm/**.js',
-			'src/bmoor/core/**.js',
-			'src/bmoor/error/**.js',
+			'src/bmoor/core.js',
+            'src/bmoor/build/*.js',
+            'src/bmoor/defer/*.js',
+            'src/bmoor/flow/*.js',
+            'src/bmoor/core/*.js',
+            'src/bmoor/data/*.js',
+            'src/bmoor/error/*.js',
 			'test/spec/**/*.js'
 		],
 

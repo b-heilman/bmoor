@@ -8,6 +8,8 @@ Allows for the compilation of object from a definition structure
 bMoor.inject(
 	['bmoor.defer.Basic','@global', 
 	function( Defer, global ){
+		'use strict';
+
 		var eCompiler = bMoor.makeQuark('bmoor.build.Compiler'),
 			Compiler = function(){
 				this.preProcess = [];
@@ -20,16 +22,12 @@ bMoor.inject(
 		/**
 		 * The internal construction engine for the system.  Generates the class and uses all modules.
 		 **/
-		function make( name, quark, definition ){
-			var i, c,
-				obj,
+		Compiler.make = function( name, quark, definition ){
+			var obj,
 				id = name.name,
 				namespace = name.namespace,
-				dis = this,
-				stillDoing = true,
 				$d = new Defer(),
-				promise = $d.promise,
-				maker;
+				promise = $d.promise;
 
 			// a hash has been passed in to be processed
 			if ( bMoor.isObject(definition) ){
@@ -81,7 +79,7 @@ bMoor.inject(
 			}else{
 				throw 'Constructor has no idea how to handle as definition of ' + definition;
 			}
-		}
+		};
 
 		/**
 		 * Add a module to the build process
@@ -132,7 +130,7 @@ bMoor.inject(
 		Compiler.prototype.make = function( name, definition, root ){
 			var dis = this,
 				postProcess = function( def ){
-					make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
+					Compiler.make.call( dis, {name:name,namespace:namespace}, quark, def ).then(function( defined ){
 						var $d = new Defer(),
 							promise = $d.promise;
 
@@ -212,7 +210,7 @@ bMoor.inject(
 			
 			return bMoor.inject( definitions[name], bMoor.object.extend({},root,mocks) )
 				.then(function( def ){
-					return make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
+					return Compiler.make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
 						var $d = new Defer(),
 							promise = $d.promise;
 						
