@@ -1,7 +1,12 @@
 {
   "name": "bmoor",
   "version": "0.0.1",
-  "repository": {},
+  "author": "Brian Heilman <das.ist.junk@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/b-heilman/bmoor.git"
+  },
+  "main": "build/bmoor.js",
   "devDependencies": {
     "jshint": "*",
     "grunt": "*",
