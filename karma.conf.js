@@ -17,7 +17,10 @@ module.exports = function(config) {
             'src/bmoor/core/*.js',
             'src/bmoor/data/*.js',
             'src/bmoor/error/*.js',
+            'src/bmock/**/*.js',
 			'test/spec/**/*.js'
+            //'test/spec/data/MapObserver.js',
+            //'test/spec/data/CollectionObserver.js'
 		],
 
         // preprocessors: {

@@ -27,9 +27,6 @@ describe("Testing object functions", function() {
 		t = new Foo();
 
 		v = bMoor.object.mask( t );
-
-		console.log( t );
-		console.log( v );
 	});
 
 
@@ -80,5 +77,48 @@ describe("Testing object functions", function() {
 
 		expect( t.eins, 1 );
 		expect( t.foo.bar, 'woot' );
+	});
+
+	it( 'should allow for data to be overrided', function(){
+		var t = {
+			eins : 1,
+			zwei : {
+				foo : 1,
+				bar : 2
+			}
+		}
+
+		bMoor.object.override( t, {
+			drei : 3
+		});
+
+		expect( t.eins ).toBeUndefined();
+		expect( t.zwei ).toBeUndefined();
+		expect( t.drei ).toBe( 3 );
+	});
+
+	it( 'should allow for data to be merged', function(){
+		var t = {
+			eins : 1,
+			zwei : {
+				foo : 1,
+				bar : 2
+			},
+			drei : 3
+		}
+
+		bMoor.object.merge( t, {
+			eins : 2,
+			zwei : {
+				foo : 2
+			},
+			fier : 4
+		});
+
+		expect( t.eins ).toBe( 2 );
+		expect( t.zwei ).toBeDefined();
+		expect( t.zwei.foo ).toBe( 2 );
+		expect( t.drei ).toBe( 3 );
+		expect( t.fier ).toBe( 4 );
 	});
 });

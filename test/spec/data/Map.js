@@ -1,31 +1,41 @@
-describe('Testing bmoor.core.Map', function(){
+describe('Testing bmoor.data.Map', function(){
 	var t,
-		result;
-	/*
-	bMoor.make('test.Map', ['bmoor.core.Map', function( Map ){
+		result,
+		g = {},
+		Map = bMoor.get('bmoor.data.Map');
+
+	bMoor.make('test.Map', [function(){
 		return {
 			parent : Map,
-			construct : function( content ){
+			construct : function TestMap( content ){
 				Map.call( this, content );
-				this.woot = 'wootwoot';
-				this.name = this.firstName + ' ' + this.lastName;
 			},
 			properties : {
 				hello : function( io ){
 					result = io;
+				},
+				inflate : function( io ){
+					io.woot = 'wootwoot';
+					io.name = io.firstName + ' ' + io.lastName;
+
+					return io;
 				}
 			}
 		};
-	}]);
+	}], g);
 
 	beforeEach(function(){
-		t = new test.Map({
+		t = new g.test.Map({
 			firstName : 'John',
 			lastName : 'Doey',
 			eins : 1,
 			zwei : 2,
 			drei : 3
 		});
+	});
+
+	it('should be an object', function(){
+		expect( bMoor.isObject(t) ).toBe( true );
 	});
 
 	it('should run the constructor', function(){
@@ -44,5 +54,4 @@ describe('Testing bmoor.core.Map', function(){
 		t.hello( 'woot' );
 		expect( result ).toBe( 'woot' );
 	});
-	*/
 });

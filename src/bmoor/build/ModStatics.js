@@ -1,7 +1,7 @@
-bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( 10, 'bmoor.build.ModStatics', 
+	compiler.addModule( 10, 'bmoor.build.ModStatics', 
 		['-statics', function( statics ){
 			var dis = this;
 

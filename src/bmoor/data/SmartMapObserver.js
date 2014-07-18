@@ -35,12 +35,12 @@ bMoor.make('bmoor.data.SmartMapObserver',
 
 					MapObserver.prototype.observe.call( this, map );
 
-					map.$set = function(){
-						mapUpdate.apply( dis, arguments );
+					map.$set = function( update, value ){
+						mapUpdate( dis, update, value );
 					};
 
-					map.$delete = function(){
-						mapDelete.apply( dis, arguments );
+					map.$delete = function( deletion ){
+						mapDelete( dis, deletion );
 					};
 				},
 				check : function(){

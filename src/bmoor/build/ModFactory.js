@@ -1,7 +1,7 @@
-bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( 5, 'bmoor.build.ModFactory', 
+	compiler.addModule( 5, 'bmoor.build.ModFactory', 
 		['-factory', function( factories ){
 			var obj = this;
 

@@ -2,15 +2,15 @@
 
 describe("defer.Basic", function() {
 	it("Should allow for a proper default chain", function() {
- 		var 
+ 		var Basic = bMoor.get( 'bmoor.defer.Basic' ),
  			arr = [],
-			m = new bmoor.defer.Basic(function(){
+			m = new Basic(function(){
 				arr.push( 'some exception 1' );
 			}),
-			m2 = new bmoor.defer.Basic(function(){
+			m2 = new Basic(function(){
 				arr.push( 'some exception 2' );
 			}),
-			m3 = new bmoor.defer.Basic(function(){
+			m3 = new Basic(function(){
 				arr.push( 'some exception 3' );
 			});
 

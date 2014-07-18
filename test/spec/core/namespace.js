@@ -1,4 +1,5 @@
 describe("Testing namespace functions", function() {
+	var _root = bMoor._root;
 
 	// parseNS
 	it("should parse namespaces correctly", function(){
@@ -33,8 +34,8 @@ describe("Testing namespace functions", function() {
 		bMoor.set( 'foo.bar', {value:true} ,root );
 
 
-		expect( foo.bar.eins ).toBe( 1 );
-		expect( dis.dat.derp ).toBe( 'yay' );
+		expect( _root.foo.bar.eins ).toBe( 1 );
+		expect( _root.dis.dat.derp ).toBe( 'yay' );
 		expect( root.foo.bar.value ).toBe( true );
 
 		expect( bMoor.exists('derp2') ).toBe( undefined );

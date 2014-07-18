@@ -1,3 +1,7 @@
+- A system that lets you register for call backs, but doesn't fire right away
+	- all values are queued up for 30 ms, and it only fires once every 30 ms at most
+	- use vGraph image processing as example
+
 - managing quarks
 	- see what are being waited on
 	- allow the fetching of any missing quarks
@@ -15,21 +19,5 @@
 		* failure - one failed
 	- improved interface
 		* watch( success, error ) : same as then, but doesn't change the output, returns the same promise
-
-- could move some utils out to a lib directory
-	- env  ( add to bmoor.Env )
-		- isIE
-	- object ( add to bmoor.Object )
-		- merge
-		- diff
-	- url ( add to bmoor.Url )
-		- resolve
-	- string ( add to bmoor.String )
-		- indexOf
-	- array ( add to bmoor.Array )
- 		- remove
-		- removeAll
-		- filter
-		- diff (formerly compare)
 
 - Error handling

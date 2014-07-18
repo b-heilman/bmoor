@@ -6,8 +6,8 @@ Allows for the compilation of object from a definition structure
 @constructor
 **/
 bMoor.inject(
-	['bmoor.defer.Basic','@global', 
-	function( Defer, global ){
+	['bmoor.defer.Basic', 
+	function( Defer ){
 		'use strict';
 
 		var eCompiler = bMoor.makeQuark('bmoor.build.Compiler'),
@@ -138,7 +138,15 @@ bMoor.inject(
 
 						bMoor.loop( dis.postProcess, function( maker ){
 							promise = promise.then(function(){
-								return bMoor.inject( maker.module, def, defined ); 
+								var t = bMoor.inject( maker.module, def, defined );
+
+								t.then(function( res ){
+									if ( res ){
+										defined = res;
+									}
+								}); 
+
+								return t;
 							});
 						});
 						
@@ -161,7 +169,7 @@ bMoor.inject(
 				throw JSON.stringify(name) + ' > ' + JSON.stringify(definition) + ' > ' +
 					'message : you need to define a name and needs to be either a string or an array';
 			}
-
+			
 			quark = bMoor.makeQuark( namespace, root );
 
 			// if this is a simple definition, pass in 
@@ -193,7 +201,7 @@ bMoor.inject(
 		 *
 		 * @param {string} name The name of the definition to create a mock of
 		 * @param {object} mocks Hash containing the mocks to user to override in the build
-		 * @param {object} root The optional namespace to user, defaults to global
+		 * @param {object} root The optional namespace to user, defaults to bMoor._root
 		 *
 		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
 		 */
@@ -205,10 +213,10 @@ bMoor.inject(
 				};
 
 			if ( !root ){
-				root = global;
+				root = bMoor._root;
 			}
 			
-			return bMoor.inject( definitions[name], bMoor.object.extend({},root,mocks) )
+			return bMoor.inject( definitions[name], bMoor.object.extend({},root,mocks), {}, true )
 				.then(function( def ){
 					return Compiler.make.call( dis, {name:'mock',namespace:['mock']}, quark, def ).then(function( defined ){
 						var $d = new Defer(),
@@ -257,22 +265,20 @@ bMoor.inject(
 		};
 
 		instance = new Compiler();
-		Compiler.$instance = instance;
-		
-		bMoor.install( 'bmoor.build.$compiler', instance );
+		instance.$constructor = Compiler;
 
-		bMoor.plugin( 'make', function( namespace, definition ){
-			return instance.make( namespace, definition );
+		bMoor.plugin( 'make', function( namespace, definition, root ){
+			return instance.make( namespace, definition, root );
 		});
 		
-		bMoor.plugin( 'mock', function( namespace, mocks ){
-			return instance.mock( namespace, bMoor.map(mocks) );
+		bMoor.plugin( 'mock', function( namespace, mocks, root ){
+			return instance.mock( namespace, bMoor.map(mocks), root );
 		});
 
-		bMoor.plugin( 'define', function( namespace, value ){
-			return instance.define( namespace, value );
+		bMoor.plugin( 'define', function( namespace, value, root ){
+			return instance.define( namespace, value, root );
 		});
 
-		eCompiler.$ready( Compiler );
+		eCompiler.$ready( instance );
 	}
 ]);

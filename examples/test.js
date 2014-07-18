@@ -1,5 +1,6 @@
-var bMoor = this.bMoor ? this.bMoor : global.bMoor;
+var bMoor = this.bMoor ? this.bMoor : require('../build/bmoor.js');
 
+console.log( bMoor.toString() );
 // Basic declaration	
 console.log( 'foo.Hello' );
 bMoor.make( 'foo.Hello', {
@@ -11,13 +12,12 @@ bMoor.make( 'foo.Hello', {
 }).then(function( obj ){
 	( new obj() ).hello();
 });
+console.debug( '--Hello-1', bMoor._root.foo.Hello );
 
 // Define a singleton
 console.log( 'foo.Woot' );
 bMoor.make( 'foo.Woot',{
-	singleton : {
-		woot : [ 'the singleton' ]
-	},
+	singleton : true,
 	construct : function( woot ){
 		this.woot = woot || 'hello world';
 	},
@@ -31,8 +31,8 @@ bMoor.make( 'foo.Woot',{
 	}
 });
 
-foo.Woot.$woot.hello();
-foo.Woot.$woot.say( 'hello to my little friend' );
+bMoor._root.foo.Woot.hello();
+bMoor._root.foo.Woot.say( 'hello to my little friend' );
 
 console.log( 'foo.Dog' );
 // Define a factory
@@ -54,7 +54,7 @@ bMoor.make('foo.Dog', {
 	}
 });
 
-obj = foo.Dog.$make('woof');
+obj = bMoor._root.foo.Dog.$make('woof');
 obj.speak();
 
 // Injecion comes standard
@@ -143,11 +143,12 @@ bMoor.define( 'foo.Mixin2', {
 });
 
 console.log( 'mocking...' );
-console.log( foo.Woot );
-console.log( foo.Mixin2 );
+console.log( bMoor._root.foo.Woot );
+console.log( bMoor._root.foo.Mixin2 );
+console.debug( '--Hello-9', bMoor._root.foo.Hello );
 bMoor.mock('foo.Hello2', {
-	'foo.Hello' : foo.Woot,
-	'foo.Mixin1' : foo.Mixin2
+	'foo.Hello' : bMoor._root.foo.Woot.$constructor,
+	'foo.Mixin1' : bMoor._root.foo.Mixin2
 }).then(function( fake ){
 	var t = new fake('this is now fake');
 

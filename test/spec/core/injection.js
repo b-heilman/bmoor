@@ -1,5 +1,6 @@
 describe("Testing injection functionality", function() {
-	
+	var Promise = bMoor.get('bmoor.defer.Promise');
+
 	// makeQuark
 	it('should allow for the creation of quarks', function(){
 		var root = {};
@@ -29,7 +30,7 @@ describe("Testing injection functionality", function() {
 		};
 
 		expect(
-			bMoor.ensure('foo.bar',root) instanceof bmoor.defer.Promise
+			bMoor.ensure('foo.bar',root) instanceof Promise
 		).toBe( true );
 	});
 
@@ -82,8 +83,8 @@ describe("Testing injection functionality", function() {
 		expect( res[1] ).not.toBeDefined();
 		expect( res[2] ).not.toBeDefined();
 		expect( res[3] ).toBe( 2 );
-		expect( res[4] instanceof bmoor.defer.Promise ).toBe( true );
-		expect( res[5] instanceof bmoor.defer.Promise ).toBe( true );
+		expect( res[4] instanceof Promise ).toBe( true );
+		expect( res[5] instanceof Promise ).toBe( true );
 	});
 
 	// inject

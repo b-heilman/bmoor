@@ -1,17 +1,26 @@
-bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( 90, 'bmoor.build.ModInherit', 
+	compiler.addModule( 90, 'bmoor.build.ModInherit', 
 		['-id','-namespace','-name', '-mount','-parent', 
 		function( id, namespace, name, mount, parent){
 			var dis = this,
+				proto,
 				T;
 
 			if ( parent ){
+				if ( bMoor.isFunction(parent) ){
+					// we assume this a constructor function
+					proto = parent.prototype;
+				}else{
+					// we want to inherit directly from this object
+					proto = parent;
+				}
+
 				T = function(){ 
 					this.constructor = dis; // once called, define
 				};
-				T.prototype = parent.prototype;
+				T.prototype = proto;
 				this.prototype = new T();
 			}
 			

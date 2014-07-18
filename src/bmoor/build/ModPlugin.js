@@ -1,7 +1,7 @@
-bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( -2, 'bmoor.build.ModPlugin', 
+	compiler.addModule( -2, 'bmoor.build.ModPlugin', 
 		['-plugins', function( plugins ){
 			var obj = this;
 
@@ -12,7 +12,7 @@ bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
 					if ( !request.instance ){
 						o = obj;
 					}else if ( bMoor.isString(request.instance) ){
-						o = obj[ '$' + request.instance ]; // link to singletons
+						o = obj[ '$' + request.instance ]; // link to instances
 					}else{
 						o = bMoor.instantiate( obj, request.instance );
 					} 
