@@ -1,7 +1,7 @@
-bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( 10, 'bmoor.build.ModProperties', 
+	compiler.addModule( 10, 'bmoor.build.ModProperties', 
 		['-properties', function( properties ){
 			var name;
 

@@ -1,14 +1,16 @@
-bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( -1, 'bmoor.build.ModSingleton', 
+	compiler.addModule( -1, 'bmoor.build.ModSingleton', 
 		['-singleton',function( singleton ){
-			var obj = this;
+			var t,
+				obj = this;
 
 			if ( singleton ){
-				bMoor.iterate( singleton, function( args /* arguments to construct with */, name /* string */ ){
-					obj[ '$'+name ] = bMoor.instantiate( obj, args );
-				});
+				t = bMoor.instantiate( obj, [] );
+				t.$constructor = obj;
+
+				return t;
 			}
 		}]
 	);

@@ -15,8 +15,8 @@ module.exports = function(grunt) {
 		concat: {
 			options: {
 				separator: ';',
-				banner:';(function( g ){',
-				footer: '\n}( this ));',
+				banner:';(function(){',
+				footer: '\n}());',
 			},
 			dist: {
 				src: [

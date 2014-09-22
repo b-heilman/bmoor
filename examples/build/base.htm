@@ -53,16 +53,7 @@
 				construct : function FooBar2(){
 
 				},
-				singleton : {
-					instance : []
-				},
-				factory : {
-					'make' : function(){
-						var obj = this;
-
-						return new obj();
-					}
-				},
+				singleton : true,
 				properties : {
 					dos : '--2--'
 				}
@@ -76,6 +67,34 @@
 		t.unos();
 
 		console.log( obj.$instance.dos );
+	});
+
+	bMoor.make('foo.Maker', 
+		['foo.Bar',function( Bar ){
+			return {
+				parent : Bar,
+				construct : function Maker(){
+				},
+				factory : {
+					'make' : function(){
+						var obj = this;
+
+						return new obj();
+					}
+				},
+				properties : {
+					dos : '--Maker--'
+				}
+			};
+		}]
+	).then(function(obj){ 
+		var t = new obj();
+
+		console.log( 'foo.Maker', t );
+
+		t.unos();
+
+		console.log( obj.$make().dos );
 	});
 
 	bMoor.make( 'Decorator1', 
@@ -106,10 +125,10 @@
 		}]
 	);
 
-	console.log( 'foo.Bar2', foo.Bar2, foo.Bar2.$instance );
+	console.log( 'foo.Bar2', foo.Bar2 );
 
-	foo.Bar2.$instance.unos('3');
-	foo.Bar2.$make();
+	foo.Bar2.unos('3');
+	foo.Maker.$make();
 
 	var t = new foo.Bar3();
 	t.unos('hey now');

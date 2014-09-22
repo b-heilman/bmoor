@@ -1,10 +1,11 @@
 describe("Testing the builds compiler", function() {
-	var compiler,
+	var Compiler = bMoor.get('bmoor.build.Compiler').$constructor,
+		compiler,
 		log,
 		space = {};
 
 	it("should allow the declaration of a Compiler", function(){
-		compiler = new bmoor.build.Compiler();
+		compiler = new Compiler();
 
 		expect( compiler ).toBeDefined();
 	});

@@ -1,7 +1,7 @@
-bMoor.inject(['bmoor.build.Compiler',function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( 0, 'bmoor.build.ModRegister', 
+	compiler.addModule( 0, 'bmoor.build.ModRegister', 
 		['-id', function( id ){
 			bMoor.register( id, this );
 		}]

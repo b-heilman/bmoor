@@ -1,7 +1,7 @@
-bMoor.inject(['bmoor.build.Compiler', function( Compiler ){
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
-	Compiler.$instance.addModule( 8, 'bmoor.build.ModMixins', 
+	compiler.addModule( 11, 'bmoor.build.ModMixins', 
 		['-mixins', function( mixins ){
 			if ( mixins ){
 				if ( !bMoor.isArray( mixins ) ){
