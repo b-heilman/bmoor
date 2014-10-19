@@ -1,4 +1,6 @@
-;(function(){var bMoor = {};
+;(function(){
+/** bmoor v0.0.3 **/
+var bMoor = {};
 
 (function( g ){
 	'use strict';
@@ -871,7 +873,8 @@
 	}
 
 	/**
-	 * Call a function against all own properties of an object, skipping specific framework properties.  
+	 * Call a function against all own properties of an object, skipping specific framework properties.
+	 * In this framework, $ implies a system function, _ implies private, so skip _
 	 *
 	 * @function iterate
 	 * @namespace bMoor
@@ -887,7 +890,7 @@
 		}
 
 		for( key in obj ){ 
-			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '$' && key.charAt(0) !== '_' ){
+			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' ){
 				fn.call( scope, obj[key], key, obj );
 			}
 		}
@@ -1856,7 +1859,8 @@
 			'resolve'  : urlResolve
 		}
 	});
-}( this ));;/**
+}( this ));
+/**
 Allows for the compilation of object from a definition structure
 
 @class Compiler 
@@ -1864,7 +1868,7 @@ Allows for the compilation of object from a definition structure
 @constructor
 **/
 bMoor.inject(
-	['bmoor.defer.Basic', 
+	['bmoor.defer.Basic',
 	function( Defer ){
 		'use strict';
 
@@ -1897,7 +1901,10 @@ bMoor.inject(
 					obj = definition.construct;
 				}else{
 					// throw namespace + 'needs a constructor, event if it just calls the parent it should be named'
-					obj = function GenericConstruct(){};
+					obj = function GenericConstruct(){
+						console.log('generic');
+					};
+					obj.$generic = true;
 				}
 
 				// defines a class
@@ -2139,9 +2146,32 @@ bMoor.inject(
 
 		eCompiler.$ready( instance );
 	}
-]);;bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+]);
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 	
+	function override( key, el, action ){
+		var old = el[key];
+		
+		if (  bMoor.isFunction(action) ){
+			el[key] = function(){
+				var backup = this._wrapped,
+					rtn;
+
+				this.$wrapped = old;
+
+				rtn = action.apply( this, arguments );
+
+				this.$wrapped = backup;
+
+				return rtn;
+			};
+		}else if ( bMoor.isString(action) ){
+			// for now, I am just going to append the strings with a white space between...
+			el[key] += ' ' + action;
+		}
+	}
+
 	compiler.addModule( 9, 'bmoor.build.ModDecorate', 
 		['-decorators', function( decorators ){
 			var proto = this.prototype;
@@ -2151,15 +2181,31 @@ bMoor.inject(
 					throw 'the decoration list must be an array';
 				}
 				
-				bMoor.loop( decorators, function( dec ){
-					if ( dec.$wrap ){
-						dec.$wrap( proto );
+				bMoor.loop( decorators, function( Dec ){
+					var t,
+						key;
+
+					if ( bMoor.isFunction(Dec) ){
+						t = new Dec( proto );
+					}else{
+						t = Dec;
+					}
+
+					for( key in t ){
+						// TODO : do I still need this, isn't it an artifact?
+						if ( proto[key] ){
+							// the default override is post
+							override( key, proto, t[key] );
+						}else{
+							proto[key] = t[key];
+						}
 					}
 				});
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler', function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
 	compiler.addModule( 5, 'bmoor.build.ModFactory', 
@@ -2175,7 +2221,8 @@ bMoor.inject(
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler', function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
 	compiler.addModule( 1, 'bmoor.build.ModFinalize', 
@@ -2187,17 +2234,20 @@ bMoor.inject(
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
 	compiler.addModule( 90, 'bmoor.build.ModInherit', 
-		['-id','-namespace','-name', '-mount','-parent', 
-		function( id, namespace, name, mount, parent){
-			var dis = this,
+		['-id','-namespace','-name', '-mount','-parent',
+		function( id, namespace, name, mount, parent ){
+			var construct,
 				proto,
 				T;
 
 			if ( parent ){
+				construct = this;
+
 				if ( bMoor.isFunction(parent) ){
 					// we assume this a constructor function
 					proto = parent.prototype;
@@ -2207,20 +2257,23 @@ bMoor.inject(
 				}
 
 				T = function(){ 
-					this.constructor = dis; // once called, define
+					this.constructor = construct; // once called, define
 				};
 				T.prototype = proto;
 				this.prototype = new T();
+
+				delete this.$generic;
 			}
 			
-			this.prototype.$static = dis;	
+			this.prototype.$static = this;	
 			this.prototype.__class = id;
 			this.prototype.__namespace = namespace;
 			this.prototype.__name = name;
 			this.prototype.__mount = mount;
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
 	compiler.addModule( -1, 'bmoor.build.ModInstances', 
@@ -2234,7 +2287,8 @@ bMoor.inject(
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler', function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
 	compiler.addModule( 11, 'bmoor.build.ModMixins', 
@@ -2252,7 +2306,8 @@ bMoor.inject(
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler', function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
 	compiler.addModule( -2, 'bmoor.build.ModPlugin', 
@@ -2284,7 +2339,8 @@ bMoor.inject(
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
 	compiler.addModule( 10, 'bmoor.build.ModProperties', 
@@ -2296,7 +2352,8 @@ bMoor.inject(
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
 	compiler.addModule( 0, 'bmoor.build.ModRegister', 
@@ -2304,12 +2361,14 @@ bMoor.inject(
 			bMoor.register( id, this );
 		}]
 	);
-}]);;(function(){
+}]);
+(function(){
 	'use strict';
 
 	// TODO : this is no longer needed
 }());
-;bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
 	compiler.addModule( -1, 'bmoor.build.ModSingleton', 
@@ -2325,7 +2384,8 @@ bMoor.inject(
 			}
 		}]
 	);
-}]);;bMoor.inject(['bmoor.build.Compiler', function( compiler ){
+}]);
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
 	compiler.addModule( 10, 'bmoor.build.ModStatics', 
@@ -2340,7 +2400,8 @@ bMoor.inject(
 		}]
 	);
 }]);
-;bMoor.inject(['bmoor.build.Compiler', '-bmoor.comm.Http', 'bmoor.defer.Basic', 'bmoor.flow.Interval',
+
+bMoor.inject(['bmoor.build.Compiler', '-bmoor.comm.Http', 'bmoor.defer.Basic', 'bmoor.flow.Interval',
 	function( compiler, httpConnect, Defer, Interval ){
 		'use strict';
 
@@ -2598,7 +2659,8 @@ bMoor.inject(
 	}]
 );
 
-;bMoor.make( 'bmoor.defer.Stack', [function(){
+
+bMoor.make( 'bmoor.defer.Stack', [function(){
 	'use strict';
 	
 	function stackOn( stack, func, args ){
@@ -2644,7 +2706,8 @@ bMoor.inject(
 			}
 		}
 	};
-}]);;bMoor.make('bmoor.flow.Batch', 
+}]);
+bMoor.make('bmoor.flow.Batch', 
 	[ 'bmoor.flow.Timeout',
 	function( Timeout ){
 		'use strict';
@@ -2693,7 +2756,8 @@ bMoor.inject(
 			}
 		};
 	}]
-);;bMoor.make( 'bmoor.flow.Interval', 
+);
+bMoor.make( 'bmoor.flow.Interval', 
 	[
 	function(){
 		'use strict';
@@ -2751,7 +2815,8 @@ bMoor.inject(
 		};
 	}]
 );
-;bMoor.make('bmoor.flow.Regulator', 
+
+bMoor.make('bmoor.flow.Regulator', 
 	[ 'bmoor.flow.Timeout',
 	function( Timeout ){
 		'use strict';
@@ -2802,7 +2867,8 @@ bMoor.inject(
 			}
 		};
 	}]
-);;bMoor.make( 'bmoor.flow.Timeout', 
+);
+bMoor.make( 'bmoor.flow.Timeout', 
 	[
 	function(){
 		'use strict';
@@ -2821,57 +2887,8 @@ bMoor.inject(
 			singleton : true
 		};
 	}]
-);;bMoor.make( 'bmoor.core.Decorator', [function(){
-	'use strict';
-
-	function override( key, el, action ){
-		var 
-			type = typeof(action),
-			old = el[key];
-		
-		if (  bMoor.isFunction(type) ){
-			el[key] = function(){
-				var backup = this._wrapped,
-					rtn;
-
-				this.$wrapped = old;
-
-				rtn = action.apply( this, arguments );
-
-				this.$wrapped = backup;
-
-				return rtn;
-			};
-		}else if ( bMoor.isString(type) ){
-			// for now, I am just going to append the strings with a white space between...
-			el[key] += ' ' + action;
-		}
-	}
-
-	return {
-		construct : function Decorator(){},
-		onMake : function(){
-			var Inst = this,
-				t = new Inst();
-
-			Inst.$wrap = function Decoration( obj ){
-				var key;
-				
-				for( key in t ){
-					// TODO : do I still need this, isn't it an artifact?
-					if ( key === '_construct' ){
-						continue;
-					}else if ( obj[key] ){
-						// the default override is post
-						override( key, obj, t[key] );
-					}else{
-						obj[key] = t[key];
-					}
-				}
-			};
-		}
-	};
-}]);;bMoor.make( 'bmoor.data.Collection', 
+);
+bMoor.make( 'bmoor.data.Collection', 
 	['bmoor.data.Model', 
 	function( Model ){
 		'use strict';
@@ -2900,7 +2917,8 @@ bMoor.inject(
 			}
 		};
 	}]
-);;bMoor.make('bmoor.data.CollectionObserver',
+);
+bMoor.make('bmoor.data.CollectionObserver',
 	['bmoor.data.MapObserver',
 	function( MapObserver ){
 		'use strict';
@@ -3020,7 +3038,8 @@ bMoor.inject(
 	}]
 );
 
-;bMoor.make( 'bmoor.data.Map', 
+
+bMoor.make( 'bmoor.data.Map', 
 	['bmoor.data.Model', 
 	function( Model ){
 		'use strict';
@@ -3036,7 +3055,8 @@ bMoor.inject(
 	}]
 );
 
-;bMoor.make( 'bmoor.data.MapObserver', 
+
+bMoor.make( 'bmoor.data.MapObserver', 
 	['bmoor.flow.Interval',
 	function( interval ){
 		'use strict';
@@ -3139,7 +3159,8 @@ bMoor.inject(
 		};
 	}]
 );
-;bMoor.define( 'bmoor.data.Model', 
+
+bMoor.define( 'bmoor.data.Model', 
 	[
 	function(){
 		'use strict';
@@ -3185,7 +3206,8 @@ bMoor.inject(
 	}]
 );
 
-;bMoor.make('bmoor.data.SmartMapObserver', 
+
+bMoor.make('bmoor.data.SmartMapObserver', 
 	['@undefined', 'bmoor.data.MapObserver', function( undefined, MapObserver ){
 		'use strict';
 
@@ -3254,7 +3276,8 @@ bMoor.inject(
 	}]
 );
 
-;bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
+
+bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
 	'use strict';
 
 	return {

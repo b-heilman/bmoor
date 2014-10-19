@@ -6,7 +6,7 @@ Allows for the compilation of object from a definition structure
 @constructor
 **/
 bMoor.inject(
-	['bmoor.defer.Basic', 
+	['bmoor.defer.Basic',
 	function( Defer ){
 		'use strict';
 
@@ -39,7 +39,10 @@ bMoor.inject(
 					obj = definition.construct;
 				}else{
 					// throw namespace + 'needs a constructor, event if it just calls the parent it should be named'
-					obj = function GenericConstruct(){};
+					obj = function GenericConstruct(){
+						console.log('generic');
+					};
+					obj.$generic = true;
 				}
 
 				// defines a class

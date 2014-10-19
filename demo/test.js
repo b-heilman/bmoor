@@ -44,7 +44,7 @@ bMoor.make('foo.Dog', {
 			return new obj( words );
 		}
 	},
-	construct : function( whatToSay ){
+	construct : function Dog( whatToSay ){
 		this.something = whatToSay;
 	},
 	properties : {
@@ -61,36 +61,37 @@ obj.speak();
 
 // Decoration
 // wrappers around your functionality... they stack up
-console.log( 'foo.Decorator1' );
-bMoor.make( 'foo.Decorator1', ['bmoor.core.Decorator', function( Decorator ){
+console.log( '--foo.Decorator1--' );
+bMoor.make( 'foo.Decorator1', [, function(){
 	return {
-		parent : Decorator,
 		properties : {
 			speak : function(){
 				this.$wrapped();
-				console.log('now roll over');
+				console.log('--decorator called--');
 			}
 		}
 	};
 }]);
 
-console.log( 'foo.Pheonix' );
-bMoor.make( 'foo.Pheonix', ['foo.Dog', function( Dog ){
+console.log( '--foo.Pheonix--' );
+bMoor.make( 'foo.Pheonix', 
+	['foo.Dog', 'foo.Decorator1', function ( Dog, TheD ){
 	return {
 		parent : Dog,
-		construct : function( whatToSay ){
+		construct : function Pheonix( whatToSay ){
 			Dog.call( this, whatToSay );
 		},
 		decorators : [
-			'foo.Decorator1'
+			TheD
 		]
 	};
 }]).then(function( obj ){
+	console.log( '===decorator===', obj.prototype );
 	( new obj('woofie woof') ).speak();
 });
 
 // Requiring
-console.log( 'foo.Body' );
+console.log( '===foo.Body===' );
 bMoor.make( 'foo.Body', [
 	'>jQuery>//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js',
 	function( $ ){

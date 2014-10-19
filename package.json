@@ -1,27 +1,35 @@
 {
   "name": "bmoor",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Brian Heilman <das.ist.junk@gmail.com>",
   "repository": {
     "type": "git",
     "url": "git://github.com/b-heilman/bmoor.git"
   },
-  "main": "build/bmoor.js",
+  "main": "dist/bmoor.js",
   "devDependencies": {
+    "express": "*",
+    "gulp": "*",
+    "gulp-clean": "*",
+    "gulp-concat": "*",
+    "gulp-jshint": "*",
+    "gulp-karma": "*",
+    "gulp-rename": "*",
+    "gulp-serve": "*",
+    "gulp-uglifyjs": "*",
+    "gulp-watch": "*",
+    "gulp-yuidoc": "*",
+    "gulp-header": "*",
+    "gulp-footer": "*",
     "jshint": "*",
-    "grunt": "*",
-    "grunt-contrib-jshint": "*",
-    "grunt-contrib-uglify": "*",
-    "grunt-contrib-concat": "*",
-    "npm": "*",
-    "grunt-contrib-jasmine": "*",
+    "jshint-stylish": "*",
     "karma": "*",
     "karma-chrome-launcher": "*",
-    "karma-jasmine": "*",
-    "grunt-karma": "*",
-    "karma-phantomjs-launcher": "*",
     "karma-firefox-launcher": "*",
     "karma-ie-launcher": "*",
-    "karma-safari-launcher": "*"
+    "karma-jasmine": "*",
+    "karma-phantomjs-launcher": "*",
+    "karma-safari-launcher": "*",
+    "map-stream": "*"
   }
 }

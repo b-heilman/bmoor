@@ -1,1 +1,1 @@
-module.exports = require('./build/bmoor.js');
+module.exports = require('./dist/bmoor.js');

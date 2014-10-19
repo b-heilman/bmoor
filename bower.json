@@ -1,7 +1,7 @@
 {
   "name": "bmoor",
-  "main": "index.js",
-  "version": "0.0.2",
+  "main": "dist/bmoor.js",
+  "version": "0.0.3",
   "homepage": "https://github.com/b-heilman/bmoor",
   "authors": [
     "Brian Heilman <brian.heilman@gmail.com>"
@@ -10,9 +10,14 @@
   "license": "MIT",
   "ignore": [
     "**/.*",
-    "node_modules",
-    "bower_components",
+    "demo",
     "test",
-    "tests"
+    "gulpfile.js",
+    "index.js",
+    "karma.conf.js",
+    "node_modules", 
+    "bower_components",
+    "package.json",
+    "TODO.txt"
   ]
 }
