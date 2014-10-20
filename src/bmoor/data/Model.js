@@ -5,7 +5,7 @@ bMoor.define( 'bmoor.data.Model',
 
 		return {
 			// TODO : readd merge
-			override : function( from ){
+			$override : function( from ){
 				if ( bMoor.isArrayLike(from) ){
 					bMoor.array.override( this, from );
 				}else{
@@ -14,22 +14,25 @@ bMoor.define( 'bmoor.data.Model',
 
 				return this;
 			},
-			validate : function(){ 
+			$merge : function( data ){
+				bMoor.object.merge( this, data );
+			},
+			$validate : function(){ 
 				return true; 
 			},
-			inflate : function( content ){
+			$inflate : function( content ){
 				return content;
 			},
-			deflate : function(){
-				return this.simplify(); 
+			$deflate : function(){
+				return this.$simplify(); 
 			},
-			update : function( content ){
+			$update : function( content ){
 				return bMoor.object.merge( this, content );
 			},
-			simplify : function(){
-				var rtn = {};
+			$simplify : function(){
+				var rtn = bMoor.isArrayLike() ? [] : {};
 
-                bMoor.iterate( this, function( value, key ){
+                bMoor.object.safe( this, function( value, key ){
                 	if ( !bMoor.isFunction(value) ){
                 		rtn[ key ] = value;
                 	}
@@ -37,8 +40,8 @@ bMoor.define( 'bmoor.data.Model',
 				
 				return rtn;
 			},
-			toJson : function(){
-				return JSON.stringify( this.simplify() );
+			$toJson : function(){
+				return JSON.stringify( this.$simplify() );
 			}
 		};
 	}]

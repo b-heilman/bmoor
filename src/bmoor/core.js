@@ -412,7 +412,7 @@ var bMoor = {};
 	function extend( obj ){
 		loop( arguments, function(cpy){
 			if ( cpy !== obj ) {
-				each( cpy, function(value, key){
+				iterate( cpy, function(value, key){
 					obj[key] = value;
 				});
 			}
@@ -428,7 +428,7 @@ var bMoor = {};
 			return from;
 		}else{
 
-			each( from, function( val, key ){
+			safe( from, function( val, key ){
 				to[ key ] = merge( to[key], val );
 			});
 
@@ -437,42 +437,34 @@ var bMoor = {};
 	}
 
 	function override( to, from ){
-		var key, f, t;
+		safe( from, function( f, key){
+			var t = to[ key ];
 
-		// merge in the 'from'
-		for( key in from ){
-			if ( from.hasOwnProperty(key) ){
-				f = from[ key ];
-				t = to[ key ];
-
-				if ( t === undefined ){
-					to[ key ] = f;
-				}else if ( bMoor.isArrayLike(f) ){
-					if ( !bMoor.isArrayLike(t) ){
-						t = to[ key ] = [];
-					}
-
-					arrayOverride( t, f );
-				}else if ( bMoor.isObject(f) ){
-					if ( !bMoor.isObject(t) ){
-						t = to[ key ] = {};
-					}
-
-					override( t, f );
-				}else if ( f !== t ){
-					to[ key ] = f;
+			if ( t === undefined ){
+				to[ key ] = f;
+			}else if ( bMoor.isArrayLike(f) ){
+				if ( !bMoor.isArrayLike(t) ){
+					t = to[ key ] = [];
 				}
+
+				arrayOverride( t, f );
+			}else if ( bMoor.isObject(f) ){
+				if ( !bMoor.isObject(t) ){
+					t = to[ key ] = {};
+				}
+
+				override( t, f );
+			}else if ( f !== t ){
+				to[ key ] = f;
 			}
-		}
+		});
 
 		// now we prune the 'to'
-		for( key in to ){
-			if ( to.hasOwnProperty(key) ){
-				if ( from[key] === undefined ){
-					delete to[key];
-				}
+		safe( to, function( f, key){
+			if ( from[key] === undefined ){
+				delete to[key];
 			}
-		}
+		});
 
 		return to;
 	}
@@ -889,6 +881,30 @@ var bMoor = {};
 
 		for( key in obj ){ 
 			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' ){
+				fn.call( scope, obj[key], key, obj );
+			}
+		}
+	}
+
+	/**
+	 * Call a function against all own properties of an object, skipping specific framework properties.
+	 * In this framework, $ implies a system function, _ implies private, so skip both
+	 *
+	 * @function safe
+	 * @namespace bMoor
+	 * @param {object} obj The object to iterate through
+	 * @param {function} fn The function to call against each element
+	 * @param {object} scope The scope to call each function against
+	 **/
+	function safe( obj, fn, scope ){
+		var key;
+
+		if ( !scope ){
+			scope = obj;
+		}
+
+		for( key in obj ){ 
+			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' && key.charAt(0) !== '$' ){
 				fn.call( scope, obj[key], key, obj );
 			}
 		}
@@ -1828,6 +1844,7 @@ var bMoor = {};
 		'instantiate' : instantiate,
 		'map'         : map,
 		'object' : {
+			'safe'      : safe,
 			'mask'      : mask,
 			'extend'    : extend,
 			'copy'      : copy,

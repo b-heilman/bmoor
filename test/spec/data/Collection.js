@@ -14,7 +14,7 @@ describe('Testing bmoor.data.Collection', function(){
 				hello : function( io ){
 					result = io;
 				},
-				inflate : function( io ){
+				$inflate : function( io ){
 					io.push( io[0] + io[1] );
 					return io;
 				}
@@ -42,7 +42,7 @@ describe('Testing bmoor.data.Collection', function(){
 	});
 
 	it('should have default properties', function(){
-		expect( t.toJson ).toBeDefined();
+		expect( t.$toJson ).toBeDefined();
 	});
 
 	it('should call properties', function(){

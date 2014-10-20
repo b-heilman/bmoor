@@ -414,7 +414,7 @@ var bMoor = {};
 	function extend( obj ){
 		loop( arguments, function(cpy){
 			if ( cpy !== obj ) {
-				each( cpy, function(value, key){
+				iterate( cpy, function(value, key){
 					obj[key] = value;
 				});
 			}
@@ -430,7 +430,7 @@ var bMoor = {};
 			return from;
 		}else{
 
-			each( from, function( val, key ){
+			safe( from, function( val, key ){
 				to[ key ] = merge( to[key], val );
 			});
 
@@ -439,42 +439,34 @@ var bMoor = {};
 	}
 
 	function override( to, from ){
-		var key, f, t;
+		safe( from, function( f, key){
+			var t = to[ key ];
 
-		// merge in the 'from'
-		for( key in from ){
-			if ( from.hasOwnProperty(key) ){
-				f = from[ key ];
-				t = to[ key ];
-
-				if ( t === undefined ){
-					to[ key ] = f;
-				}else if ( bMoor.isArrayLike(f) ){
-					if ( !bMoor.isArrayLike(t) ){
-						t = to[ key ] = [];
-					}
-
-					arrayOverride( t, f );
-				}else if ( bMoor.isObject(f) ){
-					if ( !bMoor.isObject(t) ){
-						t = to[ key ] = {};
-					}
-
-					override( t, f );
-				}else if ( f !== t ){
-					to[ key ] = f;
+			if ( t === undefined ){
+				to[ key ] = f;
+			}else if ( bMoor.isArrayLike(f) ){
+				if ( !bMoor.isArrayLike(t) ){
+					t = to[ key ] = [];
 				}
+
+				arrayOverride( t, f );
+			}else if ( bMoor.isObject(f) ){
+				if ( !bMoor.isObject(t) ){
+					t = to[ key ] = {};
+				}
+
+				override( t, f );
+			}else if ( f !== t ){
+				to[ key ] = f;
 			}
-		}
+		});
 
 		// now we prune the 'to'
-		for( key in to ){
-			if ( to.hasOwnProperty(key) ){
-				if ( from[key] === undefined ){
-					delete to[key];
-				}
+		safe( to, function( f, key){
+			if ( from[key] === undefined ){
+				delete to[key];
 			}
-		}
+		});
 
 		return to;
 	}
@@ -891,6 +883,30 @@ var bMoor = {};
 
 		for( key in obj ){ 
 			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' ){
+				fn.call( scope, obj[key], key, obj );
+			}
+		}
+	}
+
+	/**
+	 * Call a function against all own properties of an object, skipping specific framework properties.
+	 * In this framework, $ implies a system function, _ implies private, so skip both
+	 *
+	 * @function safe
+	 * @namespace bMoor
+	 * @param {object} obj The object to iterate through
+	 * @param {function} fn The function to call against each element
+	 * @param {object} scope The scope to call each function against
+	 **/
+	function safe( obj, fn, scope ){
+		var key;
+
+		if ( !scope ){
+			scope = obj;
+		}
+
+		for( key in obj ){ 
+			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' && key.charAt(0) !== '$' ){
 				fn.call( scope, obj[key], key, obj );
 			}
 		}
@@ -1830,6 +1846,7 @@ var bMoor = {};
 		'instantiate' : instantiate,
 		'map'         : map,
 		'object' : {
+			'safe'      : safe,
 			'mask'      : mask,
 			'extend'    : extend,
 			'copy'      : copy,
@@ -2345,10 +2362,12 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 
 	compiler.addModule( 10, 'bmoor.build.ModProperties', 
 		['-properties', function( properties ){
-			var name;
-
-			for( name in properties ){
-				this.prototype[ name ] = properties[ name ];
+			var proto = this.prototype;
+			
+			if ( properties ){
+				bMoor.each( properties, function( prop, name ){
+					proto[ name ] = prop;
+				});
 			}
 		}]
 	);
@@ -2894,27 +2913,22 @@ bMoor.make( 'bmoor.data.Collection',
 		'use strict';
 		
 		return {
-			mixins : [
-				Model
-			],
 			construct : function Collection( content ){
 				// I'm doing this because some things go nuts with just array like
 				var key,
 					t = [];
-
+				
+				this.$override.call( t, this.$inflate.call(t, content) );
+			
 				for( key in this ){
 					t[ key ] = this[ key ];
 				}
-				
-				t.override( t.inflate(content) );
-			
+
 				return t;
 			},
-			properties : {
-				simplify : function(){
-					return this.deflate().slice( 0 );
-				}
-			}
+			mixins : [
+				Model
+			]
 		};
 	}]
 );
@@ -3049,7 +3063,7 @@ bMoor.make( 'bmoor.data.Map',
 				Model
 			],
 			construct : function Map( content ){
-				this.override( this.inflate(content) );
+				this.$override( this.$inflate(content) );
 			}
 		};
 	}]
@@ -3167,7 +3181,7 @@ bMoor.define( 'bmoor.data.Model',
 
 		return {
 			// TODO : readd merge
-			override : function( from ){
+			$override : function( from ){
 				if ( bMoor.isArrayLike(from) ){
 					bMoor.array.override( this, from );
 				}else{
@@ -3176,22 +3190,25 @@ bMoor.define( 'bmoor.data.Model',
 
 				return this;
 			},
-			validate : function(){ 
+			$merge : function( data ){
+				bMoor.object.merge( this, data );
+			},
+			$validate : function(){ 
 				return true; 
 			},
-			inflate : function( content ){
+			$inflate : function( content ){
 				return content;
 			},
-			deflate : function(){
-				return this.simplify(); 
+			$deflate : function(){
+				return this.$simplify(); 
 			},
-			update : function( content ){
+			$update : function( content ){
 				return bMoor.object.merge( this, content );
 			},
-			simplify : function(){
-				var rtn = {};
+			$simplify : function(){
+				var rtn = bMoor.isArrayLike() ? [] : {};
 
-                bMoor.iterate( this, function( value, key ){
+                bMoor.object.safe( this, function( value, key ){
                 	if ( !bMoor.isFunction(value) ){
                 		rtn[ key ] = value;
                 	}
@@ -3199,8 +3216,8 @@ bMoor.define( 'bmoor.data.Model',
 				
 				return rtn;
 			},
-			toJson : function(){
-				return JSON.stringify( this.simplify() );
+			$toJson : function(){
+				return JSON.stringify( this.$simplify() );
 			}
 		};
 	}]

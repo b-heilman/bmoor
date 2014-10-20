@@ -3,10 +3,12 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 
 	compiler.addModule( 10, 'bmoor.build.ModProperties', 
 		['-properties', function( properties ){
-			var name;
-
-			for( name in properties ){
-				this.prototype[ name ] = properties[ name ];
+			var proto = this.prototype;
+			
+			if ( properties ){
+				bMoor.each( properties, function( prop, name ){
+					proto[ name ] = prop;
+				});
 			}
 		}]
 	);

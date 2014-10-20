@@ -32,7 +32,6 @@ var buildDir = './dist/',
 		'./src/bmoor/build/*.js',
 		'./src/bmoor/defer/*.js',
 		'./src/bmoor/flow/*.js',
-		'./src/bmoor/core/*.js',
 		'./src/bmoor/data/*.js',
 		'./src/bmoor/error/*.js'
     ],

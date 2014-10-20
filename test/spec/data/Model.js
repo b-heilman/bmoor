@@ -23,12 +23,12 @@ describe( 'bmoor.data.Model', function(){
 				],
 				t = bMoor.object.extend( [], Model );
 
-			t.override( a );
+			t.$override( a );
 			
 			expect( t.length ).toBe( 2 );
 			expect( t[0].eins ).toBeDefined();
 
-			t.override( b );
+			t.$override( b );
 			
 			expect( t.length ).toBe( 1 );
 			expect( t[0].eins ).toBe( 3 );
@@ -51,12 +51,12 @@ describe( 'bmoor.data.Model', function(){
 				],
 				t = bMoor.object.extend( {}, Model );
 
-			t.override( a );
+			t.$override( a );
 
 			expect( t.length ).not.toBeDefined();
 			expect( t[0].eins ).toBeDefined();
 
-			t.override( b );
+			t.$override( b );
 
 			expect( t.length ).not.toBeDefined();
 			expect( t[0].eins ).not.toBeDefined();
@@ -67,14 +67,14 @@ describe( 'bmoor.data.Model', function(){
 	it( 'should always validate', function(){
 		var t = bMoor.object.extend( {}, Model );
 
-		expect( t.validate() ).toBe( true );
+		expect( t.$validate() ).toBe( true );
 	});
 
 	it( 'should allow for data to be inflated', function(){
 		var t = bMoor.object.extend( {}, Model ),
 			o = {};
 
-		expect( o ).toBe( t.inflate(o) );
+		expect( o ).toBe( t.$inflate(o) );
 	});
 
 	it( 'should always allow for data to be deflated', function(){
@@ -84,7 +84,7 @@ describe( 'bmoor.data.Model', function(){
 			hello : 'world'
 		}, Model );
 
-		expect( t.deflate() ).toEqual( {hello:'world'} );
+		expect( t.$deflate() ).toEqual( {hello:'world'} );
 	});
 
 	it( 'should always allow for simplifying objects', function(){
@@ -94,7 +94,7 @@ describe( 'bmoor.data.Model', function(){
 			hello : 'world'
 		}, Model );
 
-		expect( t.simplify() ).toEqual( {hello:'world'} );
+		expect( t.$simplify() ).toEqual( {hello:'world'} );
 	});
 
 	it( 'should always allow for json encoding', function(){
@@ -104,6 +104,6 @@ describe( 'bmoor.data.Model', function(){
 			hello : 'world'
 		}, Model );
 
-		expect( t.toJson() ).toBe( '{"hello":"world"}' );
+		expect( t.$toJson() ).toBe( '{"hello":"world"}' );
 	});
 });

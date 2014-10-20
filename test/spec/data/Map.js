@@ -14,7 +14,7 @@ describe('Testing bmoor.data.Map', function(){
 				hello : function( io ){
 					result = io;
 				},
-				inflate : function( io ){
+				$inflate : function( io ){
 					io.woot = 'wootwoot';
 					io.name = io.firstName + ' ' + io.lastName;
 
@@ -47,7 +47,7 @@ describe('Testing bmoor.data.Map', function(){
 	});
 
 	it('should have default properties', function(){
-		expect( t.toJson ).toBeDefined();
+		expect( t.$toJson ).toBeDefined();
 	});
 
 	it('should call properties', function(){

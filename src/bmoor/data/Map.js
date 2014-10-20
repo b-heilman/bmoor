@@ -8,7 +8,7 @@ bMoor.make( 'bmoor.data.Map',
 				Model
 			],
 			construct : function Map( content ){
-				this.override( this.inflate(content) );
+				this.$override( this.$inflate(content) );
 			}
 		};
 	}]
