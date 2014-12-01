@@ -39,9 +39,7 @@ bMoor.inject(
 					obj = definition.construct;
 				}else{
 					// throw namespace + 'needs a constructor, event if it just calls the parent it should be named'
-					obj = function GenericConstruct(){
-						console.log('generic');
-					};
+					obj = function GenericConstruct(){};
 					obj.$generic = true;
 				}
 

@@ -5,8 +5,7 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 		['-id','-namespace','-name', '-mount','-parent',
 		function( id, namespace, name, mount, parent ){
 			var construct,
-				proto,
-				T;
+				proto;
 
 			if ( parent ){
 				construct = this;
@@ -19,11 +18,8 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 					proto = parent;
 				}
 
-				T = function(){ 
-					this.constructor = construct; // once called, define
-				};
-				T.prototype = proto;
-				this.prototype = new T();
+				this.prototype = bMoor.object.mask( proto );
+				this.prototype.constructor = construct;
 
 				delete this.$generic;
 			}

@@ -375,17 +375,6 @@ var bMoor = {};
 	}
 
 	/**
-	 * Converts an object to a string
-	 *
-	 * @function toString
-	 * @namespace bMoor
-	 * @param {object} obj The object to convert
-	 **/
-	function toString( obj ){
-		return Object.prototype.toString.call( obj );
-	}
-
-	/**
 	 * Create a new instance from an object and some arguments
 	 *
 	 * @function mask
@@ -395,11 +384,15 @@ var bMoor = {};
 	 * @return {object} The new object that has been constructed
 	 **/
 	function mask( obj ){
-		var T = function(){};
+		if ( Object.create ){
+			var T = function Masked(){};
 
-		T.prototype = obj;
+			T.prototype = obj;
 
-		return new T();
+			return new T();
+		}else{
+			return Object.create( obj );
+		}
 	}
 
 	/**
@@ -423,19 +416,30 @@ var bMoor = {};
 		return obj;
 	}
 
-	function merge( to, from ){
-		if ( to === from ){
-			return to;
-		}else if ( !bMoor.isObject(to) ){
-			return from;
-		}else{
-
-			safe( from, function( val, key ){
+	function merge( to ){
+		var from,
+			i, c,
+			m = function( val, key ){
 				to[ key ] = merge( to[key], val );
-			});
+			};
 
-			return to;
+		for( i = 1, c = arguments.length; i < c; i++ ){
+			from = arguments[i];
+
+			if ( to === from || !from ){
+				continue;
+			}else if ( !isObject(to) ){
+				if ( isObject(from) ){
+					to = merge( {}, from );
+				}else{
+					to = from;
+				}
+			}else{
+				safe( from, m );
+			}
 		}
+		
+		return to;
 	}
 
 	function override( to, from ){
@@ -628,11 +632,11 @@ var bMoor = {};
 	 * @param {object} error The error to be reporting
 	 **/
 	function error( err ){
-		if ( isObject(err) && err.stack ){
-			console.warn( err );
-			console.debug( err.stack );
+		if ( err.message ){
+			console.log( err.message );
+			console.log( err.stack );
 		}else{
-			console.warn( err );
+			console.log( err );
 			console.trace();
 		}
 	}
@@ -749,9 +753,9 @@ var bMoor = {};
 	 * @param {something} value The variable to test
 	 * @return {boolean}
 	 **/
-	function isArray( value ) {
-		return toString(value) === '[object Array]';
-	}
+	var isArray = function( value ) {
+		return value instanceof Array;
+	};
 
 	/**
 	 * Tests if the value is a Quark, a placeholder for code being loaded
@@ -1918,9 +1922,7 @@ bMoor.inject(
 					obj = definition.construct;
 				}else{
 					// throw namespace + 'needs a constructor, event if it just calls the parent it should be named'
-					obj = function GenericConstruct(){
-						console.log('generic');
-					};
+					obj = function GenericConstruct(){};
 					obj.$generic = true;
 				}
 
@@ -2259,8 +2261,7 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 		['-id','-namespace','-name', '-mount','-parent',
 		function( id, namespace, name, mount, parent ){
 			var construct,
-				proto,
-				T;
+				proto;
 
 			if ( parent ){
 				construct = this;
@@ -2273,11 +2274,8 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 					proto = parent;
 				}
 
-				T = function(){ 
-					this.constructor = construct; // once called, define
-				};
-				T.prototype = proto;
-				this.prototype = new T();
+				this.prototype = bMoor.object.mask( proto );
+				this.prototype.constructor = construct;
 
 				delete this.$generic;
 			}
@@ -2907,393 +2905,6 @@ bMoor.make( 'bmoor.flow.Timeout',
 		};
 	}]
 );
-bMoor.make( 'bmoor.data.Collection', 
-	['bmoor.data.Model', 
-	function( Model ){
-		'use strict';
-		
-		return {
-			construct : function Collection( content ){
-				// I'm doing this because some things go nuts with just array like
-				var key,
-					t = [];
-				
-				this.$override.call( t, this.$inflate.call(t, content) );
-			
-				for( key in this ){
-					t[ key ] = this[ key ];
-				}
-
-				return t;
-			},
-			mixins : [
-				Model
-			]
-		};
-	}]
-);
-bMoor.make('bmoor.data.CollectionObserver',
-	['bmoor.data.MapObserver',
-	function( MapObserver ){
-		'use strict';
-		
-		return {
-			parent : MapObserver,
-			construct : function CollectionObserver(){
-				MapObserver.apply( this, arguments );
-			},
-			properties : {
-				observe : function( collection ){
-					var i, c,
-						val;
-					
-					this._old = [];
-					this.watches = [];
-					
-					for( i = 0, c = collection.length; i < c; i++ ){
-						val = collection[ i ];
-
-						// do some autoboxing here
-						if( bMoor.isString(val) ){
-							// i need this so is passes by reference and not value
-							val = new String( val ); // jshint ignore:line
-						}
-
-						this._old[ i ] = collection[ i ] = val;
-					}
-
-					MapObserver.prototype.observe.call( this, collection );
-				},
-				watchChanges : function( func ){
-					this.watches.push( func );
-				},
-				check : function(){
-					var dis = this;
-					
-					if ( this.active && !this.checking ){
-						MapObserver.prototype.check.call( this );
-						
-						this.checking = true;
-						this.changes = this.checkChanges();
-						
-						if ( this._needNotify(this.changes) ){
-							bMoor.loop( this.watches, function( f ){
-								f( dis.changes );
-							});
-						}
-						this.checking = false;
-					}
-				}, 
-				checkChanges : function(){
-					var i, c,
-						val,
-						model = this.model,
-						old = this._old,
-						insert = {},
-						change = {},
-						remove = {};
-
-					/* 
-					TODO : bring this back in
-					if ( val.$remove ){
-						// allow for a model to force its own removal
-						this.model.splice( i, 1 );
-					}
-					*/
-					for( i = 0, c = old.length; i < c; i++ ) {
-						old[i]._pos = i;
-						remove[ i ] = old[ i ];
-					}
-
-					for( i = 0, c = model.length; i < c; i++ ) {
-						val = model[ i ];
-
-						if ( val._pos === undefined ){
-							insert[ i ] = model[ i ];
-						}else{
-							delete remove[ val._pos ];
-							if ( val._pos !== i ){
-								change[ i ] = val._pos;
-							}
-						}
-					}
-
-					// clean up the old data
-					old.length = model.length;
-					for( i in insert ){
-						val = insert[ i ];
-
-						if ( bMoor.isString(val) ){
-							val = new String( val ); // jshint ignore:line
-							insert[ i ] = model[ i ] = val; 
-						}
-
-						old[ i ] = val;
-					}
-
-					for( i = 0, c = model.length; i < c; i++ ) {
-						delete model[ i ]._pos;
-						old[ i ] = model[ i ];
-					}
-
-					return {
-						moves : change,
-						inserts : insert,
-						removals : remove
-					};
-				},
-				_needNotify : function( changes ){
-					return !bMoor.isEmpty( changes.moves ) ||
-						!bMoor.isEmpty( changes.inserts ) ||
-						!bMoor.isEmpty( changes.removals );
-				}
-			}
-		};
-	}]
-);
-
-
-bMoor.make( 'bmoor.data.Map', 
-	['bmoor.data.Model', 
-	function( Model ){
-		'use strict';
-		
-		return {
-			mixins : [
-				Model
-			],
-			construct : function Map( content ){
-				this.$override( this.$inflate(content) );
-			}
-		};
-	}]
-);
-
-
-bMoor.make( 'bmoor.data.MapObserver', 
-	['bmoor.flow.Interval',
-	function( interval ){
-		'use strict';
-		
-		var $snapMO = 0;
-
-		return {
-			construct : function MapObserver( model ){
-				var dis = this,
-					inst = interval;
-
-				this.$snapMO = $snapMO++;
-
-				this.checking = false;
-				this.watching = {};
-				this.observe( model );
-				this.start();
-
-				inst.set(function(){
-					dis.check();
-				}, 30);
-			},
-			properties : {
-				observe : function( model ){
-					if ( this.model ){
-						delete this.model.$observers[ this.$snapMO ];
-					}
-
-					this.model = model;
-
-					if ( !model.$observers ){
-						model.$observers = {};
-					}
-
-					model.$observers[ this.$snapMO ] = this;
-				},
-				watch : function( variable, func ){
-					var p, 
-						t; // registers what the observe monitors
-					
-					if ( !this.watching[variable] ){
-						p = variable.split('.');
-
-						this.watching[variable] = {
-							path : p,
-							value : this.evaluate( p ),
-							calls : []
-						};
-					}
-
-					t = this.watching[ variable ];
-
-					func( t.value, undefined ); // call when first inserted
-					
-					t.calls.push( func );
-				},
-				evaluate : function( path ){
-					var i, c,
-						val = this.model;
-
-					if ( bMoor.isString(path) ){
-						path = path.split('.');
-					}
-
-					for( i = 0, c = path.length; i < c && val !== undefined; i++ ){
-						val = val[ path[i] ];
-					}
-
-					return val;
-				},
-				check : function(){
-					var dis = this;
-
-					// see if anything has changed in the model
-					if ( this.active && !this.checking ){
-						this.checking = true;
-						
-						bMoor.iterate( this.watching, function( watch ){
-							var i, c,
-								val = dis.evaluate( watch.path );
-
-							if ( val !== watch.value ){
-								for( i = 0, c = watch.calls.length; i < c; i++ ){
-									watch.calls[ i ]( val, watch.value );
-								}
-
-								watch.value = val;
-							}
-						});
-						this.checking = false;
-					}
-				},
-				start : function(){
-					this.active = true;
-				},
-				stop : function(){
-					this.active = false;
-				}
-			}
-		};
-	}]
-);
-
-bMoor.define( 'bmoor.data.Model', 
-	[
-	function(){
-		'use strict';
-
-		return {
-			// TODO : readd merge
-			$override : function( from ){
-				if ( bMoor.isArrayLike(from) ){
-					bMoor.array.override( this, from );
-				}else{
-					bMoor.object.override( this, from );
-				}
-
-				return this;
-			},
-			$merge : function( data ){
-				bMoor.object.merge( this, data );
-			},
-			$validate : function(){ 
-				return true; 
-			},
-			$inflate : function( content ){
-				return content;
-			},
-			$deflate : function(){
-				return this.$simplify(); 
-			},
-			$update : function( content ){
-				return bMoor.object.merge( this, content );
-			},
-			$simplify : function(){
-				var rtn = bMoor.isArrayLike() ? [] : {};
-
-                bMoor.object.safe( this, function( value, key ){
-                	if ( !bMoor.isFunction(value) ){
-                		rtn[ key ] = value;
-                	}
-                });
-				
-				return rtn;
-			},
-			$toJson : function(){
-				return JSON.stringify( this.$simplify() );
-			}
-		};
-	}]
-);
-
-
-bMoor.make('bmoor.data.SmartMapObserver', 
-	['@undefined', 'bmoor.data.MapObserver', function( undefined, MapObserver ){
-		'use strict';
-
-		function mapUpdate( observer, update, value ){
-			var key;
-
-			if ( bMoor.isString( update ) ){
-				observer.updates[ update ] = bMoor.set( update, value, observer.model );
-			}else if ( bMoor.isObject(update) ){
-				for( key in update ){
-					if ( update.hasOwnProperty(key) ){
-						mapUpdate( observer, key, update[key] );
-					}
-				}
-			}
-		}
-
-		function mapDelete( observer, deletion ){
-			if ( bMoor.isString( deletion ) ){
-				observer.updates[ deletion ] = bMoor.del( deletion, observer.model );
-			}
-		}
-
-		return {
-			parent : MapObserver,
-			construct : function SmartMapObserver(){
-				MapObserver.apply( this, arguments );
-			},
-			properties : {
-				observe : function( map ){
-					var dis = this;
-					
-					this.updates = {};
-
-					MapObserver.prototype.observe.call( this, map );
-
-					map.$set = function( update, value ){
-						mapUpdate( dis, update, value );
-					};
-
-					map.$delete = function( deletion ){
-						mapDelete( dis, deletion );
-					};
-				},
-				check : function(){
-					var dis = this;
-
-					bMoor.iterate( this.updates, function( oValue, path ){
-						var i, c,
-							watch = dis.watching[ path ],
-							val;
-
-						if ( watch ){
-							val = dis.evaluate( path );
-
-							for( i = 0, c = watch.calls.length; i < c; i++ ){
-								watch.calls[ i ]( val, oValue );
-							}
-						}
-					});
-
-					this.updates = {};
-				}
-			}
-		};
-	}]
-);
-
-
 bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
 	'use strict';
 

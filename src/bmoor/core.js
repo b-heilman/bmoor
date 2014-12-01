@@ -373,17 +373,6 @@ var bMoor = {};
 	}
 
 	/**
-	 * Converts an object to a string
-	 *
-	 * @function toString
-	 * @namespace bMoor
-	 * @param {object} obj The object to convert
-	 **/
-	function toString( obj ){
-		return Object.prototype.toString.call( obj );
-	}
-
-	/**
 	 * Create a new instance from an object and some arguments
 	 *
 	 * @function mask
@@ -393,11 +382,15 @@ var bMoor = {};
 	 * @return {object} The new object that has been constructed
 	 **/
 	function mask( obj ){
-		var T = function(){};
+		if ( Object.create ){
+			var T = function Masked(){};
 
-		T.prototype = obj;
+			T.prototype = obj;
 
-		return new T();
+			return new T();
+		}else{
+			return Object.create( obj );
+		}
 	}
 
 	/**
@@ -421,19 +414,30 @@ var bMoor = {};
 		return obj;
 	}
 
-	function merge( to, from ){
-		if ( to === from ){
-			return to;
-		}else if ( !bMoor.isObject(to) ){
-			return from;
-		}else{
-
-			safe( from, function( val, key ){
+	function merge( to ){
+		var from,
+			i, c,
+			m = function( val, key ){
 				to[ key ] = merge( to[key], val );
-			});
+			};
 
-			return to;
+		for( i = 1, c = arguments.length; i < c; i++ ){
+			from = arguments[i];
+
+			if ( to === from || !from ){
+				continue;
+			}else if ( !isObject(to) ){
+				if ( isObject(from) ){
+					to = merge( {}, from );
+				}else{
+					to = from;
+				}
+			}else{
+				safe( from, m );
+			}
 		}
+		
+		return to;
 	}
 
 	function override( to, from ){
@@ -626,11 +630,11 @@ var bMoor = {};
 	 * @param {object} error The error to be reporting
 	 **/
 	function error( err ){
-		if ( isObject(err) && err.stack ){
-			console.warn( err );
-			console.debug( err.stack );
+		if ( err.message ){
+			console.log( err.message );
+			console.log( err.stack );
 		}else{
-			console.warn( err );
+			console.log( err );
 			console.trace();
 		}
 	}
@@ -747,9 +751,9 @@ var bMoor = {};
 	 * @param {something} value The variable to test
 	 * @return {boolean}
 	 **/
-	function isArray( value ) {
-		return toString(value) === '[object Array]';
-	}
+	var isArray = function( value ) {
+		return value instanceof Array;
+	};
 
 	/**
 	 * Tests if the value is a Quark, a placeholder for code being loaded
