@@ -1,7 +1,7 @@
 {
   "name": "bmoor",
   "main": "dist/bmoor.js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/b-heilman/bmoor",
   "authors": [
     "Brian Heilman <brian.heilman@gmail.com>"

@@ -4,7 +4,7 @@ describe( 'bmoor.flow.Batch', function(){
 		timeout,
 		mountUp;
 
-	bMoor.mock( 'bmoor.flow.Batch', {
+	bMoor.mock( {}, 'bmoor.flow.Batch', {
 		'bmoor.flow.Timeout' : Timeout
 	}).then(function( o ){
 		Mock = o;

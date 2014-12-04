@@ -268,15 +268,33 @@ bMoor.inject(
 		instance = new Compiler();
 		instance.$constructor = Compiler;
 
-		bMoor.plugin( 'make', function( namespace, definition, root ){
+		bMoor.plugin( 'make', function( root, namespace, definition ){
+			if ( definition === undefined ){
+				definition = namespace;
+				namespace = root;
+				root = undefined;
+			}
+
 			return instance.make( namespace, definition, root );
 		});
 		
-		bMoor.plugin( 'mock', function( namespace, mocks, root ){
-			return instance.mock( namespace, bMoor.map(mocks), root );
+		bMoor.plugin( 'mock', function( root, namespace, mock ){
+			if ( mock === undefined ){
+				mock = namespace;
+				namespace = root;
+				root = undefined;
+			}
+
+			return instance.mock( namespace, bMoor.map(mock), root );
 		});
 
-		bMoor.plugin( 'define', function( namespace, value, root ){
+		bMoor.plugin( 'define', function( root, namespace, value ){
+			if ( value === undefined ){
+				value = namespace;
+				namespace = root;
+				root = undefined;
+			}
+
 			return instance.define( namespace, value, root );
 		});
 

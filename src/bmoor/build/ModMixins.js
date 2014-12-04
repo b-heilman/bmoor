@@ -3,16 +3,13 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 
 	compiler.addModule( 11, 'bmoor.build.ModMixins', 
 		['-mixins', function( mixins ){
+			var i, c,
+				proto = this.prototype;
+
 			if ( mixins ){
-				if ( !bMoor.isArray( mixins ) ){
-					mixins = [ mixins ];
-				}else{
-					mixins = mixins.splice(0);
+				for( i = 0, c = mixins.length; i < c; i++ ){
+					mixins[i]._target( proto );
 				}
-
-				mixins.unshift( this.prototype );
-
-				bMoor.object.extend.apply( this, mixins );
 			}
 		}]
 	);

@@ -15,6 +15,7 @@ module.exports = function(config) {
             'src/bmoor/defer/*.js',
             'src/bmoor/flow/*.js',
             'src/bmoor/error/*.js',
+            'src/bmoor/component/*.js',
             'src/bmock/**/*.js',
 			'test/spec/**/*.js'
             //'test/spec/data/MapObserver.js',

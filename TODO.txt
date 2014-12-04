@@ -1,3 +1,26 @@
+
+
+- A way to improve code reuse
+	* object with functions on prototype to map over
+	* will just copy over all functions from prototype
+	- mixins
+		- inherits from Mixin
+		- $target will wrap an object : this.$target( obj )
+		- definition with mixins property : { mixins : [] }
+	- decorators
+		- inherits from Decorator
+		- override function, but provides $wrapped to reference original
+		- $target will wrap an object : this.$target( obj )
+		- maintains reference to original object through call
+		- definition with decorators property : { decorators : [] }
+	- plugins
+		- inherits from Plugin
+		- override function, but provides $wrapped to reference original
+		- plugins are constructed with optional settings
+		- $target will wrap an object : this.$target( obj )
+		- reference inside the function is to the plugin, not the target
+		- definition with plugins property : { plugins : [] }
+
 - A system that lets you register for call backs, but doesn't fire right away
 	- all values are queued up for 30 ms, and it only fires once every 30 ms at most
 	- use vGraph image processing as example

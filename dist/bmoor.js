@@ -2151,75 +2151,51 @@ bMoor.inject(
 		instance = new Compiler();
 		instance.$constructor = Compiler;
 
-		bMoor.plugin( 'make', function( namespace, definition, root ){
+		bMoor.plugin( 'make', function( root, namespace, definition ){
+			if ( definition === undefined ){
+				definition = namespace;
+				namespace = root;
+				root = undefined;
+			}
+
 			return instance.make( namespace, definition, root );
 		});
 		
-		bMoor.plugin( 'mock', function( namespace, mocks, root ){
-			return instance.mock( namespace, bMoor.map(mocks), root );
+		bMoor.plugin( 'mock', function( root, namespace, mock ){
+			if ( mock === undefined ){
+				mock = namespace;
+				namespace = root;
+				root = undefined;
+			}
+
+			return instance.mock( namespace, bMoor.map(mock), root );
 		});
 
-		bMoor.plugin( 'define', function( namespace, value, root ){
+		bMoor.plugin( 'define', function( root, namespace, value ){
+			if ( value === undefined ){
+				value = namespace;
+				namespace = root;
+				root = undefined;
+			}
+
 			return instance.define( namespace, value, root );
 		});
 
 		eCompiler.$ready( instance );
 	}
 ]);
-bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 	
-	function override( key, el, action ){
-		var old = el[key];
-		
-		if (  bMoor.isFunction(action) ){
-			el[key] = function(){
-				var backup = this._wrapped,
-					rtn;
-
-				this.$wrapped = old;
-
-				rtn = action.apply( this, arguments );
-
-				this.$wrapped = backup;
-
-				return rtn;
-			};
-		}else if ( bMoor.isString(action) ){
-			// for now, I am just going to append the strings with a white space between...
-			el[key] += ' ' + action;
-		}
-	}
-
-	compiler.addModule( 9, 'bmoor.build.ModDecorate', 
+	compiler.addModule( 11, 'bmoor.build.ModDecorate', 
 		['-decorators', function( decorators ){
-			var proto = this.prototype;
+			var i, c,
+				proto = this.prototype;
 
 			if ( decorators ){
-				if ( !bMoor.isArray( decorators ) ){
-					throw 'the decoration list must be an array';
+				for( i = 0, c = decorators.length; i < c; i++ ){
+					decorators[i]._target( proto );
 				}
-				
-				bMoor.loop( decorators, function( Dec ){
-					var t,
-						key;
-
-					if ( bMoor.isFunction(Dec) ){
-						t = new Dec( proto );
-					}else{
-						t = Dec;
-					}
-
-					for( key in t ){
-						// TODO : do I still need this, isn't it an artifact?
-						if ( proto[key] ){
-							// the default override is post
-							override( key, proto, t[key] );
-						}else{
-							proto[key] = t[key];
-						}
-					}
-				});
 			}
 		}]
 	);
@@ -2308,49 +2284,29 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 
 	compiler.addModule( 11, 'bmoor.build.ModMixins', 
 		['-mixins', function( mixins ){
+			var i, c,
+				proto = this.prototype;
+
 			if ( mixins ){
-				if ( !bMoor.isArray( mixins ) ){
-					mixins = [ mixins ];
-				}else{
-					mixins = mixins.splice(0);
+				for( i = 0, c = mixins.length; i < c; i++ ){
+					mixins[i]._target( proto );
 				}
-
-				mixins.unshift( this.prototype );
-
-				bMoor.object.extend.apply( this, mixins );
 			}
 		}]
 	);
 }]);
 bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
+	
+	compiler.addModule( 11, 'bmoor.build.ModPlugin', 
+		['-plugins', function( decorators ){
+			var i, c,
+				proto = this.prototype;
 
-	compiler.addModule( -2, 'bmoor.build.ModPlugin', 
-		['-plugins', function( plugins ){
-			var obj = this;
-
-			if ( plugins ){
-				bMoor.loop( plugins, function( request ){
-					var o;
-
-					if ( !request.instance ){
-						o = obj;
-					}else if ( bMoor.isString(request.instance) ){
-						o = obj[ '$' + request.instance ]; // link to instances
-					}else{
-						o = bMoor.instantiate( obj, request.instance );
-					} 
-
-					bMoor.iterate( request.funcs, function( func, plugin ){
-						if ( bMoor.isString(func) ){
-							func = obj[ func ];
-						}
-
-						bMoor.plugin( plugin, function(){ 
-							return func.apply( o, arguments ); 
-						});
-					});
-				});
+			if ( decorators ){
+				for( i = 0, c = decorators.length; i < c; i++ ){
+					decorators[i]._target( proto );
+				}
 			}
 		}]
 	);
@@ -2417,265 +2373,6 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 		}]
 	);
 }]);
-
-bMoor.inject(['bmoor.build.Compiler', '-bmoor.comm.Http', 'bmoor.defer.Basic', 'bmoor.flow.Interval',
-	function( compiler, httpConnect, Defer, Interval ){
-		'use strict';
-
-		var maker,
-			cache = {},
-			deferred = {};
-
-		function makeServiceCall( target, options ){
-			var request;
-
-			function loadFunc( type ){
-				return options[ type ] || maker.settings[ type ];
-			}
-
-			if ( bMoor.isString(options) ){
-				options = {
-					url : options
-				};
-			}
-
-			request = function(){
-				var cancel,
-					args = arguments,
-					http = loadFunc( 'http' ),
-					url,
-					context = options.context || target,	
-					preload,
-					decode = loadFunc( 'decode' ),
-					validation = loadFunc( 'validation' ),
-					success = loadFunc( 'success' ),
-					failure = loadFunc( 'failure' ),
-					always = loadFunc( 'always' );
-
-				function handleResponse( r ){
-					var t = r.then(
-						function( content ){
-							// we hava successful transmition
-							/*
-							I make the assumption that the httpConnector will return back an object that has,
-							at the very least, code and data attributes
-							*/
-							var res = decode ? decode( content ) : content,
-								data = res.data,
-								code = res.code;
-
-							if ( always ){
-								always.call( context );
-							}
-
-							if ( (validation && !validation(code, data)) ){
-								Array.prototype.unshift.call( args, res );
-								return failure.apply( context, args );
-							}else{
-								if ( success ){
-									Array.prototype.unshift.call( args, data );
-									return success.apply( context, args );
-								}else{
-									return data;
-								}
-							}
-						},
-						function ( res ){
-							// something went boom
-							if ( always ){
-								always.call( context );
-							}
-
-							Array.prototype.unshift.call( args, res );
-							return failure.apply( context, args );
-						}
-					);
-
-					if ( options.cached ){
-						cache[ url ] = t;
-					}
-
-					return t;
-				}
-
-				// prep, decode any options
-				if ( options.massage ){
-					Array.prototype.push.call( args, options.massage.apply(context,args) );
-				}
-
-				url = ( typeof(options.url) === 'function' ? options.url.apply(context, args) : options.url );
-				
-				if ( options.preload ){
-					if ( typeof(options.preload) === 'function' ){
-						preload = options.preload();
-					}else{
-						preload = options.preload; // assumed to already be a promise
-					}
-				}else{
-					preload = bMoor.dwrap( undefined );
-				}
-
-				return preload.then(
-					function(){
-						var t,
-							f,
-							ff;
-
-						if ( options.response ) {
-							f = function(){
-								var req;
-
-								if ( typeof(options.response) === 'function' ){
-									req = options.response.apply( context, args );
-								}else{
-									req = options.response;
-								}
-
-								if ( req.then ){
-									return handleResponse( req.then(function( v ){
-										return {
-											data : v,
-											code : 200
-										};
-									}) );
-								}else{
-									return handleResponse( bMoor.dwrap({
-										data : req,
-										code : 200
-									}) );
-								}
-							};
-						}else{
-							if ( options.cached && cache[url] ){
-								return cache[ url ];
-							}else if ( deferred[url] ){
-								return deferred[ url ];
-							}else{
-								f = function(){
-									return handleResponse(
-										http(bMoor.object.extend(
-											{
-												'method' : options.method || 'GET',
-												'data' : args[ args.length - 1 ],
-												'url' : url,
-												'headers' : bMoor.object.extend(
-													{ 'Content-Type' : 'application/json' },
-													maker.settings.headers,
-													options.headers
-												)
-											},
-											options.comm || {}
-										))
-									);
-								};
-							}
-						}
-
-						if ( options.interval !== undefined && !deferred[url] ){
-                            ff = function(){
-                                request.lastRun = ( new Date() ).getTime();
-                                return f();
-                            };
-
-                            request.setInterval = function( i ){
-                                var time = ( new Date() ).getTime();
-
-                                // I want to protect against
-                                if ( !request.lastRun || time - i < request.lastRun ||
-                                    (request.lastInterval && request.lastInterval > i) ){
-                                    t = ff();
-                                }else if ( url && options.cached ){
-                                    // TODO : really?
-                                    t = cache[ url ];
-                                }else{
-                                    // this has to be something simulated, so...
-                                    t = request.lastResponse;
-                                }
-
-                                request.lastInterval = i;
-
-                                if ( cancel ){
-                                    Interval.clear( cancel );
-                                }
-
-                                cancel = Interval.set(function(){
-                                    deferred[ url ] = ff();
-                                }, i);
-                            };
-
-                            request.stopRefresh = function(){
-                                Interval.clear( cancel );
-                                if ( options.onStopRefresh ){
-                                    options.onStopRefresh.call( context );
-                                }
-                            };
-
-                            if ( options.interval ){
-                                request.setInterval( options.interval ); // will implicitely call t = f()
-                            }else{
-                                t = ff(); // make sure it gets called
-                            }
-                        }else{
-                            t = f();
-                        }
-
-						if ( url ){
-							deferred[ url ] = t;
-
-							t.then(
-								function(){
-									deferred[ url ] = null;
-								},
-								function(){
-									deferred[ url ] = null;
-								}
-							);
-						}
-
-						request.lastResponse = t;
-
-                        return t;
-					},
-					function(){
-						Array.prototype.unshift.call( args, {
-							code : 0,
-							message : 'Preload Error'
-						});
-						return options.failure.apply( context, args );
-					}
-				);
-			};
-
-			return request;
-		}
-
-		maker = function( streams ){
-			var obj = this;
-			
-			bMoor.iterate( streams, function( stream, name ){
-				obj.prototype[name] = makeServiceCall( obj, stream );
-			});
-		};
-
-		maker.clearCache = function( url ){
-			delete cache[ url ];
-		};
-
-		maker.settings = {
-			http : httpConnect,
-			defer : Defer,
-			validation : function ( code, data ){
-				return (!code || code === 200) && data;
-			},
-			failure : function( message ){
-				console.log( message );
-			}
-		};
-
-		compiler.addModule( 9, 'bmoor.build.ModStreams', ['-streams', maker] );
-	}]
-);
-
 
 bMoor.make( 'bmoor.defer.Stack', [function(){
 	'use strict';
@@ -2955,4 +2652,121 @@ bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
 		}
 	};
 }]);
+bMoor.make('bmoor.component.Decorator', [
+	function(){
+		'use strict';
+
+		function override( key, target, action ){
+			var old = target[key];
+			
+			if ( bMoor.isFunction(action) ){
+				if ( old === undefined || bMoor.isFunction(old) ){
+					target[key] = function(){
+						var backup = this.$wrapped,
+							rtn;
+
+						this.$wrapped = old;
+
+						rtn = action.apply( this, arguments );
+
+						this.$wrapped = backup;
+
+						return rtn;
+					};
+				}else{
+					throw 'attempting to decorate '+key+' an instance of '+typeof(old);
+				}
+			}else{
+				throw 'attempting to decorate with '+key+' and instance of '+typeof(action);
+			}
+		}
+
+		return {
+			construct : function Decorator(){
+				throw 'You neex to extend Decorator, no instaniating it directly';
+			},
+			properties : {
+				_target : function( target ){
+					var key;
+
+					for( key in this ){
+						if ( key.charAt(0) !== '_' ){
+							override( key, target, this[key] );
+						}
+					}
+				}
+			}
+		};
+	}]
+);
+bMoor.make('bmoor.component.Mixin', [
+	function(){
+		'use strict';
+
+		return {
+			construct : function Mixin(){
+				throw 'You neex to extend Mixin, no instaniating it directly';
+			},
+			properties : {
+				_target : function( obj ){
+					var key;
+
+					for( key in this ){
+						if ( key.charAt(0) !== '_' ){
+							obj[key] = this[key];
+						}
+					}
+				}
+			}
+		};
+	}]
+);
+bMoor.make('bmoor.component.Plugin', [
+	function(){
+		'use strict';
+
+		function override( key, target, plugin ){
+			var action = plugin[key],
+				old = target[key];
+			
+			if ( bMoor.isFunction(action) ){
+				if ( old === undefined || bMoor.isFunction(old) ){
+					target[key] = function(){
+						var backup = plugin.$wrapped,
+							rtn;
+
+						plugin.$wrapped = old;
+
+						rtn = action.apply( plugin, arguments );
+
+						plugin.$wrapped = backup;
+
+						return rtn;
+					};
+				}else{
+					throw 'attempting to plug-n-play '+key+' an instance of '+typeof(old);
+				}
+			}else{
+				throw 'attempting to plug-n-play with '+key+' and instance of '+typeof(action);
+			}
+		}
+
+		return {
+			construct : function Plugin(){
+				throw 'You neex to extend Plugin, no instaniating it directly';
+			},
+			properties : {
+				_target : function( target ){
+					var key;
+
+					for( key in this ){
+						if ( key.charAt(0) !== '_' ){
+							override( key, target, this );
+						}
+					}
+				}
+			}
+		};
+	}]
+);
 }());

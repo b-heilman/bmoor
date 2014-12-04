@@ -3,7 +3,7 @@ describe( 'bmoor.flow.Regulator', function(){
 		Mock,
 		mountUp;
 
-	bMoor.mock( 'bmoor.flow.Regulator', {
+	bMoor.mock( {}, 'bmoor.flow.Regulator', {
 		'bmoor.flow.Timeout' : Timeout
 	}).then(function( o ){
 		Mock = o;
