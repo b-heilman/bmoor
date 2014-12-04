@@ -1,5 +1,5 @@
 ;(function(){
-/** bmoor v0.0.3 **/
+/** bmoor v0.0.4 **/
 var bMoor = {};
 
 (function( g ){
