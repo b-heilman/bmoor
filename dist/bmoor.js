@@ -2735,7 +2735,9 @@ bMoor.make('bmoor.component.Plugin', [
 						var backup = plugin.$wrapped,
 							rtn;
 
-						plugin.$wrapped = old;
+						plugin.$wrapped = function(){
+							old.apply( target, arguments );
+						};
 
 						rtn = action.apply( plugin, arguments );
 

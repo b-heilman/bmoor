@@ -41,7 +41,9 @@ describe('bmoor.component.Plugin', function(){
 
 	describe( 'using Plugin', function(){
 		var called,
-			t;
+			t,
+			woot1, 
+			woot2;
 
 		beforeEach(function(){
 			bMoor.make({}, 'Plug', {
@@ -51,13 +53,13 @@ describe('bmoor.component.Plugin', function(){
 						this.$wrapped();
 						expect( this._test ).toBeDefined();
 					},
-					zwei : function(){},
 					_test : 'hello'
 				}
 			}).then(function( O ){
 				t = {
 					eins : function(){
 						called = true;
+						expect( this._test ).toBeUndefined();
 					}
 				};
 				( new O() )._target( t );
