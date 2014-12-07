@@ -7,7 +7,7 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 				obj = this;
 
 			if ( singleton ){
-				t = bMoor.instantiate( obj, [] );
+				t = bMoor.object.instantiate( obj, [] );
 				t.$constructor = obj;
 
 				return t;

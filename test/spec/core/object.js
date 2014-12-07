@@ -9,7 +9,7 @@ describe("Testing object functions", function() {
 			this.hey = hey;
 		}
 
-		expect( bMoor.instantiate(Foo,['derp','woot']).dude ).toBe( 'derp' );
+		expect( bMoor.object.instantiate(Foo,['derp','woot']).dude ).toBe( 'derp' );
 		expect( wasCalled ).toBe( true );
 	});
 	
@@ -56,7 +56,7 @@ describe("Testing object functions", function() {
 
 	// map
 	it('should allow for the mapping of variables onto an object', function(){
-		var t = bMoor.map({},{
+		var t = bMoor.object.explode({},{
 			'eins' : 1, 
 			'zwei' : 2,
 			'drei' : 3,
@@ -68,7 +68,7 @@ describe("Testing object functions", function() {
 	});
 
 	it('should allow for a new variable to be created from a map', function(){
-		var t = bMoor.map({
+		var t = bMoor.object.explode({
 			'eins' : 1, 
 			'zwei' : 2,
 			'drei' : 3,

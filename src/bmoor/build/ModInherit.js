@@ -23,12 +23,6 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 
 				delete this.$generic;
 			}
-			
-			this.prototype.$static = this;	
-			this.prototype.__class = id;
-			this.prototype.__namespace = namespace;
-			this.prototype.__name = name;
-			this.prototype.__mount = mount;
 		}]
 	);
 }]);

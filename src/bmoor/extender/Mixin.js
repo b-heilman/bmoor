@@ -1,4 +1,4 @@
-bMoor.make('bmoor.component.Mixin', [
+bMoor.make('bmoor.extender.Mixin', [
 	function(){
 		'use strict';
 
@@ -7,7 +7,7 @@ bMoor.make('bmoor.component.Mixin', [
 				throw 'You neex to extend Mixin, no instaniating it directly';
 			},
 			properties : {
-				_target : function( obj ){
+				_extend : function( obj ){
 					var key;
 
 					for( key in this ){

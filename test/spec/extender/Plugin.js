@@ -1,16 +1,16 @@
-describe('bmoor.component.Plugin', function(){
+describe('bmoor.extender.Plugin', function(){
 	var space = {},
-		Plugin = bMoor.get('bmoor.component.Plugin');
+		Plugin = bMoor.get('bmoor.extender.Plugin');
 
-	it( 'should have the target function defined', function(){
-		expect( Plugin.prototype._target ).toBeDefined();
+	it( 'should have the _extend function defined', function(){
+		expect( Plugin.prototype._extend ).toBeDefined();
 	});
 
 	it( 'should not be able to be constructed', function(){
 		var t;
 
 		try {
-			new Mixin();
+			new Plugin();
 		} catch( e ){
 			t = true;
 		}
@@ -22,50 +22,54 @@ describe('bmoor.component.Plugin', function(){
 		var t;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Plug', {
+			t = bMoor.test.make({
 				parent: Plugin,
 				properties : {
 					eins : function(){},
 					zwei : function(){}
 				}
-			}).then(function( O ){
-				t = new O();
 			});
+
+			t = new t();
 		});
 		
 		it( 'should copy properties over', function(){
 			expect( t.eins ).toBeDefined();
-			expect( t._target ).toBeDefined();
+			expect( t._extend ).toBeDefined();
 		});
 	});
 
 	describe( 'using Plugin', function(){
 		var called,
-			t;
+			t,
+			t2,
+			woot1, 
+			woot2;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Plug', {
+			t = bMoor.test.make({
 				parent: Plugin,
 				properties : {
 					eins : function(){
 						this.$wrapped();
 						expect( this._test ).toBeDefined();
 					},
-					zwei : function(){},
 					_test : 'hello'
 				}
-			}).then(function( O ){
-				t = {
-					eins : function(){
-						called = true;
-					}
-				};
-				( new O() )._target( t );
 			});
+
+			t2 = {
+				eins : function(){
+					called = true;
+					expect( this._test ).toBeUndefined();
+				}
+			};
+			
+			( new t() )._extend( t2 );
 		});
 		
 		it( 'should copy properties over', function(){
-			t.eins();
+			t2.eins();
 
 			expect( called ).toBe( true );
 		});

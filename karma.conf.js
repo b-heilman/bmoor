@@ -15,12 +15,10 @@ module.exports = function(config) {
             'src/bmoor/defer/*.js',
             'src/bmoor/flow/*.js',
             'src/bmoor/error/*.js',
-            'src/bmoor/component/*.js',
+            'src/bmoor/extender/*.js',
             'src/bmock/**/*.js',
 			'test/spec/**/*.js'
-            //'test/spec/data/MapObserver.js',
-            //'test/spec/data/CollectionObserver.js'
-		],
+        ],
 
         // preprocessors: {
         //   'app/scripts/{,*/}*.js': 'coverage'

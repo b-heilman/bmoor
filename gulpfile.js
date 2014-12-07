@@ -33,7 +33,7 @@ var buildDir = './dist/',
 		'./src/bmoor/defer/*.js',
 		'./src/bmoor/flow/*.js',
 		'./src/bmoor/error/*.js',
-        './src/bmoor/component/*.js'
+        './src/bmoor/extender/*.js'
     ],
     jsOut = 'bmoor.js',
     jsMin = 'bmoor.min.js',

@@ -2,12 +2,14 @@ describe("Testing the builds compiler", function() {
 	var Compiler = bMoor.get('bmoor.build.Compiler').$constructor,
 		compiler,
 		log,
-		space = {};
+		root = {};
 
 	it("should allow the declaration of a Compiler", function(){
 		compiler = new Compiler();
 
 		expect( compiler ).toBeDefined();
+
+		compiler.setRoot( root );
 	});
 
 	it("should allow plugins to be added", function(){
@@ -37,27 +39,25 @@ describe("Testing the builds compiler", function() {
 			foobar : 3,
 			foo : 1,
 			bar : 2
-		}, space );
+		});
 
 		expect( log ).toEqual( [2,1,3] );
-		expect( space.Aname ).toBeDefined();
-		expect( space.Aname.prototype.foo ).toBe( 'foo' );
-		expect( space.Aname.prototype.bar ).toBe( true );
-		expect( space.Aname.prototype.foobar ).toBe( false );
+		expect( root.Aname ).toBeDefined();
+		expect( root.Aname.prototype.foo ).toBe( 'foo' );
+		expect( root.Aname.prototype.bar ).toBe( true );
+		expect( root.Aname.prototype.foobar ).toBe( false );
 	});
 
 	it("should allow previously defined objects to be mocked", function(){
-		var t;
-
 		log = [];
 
 		compiler.mock( 'Aname', {
 			foobar : 7,
 			foo : 5,
 			bar : 6
-		}, space ).then(function( o ){
+		}).then(function( o ){
 			t = o;
-		});
+		});	
 
 		expect( log ).toEqual( [2,1,3] ); // because the original defintion doesn't inject
 		expect( t ).toBeDefined();
@@ -69,9 +69,9 @@ describe("Testing the builds compiler", function() {
 	it("should run allow for injection in defintions", function(){
 		log = [];
 
-		space.foobar = 3;
-		space.foo = 1;
-		space.bar = 2;
+		root.foobar = 13;
+		root.foo = 11;
+		root.bar = 12;
 
 		compiler.make( 'Aname', ['foo', 'bar', 'foobar', function( f, b, fb ){
 			return {
@@ -79,13 +79,13 @@ describe("Testing the builds compiler", function() {
 				foo : f,
 				bar : b
 			}
-		}], space );
+		}]);
 
-		expect( log ).toEqual( [2,1,3] );
-		expect( space.Aname ).toBeDefined();
-		expect( space.Aname.prototype.foo ).toBe( 'foo' );
-		expect( space.Aname.prototype.bar ).toBe( true );
-		expect( space.Aname.prototype.foobar ).toBe( false );
+		expect( log ).toEqual( [12,11,13] );
+		expect( root.Aname ).toBeDefined();
+		expect( root.Aname.prototype.foo ).toBe( 'foo' );
+		expect( root.Aname.prototype.bar ).toBe( true );
+		expect( root.Aname.prototype.foobar ).toBe( false );
 	});
 
 	it("should run allow for injection in mocks", function(){
@@ -93,18 +93,18 @@ describe("Testing the builds compiler", function() {
 
 		log = [];
 
-		space.foobar = 3;
-		space.foo = 1;
-		space.bar = 2;
+		root.foobar = 3;
+		root.foo = 1;
+		root.bar = 2;
 
 		compiler.mock( 'Aname', {
-			foobar : 7,
-			bar : 6
-		}, space ).then(function( o ){
+			foobar : 27,
+			bar : 26
+		}).then(function( o ){
 			t = o;
 		});
 
-		expect( log ).toEqual( [6,1,7] );
+		expect( log ).toEqual( [26,1,27] );
 		expect( t ).toBeDefined();
 		expect( t.prototype.foo ).toBe( 'foo' );
 		expect( t.prototype.bar ).toBe( true );
@@ -112,12 +112,100 @@ describe("Testing the builds compiler", function() {
 	});
 
 	it("should run allow for defining constants", function(){
-		compiler.define( 'Woot', 1, space );
-		compiler.define( 'Foo', {}, space );
-		compiler.define( 'Bar', true, space );
+		compiler.define( 'Woot', 1 );
+		compiler.define( 'Foo', {} );
+		compiler.define( 'Bar', true );
 
-		expect( space.Woot ).toBe( 1 );
-		expect( space.Foo ).toBeDefined();
-		expect( space.Bar ).toBe( true );
+		expect( root.Woot ).toBe( 1 );
+		expect( root.Foo ).toBeDefined();
+		expect( root.Bar ).toBe( true );
+	});
+
+	describe('inheritance', function(){
+		beforeEach(function(){
+			root = {};
+			compiler = new Compiler();
+
+			compiler.setRoot( root );
+
+			compiler.addModule( 90, 'bmoor.build.ModInherit', 
+				['-id','-namespace','-name', '-mount','-parent',
+				function( id, namespace, name, mount, parent ){
+					var construct,
+						proto;
+
+					if ( parent ){
+						construct = this;
+
+						if ( bMoor.isFunction(parent) ){
+							// we assume this a constructor function
+							proto = parent.prototype;
+						}else{
+							// we want to inherit directly from this object
+							proto = parent;
+						}
+
+						this.prototype = bMoor.object.mask( proto );
+						this.prototype.constructor = construct;
+
+						delete this.$generic;
+					}
+				}]
+			);
+
+			compiler.addModule( 10, 'bmoor.build.ModProperties', 
+				['-properties', function( properties ){
+					var proto = this.prototype;
+					
+					if ( properties ){
+						bMoor.each( properties, function( prop, name ){
+							proto[ name ] = prop;
+						});
+					}
+				}]
+			);
+		});
+
+		it('should be possible', function(){
+			compiler.make('Test1', {
+				properties : {
+					eins : 'one'
+				}
+			});
+
+			expect( root.Test1.prototype.eins ).toBe('one');
+			expect( root.Test1.$ready ).toBeUndefined();
+
+			compiler.make('Test2', [
+				'Test1',
+				function( Test1 ){
+					return {
+						parent : Test1,
+						properties : {
+							zwei : 'two'
+						}
+					}
+				}]
+			);
+
+			expect( root.Test2 ).toBeDefined();
+			expect( root.Test2.prototype.eins ).toBeDefined();
+			expect( root.Test2.prototype.zwei ).toBe('two');
+			expect( root.Test2.$ready ).toBeUndefined();
+		});
+	});
+
+	describe('global interaction', function(){
+		it('should allow making and defining', function(){
+			expect( bMoor.make ).toBeDefined();
+			expect( bMoor.define ).toBeDefined();
+		});
+
+		it('should facilitate creating test objects', function(){
+			expect( bMoor.test ).toBeDefined();
+			expect( bMoor.test.remake ).toBeDefined();
+			expect( bMoor.test.make ).toBeDefined();
+			expect( bMoor.test.mock ).toBeDefined();
+		});
 	});
 });
