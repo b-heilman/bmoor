@@ -2620,4 +2620,129 @@ bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
 		}
 	};
 }]);
+bMoor.make('bmoor.extender.Decorator', [
+	function(){
+		'use strict';
+
+		function override( key, target, action ){
+			var old = target[key];
+			
+			if ( bMoor.isFunction(action) ){
+				if ( old === undefined ){
+					target[key] = action;
+				} else if ( bMoor.isFunction(old) ){
+					target[key] = function(){
+						var backup = this.$wrapped,
+							rtn;
+
+						this.$wrapped = old;
+
+						rtn = action.apply( this, arguments );
+
+						this.$wrapped = backup;
+
+						return rtn;
+					};
+				} else {
+					throw 'attempting to decorate '+key+' an instance of '+typeof(old);
+				}
+			}else{
+				throw 'attempting to decorate with '+key+' and instance of '+typeof(action);
+			}
+		}
+
+		return {
+			construct : function Decorator(){
+				throw 'You neex to extend Decorator, no instaniating it directly';
+			},
+			properties : {
+				_extend : function( target ){
+					var key;
+
+					for( key in this ){
+						if ( key.charAt(0) !== '_' ){
+							override( key, target, this[key] );
+						}
+					}
+				}
+			}
+		};
+	}]
+);
+bMoor.make('bmoor.extender.Mixin', [
+	function(){
+		'use strict';
+
+		return {
+			construct : function Mixin(){
+				throw 'You neex to extend Mixin, no instaniating it directly';
+			},
+			properties : {
+				_extend : function( obj ){
+					var key;
+
+					for( key in this ){
+						if ( key.charAt(0) !== '_' ){
+							obj[key] = this[key];
+						}
+					}
+				}
+			}
+		};
+	}]
+);
+bMoor.make('bmoor.extender.Plugin', [
+	function(){
+		'use strict';
+
+		function override( key, target, plugin ){
+			var action = plugin[key],
+				old = target[key];
+			
+			if ( bMoor.isFunction(action) ){
+				if ( old === undefined ){
+					target[key] = function(){
+						return action.apply( plugin, arguments );
+					};
+				} else if ( bMoor.isFunction(old) ){
+					target[key] = function(){
+						var backup = plugin.$wrapped,
+							rtn;
+
+						plugin.$wrapped = function(){
+							old.apply( target, arguments );
+						};
+
+						rtn = action.apply( plugin, arguments );
+
+						plugin.$wrapped = backup;
+
+						return rtn;
+					};
+				}else{
+					throw 'attempting to plug-n-play '+key+' an instance of '+typeof(old);
+				}
+			}else{
+				throw 'attempting to plug-n-play with '+key+' and instance of '+typeof(action);
+			}
+		}
+
+		return {
+			construct : function Plugin(){
+				throw 'You neex to extend Plugin, no instaniating it directly';
+			},
+			properties : {
+				_extend : function( target ){
+					var key;
+
+					for( key in this ){
+						if ( key.charAt(0) !== '_' ){
+							override( key, target, this );
+						}
+					}
+				}
+			}
+		};
+	}]
+);
 }());
