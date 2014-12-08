@@ -2,8 +2,8 @@ describe('bmoor.extender.Plugin', function(){
 	var space = {},
 		Plugin = bMoor.get('bmoor.extender.Plugin');
 
-	it( 'should have the target function defined', function(){
-		expect( Plugin.prototype._target ).toBeDefined();
+	it( 'should have the _extend function defined', function(){
+		expect( Plugin.prototype._extend ).toBeDefined();
 	});
 
 	it( 'should not be able to be constructed', function(){
@@ -35,7 +35,7 @@ describe('bmoor.extender.Plugin', function(){
 		
 		it( 'should copy properties over', function(){
 			expect( t.eins ).toBeDefined();
-			expect( t._target ).toBeDefined();
+			expect( t._extend ).toBeDefined();
 		});
 	});
 
@@ -62,7 +62,7 @@ describe('bmoor.extender.Plugin', function(){
 						expect( this._test ).toBeUndefined();
 					}
 				};
-				( new O() )._target( t );
+				( new O() )._extend( t );
 			});
 		});
 		

@@ -2,8 +2,8 @@ describe('bmoor.extender.Mixin', function(){
 	var space = {},
 		Mixin = bMoor.get('bmoor.extender.Mixin');
 
-	it( 'should have the target function defined', function(){
-		expect( Mixin.prototype._target ).toBeDefined();
+	it( 'should have the _extend function defined', function(){
+		expect( Mixin.prototype._extend ).toBeDefined();
 	});
 
 	it( 'should not be able to be constructed', function(){
@@ -35,7 +35,7 @@ describe('bmoor.extender.Mixin', function(){
 		
 		it( 'should copy properties over', function(){
 			expect( t.eins ).toBeDefined();
-			expect( t._target ).toBeDefined();
+			expect( t._extend ).toBeDefined();
 		});
 	});
 
@@ -51,7 +51,7 @@ describe('bmoor.extender.Mixin', function(){
 				}
 			}).then(function( O ){
 				t = {};
-				( new O() )._target( t );
+				( new O() )._extend( t );
 			});
 		});
 		

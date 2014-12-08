@@ -2,8 +2,8 @@ describe('bmoor.extender.Decorator', function(){
 	var space = {},
 		Decorator = bMoor.get('bmoor.extender.Decorator');
 
-	it( 'should have the target function defined', function(){
-		expect( Decorator.prototype._target ).toBeDefined();
+	it( 'should have the _extend function defined', function(){
+		expect( Decorator.prototype._extend ).toBeDefined();
 	});
 
 	it( 'should not be able to be constructed', function(){
@@ -35,7 +35,7 @@ describe('bmoor.extender.Decorator', function(){
 		
 		it( 'should copy properties over', function(){
 			expect( t.eins ).toBeDefined();
-			expect( t._target ).toBeDefined();
+			expect( t._extend ).toBeDefined();
 		});
 	});
 
@@ -60,7 +60,7 @@ describe('bmoor.extender.Decorator', function(){
 						called = true;
 					}
 				};
-				( new O() )._target( t );
+				( new O() )._extend( t );
 			});
 		});
 		

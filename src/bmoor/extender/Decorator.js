@@ -34,7 +34,7 @@ bMoor.make('bmoor.extender.Decorator', [
 				throw 'You neex to extend Decorator, no instaniating it directly';
 			},
 			properties : {
-				_target : function( target ){
+				_extend : function( target ){
 					var key;
 
 					for( key in this ){
