@@ -1,4 +1,4 @@
-bMoor.make('bmoor.component.Decorator', [
+bMoor.make('bmoor.extender.Decorator', [
 	function(){
 		'use strict';
 
@@ -6,7 +6,9 @@ bMoor.make('bmoor.component.Decorator', [
 			var old = target[key];
 			
 			if ( bMoor.isFunction(action) ){
-				if ( old === undefined || bMoor.isFunction(old) ){
+				if ( old === undefined ){
+					target[key] = action;
+				} else if ( bMoor.isFunction(old) ){
 					target[key] = function(){
 						var backup = this.$wrapped,
 							rtn;
@@ -19,7 +21,7 @@ bMoor.make('bmoor.component.Decorator', [
 
 						return rtn;
 					};
-				}else{
+				} else {
 					throw 'attempting to decorate '+key+' an instance of '+typeof(old);
 				}
 			}else{

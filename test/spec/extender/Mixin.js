@@ -1,6 +1,6 @@
-describe('bmoor.component.Mixin', function(){
+describe('bmoor.extender.Mixin', function(){
 	var space = {},
-		Mixin = bMoor.get('bmoor.component.Mixin');
+		Mixin = bMoor.get('bmoor.extender.Mixin');
 
 	it( 'should have the target function defined', function(){
 		expect( Mixin.prototype._target ).toBeDefined();

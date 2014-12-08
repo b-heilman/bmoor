@@ -1,16 +1,16 @@
-describe('bmoor.component.Plugin', function(){
+describe('bmoor.extender.Decorator', function(){
 	var space = {},
-		Plugin = bMoor.get('bmoor.component.Plugin');
+		Decorator = bMoor.get('bmoor.extender.Decorator');
 
 	it( 'should have the target function defined', function(){
-		expect( Plugin.prototype._target ).toBeDefined();
+		expect( Decorator.prototype._target ).toBeDefined();
 	});
 
 	it( 'should not be able to be constructed', function(){
 		var t;
 
 		try {
-			new Mixin();
+			new Decorator();
 		} catch( e ){
 			t = true;
 		}
@@ -18,12 +18,12 @@ describe('bmoor.component.Plugin', function(){
 		expect( t ).toBe( true );
 	});
 
-	describe( 'extending Plugin', function(){
+	describe( 'extending Decorator', function(){
 		var t;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Plug', {
-				parent: Plugin,
+			bMoor.make({}, 'Dec', {
+				parent: Decorator,
 				properties : {
 					eins : function(){},
 					zwei : function(){}
@@ -39,27 +39,25 @@ describe('bmoor.component.Plugin', function(){
 		});
 	});
 
-	describe( 'using Plugin', function(){
+	describe( 'using Decorator', function(){
 		var called,
-			t,
-			woot1, 
-			woot2;
+			t;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Plug', {
-				parent: Plugin,
+			bMoor.make({}, 'Dec', {
+				parent: Decorator,
 				properties : {
 					eins : function(){
 						this.$wrapped();
-						expect( this._test ).toBeDefined();
+						expect( this._test ).toBeUndefined();
 					},
+					zwei : function(){},
 					_test : 'hello'
 				}
 			}).then(function( O ){
 				t = {
 					eins : function(){
 						called = true;
-						expect( this._test ).toBeUndefined();
 					}
 				};
 				( new O() )._target( t );

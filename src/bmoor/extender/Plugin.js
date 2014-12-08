@@ -1,4 +1,4 @@
-bMoor.make('bmoor.component.Plugin', [
+bMoor.make('bmoor.extender.Plugin', [
 	function(){
 		'use strict';
 
@@ -7,7 +7,11 @@ bMoor.make('bmoor.component.Plugin', [
 				old = target[key];
 			
 			if ( bMoor.isFunction(action) ){
-				if ( old === undefined || bMoor.isFunction(old) ){
+				if ( old === undefined ){
+					target[key] = function(){
+						return action.apply( plugin, arguments );
+					};
+				} else if ( bMoor.isFunction(old) ){
 					target[key] = function(){
 						var backup = plugin.$wrapped,
 							rtn;

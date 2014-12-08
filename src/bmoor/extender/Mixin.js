@@ -1,4 +1,4 @@
-bMoor.make('bmoor.component.Mixin', [
+bMoor.make('bmoor.extender.Mixin', [
 	function(){
 		'use strict';
 

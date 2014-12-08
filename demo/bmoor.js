@@ -2186,15 +2186,15 @@ bMoor.inject(
 ]);
 bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
-	
-	compiler.addModule( 11, 'bmoor.build.ModDecorate', 
-		['-decorators', function( decorators ){
+
+	compiler.addModule( 11, 'bmoor.build.ModExtend', 
+		['-extend', function( extensions ){
 			var i, c,
 				proto = this.prototype;
 
-			if ( decorators ){
-				for( i = 0, c = decorators.length; i < c; i++ ){
-					decorators[i]._target( proto );
+			if ( extensions ){
+				for( i = 0, c = extensions.length; i < c; i++ ){
+					extensions[i]._target( proto );
 				}
 			}
 		}]
@@ -2275,38 +2275,6 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 				bMoor.iterate( instances, function( args /* arguments to construct with */, name /* string */ ){
 					obj[ '$'+name ] = bMoor.instantiate( obj, args );
 				});
-			}
-		}]
-	);
-}]);
-bMoor.inject(['bmoor.build.Compiler', function( compiler ){
-	'use strict';
-
-	compiler.addModule( 11, 'bmoor.build.ModMixins', 
-		['-mixins', function( mixins ){
-			var i, c,
-				proto = this.prototype;
-
-			if ( mixins ){
-				for( i = 0, c = mixins.length; i < c; i++ ){
-					mixins[i]._target( proto );
-				}
-			}
-		}]
-	);
-}]);
-bMoor.inject(['bmoor.build.Compiler', function( compiler ){
-	'use strict';
-	
-	compiler.addModule( 11, 'bmoor.build.ModPlugin', 
-		['-plugins', function( decorators ){
-			var i, c,
-				proto = this.prototype;
-
-			if ( decorators ){
-				for( i = 0, c = decorators.length; i < c; i++ ){
-					decorators[i]._target( proto );
-				}
 			}
 		}]
 	);
@@ -2652,123 +2620,4 @@ bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
 		}
 	};
 }]);
-bMoor.make('bmoor.component.Decorator', [
-	function(){
-		'use strict';
-
-		function override( key, target, action ){
-			var old = target[key];
-			
-			if ( bMoor.isFunction(action) ){
-				if ( old === undefined || bMoor.isFunction(old) ){
-					target[key] = function(){
-						var backup = this.$wrapped,
-							rtn;
-
-						this.$wrapped = old;
-
-						rtn = action.apply( this, arguments );
-
-						this.$wrapped = backup;
-
-						return rtn;
-					};
-				}else{
-					throw 'attempting to decorate '+key+' an instance of '+typeof(old);
-				}
-			}else{
-				throw 'attempting to decorate with '+key+' and instance of '+typeof(action);
-			}
-		}
-
-		return {
-			construct : function Decorator(){
-				throw 'You neex to extend Decorator, no instaniating it directly';
-			},
-			properties : {
-				_target : function( target ){
-					var key;
-
-					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
-							override( key, target, this[key] );
-						}
-					}
-				}
-			}
-		};
-	}]
-);
-bMoor.make('bmoor.component.Mixin', [
-	function(){
-		'use strict';
-
-		return {
-			construct : function Mixin(){
-				throw 'You neex to extend Mixin, no instaniating it directly';
-			},
-			properties : {
-				_target : function( obj ){
-					var key;
-
-					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
-							obj[key] = this[key];
-						}
-					}
-				}
-			}
-		};
-	}]
-);
-bMoor.make('bmoor.component.Plugin', [
-	function(){
-		'use strict';
-
-		function override( key, target, plugin ){
-			var action = plugin[key],
-				old = target[key];
-			
-			if ( bMoor.isFunction(action) ){
-				if ( old === undefined || bMoor.isFunction(old) ){
-					target[key] = function(){
-						var backup = plugin.$wrapped,
-							rtn;
-
-						plugin.$wrapped = function(){
-							old.apply( target, arguments );
-						};
-
-						rtn = action.apply( plugin, arguments );
-
-						plugin.$wrapped = backup;
-
-						return rtn;
-					};
-				}else{
-					throw 'attempting to plug-n-play '+key+' an instance of '+typeof(old);
-				}
-			}else{
-				throw 'attempting to plug-n-play with '+key+' and instance of '+typeof(action);
-			}
-		}
-
-		return {
-			construct : function Plugin(){
-				throw 'You neex to extend Plugin, no instaniating it directly';
-			},
-			properties : {
-				_target : function( target ){
-					var key;
-
-					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
-							override( key, target, this );
-						}
-					}
-				}
-			}
-		};
-	}]
-);
 }());
