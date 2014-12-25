@@ -19,44 +19,51 @@ describe('bmoor.extender.Mixin', function(){
 	});
 
 	describe( 'extending Mixin', function(){
-		var t;
+		var t,
+			t2;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Mix', {
-				parent: Mixin,
-				properties : {
-					eins : function(){},
-					zwei : function(){}
-				}
-			}).then(function( O ){
-				t = new O();
-			});
+			t = bMoor.test.make({
+					parent: Mixin,
+					properties : {
+						eins : function(){},
+						zwei : function(){}
+					}
+				});
+
+			t2 = new t();
 		});
 		
+		it( 'should have properties', function(){
+			expect( t.prototype.eins ).toBeDefined();
+			expect( t.prototype._extend ).toBeDefined();
+		});
+
 		it( 'should copy properties over', function(){
-			expect( t.eins ).toBeDefined();
-			expect( t._extend ).toBeDefined();
+			expect( t2.eins ).toBeDefined();
+			expect( t2._extend ).toBeDefined();
 		});
 	});
 
 	describe( 'using Mixin', function(){
-		var t;
+		var t,
+			t2;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Mix', {
-				parent: Mixin,
-				properties : {
-					eins : function(){},
-					zwei : function(){}
-				}
-			}).then(function( O ){
-				t = {};
-				( new O() )._extend( t );
-			});
+			t = bMoor.test.make({
+					parent: Mixin,
+					properties : {
+						eins : function(){},
+						zwei : function(){}
+					}
+				});
+
+			t2 = {};
+			( new t() )._extend( t2 );
 		});
 		
 		it( 'should copy properties over', function(){
-			expect( t.eins ).toBeDefined();
+			expect( t2.eins ).toBeDefined();
 		});
 	});
 });

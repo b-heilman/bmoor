@@ -19,53 +19,61 @@ describe('bmoor.extender.Decorator', function(){
 	});
 
 	describe( 'extending Decorator', function(){
-		var t;
+		var t,
+			t2;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Dec', {
-				parent: Decorator,
-				properties : {
-					eins : function(){},
-					zwei : function(){}
-				}
-			}).then(function( O ){
-				t = new O();
-			});
+			t = bMoor.test.make({
+					parent: Decorator,
+					properties : {
+						eins : function(){},
+						zwei : function(){}
+					}
+				});
+
+			t2 = new t();
 		});
 		
+		it( 'should have properties', function(){
+			expect( t.prototype.eins ).toBeDefined();
+			expect( t.prototype._extend ).toBeDefined();
+		});
+
 		it( 'should copy properties over', function(){
-			expect( t.eins ).toBeDefined();
-			expect( t._extend ).toBeDefined();
+			expect( t2.eins ).toBeDefined();
+			expect( t2._extend ).toBeDefined();
 		});
 	});
 
 	describe( 'using Decorator', function(){
 		var called,
-			t;
+			t,
+			t2;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Dec', {
-				parent: Decorator,
-				properties : {
-					eins : function(){
-						this.$wrapped();
-						expect( this._test ).toBeUndefined();
-					},
-					zwei : function(){},
-					_test : 'hello'
-				}
-			}).then(function( O ){
-				t = {
-					eins : function(){
-						called = true;
+			t = bMoor.test.make({
+					parent: Decorator,
+					properties : {
+						eins : function(){
+							this.$wrapped();
+							expect( this._test ).toBeUndefined();
+						},
+						zwei : function(){},
+						_test : 'hello'
 					}
-				};
-				( new O() )._extend( t );
-			});
+				});
+
+			t2 = {
+				eins : function(){
+					called = true;
+				}
+			};
+
+			( new t() )._extend( t2 );
 		});
 		
 		it( 'should copy properties over', function(){
-			t.eins();
+			t2.eins();
 
 			expect( called ).toBe( true );
 		});

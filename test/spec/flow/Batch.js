@@ -4,13 +4,12 @@ describe( 'bmoor.flow.Batch', function(){
 		timeout,
 		mountUp;
 
-	bMoor.mock( {}, 'bmoor.flow.Batch', {
-		'bmoor.flow.Timeout' : Timeout
-	}).then(function( o ){
-		Mock = o;
-	});
-
 	beforeEach(function(){
+		bMoor.test.remake();
+
+		Mock = bMoor.test.mock('bmoor.flow.Batch', {
+			'bmoor.flow.Timeout' : Timeout
+		});
 		mountUp = new Mock();
 	}); 
 

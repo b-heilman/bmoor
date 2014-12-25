@@ -59,9 +59,9 @@ describe("Testing array functionality", function() {
 
 	// remove
 	it("should support remove", function(){
-		expect( bMoor.array.remove(['a','c','b','c'],'a').length ).toBe( 1 );
-		expect( bMoor.array.remove(['a','c','b','c'],'c').length ).toBe( 1 );
-		expect( bMoor.array.remove(['a','c','b','c'],'d').length ).toBe( 0 );
+		expect( bMoor.array.remove(['a','c','b','c'],'a') ).toBe( 'a' );
+		expect( bMoor.array.remove(['a','c','b','c'],'c') ).toBe( 'c' );
+		expect( bMoor.array.remove(['a','c','b','c'],'d') ).toBeUndefined();
 	});
 
 	// removeAll

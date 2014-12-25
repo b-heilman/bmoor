@@ -1,5 +1,5 @@
 describe("Testing namespace functions", function() {
-	var _root = bMoor._root;
+	var _root = bMoor.namespace.root;
 
 	// parseNS
 	it("should parse namespaces correctly", function(){

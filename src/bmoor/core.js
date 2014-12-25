@@ -3,12 +3,10 @@ var bMoor = {};
 (function( g ){
 	'use strict';
 
-	var _root = bMoor._root = {},
+	var _root = {},
 		msie,
 		environment,
 		aliases = {};
-
-	_root.bmoor = {};
 
 	if ( g.navigator ){
 		// this means we're in a browser
@@ -61,7 +59,7 @@ var bMoor = {};
 	 * @namespace bMoor
 	 * @param {string|array} space The namespace
 	 * @param {something} value The value to set the namespace to
-	 * @param {object} root The root of the namespace, bMoor._root if not defined
+	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @return {something}
 	 **/
 	function set( space, value, root ){
@@ -98,14 +96,14 @@ var bMoor = {};
 	 * @function del
 	 * @namespace bMoor
 	 * @param {string|array} space The namespace
-	 * @param {object} root The root of the namespace, bMoor._root if not defined
+	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @return {something}
 	 **/
 	function del( space, root ){
 		var old,
 			val,
 			nextSpace,
-			curSpace = root || bMoor._root;
+			curSpace = root || bMoor.namespace.root;
 		
 		if ( space && (isString(space) || isArrayLike(space)) ){
 			space = parse( space );
@@ -135,11 +133,11 @@ var bMoor = {};
 	 * @function get
 	 * @namespace bMoor
 	 * @param {string|array} space The namespace
-	 * @param {object} root The root of the namespace, bMoor._root if not defined
+	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @return {array}
 	 **/
 	function get( space, root ){
-		var curSpace = root || bMoor._root,
+		var curSpace = root || bMoor.namespace.root,
 			nextSpace;
 		
 		if ( space && (isString(space) || isArrayLike(space)) ){
@@ -159,12 +157,12 @@ var bMoor = {};
 		}else if ( isObject(space) ){
 			return space;
 		}else{
-			throw 'unsupported type';
+			throw new Error('unsupported type');
 		}
 	}
 
 	function _exists( space, root ){
-		var curSpace = root || bMoor._root;
+		var curSpace = root || bMoor.namespace.root;
 		
 		if ( isString(space) || isArrayLike(space) ){
 			space = parse( space );
@@ -183,7 +181,7 @@ var bMoor = {};
 		}else if ( isObject(space) ){
 			return space;
 		}else{
-			throw 'unsupported type';
+			throw new Error('unsupported type');
 		}
 	}
 
@@ -193,7 +191,7 @@ var bMoor = {};
 	 * @function exists
 	 * @namespace bMoor
 	 * @param {string|array} space The namespace
-	 * @param {object|array} root Array of roots to check, the root of the namespace, or bMoor._root if not defined
+	 * @param {object|array} root Array of roots to check, the root of the namespace, or bMoor.namespace.root if not defined
 	 * @return {array}
 	 **/
 	function exists( space, root ){
@@ -219,7 +217,7 @@ var bMoor = {};
 	 * @namespace bMoor
 	 * @param {string} alias The name of the alias
 	 * @param {object} obj The value to be aliased
-	 * @param {object|array} root Array of roots to check, the root of the namespace, or bMoor._root if not defined
+	 * @param {object|array} root Array of roots to check, the root of the namespace, or bMoor.namespace.root if not defined
 	 **/
 	function register( alias, obj, root ){
 		var a;
@@ -243,7 +241,7 @@ var bMoor = {};
 	 * @function check
 	 * @namespace bMoor
 	 * @param {string} alias The name of the alias
-	 * @param {object|array} root Array of roots to check, the root of the namespace, or bMoor._root if not defined
+	 * @param {object|array} root Array of roots to check, the root of the namespace, or bMoor.namespace.root if not defined
 	 * @return {something}
 	 **/
 	function check( alias, root ){
@@ -273,43 +271,6 @@ var bMoor = {};
 	// TODO : is this really needed?
 	function plugin( name, obj ){ 
 		set( name, obj, bMoor ); 
-	}
-
-	/**
-	 * first searches to see if an alias exists, then sees if the namespace exists
-	 *
-	 * @function find
-	 * @namespace bMoor
-	 * @param {string|array} space The namespace
-	 * @param {object|array} root Array of roots to check, the root of the namespace, or bMoor._root if not defined
-	 * @return {something}
-	 **/
-	// TODO : is this really needed?
-	function find( namespace, root ){
-		var t;
-		
-		if ( root === undefined ){
-			t = check( isArray(namespace)?namespace.join('.'):namespace );
-			if ( t ){
-				return t;
-			}
-		}
-
-		return exists( namespace, root );
-	}
-
-	/**
-	 * first sets the variable to the namespace, then registers it as an alias
-	 *
-	 * @function install
-	 * @namespace bMoor
-	 * @param {string|array} namespace The namespace
-	 * @param {something} obj The thing being installed into the namespace
-	 * @param {root} obj The root to install against
-	 **/
-	// TODO : is this really needed?
-	function install( namespace, obj, root ){
-		set( namespace, obj, root );
 	}
 
 	/**
@@ -353,13 +314,13 @@ var bMoor = {};
 	/**
 	 * Takes a hash and uses the indexs as namespaces to add properties to an objs
 	 *
-	 * @function map
+	 * @function explode
 	 * @namespace bMoor
 	 * @param {object} target The object to map the variables onto
 	 * @param {object} mappings An object orientended as [ namespace ] => value
 	 * @return {object} The object that has had content mapped into it
 	 **/
-	function map( target, mappings ){
+	function explode( target, mappings ){
 		if ( arguments.length === 1 ){
 			mappings = target;
 			target = {};
@@ -509,48 +470,6 @@ var bMoor = {};
 	}
 
 	/**
-	 * Copy content from one object into another
-	 *
-	 * @function copy
-	 * @namespace bMoor
-	 * @param {object} from The object to copy the content from
-	 * @param {object} to The object into which to copy the content
-	 * @param {boolean} deep Whether or not to deep copy the data
-	 * @returns {object} The object copied into
-	 **/
-	function copy( from, to, deep ){
-		if ( from === to ){
-			return to;
-		}else if ( !to ){
-			to = from; // this lets all other things pass through
-
-			if ( from ){
-				if ( from.clone ){
-					to = from.clone();
-				}else if ( isArrayLike(from) ){
-					to = copy( from, [], deep );
-				}else{
-					to = copy( from, {}, deep );
-				}
-			}
-		}else if ( to.copy ){
-			to.copy( from, deep );
-		}else{
-			if ( isArrayLike(from) ){
-				to.length = 0;  // this clears the array
-				for( var i = 0, c = from.length; i < c; i++ ){
-					to.push( copy(from[i]) );
-				}
-			}else{
-				each( to, function( value, key ){ delete to[key]; });
-				each( from, function( value, key ){ to[key] = value; });
-			}
-		}
-
-		return to;
-	}
-
-	/**
 	 * A general comparison algorithm to test if two objects are equal
 	 *
 	 * @function equals
@@ -570,7 +489,7 @@ var bMoor = {};
 			return true;
 		}else if ( obj1 !== obj1 && obj2 !== obj2 ){
 			return true; // silly NaN
-		}else if ( obj1 === null || obj1 === undefined || obj2 === null || obj2 === null ){
+		}else if ( obj1 === null || obj1 === undefined || obj2 === null || obj2 === undefined ){
 			return false; // undefined or null
 		}else if ( obj1.equals ){
 			return obj1.equals( obj2 );
@@ -625,7 +544,7 @@ var bMoor = {};
 	/**
 	 * Reports an error
 	 *
-	 * @function map
+	 * @function error
 	 * @namespace bMoor
 	 * @param {object} error The error to be reporting
 	 **/
@@ -969,7 +888,7 @@ var bMoor = {};
 	 * @function makeQuark
 	 * @namespace bMoor
 	 * @param {string|array} namespace The path to the quark
-	 * @param {object} root The root of the namespace to position the quark, defaults to bMoor._root
+	 * @param {object} root The root of the namespace to position the quark, defaults to bMoor.namespace.root
 	 * @return {Quark}
 	 **/
 	function makeQuark( namespace, root ){
@@ -977,13 +896,13 @@ var bMoor = {};
 			t = exists( path ),
 			defer,
 			quark = function Quark (){
-				throw 'You tried to construct a Quark: '+path.join( '.' );
+				throw new Error('You tried to construct a Quark: '+path.join( '.' ));
 			};
 
 		if ( isQuark(t) ){
 			return t;
 		}else{
-			root = root || bMoor._root;
+			root = root || bMoor.namespace.root;
 
 			quark.$isQuark = true;
 
@@ -1017,7 +936,7 @@ var bMoor = {};
 	 * @function ensure
 	 * @namespace bMoor
 	 * @param {string|array} namespace The path to the quark
-	 * @param {object} root The root of the namespace to search, defaults to bMoor._root
+	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
 	 * @return {Quark}
 	 **/
 	function ensure( namespace, root, debug ){
@@ -1037,7 +956,7 @@ var bMoor = {};
 	 * @function decode
 	 * @namespace bMoor
 	 * @param {string} str The string that needs to be decoded
-	 * @param {object} root The root of the namespace to search, defaults to bMoor._root
+	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
 	 * @return {object}
 	 **/
 	function decode( str, root ){
@@ -1063,7 +982,7 @@ var bMoor = {};
 	 * @function translate
 	 * @namespace bMoor
 	 * @param {array} arr The array to be translated
-	 * @param {object} root The root of the namespace to search, defaults to bMoor._root
+	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
 	 * @return {array}
 	 **/
 	function translate( arr, root ){
@@ -1087,7 +1006,7 @@ var bMoor = {};
 	 * @namespace bMoor
 	 * @param {array} req The array to be translated
 	 * @param {array} translate If unknown strings should be ensured
-	 * @param {object} root The root of the namespace to search, defaults to bMoor._root
+	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
 	 * @return {bmoor.defer.Promise}
 	 **/
 	function request( req, translate, root ){
@@ -1127,7 +1046,7 @@ var bMoor = {};
 	 * @function inject
 	 * @namespace bMoor
 	 * @param {Injectable} arr An array with a function as the last value
-	 * @param {object} root The root of the namespace to search, defaults to bMoor._root
+	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
 	 * @param {object} context The context to call the function against
 	 * @return {bmoor.defer.Promise}
 	 **/
@@ -1141,7 +1060,9 @@ var bMoor = {};
 		}else if ( isInjectable(arr) ){
 			func = arr[ arr.length - 1 ];
 		}else{
-			throw 'inject needs arr to be either Injectable or Function';
+			throw new Error(
+				'inject needs arr to be either Injectable or Function, received:' + typeof( arr )
+			);
 		}
 
 		if ( !context ){
@@ -1303,9 +1224,7 @@ var bMoor = {};
 		var pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
-			return [ arr.splice(pos,1) ];
-		}else{
-			return [];
+			return arr.splice( pos, 1 )[0];
 		}
 	}
 
@@ -1321,15 +1240,12 @@ var bMoor = {};
 	 **/
 	function removeAll( arr, searchElement, fromIndex ){
 		var r,
-			res,
 			pos = indexOf( arr, searchElement, fromIndex );
 
 		if ( pos > -1 ){
-			res = arr.splice( pos, 1 );
-			r = removeAll( arr, searchElement, pos );
-
-			r.unshift( res );
-
+			r = removeAll( arr, searchElement, pos+1 );
+			r.unshift( arr.splice(pos,1)[0] );
+			
 			return r;
 		} else {
 			return [];
@@ -1357,7 +1273,7 @@ var bMoor = {};
 				res = [];
 
 			if ( !isFunction(func) ){
-				throw 'func needs to be a function';
+				throw new Error('func needs to be a function');
 			}
 
 			for ( i = 0; i < c; i++ ){
@@ -1506,7 +1422,7 @@ var bMoor = {};
 			if ( this.sub ){
 				this.sub.reject( error );
 			}else{
-				throw 'must reject from inside a then';
+				throw new Error('must reject from inside a then');
 			}
 		},
 		/**
@@ -1650,7 +1566,11 @@ var bMoor = {};
 			 * @param {function} message The value to be reported back
 			 **/
 			defaultFailure : function( message ){ 
-				throw message; // keep passing the buck till someone stops it
+				if ( message instanceof Error ){
+					throw message;
+				}else{
+					throw new Error(message); // keep passing the buck till someone stops it
+				}
 			}, 
 			/**
 			 * Set up functions to be called when value is resolved
@@ -1808,16 +1728,18 @@ var bMoor = {};
 	**/
 	extend( bMoor, {
 		// namespace
+		'namespace'   : {
+			root : _root
+		},
+		// accessors
 		'parseNS'     : parse,
 		'dwrap'       : dwrap,
 		'set'         : set,
 		'get'         : get,
 		'del'         : del,
 		'exists'      : exists,
-		'register'    : register,
-		'check'       : check,
-		'find'        : find,
-		'install'     : install,
+		'register'    : register, // defines an alias
+		'check'       : check,	// checks for an alias
 		// injection
 		'makeQuark'   : makeQuark,
 		'ensure'      : ensure,
@@ -1825,12 +1747,12 @@ var bMoor = {};
 		'request'     : request,
 		'translate'   : translate,
 		'inject'      : inject,
-		'plugin'      : plugin,
+		'plugin'      : plugin, // adds it to bMoor
 		// loop
 		'loop'        : loop, // array
 		'each'        : each, // object
 		'iterate'     : iterate, // object + safe
-		'forEach'     : forEach,
+		'forEach'     : forEach, // picks the best to use for the instance
 		// test
 		'isBoolean'   : isBoolean,
 		'isDefined'   : isDefined,
@@ -1845,16 +1767,18 @@ var bMoor = {};
 		'isEmpty'     : isEmpty, 
 		'isQuark'     : isQuark,
 		// object
-		'instantiate' : instantiate,
-		'map'         : map,
 		'object' : {
 			'safe'      : safe,
 			'mask'      : mask,
-			'extend'    : extend,
-			'copy'      : copy,
 			'equals'    : equals,
-			'merge'     : merge,
-			'override'  : override
+			'instantiate' : instantiate,
+			// what is the difference between these?
+			'extend'    : extend, // copy properties from one object to another
+			'merge'     : merge, // deep version of extend
+			'override'  : override, // copies in all values, but uses original object
+			// modifiers
+			'explode' : explode
+			// TODO : implode -> convert multi layer hash into single layer hash
 		},
 		// string
 		'string' : {

@@ -5,27 +5,29 @@ bMoor.make('bmoor.extender.Decorator', [
 		function override( key, target, action ){
 			var old = target[key];
 			
-			if ( bMoor.isFunction(action) ){
-				if ( old === undefined ){
-					target[key] = action;
-				} else if ( bMoor.isFunction(old) ){
-					target[key] = function(){
-						var backup = this.$wrapped,
-							rtn;
+			if ( old === undefined ){
+				target[key] = action;
+			} else {
+				if ( bMoor.isFunction(action) ){
+					if ( bMoor.isFunction(old) ){
+						target[key] = function(){
+							var backup = this.$wrapped,
+								rtn;
 
-						this.$wrapped = old;
+							this.$wrapped = old;
 
-						rtn = action.apply( this, arguments );
+							rtn = action.apply( this, arguments );
 
-						this.$wrapped = backup;
+							this.$wrapped = backup;
 
-						return rtn;
-					};
-				} else {
-					throw 'attempting to decorate '+key+' an instance of '+typeof(old);
+							return rtn;
+						};
+					} else {
+						throw 'attempting to decorate '+key+' an instance of '+typeof(old);
+					}
+				}else{
+					throw 'attempting to decorate with '+key+' and instance of '+typeof(action);
 				}
-			}else{
-				throw 'attempting to decorate with '+key+' and instance of '+typeof(action);
 			}
 		}
 

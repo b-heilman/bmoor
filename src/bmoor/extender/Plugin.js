@@ -6,31 +6,37 @@ bMoor.make('bmoor.extender.Plugin', [
 			var action = plugin[key],
 				old = target[key];
 			
-			if ( bMoor.isFunction(action) ){
-				if ( old === undefined ){
+			if ( old === undefined ){
+				if ( bMoor.isFunction(action) ){
 					target[key] = function(){
 						return action.apply( plugin, arguments );
 					};
-				} else if ( bMoor.isFunction(old) ){
-					target[key] = function(){
-						var backup = plugin.$wrapped,
-							rtn;
-
-						plugin.$wrapped = function(){
-							old.apply( target, arguments );
-						};
-
-						rtn = action.apply( plugin, arguments );
-
-						plugin.$wrapped = backup;
-
-						return rtn;
-					};
-				}else{
-					throw 'attempting to plug-n-play '+key+' an instance of '+typeof(old);
+				} else {
+					target[key] = action;
 				}
-			}else{
-				throw 'attempting to plug-n-play with '+key+' and instance of '+typeof(action);
+			} else {
+				if ( bMoor.isFunction(action) ){
+					if ( bMoor.isFunction(old) ){
+						target[key] = function(){
+							var backup = plugin.$wrapped,
+								rtn;
+
+							plugin.$wrapped = function(){
+								old.apply( target, arguments );
+							};
+
+							rtn = action.apply( plugin, arguments );
+
+							plugin.$wrapped = backup;
+
+							return rtn;
+						};
+					}else{
+						throw 'attempting to plug-n-play '+key+' an instance of '+typeof(old);
+					}
+				}else{
+					throw 'attempting to plug-n-play with '+key+' and instance of '+typeof(action);
+				}
 			}
 		}
 

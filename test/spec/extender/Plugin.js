@@ -22,15 +22,15 @@ describe('bmoor.extender.Plugin', function(){
 		var t;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Plug', {
+			t = bMoor.test.make({
 				parent: Plugin,
 				properties : {
 					eins : function(){},
 					zwei : function(){}
 				}
-			}).then(function( O ){
-				t = new O();
 			});
+
+			t = new t();
 		});
 		
 		it( 'should copy properties over', function(){
@@ -42,11 +42,12 @@ describe('bmoor.extender.Plugin', function(){
 	describe( 'using Plugin', function(){
 		var called,
 			t,
+			t2,
 			woot1, 
 			woot2;
 
 		beforeEach(function(){
-			bMoor.make({}, 'Plug', {
+			t = bMoor.test.make({
 				parent: Plugin,
 				properties : {
 					eins : function(){
@@ -55,19 +56,20 @@ describe('bmoor.extender.Plugin', function(){
 					},
 					_test : 'hello'
 				}
-			}).then(function( O ){
-				t = {
-					eins : function(){
-						called = true;
-						expect( this._test ).toBeUndefined();
-					}
-				};
-				( new O() )._extend( t );
 			});
+
+			t2 = {
+				eins : function(){
+					called = true;
+					expect( this._test ).toBeUndefined();
+				}
+			};
+			
+			( new t() )._extend( t2 );
 		});
 		
 		it( 'should copy properties over', function(){
-			t.eins();
+			t2.eins();
 
 			expect( called ).toBe( true );
 		});
