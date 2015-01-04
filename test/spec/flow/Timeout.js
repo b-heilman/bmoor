@@ -1,7 +1,12 @@
 describe('bmoor.flow.Timeout', function(){
-	var inst = bMoor.get('bmoor.flow.Timeout'),
-		mock = bMoor.get('bmock.flow.Timeout');
+	var inst,
+		mock;
 			
+	beforeEach(bMoor.test.injector(['bmoor.flow.Timeout', 'bmock.flow.Timeout', function( T, Mock ){
+		inst = T;
+		mock = Mock;
+	}]));
+
 	it('should be defined', function(){
 		expect( inst ).toBeDefined();
 		expect( inst.set ).toBeDefined();

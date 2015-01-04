@@ -1,8 +1,14 @@
 describe( 'bmoor.flow.Batch', function(){
-	var Timeout = bMoor.get('bmock.flow.Timeout'),
+	'use strict';
+	
+	var Timeout,
 		Mock,
 		timeout,
 		mountUp;
+
+	beforeEach(bMoor.test.injector(['bmock.flow.Timeout', function( T ){
+		Timeout = T;
+	}]));
 
 	beforeEach(function(){
 		bMoor.test.remake();

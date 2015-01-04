@@ -1,6 +1,9 @@
 describe('bmoor.extender.Decorator', function(){
-	var space = {},
-		Decorator = bMoor.get('bmoor.extender.Decorator');
+	var Decorator;
+
+	beforeEach(bMoor.test.injector(['bmoor.extender.Decorator', function( D ){
+		Decorator = D;
+	}]));
 
 	it( 'should have the _extend function defined', function(){
 		expect( Decorator.prototype._extend ).toBeDefined();

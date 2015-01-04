@@ -1,5 +1,11 @@
-describe("Testing injection functionality", function() {
-	var Promise = bMoor.get('bmoor.defer.Promise');
+describe("bMoor.inject", function() {
+	'use strict';
+	
+	var Promise;
+
+	beforeEach(bMoor.test.injector(['bmoor.defer.Promise',function(P){
+		Promise = P;
+	}]));
 
 	// makeQuark
 	it('should allow for the creation of quarks', function(){
@@ -8,8 +14,8 @@ describe("Testing injection functionality", function() {
 		bMoor.makeQuark( 'foo.bar', root );
 
 		expect( root.foo.bar ).toBeDefined();
-		expect( root.foo.bar.$promise ).toBeDefined();
-		expect( root.foo.bar.$ready ).toBeDefined();
+		expect( root.foo.bar.$getDefinition ).toBeDefined();
+		expect( root.foo.bar.$setDefinition ).toBeDefined();
 	});
 
 	// ensure
@@ -19,9 +25,10 @@ describe("Testing injection functionality", function() {
 		bMoor.ensure( 'foo.bar', root );
 
 		expect( root.foo.bar ).toBeDefined();
-		expect( root.foo.bar.$promise ).toBeDefined();
-		expect( root.foo.bar.$ready ).toBeDefined();
+		expect( root.foo.bar.$getDefinition ).toBeDefined();
+		expect( root.foo.bar.$setDefinition ).toBeDefined();
 	});
+
 	it('ensure should always return a promise', function(){
 		var root = {
 			foo : {
@@ -41,7 +48,7 @@ describe("Testing injection functionality", function() {
 			t = {},
 			res;
 
-		root.foo.bar.$ready( t );
+		root.foo.bar.$set( t );
 
 		req.then(function( v ){
 			res = v;
@@ -53,12 +60,12 @@ describe("Testing injection functionality", function() {
 		var root = {},
 			req = bMoor.request( ['foo','bar'], true, root ),
 			t1 = {},
-			t2 = {}.
+			t2 = {},
 			res1,
 			res2;
 
-		root.foo.$ready( t1 );
-		root.bar.$ready( t2 );
+		root.foo.$set( t1 );
+		root.bar.$set( t2 );
 
 		req.then(function( args ){
 			res1 = args[0];

@@ -1,47 +1,46 @@
-bMoor.make( 'bmoor.defer.Stack', [function(){
-	'use strict';
-	
-	function stackOn( stack, func, args ){
-		return stack.promise.then(function(){
-			return func.apply( {}, args || [] );
-		});
-	}
+bMoor.make( 'bmoor.defer.Stack', [
+	'bmoor.defer.Basic',
+	function( Defer ){
+		'use strict';
+		
+		return {
+			construct : function(){
+				this.active = null;
+				this.defer = new Defer();
+				this.promise = this.defer.promise;
+			},
+			properties : {
+				run : function(){
+					var dis = this;
 
-	return {
-		construct : function(){
-			this.promise = null;
-		},
-		properties : {
-			getPromise : function(){
-				return this.promise;
-			},
-			isStacked : function(){
-				return this.promise !== null;
-			},
-            // TODO: there is a bug in here, when a controller uses multiple it will break.
-            // -- highly unlikely, but noted
-			begin : function(){
-				this.promise = null;
-			},
-			run : function( func ){
-				if ( !this.promise ){
-					func();
-				}else{
-					this.promise['finally']( func );
-				}
-			},
-			add : function( func, args ){
-				if ( this.promise ){
-					this.promise = stackOn( this, func, args );
-				}else{
-					this.promise = func.apply( {}, args );
-					if ( !this.promise.then ){
-						this.promise = null;
+					this.active.then(
+						function( v ){
+							dis.defer.resolve( v );
+						},
+						function( v ){
+							dis.defer.reject( v );
+						}
+					);
+				},
+				add : function( func, args, ctx ){
+					var dis = this;
+
+					if ( this.active ){
+						this.active = this.active.then(
+							function(){
+								return func.apply( ctx, args );
+							},
+							function( v ){
+								dis.defer.reject( v );
+							}
+						);
+					}else{
+						this.active = bMoor.dwrap( func.apply(ctx,args) );
 					}
-				}
 
-				return this.promise;
+					return this;
+				}
 			}
-		}
-	};
-}]);
+		};
+	}]
+);

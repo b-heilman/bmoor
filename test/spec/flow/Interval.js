@@ -1,6 +1,11 @@
 describe('bmoor.flow.Interval', function(){
-	var inst = bMoor.get('bmoor.flow.Interval'),
-		mock = bMoor.get('bmock.flow.Interval');
+	var inst,
+		mock;
+
+	beforeEach(bMoor.test.injector(['bmoor.flow.Interval', 'bmock.flow.Interval', function( T, Mock ){
+		inst = T;
+		mock = Mock;
+	}]));
 
 	it('should be defined', function(){
 		expect( inst ).toBeDefined();

@@ -1,6 +1,11 @@
 describe('bmoor.extender.Plugin', function(){
-	var space = {},
-		Plugin = bMoor.get('bmoor.extender.Plugin');
+	'use strict';
+	
+	var Plugin;
+
+	beforeEach(bMoor.test.injector(['bmoor.extender.Plugin', function(P){
+		Plugin = P;
+	}]));
 
 	it( 'should have the _extend function defined', function(){
 		expect( Plugin.prototype._extend ).toBeDefined();

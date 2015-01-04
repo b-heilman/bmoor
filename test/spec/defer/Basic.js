@@ -1,9 +1,14 @@
-(function(undefined){
+describe("bmoor.defer.Basic", function() {
+	'use strict';
+	
+	var Basic;
 
-describe("defer.Basic", function() {
+	beforeEach(bMoor.test.injector(['bmoor.defer.Basic',function( B ){
+		Basic = B;
+	}]));
+
 	it("Should allow for a proper default chain", function() {
- 		var Basic = bMoor.get( 'bmoor.defer.Basic' ),
- 			arr = [],
+		var arr = [],
 			m = new Basic(function(){
 				arr.push( 'some exception 1' );
 			}),
@@ -50,6 +55,79 @@ describe("defer.Basic", function() {
 			'some exception 1'
 		]);
 	});
-});
 
-}());
+	it('should allow for rejection inside the sucess statement', function(){
+		var m = new Basic(),
+			v,
+			t;
+
+		m.promise.then(function(){
+			expect( this.reject ).toBeDefined();
+			this.reject('woot');
+		}).then(
+			function( i ){
+				v = i;
+				t = true;
+			},
+			function( i ){
+				v = i;
+				t = false;
+			}
+		);
+
+		m.resolve( true );
+
+		expect( v ).toBe( 'woot' );
+		expect( t ).toBe( false );
+	});
+
+	it('should cascade resolutions', function(){
+		var m = new Basic(),
+			v,
+			t;
+
+		m.promise
+			.catch(function(){})
+			.catch(function(){})
+			.then(
+				function( i ){
+					v = i;
+					t = true;
+				},
+				function( i ){
+					v = i;
+					t = false;
+				}
+			);
+
+		m.resolve( 'woot' );
+
+		expect( v ).toBe( 'woot' );
+		expect( t ).toBe( true );
+	});
+
+	it('should cascade rejections', function(){
+		var m = new Basic(),
+			v,
+			t;
+
+		m.promise
+			.then(function(){})
+			.then(function(){})
+			.then(
+				function( i ){
+					v = i;
+					t = true;
+				},
+				function( i ){
+					v = i;
+					t = false;
+				}
+			);
+
+		m.reject( 'woot' );
+
+		expect( v ).toBe( 'woot' );
+		expect( t ).toBe( false );
+	});
+});

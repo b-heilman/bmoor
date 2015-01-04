@@ -18,6 +18,7 @@ module.exports = function(config) {
             'src/bmoor/extender/*.js',
             'src/bmock/**/*.js',
 			'test/spec/**/*.js'
+            //'test/spec/build/Compiler.js'
         ],
 
         // preprocessors: {

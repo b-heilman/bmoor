@@ -1,13 +1,19 @@
 describe( 'bmoor.flow.Regulator', function(){
-	var Timeout = bMoor.get('bmock.flow.Timeout'),
+	'use strict';
+	
+	var Timeout,
 		Mock,
 		mountUp;
 
-	Mock = bMoor.test.mock( 'bmoor.flow.Regulator', {
-		'bmoor.flow.Timeout' : Timeout
-	});
+	
+	beforeEach(bMoor.test.injector(['bmock.flow.Timeout',function( T ){
+		Timeout = T;
+	}]));
 
 	beforeEach(function(){
+		Mock = bMoor.test.mock( 'bmoor.flow.Regulator', {
+			'bmoor.flow.Timeout' : Timeout
+		});
 		mountUp = new Mock();
 	}); 
 

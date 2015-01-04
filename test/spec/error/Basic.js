@@ -1,6 +1,13 @@
 describe('Testing bmoor.error.Basic', function(){
-	var Basic = bMoor.get( 'bmoor.error.Basic' ),
+	'use strict';
+	
+	var Basic,
+		t; 
+
+	beforeEach(bMoor.test.injector(['bmoor.error.Basic',function( B ){
+		Basic = B;
 		t = new Basic( 'this is a message' );
+	}]));
 
 	it('Should pass through the message', function(){
 		expect( t.error ).toBe( 'this is a message' );

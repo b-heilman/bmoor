@@ -15,10 +15,9 @@ bMoor.inject(
 				this.preProcess = [];
 				this.postProcess = [];
 				this.clean = true;
-
+				this.definitions = {};
 				this.root = bMoor.namespace.root;
 			},
-			definitions = {},
 			instance;
 
 		/**
@@ -135,8 +134,8 @@ bMoor.inject(
 		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the defined object
 		 */
 		Compiler.prototype.make = function( name, definition ){
-			var namespace,
-				onReady,
+			var dis = this,
+				namespace,
 				quark;
 
 			if ( bMoor.isString(name) ){
@@ -152,22 +151,23 @@ bMoor.inject(
 				);
 			}
 			
-			definitions[ name ] = definition;
+			this.definitions[ name ] = definition;
 
 			quark = bMoor.makeQuark( namespace, this.root );
-			onReady = quark.$ready;
+			
+			quark.$setDefinition(function(){
+				return dis.build( definition ).then(function( result ){
+					if ( result.prototype ){
+						result.prototype._name = name;
+					}else{
+						result._name = name;
+					}
 
-			delete quark.$ready; // prevent accidental injection
-
-			return this.build( definition ).then(function( result ){
-				if ( result.prototype ){
-					result.prototype.$name = name;
-				}else{
-					result.$name = name;
-				}
-
-				onReady( result );
+					return result;
+				});
 			});
+
+			return quark;
 		};
 
 		Compiler.prototype.setRoot = function( r ){
@@ -196,7 +196,7 @@ bMoor.inject(
 
 			this.root = bMoor.namespace.root;
 
-			bMoor.iterate( definitions, function( definition, name ){
+			bMoor.iterate( this.definitions, function( definition, name ){
 				dis.make( name, definition );
 			});
 		};
@@ -215,7 +215,7 @@ bMoor.inject(
 		Compiler.prototype.mock = function( name, mocks ){
 			var dis = this,
 				r = bMoor.object.extend( {}, this.root, mocks ),
-				definition = definitions[name];
+				definition = this.definitions[name];
 
 			if ( !bMoor.isInjectable(definition) ){
 				// TODO : bMoor.makeInjectable
@@ -248,13 +248,13 @@ bMoor.inject(
 			
 			if ( bMoor.isInjectable(value) ){
 				bMoor.inject( value ).then( function( v ){
-					quark.$ready( v );
+					quark.$set( v );
 				});
 			}else{
-				quark.$ready( value );
+				quark.$set( value );
 			}
 
-			return quark.$promise;
+			return quark;
 		};
 
 		instance = new Compiler();
@@ -269,6 +269,12 @@ bMoor.inject(
 		});
 
 		bMoor.plugin( 'test', {
+			injector : function( injection ){
+				return function(){
+					instance.remake();
+					bMoor.inject( injection );
+				};
+			},
 			remake : function(){
 				instance.remake();
 			},
@@ -292,6 +298,6 @@ bMoor.inject(
 			}
 		});
 		
-		eCompiler.$ready( instance );
+		eCompiler.$set( instance );
 	}
 ]);

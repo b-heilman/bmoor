@@ -1,6 +1,11 @@
 describe('bmoor.extender.Mixin', function(){
-	var space = {},
-		Mixin = bMoor.get('bmoor.extender.Mixin');
+	'use strict';
+	
+	var Mixin;
+
+	beforeEach(bMoor.test.injector(['bmoor.extender.Mixin', function( M ){
+		Mixin = M;
+	}]));
 
 	it( 'should have the _extend function defined', function(){
 		expect( Mixin.prototype._extend ).toBeDefined();
