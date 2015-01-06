@@ -11,14 +11,14 @@ bMoor.make('bmoor.extender.Decorator', [
 				if ( bMoor.isFunction(action) ){
 					if ( bMoor.isFunction(old) ){
 						target[key] = function(){
-							var backup = this.$wrapped,
+							var backup = this.$old,
 								rtn;
 
-							this.$wrapped = old;
+							this.$old = old;
 
 							rtn = action.apply( this, arguments );
 
-							this.$wrapped = backup;
+							this.$old = backup;
 
 							return rtn;
 						};

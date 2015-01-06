@@ -91,7 +91,7 @@ Examples - more examples can be found in demos
 			parent : Decorator,
 			properties : {
 				speak : function(){
-					this.$wrapped();
+					this.$old();
 					console.log('now roll over');
 				}
 			}

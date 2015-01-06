@@ -56,7 +56,7 @@ describe('bmoor.extender.Plugin', function(){
 				parent: Plugin,
 				properties : {
 					eins : function(){
-						this.$wrapped();
+						this.$old();
 						expect( this._test ).toBeDefined();
 					},
 					_test : 'hello'

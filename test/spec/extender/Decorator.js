@@ -58,7 +58,7 @@ describe('bmoor.extender.Decorator', function(){
 					parent: Decorator,
 					properties : {
 						eins : function(){
-							this.$wrapped();
+							this.$old();
 							expect( this._test ).toBeUndefined();
 						},
 						zwei : function(){},

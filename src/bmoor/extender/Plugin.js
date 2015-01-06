@@ -18,18 +18,18 @@ bMoor.make('bmoor.extender.Plugin', [
 				if ( bMoor.isFunction(action) ){
 					if ( bMoor.isFunction(old) ){
 						target[key] = function(){
-							var backup = plugin.$wrapped,
+							var backup = plugin.$old,
 								reference = plugin.$target,
 								rtn;
 
 							plugin.$target = target;
-							plugin.$wrapped = function(){
+							plugin.$old = function(){
 								return old.apply( target, arguments );
 							};
 
 							rtn = action.apply( plugin, arguments );
 
-							plugin.$wrapped = backup;
+							plugin.$old = backup;
 							plugin.$target = reference;
 
 							return rtn;

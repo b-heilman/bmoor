@@ -1,5 +1,5 @@
 ;(function(){
-/** bmoor v0.0.6 **/
+/** bmoor v0.0.7 **/
 var bMoor = {};
 
 (function( g ){
@@ -333,6 +333,15 @@ var bMoor = {};
 		});
 
 		return target;
+	}
+
+	function inherit( from ){
+		if ( from.prototype ){
+			// we assume this a constructor function
+			from = from.prototype;
+		}
+
+		return mask( from );
 	}
 
 	/**
@@ -1792,6 +1801,7 @@ var bMoor = {};
 			'mask'      : mask,
 			'equals'    : equals,
 			'instantiate' : instantiate,
+			'inherit' : inherit,
 			// what is the difference between these?
 			'extend'    : extend, // copy properties from one object to another
 			'merge'     : merge, // deep version of extend
@@ -2162,12 +2172,10 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
-	compiler.addModule( 1, 'bmoor.build.ModFinalize', 
-		['-onMake', '-parent', function( onMake, parent ){
+	compiler.addModule( -100, 'bmoor.build.ModFinalize', 
+		['-finalize', function( onMake ){
 			if ( onMake ){
-				this.$onMake = onMake;
-			}else if ( parent ){
-				this.$onMake = parent.$onMake;
+				onMake( this );
 			}
 		}]
 	);
@@ -2178,21 +2186,12 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	compiler.addModule( 90, 'bmoor.build.ModInherit', 
 		['-id','-namespace','-name', '-mount','-parent',
 		function( id, namespace, name, mount, parent ){
-			var construct,
-				proto;
+			var construct;
 
 			if ( parent ){
 				construct = this;
 
-				if ( bMoor.isFunction(parent) ){
-					// we assume this a constructor function
-					proto = parent.prototype;
-				}else{
-					// we want to inherit directly from this object
-					proto = parent;
-				}
-
-				this.prototype = bMoor.object.mask( proto );
+				this.prototype = bMoor.object.inherit( parent );
 				this.prototype.constructor = construct;
 
 				delete this.$generic;
@@ -2278,6 +2277,39 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	);
 }]);
 
+bMoor.inject(['bmoor.build.Compiler',function( compiler ){
+	'use strict';
+
+	compiler.addModule( 89, 'bmoor.build.ModWrapper', 
+		[ '-wrap',
+		function( wrapped ){
+			if ( wrapped ){
+				this.prototype.$wrap = function(){
+					var key,
+						temp = bMoor.object.instantiate( wrapped, arguments);
+
+					this.$wrapped = temp;
+
+					function extend( dis, value, key ){
+						if ( bMoor.isFunction(value) ){
+							dis[ key ] = function(){
+								return value.apply( temp, arguments );
+							};
+						}else{
+							dis[ key ] = value;
+						}
+					}
+
+					for( key in temp ){
+						if ( !(key in this) ){
+							extend( this, temp[key], key );
+						}
+					}
+				};
+			}
+		}]
+	);
+}]);
 bMoor.make( 'bmoor.defer.Stack', [
 	'bmoor.defer.Basic',
 	function( Defer ){
@@ -2568,14 +2600,14 @@ bMoor.make('bmoor.extender.Decorator', [
 				if ( bMoor.isFunction(action) ){
 					if ( bMoor.isFunction(old) ){
 						target[key] = function(){
-							var backup = this.$wrapped,
+							var backup = this.$old,
 								rtn;
 
-							this.$wrapped = old;
+							this.$old = old;
 
 							rtn = action.apply( this, arguments );
 
-							this.$wrapped = backup;
+							this.$old = backup;
 
 							return rtn;
 						};
@@ -2648,18 +2680,18 @@ bMoor.make('bmoor.extender.Plugin', [
 				if ( bMoor.isFunction(action) ){
 					if ( bMoor.isFunction(old) ){
 						target[key] = function(){
-							var backup = plugin.$wrapped,
+							var backup = plugin.$old,
 								reference = plugin.$target,
 								rtn;
 
 							plugin.$target = target;
-							plugin.$wrapped = function(){
+							plugin.$old = function(){
 								return old.apply( target, arguments );
 							};
 
 							rtn = action.apply( plugin, arguments );
 
-							plugin.$wrapped = backup;
+							plugin.$old = backup;
 							plugin.$target = reference;
 
 							return rtn;

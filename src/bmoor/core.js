@@ -333,6 +333,15 @@ var bMoor = {};
 		return target;
 	}
 
+	function inherit( from ){
+		if ( from.prototype ){
+			// we assume this a constructor function
+			from = from.prototype;
+		}
+
+		return mask( from );
+	}
+
 	/**
 	 * Create a new instance from an object and some arguments
 	 *
@@ -1790,6 +1799,7 @@ var bMoor = {};
 			'mask'      : mask,
 			'equals'    : equals,
 			'instantiate' : instantiate,
+			'inherit' : inherit,
 			// what is the difference between these?
 			'extend'    : extend, // copy properties from one object to another
 			'merge'     : merge, // deep version of extend

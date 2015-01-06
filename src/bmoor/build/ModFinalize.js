@@ -1,12 +1,10 @@
 bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 	'use strict';
 
-	compiler.addModule( 1, 'bmoor.build.ModFinalize', 
-		['-onMake', '-parent', function( onMake, parent ){
+	compiler.addModule( -100, 'bmoor.build.ModFinalize', 
+		['-finalize', function( onMake ){
 			if ( onMake ){
-				this.$onMake = onMake;
-			}else if ( parent ){
-				this.$onMake = parent.$onMake;
+				onMake( this );
 			}
 		}]
 	);

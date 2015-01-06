@@ -66,7 +66,7 @@ bMoor.make( 'foo.Decorator1', [, function(){
 	return {
 		properties : {
 			speak : function(){
-				this.$wrapped();
+				this.$old();
 				console.log('--decorator called--');
 			}
 		}
