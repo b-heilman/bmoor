@@ -1124,6 +1124,14 @@ var bMoor = {};
 		});
 	}
 
+	inject.getInjections = function( obj ){
+		if ( isInjectable(obj) ){
+			return obj.slice(0,-1);
+		}else{
+			return [];
+		}
+	};
+	
 	/**
 	 * Borrowed From Angular : I can't write it better
 	 * ----------------------------------------
@@ -1302,6 +1310,66 @@ var bMoor = {};
 		}
 	}
 
+	function bisect( arr, value, func, preSorted ){
+		var idx,
+			val,
+			bottom = 0,
+			top = arr.length - 1;
+
+		if ( !preSorted ){
+			arr.sort(function(a,b){
+				return func(a) - func(b);
+			});
+		}
+
+		if ( func(arr[bottom]) >= value ){
+			return {
+				left : bottom,
+				right : bottom
+			};
+		}
+
+		if ( func(arr[top]) <= value ){
+			return {
+				left : top,
+				right : top
+			};
+		}
+
+		if ( arr.length ){
+			while( top - bottom > 1 ){
+				idx = Math.floor( (top+bottom)/2 );
+				val = func( arr[idx] );
+
+				if ( val === value ){
+					top = idx;
+					bottom = idx;
+				}else if ( val > value ){
+					top = idx;
+				}else{
+					bottom = idx;
+				}
+			}
+
+			// if it is one of the end points, make it that point
+			if ( top !== idx && func(arr[top]) === value ){
+				return {
+					left : top,
+					right : top
+				};
+			}else if ( bottom !== idx && func(arr[bottom]) === value ){
+				return {
+					left : bottom,
+					right : bottom
+				};
+			}else{
+				return {
+					left : bottom,
+					right : top
+				};
+			}
+		}
+	}
 	/**
 	 * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
 	 *
@@ -1819,7 +1887,8 @@ var bMoor = {};
 			'remove' : remove,
 			'removeAll' : removeAll,
 			'filter' : filter,
-			'override' : arrayOverride
+			'override' : arrayOverride,
+			'bisect' : bisect
 		},
 		// error
 		'error' : {

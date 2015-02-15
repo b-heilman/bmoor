@@ -4,46 +4,67 @@ bMoor.make('bmoor.flow.Regulator',
 		'use strict';
 		
 		return {
-			construct : function(){
-				this.content = null;
+			construct : function( timeout ){
+				var dis = this;
+
+				this.cb = null;
+				this.timeout = timeout || 30;
 				this.timeoutId = null;
-				this.notices = [];
+				this.onTimeout = function(){
+					dis.timeoutId = null;
+					dis.cb();
+				};
 			},
 			properties : {
-				wrap : function( func ){
+				wrap : function( ctx, cb, readjust ){
 					var dis = this;
 
-					return function(){
-						dis.set( func.apply(this,arguments) );
-					};
+					if ( !bMoor.isFunction(cb) ){
+						readjust = cb;
+						cb = ctx;
+						ctx = false;
+					}
+
+					if ( ctx ){
+						return function(){
+							dis.setContextual( ctx, cb, readjust );
+						};
+					}else{
+						return function( cb ){
+							dis.set( cb, readjust );
+						};
+					}
 				},
-				set : function( content ){
-					this.registerCall();
+				setup : function( readjust, contextual ){
+					var dis = this;
 
-					this.content = bMoor.object.merge(
-						this.content, 
-						content
-					);
+					if ( contextual ){
+						return function( ctx, cb ){
+							dis.setContextual( ctx, cb, readjust );
+						};
+					}else{
+						return function( cb ){
+							dis.set( cb, readjust );
+						};
+					}
 				},
-				notice : function( callback ){
-					this.notices.push( callback );
+				set : function( cb, readjust ){
+					this.registerCall( readjust );
+
+					this.cb = cb;
 				},
-				registerCall : function(){
-					var dis = this,	
-						notices = this.notices;
+				setContextual : function( ctx, cb, readjust ){
+					this.registerCall( readjust );
 
-					if ( !this.timeoutId ){
-						this.timeoutId = Timeout.set(function(){
-							var content = dis.content,
-								i, c;
+					this.cb = function(){ cb.call(ctx); };
+				},
+				registerCall : function( readjust ){
+					if ( readjust ){
+						Timeout.clear( this.timeoutId );
 
-							dis.content = null;
-							this.timeoutId = null;
-
-							for( i = 0, c = notices.length; i < c; i++ ){
-								notices[ i ]( content );
-							}
-						}, 30);
+						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
+					}else if ( !this.timeoutId ){
+						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
 					}
 				}
 			}

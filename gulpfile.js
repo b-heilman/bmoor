@@ -67,6 +67,10 @@ gulp.task('concat-js', function() {
         .pipe( footer('\n}());') )
         .pipe( gulp.dest(buildDir) )
         .pipe( gulp.dest(demoDir) );
+
+    gulp.src( './src/bmock/**/*.js' )
+        .pipe( concat('bmock.js') )
+        .pipe( gulp.dest(buildDir) );
 });
 
 gulp.task('build-js', ['concat-js'], function(){

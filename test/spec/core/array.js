@@ -1,4 +1,4 @@
-describe("Testing array functionality", function() {
+describe("bMoor.array", function() {
 	// compare
 	it("should support the matching of two arrays", function(){
 		var t = bMoor.array.compare(
@@ -82,5 +82,120 @@ describe("Testing array functionality", function() {
 		expect( bMoor.array.filter(['a','c','b','c'],function( x ){
 			return x === 'd';
 		}).length ).toBe( 0 );
+	});
+
+	// bisect
+	describe('bMoor.array.bisect', function(){
+		it('should allow directly matching elements : center', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 13, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 3 );
+			expect( t.right ).toBe( 3 );
+		});
+
+		it('should allow directly matching elements : center + 1', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 14, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 4 );
+			expect( t.right ).toBe( 4 );
+		});
+
+		it('should allow directly matching elements : center + 2', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 15, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 5 );
+			expect( t.right ).toBe( 5 );
+		});
+
+		it('should allow directly matching elements : center + 3', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 17, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 6 );
+			expect( t.right ).toBe( 6 );
+		});
+
+		it('should allow directly matching elements : center + 1.5', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 13.5, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 3 );
+			expect( t.right ).toBe( 4 );
+		});
+
+		it('should allow directly matching elements : center - 1', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 12, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 2 );
+			expect( t.right ).toBe( 2 );
+		});
+
+		it('should allow directly matching elements : center - 2', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 11, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 1 );
+			expect( t.right ).toBe( 1 );
+		});
+
+		it('should allow directly matching elements : center - 3', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			t = bMoor.array.bisect(arr, 10, function( x ){
+				return x;
+			});
+
+			expect( t.left ).toBe( 0 );
+			expect( t.right ).toBe( 0 );
+		});
+
+		it('should not sort if already sorted', function(){
+			var t,
+				arr = [10,13,14,11,12,15,17];
+
+			arr.sort = function(){
+				t = true;
+			};
+
+			bMoor.array.bisect(arr, 10, function( x ){
+				return x;
+			}, true);
+
+			expect( t ).toBeUndefined();
+			expect( arr[1] ).toBe( 13 );
+		});
 	});
 });

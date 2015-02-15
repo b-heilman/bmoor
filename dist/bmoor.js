@@ -1126,6 +1126,14 @@ var bMoor = {};
 		});
 	}
 
+	inject.getInjections = function( obj ){
+		if ( isInjectable(obj) ){
+			return obj.slice(0,-1);
+		}else{
+			return [];
+		}
+	};
+	
 	/**
 	 * Borrowed From Angular : I can't write it better
 	 * ----------------------------------------
@@ -1304,6 +1312,66 @@ var bMoor = {};
 		}
 	}
 
+	function bisect( arr, value, func, preSorted ){
+		var idx,
+			val,
+			bottom = 0,
+			top = arr.length - 1;
+
+		if ( !preSorted ){
+			arr.sort(function(a,b){
+				return func(a) - func(b);
+			});
+		}
+
+		if ( func(arr[bottom]) >= value ){
+			return {
+				left : bottom,
+				right : bottom
+			};
+		}
+
+		if ( func(arr[top]) <= value ){
+			return {
+				left : top,
+				right : top
+			};
+		}
+
+		if ( arr.length ){
+			while( top - bottom > 1 ){
+				idx = Math.floor( (top+bottom)/2 );
+				val = func( arr[idx] );
+
+				if ( val === value ){
+					top = idx;
+					bottom = idx;
+				}else if ( val > value ){
+					top = idx;
+				}else{
+					bottom = idx;
+				}
+			}
+
+			// if it is one of the end points, make it that point
+			if ( top !== idx && func(arr[top]) === value ){
+				return {
+					left : top,
+					right : top
+				};
+			}else if ( bottom !== idx && func(arr[bottom]) === value ){
+				return {
+					left : bottom,
+					right : bottom
+				};
+			}else{
+				return {
+					left : bottom,
+					right : top
+				};
+			}
+		}
+	}
 	/**
 	 * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
 	 *
@@ -1821,7 +1889,8 @@ var bMoor = {};
 			'remove' : remove,
 			'removeAll' : removeAll,
 			'filter' : filter,
-			'override' : arrayOverride
+			'override' : arrayOverride,
+			'bisect' : bisect
 		},
 		// error
 		'error' : {
@@ -1855,6 +1924,18 @@ bMoor.inject(
 			},
 			instance;
 
+		Compiler.prototype.clone = function(){
+			var t = new Compiler();
+			t.preProcess = bMoor.object.extend( [], this.preProcess );
+			t.postProcess = bMoor.object.extend( [], this.postProcess );
+			t.clean = this.clean;
+
+			t.definitions = bMoor.object.extend( {}, this.definitions );
+			t.root = bMoor.object.override( {}, this.root );
+
+			return t;
+		};
+		
 		/**
 		 * The internal construction engine for the system.  Generates the class and uses all modules.
 		 **/
@@ -2026,16 +2107,44 @@ bMoor.inject(
 			});
 		};
 
-		Compiler.prototype.remake = function(){
-			var dis = this;
+		Compiler.prototype.remake = function( name ){
+			var i, c,
+				def = this.definitions[ name ],
+				requirements;
 
-			this.root = bMoor.namespace.root;
+			if ( def ){
+				requirements = bMoor.inject.getInjections( def );
 
-			bMoor.iterate( this.definitions, function( definition, name ){
-				dis.make( name, definition );
-			});
+				for( i = 0, c = requirements.length; i < c; i++ ){
+					this.remake( requirements[i] );
+				}
+
+				this.make( name, def );
+			}
 		};
 
+		Compiler.prototype.override = function( overrides ){
+			var root = this.root,
+				definitions = this.definitions;
+
+			bMoor.iterate( overrides, function( setTo, getFrom ){
+				if ( bMoor.isString(getFrom) ){
+					getFrom = bMoor.get( getFrom, root );
+					delete definitions[ getFrom ];
+				}
+
+				if ( bMoor.isQuark(getFrom) ){
+					getFrom.$getDefinition().then(function( def ){
+						bMoor.set( setTo, def, root );
+					});
+				}else{
+					bMoor.set( setTo, getFrom, root );
+				}
+
+				// I think this works
+				delete definitions[ setTo ];
+			});
+		};
 		/**
 		 * Create a mock of a previously defined object
 		 *
@@ -2104,19 +2213,24 @@ bMoor.inject(
 		});
 
 		bMoor.plugin( 'test', {
-			injector : function( injection ){
+			injector : function( injection, overrides ){
 				return function(){
-					instance.remake();
-					bMoor.inject( injection );
+					var clone = instance.clone();
+
+					if ( overrides ){
+						clone.override( overrides );
+						bMoor.iterate( bMoor.inject.getInjections(injection), function( name ){
+							clone.remake( name );
+						});
+					}
+
+					bMoor.inject( injection, clone.root );
 				};
-			},
-			remake : function(){
-				instance.remake();
 			},
 			make : function( definition ){
 				var t;
 
-				instance.build( definition ).then(function( built ){
+				instance.clone().build( definition ).then(function( built ){
 					t = built;
 				});
 
@@ -2356,56 +2470,6 @@ bMoor.make( 'bmoor.defer.Stack', [
 		};
 	}]
 );
-bMoor.make('bmoor.flow.Batch', 
-	[ 'bmoor.flow.Timeout',
-	function( Timeout ){
-		'use strict';
-		
-		return {
-			construct : function(){
-				this.content = null;
-				this.timeoutId = null;
-				this.notices = [];
-			},
-			properties : {
-				wrap : function( func ){
-					var dis = this;
-
-					return function(){
-						dis.set( func.apply(this,arguments) );
-					};
-				},
-				set : function( content ){
-					this.registerCall();
-
-					this.content = bMoor.object.merge(
-						this.content, 
-						content
-					);
-				},
-				notice : function( callback ){
-					this.notices.push( callback );
-				},
-				registerCall : function(){
-					var dis = this,	
-						notices = this.notices;
-
-					Timeout.clear( this.timeoutId );
-
-					this.timeoutId = Timeout.set(function(){
-						var content = dis.content,
-							i, c;
-
-						dis.content = null;
-						for( i = 0, c = notices.length; i < c; i++ ){
-							notices[ i ]( content );
-						}
-					}, 30);
-				}
-			}
-		};
-	}]
-);
 bMoor.make( 'bmoor.flow.Interval', 
 	[
 	function(){
@@ -2471,46 +2535,68 @@ bMoor.make('bmoor.flow.Regulator',
 		'use strict';
 		
 		return {
-			construct : function(){
-				this.content = null;
+			construct : function( timeout ){
+				var dis = this;
+
+				this.cb = null;
+				this.timeout = timeout || 30;
 				this.timeoutId = null;
-				this.notices = [];
+				this.onTimeout = function(){
+					dis.timeoutId = null;
+
+					dis.cb();
+				};
 			},
 			properties : {
-				wrap : function( func ){
+				wrap : function( ctx, cb, readjust ){
+					var dis = this;
+					
+					if ( !bMoor.isFunction(cb) ){
+						readjust = cb;
+						cb = ctx;
+						ctx = false;
+					}
+
+					if ( ctx ){
+						return function(){
+							dis.setContextual( ctx, cb, readjust );
+						};
+					}else{
+						return function( cb ){
+							dis.set( cb, readjust );
+						};
+					}
+				},
+				setup : function( readjust, contextual ){
 					var dis = this;
 
-					return function(){
-						dis.set( func.apply(this,arguments) );
-					};
+					if ( contextual ){
+						return function( ctx, cb ){
+							dis.setContextual( ctx, cb, readjust );
+						};
+					}else{
+						return function( cb ){
+							dis.set( cb, readjust );
+						};
+					}
 				},
-				set : function( content ){
-					this.registerCall();
+				set : function( cb, readjust ){
+					this.registerCall( readjust );
 
-					this.content = bMoor.object.merge(
-						this.content, 
-						content
-					);
+					this.cb = cb;
 				},
-				notice : function( callback ){
-					this.notices.push( callback );
+				setContextual : function( ctx, cb, readjust ){
+					this.registerCall( readjust );
+
+					this.cb = function(){ cb.call(ctx); };
 				},
-				registerCall : function(){
-					var dis = this,	
-						notices = this.notices;
+				registerCall : function( readjust ){
+					if ( readjust ){
+						Timeout.clear( this.timeoutId );
 
-					if ( !this.timeoutId ){
-						this.timeoutId = Timeout.set(function(){
-							var content = dis.content,
-								i, c;
-
-							dis.content = null;
-							this.timeoutId = null;
-
-							for( i = 0, c = notices.length; i < c; i++ ){
-								notices[ i ]( content );
-							}
-						}, 30);
+						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
+					}else if ( !this.timeoutId ){
+						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
 					}
 				}
 			}

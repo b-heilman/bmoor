@@ -2,91 +2,115 @@ describe( 'bmoor.flow.Regulator', function(){
 	'use strict';
 	
 	var Timeout,
-		Mock,
+		Regulator,
 		mountUp;
 
-	
-	beforeEach(bMoor.test.injector(['bmock.flow.Timeout',function( T ){
-		Timeout = T;
-	}]));
+	beforeEach(bMoor.test.injector(
+		['bmock.flow.Timeout', 'bmoor.flow.Timeout','bmoor.flow.Regulator',
+		function( T, To, R ){
+			Timeout = T;
+			Regulator = R;
+			mountUp = new Regulator( 30 );
+		}],
+		{
+			'bmock.flow.Timeout' : 'bmoor.flow.Timeout'
+		}
+	));
 
-	beforeEach(function(){
-		Mock = bMoor.test.mock( 'bmoor.flow.Regulator', {
-			'bmoor.flow.Timeout' : Timeout
-		});
-		mountUp = new Mock();
-	}); 
-
-	if ( 'should be defined', function(){
+	it ( 'should be defined', function(){
 		expect( mountUp ).toBeDefined();
+		expect( mountUp.cb ).toBe( null );
 	});
 
-	it ( 'should  allow you to wrap existing functions', function(){
+	it ( 'should for no readjusting and contextual ', function(){
 		var t = {
-			f : function(){
-				return 'hello';
-			}
-		};
+				c : null,
+				f : function(){
+					return this.c = 'woot';
+				}
+			},
+			f = mountUp.setup( false, true );
 
-		t.f = mountUp.wrap( t.f );
+		f( t, t.f );
 
-		t.f();
+		expect( t.c ).toBe( null );
 
-		expect( mountUp.content ).toBe( 'hello' );
+		Timeout.tick( 20 );
+		expect( t.c ).toBe( null );
+
+		f( t, t.f );
+
+		Timeout.tick( 20 );
+		expect( t.c ).toBe( 'woot' );
 	});
 
-	it ( 'have multiple results stack up', function(){
+	it ( 'should for readjusting and contextual ', function(){
 		var t = {
-			f : function( o ){
-				return o;
-			}
-		};
+				c : null,
+				f : function(){
+					return this.c = 'woot';
+				}
+			},
+			f = mountUp.setup( true, true );
 
-		t.f = mountUp.wrap( t.f );
+		f( t, t.f );
 
-		t.f({
-			eins : 1
-		});
+		expect( t.c ).toBe( null );
 
-		t.f({
-			zwei : 2
-		});
+		Timeout.tick( 20 );
+		expect( t.c ).toBe( null );
 
-		expect( mountUp.content ).toEqual({
-			eins : 1,
-			zwei : 2
-		});
+		f( t, t.f );
+
+		Timeout.tick( 20 );
+		expect( t.c ).toBe( null );
+
+		Timeout.tick( 20 );
+		expect( t.c ).toBe( 'woot' );
 	});
 
-	it ( 'should only fire watches every 30 ms', function(){
-		var content,
-			t = {
-			f : function( o ){
-				return o;
-			}
-		};
+	it ( 'should for no readjusting and non-contextual ', function(){
+		var c = null,
+			f = mountUp.setup( false );
 
-		t.f = mountUp.wrap( t.f );
-
-		t.f({
-			eins : 1
+		f(function(){
+			c = 'woot';
 		});
 
-		t.f({
-			zwei : 2
-		});
+		expect( c ).toBe( null );
 
-		mountUp.notice(function( val ){
-			content = val;
+		Timeout.tick( 20 );
+		expect( c ).toBe( null );
+
+		f(function(){
+			c = 'test';
 		});
 
 		Timeout.tick( 20 );
-		expect( content ).toBeUndefined();
+		expect( c ).toBe( 'test' );
+	});
 
-		Timeout.tick( 30 );
-		expect( content ).toEqual({
-			eins : 1,
-			zwei : 2
+	it ( 'should for readjusting and non-contextual ', function(){
+		var c = null,
+			f = mountUp.setup( true );
+
+		f(function(){
+			c = 'woot';
 		});
+
+		expect( c ).toBe( null );
+
+		Timeout.tick( 20 );
+		expect( c ).toBe( null );
+
+		f(function(){
+			c = 'test';
+		});
+
+		Timeout.tick( 20 );
+		expect( c ).toBe( null );
+
+		Timeout.tick( 20 );
+		expect( c ).toBe( 'test' );
 	});
 });

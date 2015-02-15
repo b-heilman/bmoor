@@ -20,6 +20,18 @@ bMoor.inject(
 			},
 			instance;
 
+		Compiler.prototype.clone = function(){
+			var t = new Compiler();
+			t.preProcess = bMoor.object.extend( [], this.preProcess );
+			t.postProcess = bMoor.object.extend( [], this.postProcess );
+			t.clean = this.clean;
+
+			t.definitions = bMoor.object.extend( {}, this.definitions );
+			t.root = bMoor.object.override( {}, this.root );
+
+			return t;
+		};
+		
 		/**
 		 * The internal construction engine for the system.  Generates the class and uses all modules.
 		 **/
@@ -191,16 +203,44 @@ bMoor.inject(
 			});
 		};
 
-		Compiler.prototype.remake = function(){
-			var dis = this;
+		Compiler.prototype.remake = function( name ){
+			var i, c,
+				def = this.definitions[ name ],
+				requirements;
 
-			this.root = bMoor.namespace.root;
+			if ( def ){
+				requirements = bMoor.inject.getInjections( def );
 
-			bMoor.iterate( this.definitions, function( definition, name ){
-				dis.make( name, definition );
-			});
+				for( i = 0, c = requirements.length; i < c; i++ ){
+					this.remake( requirements[i] );
+				}
+
+				this.make( name, def );
+			}
 		};
 
+		Compiler.prototype.override = function( overrides ){
+			var root = this.root,
+				definitions = this.definitions;
+
+			bMoor.iterate( overrides, function( setTo, getFrom ){
+				if ( bMoor.isString(getFrom) ){
+					getFrom = bMoor.get( getFrom, root );
+					delete definitions[ getFrom ];
+				}
+
+				if ( bMoor.isQuark(getFrom) ){
+					getFrom.$getDefinition().then(function( def ){
+						bMoor.set( setTo, def, root );
+					});
+				}else{
+					bMoor.set( setTo, getFrom, root );
+				}
+
+				// I think this works
+				delete definitions[ setTo ];
+			});
+		};
 		/**
 		 * Create a mock of a previously defined object
 		 *
@@ -269,19 +309,24 @@ bMoor.inject(
 		});
 
 		bMoor.plugin( 'test', {
-			injector : function( injection ){
+			injector : function( injection, overrides ){
 				return function(){
-					instance.remake();
-					bMoor.inject( injection );
+					var clone = instance.clone();
+
+					if ( overrides ){
+						clone.override( overrides );
+						bMoor.iterate( bMoor.inject.getInjections(injection), function( name ){
+							clone.remake( name );
+						});
+					}
+
+					bMoor.inject( injection, clone.root );
 				};
-			},
-			remake : function(){
-				instance.remake();
 			},
 			make : function( definition ){
 				var t;
 
-				instance.build( definition ).then(function( built ){
+				instance.clone().build( definition ).then(function( built ){
 					t = built;
 				});
 

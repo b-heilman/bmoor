@@ -86,13 +86,15 @@ describe("bmoor.build.Compiler", function() {
 			root.foo = 11;
 			root.bar = 12;
 
-			t = compiler.make( 'Aname', ['foo', 'bar', 'foobar', function( f, b, fb ){
-				return {
-					foobar : fb,
-					foo : f,
-					bar : b
-				}
-			}]);
+			t = compiler.make( 'Aname', 
+				['foo', 'bar', 'foobar', function( f, b, fb ){
+					return {
+						foobar : fb,
+						foo : f,
+						bar : b
+					}
+				}]
+			);
 
 			t.$getDefinition();
 
@@ -103,6 +105,58 @@ describe("bmoor.build.Compiler", function() {
 			expect( root.Aname.prototype.foobar ).toBe( false );
 		});
 
+		it("should clone properly", function(){
+			var t,
+				temp = compiler.clone(),
+				r = {};
+
+			root.foobar = 13;
+			root.foo = 11;
+			root.bar = 12;
+
+			temp.setRoot(r);
+			r.foobar = 23;
+			r.foo = 21;
+			r.bar = 22;
+
+			t = compiler.make( 'Aname', 
+				['foo', 'bar', 'foobar', function( f, b, fb ){
+					return {
+						foobar : fb,
+						foo : f,
+						bar : b
+					}
+				}]
+			);
+
+			t.$getDefinition();
+
+			expect( log ).toEqual( [12,11,13] );
+			expect( root.Aname ).toBeDefined();
+			expect( root.Aname.prototype.foo ).toBe( 'foo' );
+			expect( root.Aname.prototype.bar ).toBe( true );
+			expect( root.Aname.prototype.foobar ).toBe( false );
+
+			log = [];
+			t = temp.make( 'Aname', 
+				['foo', 'bar', 'foobar', function( f, b, fb ){
+					return {
+						foobar : fb,
+						foo : f,
+						bar : b
+					}
+				}]
+			);
+
+			t.$getDefinition();
+
+			expect( log ).toEqual( [22,21,23] );
+			expect( r.Aname ).toBeDefined();
+			expect( r.Aname.prototype.foo ).toBe( 'foo' );
+			expect( r.Aname.prototype.bar ).toBe( true );
+			expect( r.Aname.prototype.foobar ).toBe( false );
+		});
+
 		it("should run allow for injection in mocks", function(){
 			var t;
 
@@ -110,13 +164,15 @@ describe("bmoor.build.Compiler", function() {
 			root.foo = 1;
 			root.bar = 2;
 
-			compiler.make( 'Aname', ['foo', 'bar', 'foobar', function( f, b, fb ){
-				return {
-					foobar : fb,
-					foo : f,
-					bar : b
-				}
-			}]).$getDefinition();
+			compiler.make( 'Aname', 
+				['foo', 'bar', 'foobar', function( f, b, fb ){
+					return {
+						foobar : fb,
+						foo : f,
+						bar : b
+					}
+				}]
+			).$getDefinition();
 
 			log = [];
 
@@ -227,7 +283,7 @@ describe("bmoor.build.Compiler", function() {
 
 		it('should facilitate creating test objects', function(){
 			expect( bMoor.test ).toBeDefined();
-			expect( bMoor.test.remake ).toBeDefined();
+			expect( bMoor.test.injector ).toBeDefined();
 			expect( bMoor.test.make ).toBeDefined();
 			expect( bMoor.test.mock ).toBeDefined();
 		});
