@@ -7,11 +7,11 @@ bMoor.make('bmoor.extender.Mixin', [
 				throw 'You neex to extend Mixin, no instaniating it directly';
 			},
 			properties : {
-				_extend : function( obj ){
+				_$extend : function( obj ){
 					var key;
 
 					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
+						if ( key.charAt(0) !== '_' || key.charAt(1) !== '$' ){
 							obj[key] = this[key];
 						}
 					}

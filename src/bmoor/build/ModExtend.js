@@ -8,7 +8,7 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 
 			if ( extensions ){
 				for( i = 0, c = extensions.length; i < c; i++ ){
-					extensions[i]._extend( proto );
+					extensions[i]._$extend( proto );
 				}
 			}
 		}]

@@ -8,7 +8,7 @@ bMoor.make( 'bmoor.flow.Interval',
 				this.clearAll();
 			},
 			properties : {
-				set : function( func, interval ){
+				set : function( func, interval, ctx ){
 					var list = this.timeouts[ interval ],
 						hk = this._c++,
 						lhk;
@@ -26,7 +26,9 @@ bMoor.make( 'bmoor.flow.Interval',
 					}
 
 					lhk = list._c++;
-					list[ lhk ] = func;
+					list[ lhk ] = function(){
+						func.call( ctx );
+					};
 
 					this.hash[ hk ] = { hk : list._c, val : interval };
 

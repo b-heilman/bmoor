@@ -288,4 +288,37 @@ describe("bmoor.build.Compiler", function() {
 			expect( bMoor.test.mock ).toBeDefined();
 		});
 	});
+
+	describe('bMoor.require', function(){
+		var Timeout;
+
+		beforeEach(bMoor.test.injector(
+			['bmoor.flow.Timeout',
+			function( T ){
+				Timeout = T;
+			}]
+		));
+
+		it('should allow requiring', function(){
+			expect( bMoor.require ).toBeDefined();
+		});
+
+		it('should pass back a required object', function(){
+			var t = bMoor.require('bmoor.flow.Timeout');
+
+			expect( t ).toBe( Timeout );
+		});
+
+		it('should fail if it can not find required object', function(){
+			var t;
+
+			try{
+				bMoor.require('bmoor.flow.Timeout2');
+			}catch( ex ){
+				t = true;
+			}
+
+			expect( t ).toBe( true );
+		});
+	});
 });

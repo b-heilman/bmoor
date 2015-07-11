@@ -10,7 +10,6 @@ describe( 'bmoor.flow.Regulator', function(){
 		function( T, To, R ){
 			Timeout = T;
 			Regulator = R;
-			mountUp = new Regulator( 30 );
 		}],
 		{
 			'bmock.flow.Timeout' : 'bmoor.flow.Timeout'
@@ -18,99 +17,95 @@ describe( 'bmoor.flow.Regulator', function(){
 	));
 
 	it ( 'should be defined', function(){
-		expect( mountUp ).toBeDefined();
-		expect( mountUp.cb ).toBe( null );
+		expect( Regulator ).toBeDefined();
 	});
 
-	it ( 'should for no readjusting and contextual ', function(){
-		var t = {
+	it ( 'should limit the calls to the low bounds', function(){
+		var reg = new Regulator( 30, 500, function(v){
+				return t.c = v;
+			}),
+			t = {
 				c : null,
-				f : function(){
-					return this.c = 'woot';
-				}
-			},
-			f = mountUp.setup( false, true );
+			};
 
-		f( t, t.f );
+		reg('woot');
 
 		expect( t.c ).toBe( null );
 
 		Timeout.tick( 20 );
+		
 		expect( t.c ).toBe( null );
 
-		f( t, t.f );
-
 		Timeout.tick( 20 );
+
 		expect( t.c ).toBe( 'woot' );
 	});
 
-	it ( 'should for readjusting and contextual ', function(){
-		var t = {
+	it ( 'should reset the lower bounds timer on call', function(){
+		var reg = new Regulator( 30, 500, function(v){
+				return t.c = v;
+			}),
+			t = {
 				c : null,
-				f : function(){
-					return this.c = 'woot';
-				}
-			},
-			f = mountUp.setup( true, true );
+			};
 
-		f( t, t.f );
+		reg('woot');
 
 		expect( t.c ).toBe( null );
 
 		Timeout.tick( 20 );
+		
+		reg('woot');
+		reg.shift( 5 );
+
 		expect( t.c ).toBe( null );
 
-		f( t, t.f );
-
 		Timeout.tick( 20 );
+
 		expect( t.c ).toBe( null );
 
 		Timeout.tick( 20 );
+		
 		expect( t.c ).toBe( 'woot' );
 	});
 
-	it ( 'should for no readjusting and non-contextual ', function(){
-		var c = null,
-			f = mountUp.setup( false );
+	it ( 'should be able to be flushed', function(){
+		var reg = new Regulator( 30, 500, function(v){
+				return t.c = v;
+			}),
+			t = {
+				c : null,
+			};
 
-		f(function(){
-			c = 'woot';
-		});
+		reg('woot');
 
-		expect( c ).toBe( null );
+		expect( t.c ).toBe( null );
 
-		Timeout.tick( 20 );
-		expect( c ).toBe( null );
+		reg.flush();
 
-		f(function(){
-			c = 'test';
-		});
-
-		Timeout.tick( 20 );
-		expect( c ).toBe( 'test' );
+		expect( t.c ).toBe( 'woot' );
 	});
 
-	it ( 'should for readjusting and non-contextual ', function(){
-		var c = null,
-			f = mountUp.setup( true );
+	it ( 'should allow it to be cancelled', function(){
+		var reg = new Regulator( 30, 500, function(v){
+				return t.c = v;
+			}),
+			t = {
+				c : null,
+			};
 
-		f(function(){
-			c = 'woot';
-		});
+		reg('woot');
 
-		expect( c ).toBe( null );
-
-		Timeout.tick( 20 );
-		expect( c ).toBe( null );
-
-		f(function(){
-			c = 'test';
-		});
+		expect( t.c ).toBe( null );
 
 		Timeout.tick( 20 );
-		expect( c ).toBe( null );
+		
+		expect( t.c ).toBe( null );
+		
+		reg.clear();
 
 		Timeout.tick( 20 );
-		expect( c ).toBe( 'test' );
+
+		expect( t.c ).toBe( null );
 	});
 });

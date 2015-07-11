@@ -23,10 +23,10 @@ bMoor.make('bmoor.extender.Decorator', [
 							return rtn;
 						};
 					} else {
-						throw 'attempting to decorate '+key+' an instance of '+typeof(old);
+						console.log( 'attempting to decorate '+key+' an instance of '+typeof(old) );
 					}
 				}else{
-					throw 'attempting to decorate with '+key+' and instance of '+typeof(action);
+					console.log( 'attempting to decorate with '+key+' and instance of '+typeof(action) );
 				}
 			}
 		}
@@ -36,11 +36,11 @@ bMoor.make('bmoor.extender.Decorator', [
 				throw 'You neex to extend Decorator, no instaniating it directly';
 			},
 			properties : {
-				_extend : function( target ){
+				_$extend : function( target ){
 					var key;
 
 					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
+						if ( key.charAt(0) !== '_' || key.charAt(1) !== '$' ){
 							override( key, target, this[key] );
 						}
 					}

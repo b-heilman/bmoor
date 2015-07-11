@@ -1,73 +1,57 @@
-bMoor.make('bmoor.flow.Regulator', 
+bMoor.define('bmoor.flow.Regulator', 
 	[ 'bmoor.flow.Timeout',
 	function( Timeout ){
 		'use strict';
 		
-		return {
-			construct : function( timeout ){
-				var dis = this;
+		return function regulator( min, max, func, context ){
+			var args,
+				timeout,
+				setTime,
+				nextTime,
+				limitTime;
 
-				this.cb = null;
-				this.timeout = timeout || 30;
-				this.timeoutId = null;
-				this.onTimeout = function(){
-					dis.timeoutId = null;
-					dis.cb();
-				};
-			},
-			properties : {
-				wrap : function( ctx, cb, readjust ){
-					var dis = this;
+			function callback(){
+				var now = setTime + min;
 
-					if ( !bMoor.isFunction(cb) ){
-						readjust = cb;
-						cb = ctx;
-						ctx = false;
-					}
-
-					if ( ctx ){
-						return function(){
-							dis.setContextual( ctx, cb, readjust );
-						};
-					}else{
-						return function( cb ){
-							dis.set( cb, readjust );
-						};
-					}
-				},
-				setup : function( readjust, contextual ){
-					var dis = this;
-
-					if ( contextual ){
-						return function( ctx, cb ){
-							dis.setContextual( ctx, cb, readjust );
-						};
-					}else{
-						return function( cb ){
-							dis.set( cb, readjust );
-						};
-					}
-				},
-				set : function( cb, readjust ){
-					this.registerCall( readjust );
-
-					this.cb = cb;
-				},
-				setContextual : function( ctx, cb, readjust ){
-					this.registerCall( readjust );
-
-					this.cb = function(){ cb.call(ctx); };
-				},
-				registerCall : function( readjust ){
-					if ( readjust ){
-						Timeout.clear( this.timeoutId );
-
-						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
-					}else if ( !this.timeoutId ){
-						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
-					}
+				if ( now >= limitTime || nextTime <= now ){
+					limitTime = null;
+					func.apply(context, args);
+				}else{
+					setTime = now;
+					timeout = Timeout.set(callback, min);
 				}
 			}
+
+			function doIt(){
+				var now = +(new Date());
+
+				args = arguments;
+				nextTime = now + min;
+				
+				if ( !limitTime ){
+					setTime = now;
+					limitTime = now+max;
+					timeout = Timeout.set(callback, min);
+				}
+			}
+
+			doIt.clear = function(){
+				Timeout.clear( timeout );
+				timeout = null;
+				limitTime = null;
+			};
+
+			doIt.flush = function(){
+				limitTime = 0;
+				callback();
+				this.clear();
+			};
+
+			doIt.shift = function( diff ){
+				nextTime += diff;
+			};
+
+			return doIt;
 		};
 	}]
 );

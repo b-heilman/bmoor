@@ -7,8 +7,10 @@ bMoor.make( 'bmoor.flow.Timeout',
 			construct : function Timeout(){
 			},
 			properties : {
-				set : function( func, interval ){
-					return setTimeout( func, interval );
+				set : function( func, interval, ctx ){
+					return setTimeout( function(){
+						func.call( ctx );
+					}, interval );
 				},
 				clear : function( timeoutId ){
 					clearTimeout( timeoutId );

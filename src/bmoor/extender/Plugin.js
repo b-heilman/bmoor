@@ -35,10 +35,10 @@ bMoor.make('bmoor.extender.Plugin', [
 							return rtn;
 						};
 					}else{
-						throw 'attempting to plug-n-play '+key+' an instance of '+typeof(old);
+						console.log( 'attempting to plug-n-play '+key+' an instance of '+typeof(old) );
 					}
 				}else{
-					throw 'attempting to plug-n-play with '+key+' and instance of '+typeof(action);
+					console.log( 'attempting to plug-n-play with '+key+' and instance of '+typeof(action) );
 				}
 			}
 		}
@@ -48,11 +48,15 @@ bMoor.make('bmoor.extender.Plugin', [
 				throw 'You neex to extend Plugin, no instaniating it directly';
 			},
 			properties : {
-				_extend : function( target ){
+				_$extend : function( target ){
 					var key;
 
+					if ( this._$onExtend ){
+						this._$onExtend( target );
+					}
+
 					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
+						if ( key.charAt(0) !== '_' || key.charAt(1) !== '$' ){
 							override( key, target, this );
 						}
 					}

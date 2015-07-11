@@ -308,6 +308,16 @@ bMoor.inject(
 			return instance.define( namespace, value );
 		});
 
+		bMoor.plugin( 'require', function( namespace ){
+			var t = bMoor.exists( namespace, instance.root );
+
+			if ( !t || bMoor.isQuark(t) ){
+				throw new Error('bMoor.require failed to load '+namespace);
+			}
+
+			return t;
+		});
+
 		bMoor.plugin( 'test', {
 			injector : function( injection, overrides ){
 				return function(){

@@ -1,14 +1,14 @@
 describe('bmoor.extender.Plugin', function(){
 	'use strict';
 	
-	var Plugin;
+	var Plugin; // Plugin maintains its own context
 
 	beforeEach(bMoor.test.injector(['bmoor.extender.Plugin', function(P){
 		Plugin = P;
 	}]));
 
-	it( 'should have the _extend function defined', function(){
-		expect( Plugin.prototype._extend ).toBeDefined();
+	it( 'should have the _$extend function defined', function(){
+		expect( Plugin.prototype._$extend ).toBeDefined();
 	});
 
 	it( 'should not be able to be constructed', function(){
@@ -40,7 +40,7 @@ describe('bmoor.extender.Plugin', function(){
 		
 		it( 'should copy properties over', function(){
 			expect( t.eins ).toBeDefined();
-			expect( t._extend ).toBeDefined();
+			expect( t._$extend ).toBeDefined();
 		});
 	});
 
@@ -55,22 +55,23 @@ describe('bmoor.extender.Plugin', function(){
 			t = bMoor.test.make({
 				parent: Plugin,
 				properties : {
-					eins : function(){
+					eins: function(){
 						this.$old();
-						expect( this._test ).toBeDefined();
+						expect( this._test ).toBe( 'hello' );
 					},
-					_test : 'hello'
+					_test: 'hello'
 				}
 			});
 
 			t2 = {
-				eins : function(){
+				eins: function(){
 					called = true;
-					expect( this._test ).toBeUndefined();
-				}
+					expect( this._test ).toBe( 'foo' );
+				},
+				_test: 'foo'
 			};
 			
-			( new t() )._extend( t2 );
+			( new t() )._$extend( t2 );
 		});
 		
 		it( 'should copy properties over', function(){

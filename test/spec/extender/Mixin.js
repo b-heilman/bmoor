@@ -7,8 +7,8 @@ describe('bmoor.extender.Mixin', function(){
 		Mixin = M;
 	}]));
 
-	it( 'should have the _extend function defined', function(){
-		expect( Mixin.prototype._extend ).toBeDefined();
+	it( 'should have the _$extend function defined', function(){
+		expect( Mixin.prototype._$extend ).toBeDefined();
 	});
 
 	it( 'should not be able to be constructed', function(){
@@ -41,12 +41,12 @@ describe('bmoor.extender.Mixin', function(){
 		
 		it( 'should have properties', function(){
 			expect( t.prototype.eins ).toBeDefined();
-			expect( t.prototype._extend ).toBeDefined();
+			expect( t.prototype._$extend ).toBeDefined();
 		});
 
 		it( 'should copy properties over', function(){
 			expect( t2.eins ).toBeDefined();
-			expect( t2._extend ).toBeDefined();
+			expect( t2._$extend ).toBeDefined();
 		});
 	});
 
@@ -64,7 +64,7 @@ describe('bmoor.extender.Mixin', function(){
 				});
 
 			t2 = {};
-			( new t() )._extend( t2 );
+			( new t() )._$extend( t2 );
 		});
 		
 		it( 'should copy properties over', function(){

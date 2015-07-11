@@ -1,6 +1,6 @@
 var bMoor = this.bMoor ? this.bMoor : require('../build/bmoor.js');
 
-console.log( bMoor.toString() );
+console.log( bMoor );
 // Basic declaration	
 console.log( 'foo.Hello' );
 bMoor.make( 'foo.Hello', {
