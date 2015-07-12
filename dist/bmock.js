@@ -13,6 +13,7 @@ bMoor.make('bmock.flow.Interval',
 					if ( jasmine.Clock.useMock ){
 						jasmine.Clock.useMock();
 					}else{
+						jasmine.clock().uninstall();
 						jasmine.clock().install();
 					}
 					
@@ -45,6 +46,7 @@ bMoor.make('bmock.flow.Timeout',
 					if ( jasmine.Clock.useMock ){
 						jasmine.Clock.useMock();
 					}else{
+						jasmine.clock().uninstall();
 						jasmine.clock().install();
 					}
 					

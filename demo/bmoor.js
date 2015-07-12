@@ -1,11 +1,12 @@
 ;(function(){
-/** bmoor v0.0.7 **/
+/** bmoor v0.1.0 **/
 var bMoor = {};
 
 (function( g ){
 	'use strict';
 
-	var _root = {},
+	var uid = 0,
+		_root = {},
 		msie,
 		environment,
 		aliases = {};
@@ -30,6 +31,25 @@ var bMoor = {};
 			isNode : true
 		};
 	}
+
+	function nextUid(){
+		return ++uid;
+	}
+
+	function setUid( obj ){
+		var t = obj.$$bmoorUid;
+
+		if ( !t ){
+			t = obj.$$bmoorUid = nextUid();
+		}
+
+		return t;
+	}
+
+	function getUid( obj ){
+		return obj.$$bmoorUid;
+	}
+
 	/**
 	 * namespace
 	 **/
@@ -318,13 +338,12 @@ var bMoor = {};
 	 *
 	 * @function explode
 	 * @namespace bMoor
-	 * @param {object} target The object to map the variables onto
 	 * @param {object} mappings An object orientended as [ namespace ] => value
+	 * @param {object} target The object to map the variables onto
 	 * @return {object} The object that has had content mapped into it
 	 **/
-	function explode( target, mappings ){
-		if ( arguments.length === 1 ){
-			mappings = target;
+	function explode( mappings, target ){
+		if ( !target ){
 			target = {};
 		}
 
@@ -334,6 +353,8 @@ var bMoor = {};
 
 		return target;
 	}
+
+	// TODO : implode
 
 	function inherit( from ){
 		if ( from.prototype ){
@@ -377,9 +398,14 @@ var bMoor = {};
 	function extend( obj ){
 		loop( arguments, function(cpy){
 			if ( cpy !== obj ) {
-				iterate( cpy, function(value, key){
-					obj[key] = value;
-				});
+				if ( obj && obj.extend ){
+					obj.extend( cpy );
+				}else{
+					iterate( cpy, function(value, key){
+						obj[key] = value;
+					});
+				}
+				
 			}
 		});
 
@@ -398,6 +424,8 @@ var bMoor = {};
 
 			if ( to === from || !from ){
 				continue;
+			}else if ( to && to.merge ){
+				to.merge( from );
 			}else if ( !isObject(to) ){
 				if ( isObject(from) ){
 					to = merge( {}, from );
@@ -667,7 +695,7 @@ var bMoor = {};
 	function isArrayLike( value ) {
 		// for me, if you have a length, I'm assuming you're array like, might change
 		if ( value ){
-			return isObject( value ) && typeof value.length === 'number';
+			return isObject( value ) && ( value.length === 0 || (0 in value && (value.length-1) in value) );
 		}else{
 			return false;
 		}
@@ -757,18 +785,18 @@ var bMoor = {};
 	 * @namespace bMoor
 	 * @param {array} arr The array to iterate through
 	 * @param {function} fn The function to call against each element
-	 * @param {object} scope The scope to call each function against
+	 * @param {object} context The context to call each function against
 	 **/
-	function loop( arr, fn, scope ){
+	function loop( arr, fn, context ){
 		var i, c;
 
-		if ( !scope ){
-			scope = arr;
+		if ( !context ){
+			context = arr;
 		}
 
 		for ( i = 0, c = arr.length; i < c; ++i ){
 			if ( i in arr ) {
-				fn.call(scope, arr[i], i, arr);
+				fn.call(context, arr[i], i, arr);
 			}
 		}
 	}
@@ -780,18 +808,18 @@ var bMoor = {};
 	 * @namespace bMoor
 	 * @param {object} arr The object to iterate through
 	 * @param {function} fn The function to call against each element
-	 * @param {object} scope The scope to call each function against
+	 * @param {object} context The context to call each function against
 	 **/
-	function each( obj, fn, scope ){
+	function each( obj, fn, context ){
 		var key;
 
-		if ( !scope ){
-			scope = obj;
+		if ( !context ){
+			context = obj;
 		}
 
 		for( key in obj ){
 			if ( obj.hasOwnProperty(key) ){
-				fn.call( scope, obj[key], key, obj );
+				fn.call( context, obj[key], key, obj );
 			}
 		}
 	}
@@ -804,18 +832,18 @@ var bMoor = {};
 	 * @namespace bMoor
 	 * @param {object} obj The object to iterate through
 	 * @param {function} fn The function to call against each element
-	 * @param {object} scope The scope to call each function against
+	 * @param {object} context The scope to call each function against
 	 **/
-	function iterate( obj, fn, scope ){
+	function iterate( obj, fn, context ){
 		var key;
 
-		if ( !scope ){
-			scope = obj;
+		if ( !context ){
+			context = obj;
 		}
 
 		for( key in obj ){ 
 			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' ){
-				fn.call( scope, obj[key], key, obj );
+				fn.call( context, obj[key], key, obj );
 			}
 		}
 	}
@@ -830,16 +858,16 @@ var bMoor = {};
 	 * @param {function} fn The function to call against each element
 	 * @param {object} scope The scope to call each function against
 	 **/
-	function safe( obj, fn, scope ){
+	function safe( obj, fn, context ){
 		var key;
 
-		if ( !scope ){
-			scope = obj;
+		if ( !context ){
+			context = obj;
 		}
 
 		for( key in obj ){ 
 			if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' && key.charAt(0) !== '$' ){
-				fn.call( scope, obj[key], key, obj );
+				fn.call( context, obj[key], key, obj );
 			}
 		}
 	}
@@ -853,16 +881,16 @@ var bMoor = {};
 	 * @param {function} fn The function to call against each element
 	 * @param {object} scope The scope to call each function against
 	 **/
-	function forEach( obj, fn, scope ){
+	function forEach( obj, fn, context ){
 		if ( obj ){
 			if ( obj.forEach && obj.forEach !== forEach ){
-				obj.forEach( fn, scope );
+				obj.forEach( fn, context );
 			}else if ( isArrayLike(obj) ){
-				loop( obj, fn, scope );
+				loop( obj, fn, context );
 			}else if ( isFunction(obj) ){
-				iterate( obj, fn, scope );
+				iterate( obj, fn, context );
 			}else{
-				each( obj, fn, scope );
+				each( obj, fn, context );
 			}
 		}
 	}
@@ -1767,17 +1795,20 @@ var bMoor = {};
 			 **/
 			add : function( promise ){
 				var dis = this;
-				this.count++;
+				
+				if ( promise ){
+					this.count++;
 
-				promise.then(
-					function(){
-						rtn( dis );
-					},
-					function( error ){
-						dis.errors.push( error );
-						rtn( dis );
-					}
-				);
+					promise.then(
+						function(){
+							rtn( dis );
+						},
+						function( error ){
+							dis.errors.push( error );
+							rtn( dis );
+						}
+					);
+				}
 			},
 			/**
 			 * Issue when all DeferPromises have been added
@@ -1837,7 +1868,7 @@ var bMoor = {};
 		'exists'      : exists,
 		'register'    : register, // defines an alias
 		'check'       : check,	// checks for an alias
-		// injection
+		// injection ---v--------
 		'makeQuark'   : makeQuark,
 		'ensure'      : ensure,
 		'decode'      : decode,
@@ -1845,12 +1876,12 @@ var bMoor = {};
 		'translate'   : translate,
 		'inject'      : inject,
 		'plugin'      : plugin, // adds it to bMoor
-		// loop
+		// loop --------v--------
 		'loop'        : loop, // array
 		'each'        : each, // object
 		'iterate'     : iterate, // object + safe
 		'forEach'     : forEach, // picks the best to use for the instance
-		// test
+		// test --------v--------
 		'isBoolean'   : isBoolean,
 		'isDefined'   : isDefined,
 		'isUndefined' : isUndefined,
@@ -1863,7 +1894,12 @@ var bMoor = {};
 		'isInjectable' : isInjectable,
 		'isEmpty'     : isEmpty, 
 		'isQuark'     : isQuark,
-		// object
+		// data --------v--------
+		'data' : {
+			'setUid' : setUid,
+			'getUid' : getUid
+		},
+		// object ------v--------
 		'object' : {
 			'safe'      : safe,
 			'mask'      : mask,
@@ -1878,11 +1914,11 @@ var bMoor = {};
 			'explode' : explode
 			// TODO : implode -> convert multi layer hash into single layer hash
 		},
-		// string
+		// string ------v--------
 		'string' : {
 			'trim' : trim 
 		},
-		// array
+		// array -------v--------
 		'array' : {
 			'compare' : compareFunc,
 			'indexOf' : indexOf,
@@ -1892,7 +1928,7 @@ var bMoor = {};
 			'override' : arrayOverride,
 			'bisect' : bisect
 		},
-		// error
+		// error -------v--------
 		'error' : {
 			report : error
 		},
@@ -2212,6 +2248,16 @@ bMoor.inject(
 			return instance.define( namespace, value );
 		});
 
+		bMoor.plugin( 'require', function( namespace ){
+			var t = bMoor.exists( namespace, instance.root );
+
+			if ( !t || bMoor.isQuark(t) ){
+				throw new Error('bMoor.require failed to load '+namespace);
+			}
+
+			return t;
+		});
+
 		bMoor.plugin( 'test', {
 			injector : function( injection, overrides ){
 				return function(){
@@ -2260,7 +2306,7 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 
 			if ( extensions ){
 				for( i = 0, c = extensions.length; i < c; i++ ){
-					extensions[i]._extend( proto );
+					extensions[i]._$extend( proto );
 				}
 			}
 		}]
@@ -2480,7 +2526,7 @@ bMoor.make( 'bmoor.flow.Interval',
 				this.clearAll();
 			},
 			properties : {
-				set : function( func, interval ){
+				set : function( func, interval, ctx ){
 					var list = this.timeouts[ interval ],
 						hk = this._c++,
 						lhk;
@@ -2498,7 +2544,9 @@ bMoor.make( 'bmoor.flow.Interval',
 					}
 
 					lhk = list._c++;
-					list[ lhk ] = func;
+					list[ lhk ] = function(){
+						func.call( ctx );
+					};
 
 					this.hash[ hk ] = { hk : list._c, val : interval };
 
@@ -2529,77 +2577,60 @@ bMoor.make( 'bmoor.flow.Interval',
 	}]
 );
 
-bMoor.make('bmoor.flow.Regulator', 
+bMoor.define('bmoor.flow.Regulator', 
 	[ 'bmoor.flow.Timeout',
 	function( Timeout ){
 		'use strict';
 		
-		return {
-			construct : function( timeout ){
-				var dis = this;
+		return function regulator( min, max, func, context ){
+			var args,
+				timeout,
+				setTime,
+				nextTime,
+				limitTime;
 
-				this.cb = null;
-				this.timeout = timeout || 30;
-				this.timeoutId = null;
-				this.onTimeout = function(){
-					dis.timeoutId = null;
+			function callback(){
+				var now = setTime + min;
 
-					dis.cb();
-				};
-			},
-			properties : {
-				wrap : function( ctx, cb, readjust ){
-					var dis = this;
-					
-					if ( !bMoor.isFunction(cb) ){
-						readjust = cb;
-						cb = ctx;
-						ctx = false;
-					}
-
-					if ( ctx ){
-						return function(){
-							dis.setContextual( ctx, cb, readjust );
-						};
-					}else{
-						return function( cb ){
-							dis.set( cb, readjust );
-						};
-					}
-				},
-				setup : function( readjust, contextual ){
-					var dis = this;
-
-					if ( contextual ){
-						return function( ctx, cb ){
-							dis.setContextual( ctx, cb, readjust );
-						};
-					}else{
-						return function( cb ){
-							dis.set( cb, readjust );
-						};
-					}
-				},
-				set : function( cb, readjust ){
-					this.registerCall( readjust );
-
-					this.cb = cb;
-				},
-				setContextual : function( ctx, cb, readjust ){
-					this.registerCall( readjust );
-
-					this.cb = function(){ cb.call(ctx); };
-				},
-				registerCall : function( readjust ){
-					if ( readjust ){
-						Timeout.clear( this.timeoutId );
-
-						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
-					}else if ( !this.timeoutId ){
-						this.timeoutId = Timeout.set(this.onTimeout, this.timeout);
-					}
+				if ( now >= limitTime || nextTime <= now ){
+					limitTime = null;
+					func.apply(context, args);
+				}else{
+					setTime = now;
+					timeout = Timeout.set(callback, min);
 				}
 			}
+
+			function doIt(){
+				var now = +(new Date());
+
+				args = arguments;
+				nextTime = now + min;
+				
+				if ( !limitTime ){
+					setTime = now;
+					limitTime = now+max;
+					timeout = Timeout.set(callback, min);
+				}
+			}
+
+			doIt.clear = function(){
+				Timeout.clear( timeout );
+				timeout = null;
+				limitTime = null;
+			};
+
+			doIt.flush = function(){
+				limitTime = 0;
+				callback();
+				this.clear();
+			};
+
+			doIt.shift = function( diff ){
+				nextTime += diff;
+			};
+
+			return doIt;
 		};
 	}]
 );
@@ -2612,8 +2643,10 @@ bMoor.make( 'bmoor.flow.Timeout',
 			construct : function Timeout(){
 			},
 			properties : {
-				set : function( func, interval ){
-					return setTimeout( func, interval );
+				set : function( func, interval, ctx ){
+					return setTimeout( function(){
+						func.call( ctx );
+					}, interval );
 				},
 				clear : function( timeoutId ){
 					clearTimeout( timeoutId );
@@ -2698,10 +2731,10 @@ bMoor.make('bmoor.extender.Decorator', [
 							return rtn;
 						};
 					} else {
-						throw 'attempting to decorate '+key+' an instance of '+typeof(old);
+						console.log( 'attempting to decorate '+key+' an instance of '+typeof(old) );
 					}
 				}else{
-					throw 'attempting to decorate with '+key+' and instance of '+typeof(action);
+					console.log( 'attempting to decorate with '+key+' and instance of '+typeof(action) );
 				}
 			}
 		}
@@ -2711,11 +2744,11 @@ bMoor.make('bmoor.extender.Decorator', [
 				throw 'You neex to extend Decorator, no instaniating it directly';
 			},
 			properties : {
-				_extend : function( target ){
+				_$extend : function( target ){
 					var key;
 
 					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
+						if ( key.charAt(0) !== '_' || key.charAt(1) !== '$' ){
 							override( key, target, this[key] );
 						}
 					}
@@ -2733,11 +2766,11 @@ bMoor.make('bmoor.extender.Mixin', [
 				throw 'You neex to extend Mixin, no instaniating it directly';
 			},
 			properties : {
-				_extend : function( obj ){
+				_$extend : function( obj ){
 					var key;
 
 					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
+						if ( key.charAt(0) !== '_' || key.charAt(1) !== '$' ){
 							obj[key] = this[key];
 						}
 					}
@@ -2783,10 +2816,10 @@ bMoor.make('bmoor.extender.Plugin', [
 							return rtn;
 						};
 					}else{
-						throw 'attempting to plug-n-play '+key+' an instance of '+typeof(old);
+						console.log( 'attempting to plug-n-play '+key+' an instance of '+typeof(old) );
 					}
 				}else{
-					throw 'attempting to plug-n-play with '+key+' and instance of '+typeof(action);
+					console.log( 'attempting to plug-n-play with '+key+' and instance of '+typeof(action) );
 				}
 			}
 		}
@@ -2796,11 +2829,15 @@ bMoor.make('bmoor.extender.Plugin', [
 				throw 'You neex to extend Plugin, no instaniating it directly';
 			},
 			properties : {
-				_extend : function( target ){
+				_$extend : function( target ){
 					var key;
 
+					if ( this._$onExtend ){
+						this._$onExtend( target );
+					}
+
 					for( key in this ){
-						if ( key.charAt(0) !== '_' ){
+						if ( key.charAt(0) !== '_' || key.charAt(1) !== '$' ){
 							override( key, target, this );
 						}
 					}
