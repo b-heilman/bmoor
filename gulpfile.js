@@ -114,6 +114,15 @@ gulp.task('test', function (done) {
 	}, done);
 });
 
+gulp.task('test-chrome', function (done) {
+    karma.start({
+        configFile: __dirname + '/karma.conf.js',
+        port: 9999,
+        singleRun: true,
+        browsers: ['Chrome']
+    }, done);
+});
+
 /*
 simple:{
 	singleRun: true,

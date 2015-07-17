@@ -94,6 +94,16 @@ describe('bmoor.extender.Decorator', function(){
 					properties : {
 						_$extend: function( el ){
 							el.isExtended = true;
+							Decorator.prototype._$extend.call( this, el );
+						},
+						sample: function(){
+							this.$sample = 'sample';
+						},
+						$sign: function(){
+							this.sign = 'sign';
+						},
+						_blank: function(){
+							this.blank = 'blank';
 						}
 					}
 				});
@@ -118,21 +128,36 @@ describe('bmoor.extender.Decorator', function(){
 			var v;
 
 			t2 = bMoor.test.make({
+					construct: function(){
+						this.junk = 'ie';
+					},
 					extend: [
 						new t()
 					],
 					properties : {
 						eins : function(){
 							called = true;
+						},
+						_foo: function(){
+							this.$bar = 'hello';
 						}
 					}
 				});
 
 			v = new t2();
 			v.eins();
+			v._foo();
+			v.sample();
+			v.$sign();
+			v._blank();
 
 			expect( called ).toBe( true );
+			expect( v.junk ).toBe( 'ie' );
 			expect( v.isExtended ).toBeDefined();
+			expect( v.$bar ).toBe( 'hello' );
+			expect( v.blank ).toBe( 'blank' );
+			expect( v.$sample ).toBe( 'sample' );
+			expect( v.sign ).toBe( 'sign' );
 		});
 	});
 });

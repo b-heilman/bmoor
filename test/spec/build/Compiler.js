@@ -289,6 +289,209 @@ describe("bmoor.build.Compiler", function() {
 		});
 	});
 
+	describe('injection of a remade class', function(){
+		var E, T;
+
+		bMoor.make('testing.Echo', [function(){
+			return {
+				construct: function IncludeEcho(){},
+				properties: {
+					echo: function(){
+						return 'hello world';
+					}
+				}
+			}
+		}]);
+
+		bMoor.make('testing.Test', [
+			'testing.Echo',
+			function( Echo ){
+				return {
+					construct: function IncludeTest(){},
+					properties: {
+						test: function(){
+							var t = new Echo();
+							return t.echo();
+						}
+					}
+				}
+			}
+		]);
+
+		bMoor.test.injector([
+			'testing.Echo', 'testing.Test',
+			function( Echo, Test ){
+				E = Echo;
+				T = Test;
+				
+				it( 'should inject testing.Test correctly', function(){
+					expect( T.prototype.test ).toBeDefined();
+				});
+
+				it( 'should inject testing.Echo correctly', function(){
+					expect( E.prototype.echo ).toBeDefined();
+				});
+			}
+		])();
+
+		it('should intially define things correctly', function(){
+			var e = new E(),
+				t = new T();
+
+			expect( e.echo() ).toBe('hello world');
+			expect( t.test() ).toBe('hello world');
+		});
+
+		bMoor.make('testing.Junk', [
+			function(){
+				return {
+					construct: function IncludeJunkEcho(){},
+					properties: {
+						echo: function(){
+							return 'junk';
+						}
+					}
+				}
+			}
+		]);
+
+		describe('with injection', function(){
+			var J,
+				T;
+
+			bMoor.test.injector(
+				['testing.Junk', 'testing.Test',
+				function( Junk, Test ){
+					J = Junk;
+					T = Test;
+				}],
+				{
+					'testing.Junk' : 'testing.Echo'
+				}
+			)();
+			
+			it('should allow a class to be replaced', function(){
+				var j = new J(),
+					t = new T();
+
+				expect( J.prototype.echo ).toBeDefined();
+				expect( T.prototype.test ).toBeDefined();
+
+				expect( j.echo() ).toBe('junk');
+				expect( t.test() ).toBe('junk');
+			});
+		});
+
+		describe('add an extra level', function(){
+			var T;
+
+			bMoor.make('testing.Top', [
+				'testing.Test',
+				function( Test ){
+					return {
+						construct: function IncludeTop(){},
+						properties: {
+							top: function(){
+								var t = new Test();
+								return t.test();
+							}
+						}
+					}
+				}
+			]);
+
+			it('should work normal at first', function(){
+				var T,
+					t;
+
+				bMoor.test.injector(
+					['testing.Top', 'testing.Echo',
+					function( Top, E ){
+						T = Top;
+					}]
+				)();
+
+				t = new T();
+
+				expect( t.top() ).toBe('hello world');
+			});
+			
+			it('should change after lower injection', function(){
+				var T,
+					t;
+
+				bMoor.test.injector(
+					['testing.Top',
+					function( Top ){
+						T = Top;
+					}],
+					{
+						'testing.Junk' : 'testing.Echo'
+					}
+				)();
+
+				t = new T();
+
+				expect( t.top() ).toBe('junk');
+			});
+		});
+
+		describe('overriding of defined things', function(){
+			bMoor.make('testing.Hello', {
+				construct: function Hello(){},
+				properties: {
+					hello: 'world'
+				}
+			});
+
+			bMoor.make('testing.GoHome', {
+				construct: function GoHome(){},
+				properties: {
+					hello: 'go home'
+				}
+			});
+
+			bMoor.define('testing.Yolo', [
+				'testing.Hello',
+				function( SayWhat ){
+					return function(){
+						var t = new SayWhat();
+						return t.hello;
+					}
+				}
+			]);
+
+			it('should work the first time', function(){
+				var Yolo;
+
+				bMoor.test.injector(
+					['testing.Yolo',
+					function( Y ){
+						Yolo = Y;
+					}]
+				)();
+
+				expect( Yolo() ).toBe( 'world' );
+			});
+
+			it('should allow overriding', function(){
+				var Yolo;
+
+				bMoor.test.injector(
+					['testing.Yolo',
+					function( Y ){
+						Yolo = Y;
+					}],
+					{
+						'testing.GoHome': 'testing.Hello'
+					}
+				)();
+
+				expect( Yolo() ).toBe( 'go home' );
+			});
+		});
+	});
+
 	describe('bMoor.require', function(){
 		var Timeout;
 

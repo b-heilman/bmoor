@@ -56,47 +56,96 @@ describe("Testing object functions", function() {
 
 	// map
 	it('should allow for the mapping of variables onto an object', function(){
-		var t = bMoor.object.explode({
-			'eins' : 1, 
-			'zwei' : 2,
-			'drei' : 3,
-			'foo.bar' : 'woot'
-		}, {hello:'world'});
+		var o = {},
+			t = bMoor.object.explode({
+				'eins': 1, 
+				'zwei': 2,
+				'drei': 3,
+				'foo.bar': 'woot',
+				'help.me': o
+			},{
+				hello:'world'
+			});
 
-		console.log( t );
-		expect( t.eins, 1 );
-		expect( t.foo.bar, 'woot' );
-		expect( t.hello, 'world' );
+		expect( t.eins ).toBe( 1 );
+		expect( t.foo.bar ).toBe( 'woot' );
+		expect( t.hello ).toBe( 'world' );
+		expect( t.help.me ).toBe( o );
 	});
 
 	it('should allow for a new variable to be created from a map', function(){
-		var t = bMoor.object.explode({
-			'eins' : 1, 
-			'zwei' : 2,
-			'drei' : 3,
-			'foo.bar' : 'woot'
-		});
+		var o = {},
+			t = bMoor.object.explode({
+				'eins': 1, 
+				'foo.bar': 'woot',
+				'hello.world': o
+			});
 
 		expect( t.eins, 1 );
 		expect( t.foo.bar, 'woot' );
+		expect( t.hello.world ).toBe( o );
 	});
 
-	it( 'should allow for data to be overrided', function(){
-		var t = {
-			eins : 1,
-			zwei : {
-				foo : 1,
-				bar : 2
-			}
-		}
+	describe('override', function(){
+		it( 'should prune old properties', function(){
+			var t = {
+					eins : 1,
+					zwei : {
+						foo : 1,
+						bar : 2
+					}
+				}
 
-		bMoor.object.override( t, {
-			drei : 3
+			bMoor.object.override( t, {
+				drei : 3
+			});
+
+			expect( t.eins ).toBeUndefined();
+			expect( t.zwei ).toBeUndefined();
+			expect( t.drei ).toBe( 3 );
 		});
 
-		expect( t.eins ).toBeUndefined();
-		expect( t.zwei ).toBeUndefined();
-		expect( t.drei ).toBe( 3 );
+		it( 'should handle shallow object copy', function(){
+			var t = {
+					eins : 1,
+					zwei : {
+						foo : 1,
+						bar : 2
+					}
+				},
+				o = {
+					drei : {
+						hello: 'world'
+					}
+				};
+
+			bMoor.object.override( t, o );
+
+			o.drei.hello = 'woot';
+
+			expect( t.drei.hello ).toBe( 'woot' );
+		});
+
+		it( 'should handle deep object copy', function(){
+			var t = {
+					eins : 1,
+					zwei : {
+						foo : 1,
+						bar : 2
+					}
+				},
+				o = {
+					drei : {
+						hello: 'world'
+					}
+				};
+
+			bMoor.object.override( t, o, true );
+
+			o.drei.hello = 'woot';
+
+			expect( t.drei.hello ).toBe( 'world' );
+		});
 	});
 
 	it( 'should allow for data to be merged', function(){

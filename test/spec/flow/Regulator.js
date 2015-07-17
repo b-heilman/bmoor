@@ -6,8 +6,8 @@ describe( 'bmoor.flow.Regulator', function(){
 		mountUp;
 
 	beforeEach(bMoor.test.injector(
-		['bmock.flow.Timeout', 'bmoor.flow.Timeout','bmoor.flow.Regulator',
-		function( T, To, R ){
+		['bmock.flow.Timeout', 'bmoor.flow.Regulator',
+		function( T, R ){
 			Timeout = T;
 			Regulator = R;
 		}],
@@ -64,7 +64,7 @@ describe( 'bmoor.flow.Regulator', function(){
 
 		expect( t.c ).toBe( null );
 
-		Timeout.tick( 20 );
+		Timeout.tick( 40 );
 		
 		expect( t.c ).toBe( 'woot' );
 	});

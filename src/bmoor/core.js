@@ -438,24 +438,25 @@ var bMoor = {};
 		return to;
 	}
 
-	function override( to, from ){
-		safe( from, function( f, key){
+	function override( to, from, deep ){
+		//console.log( to );
+		safe( from, function( f, key ){
 			var t = to[ key ];
 
-			if ( t === undefined ){
+			if ( t === undefined && (!deep||f&&f.$constructor) ){
 				to[ key ] = f;
 			}else if ( bMoor.isArrayLike(f) ){
 				if ( !bMoor.isArrayLike(t) ){
 					t = to[ key ] = [];
 				}
 
-				arrayOverride( t, f );
+				arrayOverride( t, f, deep );
 			}else if ( bMoor.isObject(f) ){
 				if ( !bMoor.isObject(t) ){
 					t = to[ key ] = {};
 				}
 
-				override( t, f );
+				override( t, f, deep );
 			}else if ( f !== t ){
 				to[ key ] = f;
 			}
@@ -471,7 +472,7 @@ var bMoor = {};
 		return to;
 	}
 
-	function arrayOverride( to, from ){
+	function arrayOverride( to, from, deep ){
 		var i, c,
 			f,
 			t;
@@ -484,20 +485,20 @@ var bMoor = {};
 			f = from[i];
 			t = to[i];
 
-			if ( t === undefined ){
+			if ( t === undefined && !deep ){
 				to[ i ] = f;
 			} else if ( bMoor.isArrayLike(f) ){
 				if ( !bMoor.isArrayLike(t) ){
 					t = to[i] = [];
 				}
 
-				arrayOverride( t, f );
+				arrayOverride( t, f, deep );
 			} else if ( bMoor.isObject(f) ){
 				if ( !bMoor.isObject(t) ){
 					t = to[i] = {};
 				}
 
-				override( t, f );
+				override( t, f, deep );
 			} else if ( f !== t ){
 				to[ i ] = f;
 			}

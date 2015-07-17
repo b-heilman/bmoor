@@ -1,5 +1,5 @@
 ;(function(){
-/** bmoor v0.1.0 **/
+/** bmoor v0.1.2 **/
 var bMoor = {};
 
 (function( g ){
@@ -440,24 +440,25 @@ var bMoor = {};
 		return to;
 	}
 
-	function override( to, from ){
-		safe( from, function( f, key){
+	function override( to, from, deep ){
+		//console.log( to );
+		safe( from, function( f, key ){
 			var t = to[ key ];
 
-			if ( t === undefined ){
+			if ( t === undefined && (!deep||f&&f.$constructor) ){
 				to[ key ] = f;
 			}else if ( bMoor.isArrayLike(f) ){
 				if ( !bMoor.isArrayLike(t) ){
 					t = to[ key ] = [];
 				}
 
-				arrayOverride( t, f );
+				arrayOverride( t, f, deep );
 			}else if ( bMoor.isObject(f) ){
 				if ( !bMoor.isObject(t) ){
 					t = to[ key ] = {};
 				}
 
-				override( t, f );
+				override( t, f, deep );
 			}else if ( f !== t ){
 				to[ key ] = f;
 			}
@@ -473,7 +474,7 @@ var bMoor = {};
 		return to;
 	}
 
-	function arrayOverride( to, from ){
+	function arrayOverride( to, from, deep ){
 		var i, c,
 			f,
 			t;
@@ -486,20 +487,20 @@ var bMoor = {};
 			f = from[i];
 			t = to[i];
 
-			if ( t === undefined ){
+			if ( t === undefined && !deep ){
 				to[ i ] = f;
 			} else if ( bMoor.isArrayLike(f) ){
 				if ( !bMoor.isArrayLike(t) ){
 					t = to[i] = [];
 				}
 
-				arrayOverride( t, f );
+				arrayOverride( t, f, deep );
 			} else if ( bMoor.isObject(f) ){
 				if ( !bMoor.isObject(t) ){
 					t = to[i] = {};
 				}
 
-				override( t, f );
+				override( t, f, deep );
 			} else if ( f !== t ){
 				to[ i ] = f;
 			}
@@ -1955,7 +1956,8 @@ bMoor.inject(
 				this.preProcess = [];
 				this.postProcess = [];
 				this.clean = true;
-				this.definitions = {};
+				this.makes = {};
+				this.defines = {};
 				this.root = bMoor.namespace.root;
 			},
 			instance;
@@ -1966,8 +1968,9 @@ bMoor.inject(
 			t.postProcess = bMoor.object.extend( [], this.postProcess );
 			t.clean = this.clean;
 
-			t.definitions = bMoor.object.extend( {}, this.definitions );
-			t.root = bMoor.object.override( {}, this.root );
+			t.makes = bMoor.object.extend( {}, this.makes );
+			t.defines = bMoor.object.extend( {}, this.defines );
+			t.root = bMoor.object.override( {}, this.root, true );
 
 			return t;
 		};
@@ -2092,9 +2095,6 @@ bMoor.inject(
 
 			if ( bMoor.isString(name) ){
 				namespace = bMoor.parseNS( name );
-			}else if ( bMoor.isArray(name) ){
-				namespace = name;
-				name = name.join('.');
 			}else{
 				throw new Error(
 					JSON.stringify(name) + ' > ' +
@@ -2103,16 +2103,16 @@ bMoor.inject(
 				);
 			}
 			
-			this.definitions[ name ] = definition;
+			this.makes[ name ] = definition;
 
 			quark = bMoor.makeQuark( namespace, this.root );
 			
 			quark.$setDefinition(function(){
 				return dis.build( definition ).then(function( result ){
 					if ( result.prototype ){
-						result.prototype._name = name;
+						result.prototype._$name = name;
 					}else{
-						result._name = name;
+						result._$name = name;
 					}
 
 					return result;
@@ -2143,30 +2143,41 @@ bMoor.inject(
 			});
 		};
 
-		Compiler.prototype.remake = function( name ){
+		Compiler.prototype.redeclair = function( name ){
 			var i, c,
-				def = this.definitions[ name ],
+				def = this.makes[ name ],
+				opt,
 				requirements;
 
-			if ( def ){
-				requirements = bMoor.inject.getInjections( def );
+			if ( this.makes[name] ){
+				opt = 'make';
+			}else{
+				def = this.defines[name];
 
+				if ( this.defines[name] ){
+					opt = 'define';
+				}
+			}
+
+			if ( opt ){
+				requirements = bMoor.inject.getInjections( def );
+				
 				for( i = 0, c = requirements.length; i < c; i++ ){
-					this.remake( requirements[i] );
+					this.redeclair( requirements[i] );
 				}
 
-				this.make( name, def );
+				this[opt]( name, def );
 			}
 		};
 
 		Compiler.prototype.override = function( overrides ){
 			var root = this.root,
-				definitions = this.definitions;
+				makes = this.makes;
 
 			bMoor.iterate( overrides, function( setTo, getFrom ){
 				if ( bMoor.isString(getFrom) ){
 					getFrom = bMoor.get( getFrom, root );
-					delete definitions[ getFrom ];
+					delete makes[ getFrom ];
 				}
 
 				if ( bMoor.isQuark(getFrom) ){
@@ -2178,7 +2189,7 @@ bMoor.inject(
 				}
 
 				// I think this works
-				delete definitions[ setTo ];
+				delete makes[ setTo ];
 			});
 		};
 		/**
@@ -2195,7 +2206,7 @@ bMoor.inject(
 		Compiler.prototype.mock = function( name, mocks ){
 			var dis = this,
 				r = bMoor.object.extend( {}, this.root, mocks ),
-				definition = this.definitions[name];
+				definition = this.makes[name];
 
 			if ( !bMoor.isInjectable(definition) ){
 				// TODO : bMoor.makeInjectable
@@ -2223,15 +2234,29 @@ bMoor.inject(
 		 *
 		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
 		 */
-		Compiler.prototype.define = function( name, value ){
-			var quark = bMoor.makeQuark( name, this.root );
+		Compiler.prototype.define = function( name, definition ){
+			var namespace,
+				quark;
+
+			if ( bMoor.isString(name) ){
+				namespace = bMoor.parseNS( name );
+			}else{
+				throw new Error(
+					JSON.stringify(name) + ' > ' +
+					JSON.stringify(definition) + ' > ' +
+					'message : you need to define a name and needs to be either a string or an array'
+				);
+			}
+
+			quark = bMoor.makeQuark( name, this.root );
 			
-			if ( bMoor.isInjectable(value) ){
-				bMoor.inject( value ).then( function( v ){
+			if ( bMoor.isInjectable(definition) ){
+				bMoor.inject( definition, this.root ).then(function( v ){
 					quark.$set( v );
 				});
+				this.defines[ name ] =  definition;
 			}else{
-				quark.$set( value );
+				quark.$set( definition );
 			}
 
 			return quark;
@@ -2259,6 +2284,10 @@ bMoor.inject(
 		});
 
 		bMoor.plugin( 'test', {
+			debug : function( path ){
+				console.log( 'clone', path, bMoor.get(path,instance.clone().root) );
+				console.log( 'primary', path, bMoor.get(path,instance.root) );
+			},
 			injector : function( injection, overrides ){
 				return function(){
 					var clone = instance.clone();
@@ -2266,7 +2295,7 @@ bMoor.inject(
 					if ( overrides ){
 						clone.override( overrides );
 						bMoor.iterate( bMoor.inject.getInjections(injection), function( name ){
-							clone.remake( name );
+							clone.redeclair( name );
 						});
 					}
 
