@@ -1,5 +1,5 @@
 ;(function(){
-/** bmoor v0.1.2 **/
+/** bmoor v0.2.0 **/
 var bMoor = {};
 
 (function( g ){
@@ -98,7 +98,7 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				nextSpace = space[ i ];
 					
-				if ( !curSpace[ nextSpace ] ){
+				if ( isUndefined(curSpace[nextSpace]) ){
 					curSpace[ nextSpace ] = {};
 				}
 					
@@ -135,8 +135,8 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				nextSpace = space[ i ];
 					
-				if ( !curSpace[ nextSpace ] ){
-					curSpace[ nextSpace ] = {};
+				if ( isUndefined(curSpace[nextSpace]) ){
+					return;
 				}
 					
 				curSpace = curSpace[ nextSpace ];
@@ -154,7 +154,7 @@ var bMoor = {};
 	 *
 	 * @function get
 	 * @namespace bMoor
-	 * @param {string|array} space The namespace
+	 * @param {string|array|function} space The namespace
 	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @return {array}
 	 **/
@@ -168,7 +168,7 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				nextSpace = space[i];
 					
-				if ( !curSpace[nextSpace] ){
+				if ( isUndefined(curSpace[nextSpace]) ){
 					curSpace[nextSpace] = {};
 				}
 				
@@ -178,6 +178,8 @@ var bMoor = {};
 			return curSpace;
 		}else if ( isObject(space) ){
 			return space;
+		}else if ( isFunction(space) ){
+			return space( root );
 		}else{
 			throw new Error('unsupported type');
 		}
@@ -192,8 +194,8 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				var nextSpace = space[i];
 					
-				if ( !curSpace[nextSpace] ){
-					return undefined;
+				if ( isUndefined(curSpace[nextSpace]) ){
+					return;
 				}
 				
 				curSpace = curSpace[nextSpace];
@@ -338,15 +340,11 @@ var bMoor = {};
 	 *
 	 * @function explode
 	 * @namespace bMoor
-	 * @param {object} mappings An object orientended as [ namespace ] => value
 	 * @param {object} target The object to map the variables onto
+	 * @param {object} mappings An object orientended as [ namespace ] => value
 	 * @return {object} The object that has had content mapped into it
 	 **/
-	function explode( mappings, target ){
-		if ( !target ){
-			target = {};
-		}
-
+	function explode( target, mappings ){
 		iterate( mappings, function( val, mapping ){
 			set( mapping, val, target );
 		});
@@ -871,6 +869,14 @@ var bMoor = {};
 				fn.call( context, obj[key], key, obj );
 			}
 		}
+	}
+
+	function naked( obj, fn, context ){
+		safe( obj, function( t, k, o ){
+			if ( !isFunction(t) ){
+				fn.call( context, t, k, o );
+			}
+		});
 	}
 
 	/**
@@ -1851,6 +1857,25 @@ var bMoor = {};
 		return group.promise;
 	});
 
+	function values( obj ){
+		var res = [];
+
+		naked( obj, function( v ){
+			res.push( v );
+		});
+
+		return res;
+	}
+
+	function keys( obj ){
+		var res = [];
+
+		naked( obj, function( v, key ){
+			res.push( key );
+		});
+
+		return res;
+	}
 	/**
 	Externalizing the functionality
 	**/
@@ -1892,9 +1917,9 @@ var bMoor = {};
 		'isFunction'  : isFunction,
 		'isNumber'    : isNumber,
 		'isString'    : isString,
-		'isInjectable' : isInjectable,
 		'isEmpty'     : isEmpty, 
 		'isQuark'     : isQuark,
+		'isInjectable' : isInjectable,
 		// data --------v--------
 		'data' : {
 			'setUid' : setUid,
@@ -1903,17 +1928,20 @@ var bMoor = {};
 		// object ------v--------
 		'object' : {
 			'safe'      : safe,
+			'naked'     : naked,
 			'mask'      : mask,
 			'equals'    : equals,
-			'instantiate' : instantiate,
 			'inherit' : inherit,
+			'instantiate' : instantiate,
 			// what is the difference between these?
 			'extend'    : extend, // copy properties from one object to another
 			'merge'     : merge, // deep version of extend
-			'override'  : override, // copies in all values, but uses original object
+			'override'  : override, // copies in all values, but uses original object.. allows update with reuse of object
 			// modifiers
-			'explode' : explode
+			'explode' : explode,
 			// TODO : implode -> convert multi layer hash into single layer hash
+			'values'  : values,
+			'keys'    : keys
 		},
 		// string ------v--------
 		'string' : {
@@ -1975,6 +2003,12 @@ bMoor.inject(
 			return t;
 		};
 		
+		function Abstract(){}
+
+		bMoor.plugin( 'isAbstract', function( obj ){
+			return obj instanceof Abstract;
+		});
+
 		/**
 		 * The internal construction engine for the system.  Generates the class and uses all modules.
 		 **/
@@ -1986,17 +2020,24 @@ bMoor.inject(
 			// a hash has been passed in to be processed
 			if ( bMoor.isObject(definition) ){
 				if ( definition.abstract ){
-					obj = function Abstract(){
+					obj = function(){
 						throw new Error(
 							'You tried to instantiate an abstract class'
 						);
 					};
+
+					obj.prototype = new Abstract();
 				}else if ( definition.construct ){
 					obj = definition.construct;
 				}else{
 					// throw namespace + 'needs a constructor, event if it just calls the parent it should be named'
-					obj = function GenericConstruct(){};
-					obj.$generic = true;
+					obj = function GenericConstruct(){
+						if ( bMoor.isFunction(definition.parent) && !(definition.parent.prototype instanceof Abstract) ){
+
+							return definition.parent.apply( this, arguments );
+						}
+					};
+					obj.$generic = true; // TODO : Why do I care?
 				}
 
 				if ( !dis.clean ){
@@ -2273,16 +2314,6 @@ bMoor.inject(
 			return instance.define( namespace, value );
 		});
 
-		bMoor.plugin( 'require', function( namespace ){
-			var t = bMoor.exists( namespace, instance.root );
-
-			if ( !t || bMoor.isQuark(t) ){
-				throw new Error('bMoor.require failed to load '+namespace);
-			}
-
-			return t;
-		});
-
 		bMoor.plugin( 'test', {
 			debug : function( path ){
 				console.log( 'clone', path, bMoor.get(path,instance.clone().root) );
@@ -2427,12 +2458,6 @@ bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 		}]
 	);
 }]);
-(function(){
-	'use strict';
-
-	// TODO : this is no longer needed
-}());
-
 bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
@@ -2469,13 +2494,14 @@ bMoor.inject(['bmoor.build.Compiler', function( compiler ){
 bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
+	// TODO : I'm not really sure what the heck I did this for?
 	compiler.addModule( 89, 'bmoor.build.ModWrapper', 
 		[ '-wrap',
 		function( wrapped ){
 			if ( wrapped ){
 				this.prototype.$wrap = function(){
 					var key,
-						temp = bMoor.object.instantiate( wrapped, arguments);
+						temp = bMoor.object.instantiate( wrapped, arguments );
 
 					this.$wrapped = temp;
 
@@ -2611,7 +2637,7 @@ bMoor.define('bmoor.flow.Regulator',
 	function( Timeout ){
 		'use strict';
 		
-		return function regulator( min, max, func, context ){
+		return function regulator( func, min, max, context ){
 			var args,
 				timeout,
 				setTime,
@@ -2769,9 +2795,7 @@ bMoor.make('bmoor.extender.Decorator', [
 		}
 
 		return {
-			construct : function Decorator(){
-				throw 'You neex to extend Decorator, no instaniating it directly';
-			},
+			abstract: true,
 			properties : {
 				_$extend : function( target ){
 					var key;
@@ -2791,9 +2815,7 @@ bMoor.make('bmoor.extender.Mixin', [
 		'use strict';
 
 		return {
-			construct : function Mixin(){
-				throw 'You neex to extend Mixin, no instaniating it directly';
-			},
+			abstract: true,
 			properties : {
 				_$extend : function( obj ){
 					var key;
@@ -2854,9 +2876,7 @@ bMoor.make('bmoor.extender.Plugin', [
 		}
 
 		return {
-			construct : function Plugin(){
-				throw 'You neex to extend Plugin, no instaniating it directly';
-			},
+			abstract: true,
 			properties : {
 				_$extend : function( target ){
 					var key;

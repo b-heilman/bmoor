@@ -3,7 +3,7 @@ bMoor.define('bmoor.flow.Regulator',
 	function( Timeout ){
 		'use strict';
 		
-		return function regulator( min, max, func, context ){
+		return function regulator( func, min, max, context ){
 			var args,
 				timeout,
 				setTime,

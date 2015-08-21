@@ -44,9 +44,7 @@ bMoor.make('bmoor.extender.Plugin', [
 		}
 
 		return {
-			construct : function Plugin(){
-				throw 'You neex to extend Plugin, no instaniating it directly';
-			},
+			abstract: true,
 			properties : {
 				_$extend : function( target ){
 					var key;

@@ -1,13 +1,14 @@
 bMoor.inject(['bmoor.build.Compiler',function( compiler ){
 	'use strict';
 
+	// TODO : I'm not really sure what the heck I did this for?
 	compiler.addModule( 89, 'bmoor.build.ModWrapper', 
 		[ '-wrap',
 		function( wrapped ){
 			if ( wrapped ){
 				this.prototype.$wrap = function(){
 					var key,
-						temp = bMoor.object.instantiate( wrapped, arguments);
+						temp = bMoor.object.instantiate( wrapped, arguments );
 
 					this.$wrapped = temp;
 

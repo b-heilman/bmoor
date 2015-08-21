@@ -21,9 +21,9 @@ describe( 'bmoor.flow.Regulator', function(){
 	});
 
 	it ( 'should limit the calls to the low bounds', function(){
-		var reg = new Regulator( 30, 500, function(v){
+		var reg = new Regulator(function(v){
 				return t.c = v;
-			}),
+			}, 30, 500),
 			t = {
 				c : null,
 			};
@@ -42,9 +42,9 @@ describe( 'bmoor.flow.Regulator', function(){
 	});
 
 	it ( 'should reset the lower bounds timer on call', function(){
-		var reg = new Regulator( 30, 500, function(v){
+		var reg = new Regulator(function(v){
 				return t.c = v;
-			}),
+			}, 30, 500 ),
 			t = {
 				c : null,
 			};
@@ -70,9 +70,9 @@ describe( 'bmoor.flow.Regulator', function(){
 	});
 
 	it ( 'should be able to be flushed', function(){
-		var reg = new Regulator( 30, 500, function(v){
+		var reg = new Regulator(function(v){
 				return t.c = v;
-			}),
+			}, 30, 500),
 			t = {
 				c : null,
 			};
@@ -87,9 +87,9 @@ describe( 'bmoor.flow.Regulator', function(){
 	});
 
 	it ( 'should allow it to be cancelled', function(){
-		var reg = new Regulator( 30, 500, function(v){
+		var reg = new Regulator(function(v){
 				return t.c = v;
-			}),
+			}, 30, 500),
 			t = {
 				c : null,
 			};

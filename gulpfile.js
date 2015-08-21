@@ -8,7 +8,7 @@ var watch = require('gulp-watch');
 var jshint = require('gulp-jshint');
 var stylish = require('jshint-stylish');
 var yuidoc = require('gulp-yuidoc');
-var karma = require('karma').server;
+var Karma = require('karma').Server;
 
 // demo ability
 var express = require( 'express' );
@@ -17,7 +17,7 @@ var server = express();
 // minify javascript
 var pkg = require('./package.json');
 var concat = require('gulp-concat');
-var uglify = require('gulp-uglifyjs');
+var uglify = require('gulp-uglify');
 var header = require('gulp-header');
 var footer = require('gulp-footer');
 
@@ -65,8 +65,8 @@ gulp.task('concat-js', function() {
         .pipe( concat(jsOut) )
         .pipe( header(';(function(){\n' + jsHeader, {pkg:pkg }) )
         .pipe( footer('\n}());') )
-        .pipe( gulp.dest(buildDir) )
-        .pipe( gulp.dest(demoDir) );
+        .pipe( gulp.dest(demoDir) )
+        .pipe( gulp.dest(buildDir) );
 
     gulp.src( './src/bmock/**/*.js' )
         .pipe( concat('bmock.js') )
@@ -75,13 +75,12 @@ gulp.task('concat-js', function() {
 
 gulp.task('build-js', ['concat-js'], function(){
     gulp.src( jsSrc )
-        .pipe( uglify(jsMin, {
-            outSourceMap: true
-        }) )
+        .pipe( concat(jsMin) )
+        .pipe( uglify() )
         .pipe( header(';(function(){\n' + jsHeader, {pkg:pkg}) )
         .pipe( footer('\n}());') )
-        .pipe( gulp.dest(buildDir) )
-        .pipe( gulp.dest(demoDir) );
+        .pipe( gulp.dest(demoDir) )
+        .pipe( gulp.dest(buildDir) );
 });
 
 var failOnError = function() {
@@ -107,20 +106,21 @@ gulp.task('lint', function() {
 });
 
 gulp.task('test', function (done) {
-	karma.start({
-		configFile: __dirname + '/karma.conf.js',
-		singleRun: true,
-		browsers: ['PhantomJS']
-	}, done);
+    ( new Karma({
+        configFile: __dirname + '/karma.conf.js',
+        port: 9999,
+        singleRun: true,
+        browsers: ['PhantomJS']
+    }, done) ).start();
 });
 
 gulp.task('test-chrome', function (done) {
-    karma.start({
+    ( new Karma({
         configFile: __dirname + '/karma.conf.js',
         port: 9999,
         singleRun: true,
         browsers: ['Chrome']
-    }, done);
+    }, done) ).start();
 });
 
 /*

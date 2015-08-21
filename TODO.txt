@@ -1,3 +1,7 @@
+- add bMoor.require and bMoor.include
+    - promise free, either it's there or it's not
+    - require will throw exception on miss, include returns undefined
+
 - managing quarks
 	- see what are being waited on
 	- allow the fetching of any missing quarks

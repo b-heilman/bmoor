@@ -96,7 +96,7 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				nextSpace = space[ i ];
 					
-				if ( !curSpace[ nextSpace ] ){
+				if ( isUndefined(curSpace[nextSpace]) ){
 					curSpace[ nextSpace ] = {};
 				}
 					
@@ -133,8 +133,8 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				nextSpace = space[ i ];
 					
-				if ( !curSpace[ nextSpace ] ){
-					curSpace[ nextSpace ] = {};
+				if ( isUndefined(curSpace[nextSpace]) ){
+					return;
 				}
 					
 				curSpace = curSpace[ nextSpace ];
@@ -152,7 +152,7 @@ var bMoor = {};
 	 *
 	 * @function get
 	 * @namespace bMoor
-	 * @param {string|array} space The namespace
+	 * @param {string|array|function} space The namespace
 	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @return {array}
 	 **/
@@ -166,7 +166,7 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				nextSpace = space[i];
 					
-				if ( !curSpace[nextSpace] ){
+				if ( isUndefined(curSpace[nextSpace]) ){
 					curSpace[nextSpace] = {};
 				}
 				
@@ -176,6 +176,8 @@ var bMoor = {};
 			return curSpace;
 		}else if ( isObject(space) ){
 			return space;
+		}else if ( isFunction(space) ){
+			return space( root );
 		}else{
 			throw new Error('unsupported type');
 		}
@@ -190,8 +192,8 @@ var bMoor = {};
 			for( var i = 0; i < space.length; i++ ){
 				var nextSpace = space[i];
 					
-				if ( !curSpace[nextSpace] ){
-					return undefined;
+				if ( isUndefined(curSpace[nextSpace]) ){
+					return;
 				}
 				
 				curSpace = curSpace[nextSpace];
@@ -336,15 +338,11 @@ var bMoor = {};
 	 *
 	 * @function explode
 	 * @namespace bMoor
-	 * @param {object} mappings An object orientended as [ namespace ] => value
 	 * @param {object} target The object to map the variables onto
+	 * @param {object} mappings An object orientended as [ namespace ] => value
 	 * @return {object} The object that has had content mapped into it
 	 **/
-	function explode( mappings, target ){
-		if ( !target ){
-			target = {};
-		}
-
+	function explode( target, mappings ){
 		iterate( mappings, function( val, mapping ){
 			set( mapping, val, target );
 		});
@@ -869,6 +867,14 @@ var bMoor = {};
 				fn.call( context, obj[key], key, obj );
 			}
 		}
+	}
+
+	function naked( obj, fn, context ){
+		safe( obj, function( t, k, o ){
+			if ( !isFunction(t) ){
+				fn.call( context, t, k, o );
+			}
+		});
 	}
 
 	/**
@@ -1849,6 +1855,25 @@ var bMoor = {};
 		return group.promise;
 	});
 
+	function values( obj ){
+		var res = [];
+
+		naked( obj, function( v ){
+			res.push( v );
+		});
+
+		return res;
+	}
+
+	function keys( obj ){
+		var res = [];
+
+		naked( obj, function( v, key ){
+			res.push( key );
+		});
+
+		return res;
+	}
 	/**
 	Externalizing the functionality
 	**/
@@ -1890,9 +1915,9 @@ var bMoor = {};
 		'isFunction'  : isFunction,
 		'isNumber'    : isNumber,
 		'isString'    : isString,
-		'isInjectable' : isInjectable,
 		'isEmpty'     : isEmpty, 
 		'isQuark'     : isQuark,
+		'isInjectable' : isInjectable,
 		// data --------v--------
 		'data' : {
 			'setUid' : setUid,
@@ -1901,17 +1926,20 @@ var bMoor = {};
 		// object ------v--------
 		'object' : {
 			'safe'      : safe,
+			'naked'     : naked,
 			'mask'      : mask,
 			'equals'    : equals,
-			'instantiate' : instantiate,
 			'inherit' : inherit,
+			'instantiate' : instantiate,
 			// what is the difference between these?
 			'extend'    : extend, // copy properties from one object to another
 			'merge'     : merge, // deep version of extend
-			'override'  : override, // copies in all values, but uses original object
+			'override'  : override, // copies in all values, but uses original object.. allows update with reuse of object
 			// modifiers
-			'explode' : explode
+			'explode' : explode,
 			// TODO : implode -> convert multi layer hash into single layer hash
+			'values'  : values,
+			'keys'    : keys
 		},
 		// string ------v--------
 		'string' : {

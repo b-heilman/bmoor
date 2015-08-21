@@ -58,13 +58,13 @@ describe("Testing object functions", function() {
 	it('should allow for the mapping of variables onto an object', function(){
 		var o = {},
 			t = bMoor.object.explode({
+				hello:'world'
+			},{
 				'eins': 1, 
 				'zwei': 2,
 				'drei': 3,
 				'foo.bar': 'woot',
 				'help.me': o
-			},{
-				hello:'world'
 			});
 
 		expect( t.eins ).toBe( 1 );
@@ -75,7 +75,8 @@ describe("Testing object functions", function() {
 
 	it('should allow for a new variable to be created from a map', function(){
 		var o = {},
-			t = bMoor.object.explode({
+			t = bMoor.object.explode({},
+			{
 				'eins': 1, 
 				'foo.bar': 'woot',
 				'hello.world': o

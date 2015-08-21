@@ -3,9 +3,7 @@ bMoor.make('bmoor.extender.Mixin', [
 		'use strict';
 
 		return {
-			construct : function Mixin(){
-				throw 'You neex to extend Mixin, no instaniating it directly';
-			},
+			abstract: true,
 			properties : {
 				_$extend : function( obj ){
 					var key;

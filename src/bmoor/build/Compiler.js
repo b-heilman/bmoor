@@ -34,6 +34,12 @@ bMoor.inject(
 			return t;
 		};
 		
+		function Abstract(){}
+
+		bMoor.plugin( 'isAbstract', function( obj ){
+			return obj instanceof Abstract;
+		});
+
 		/**
 		 * The internal construction engine for the system.  Generates the class and uses all modules.
 		 **/
@@ -45,17 +51,24 @@ bMoor.inject(
 			// a hash has been passed in to be processed
 			if ( bMoor.isObject(definition) ){
 				if ( definition.abstract ){
-					obj = function Abstract(){
+					obj = function(){
 						throw new Error(
 							'You tried to instantiate an abstract class'
 						);
 					};
+
+					obj.prototype = new Abstract();
 				}else if ( definition.construct ){
 					obj = definition.construct;
 				}else{
 					// throw namespace + 'needs a constructor, event if it just calls the parent it should be named'
-					obj = function GenericConstruct(){};
-					obj.$generic = true;
+					obj = function GenericConstruct(){
+						if ( bMoor.isFunction(definition.parent) && !(definition.parent.prototype instanceof Abstract) ){
+
+							return definition.parent.apply( this, arguments );
+						}
+					};
+					obj.$generic = true; // TODO : Why do I care?
 				}
 
 				if ( !dis.clean ){
@@ -330,16 +343,6 @@ bMoor.inject(
 
 		bMoor.plugin( 'define', function( namespace, value ){
 			return instance.define( namespace, value );
-		});
-
-		bMoor.plugin( 'require', function( namespace ){
-			var t = bMoor.exists( namespace, instance.root );
-
-			if ( !t || bMoor.isQuark(t) ){
-				throw new Error('bMoor.require failed to load '+namespace);
-			}
-
-			return t;
 		});
 
 		bMoor.plugin( 'test', {
