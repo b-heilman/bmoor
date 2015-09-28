@@ -12,13 +12,13 @@ module.exports = function(config) {
         files: [
 			'src/bmoor/core.js',
             'src/bmoor/build/*.js',
+            'src/bmoor/build/modules/*.js',
             'src/bmoor/defer/*.js',
             'src/bmoor/flow/*.js',
             'src/bmoor/error/*.js',
             'src/bmoor/extender/*.js',
             'src/bmock/**/*.js',
 			'test/spec/**/*.js'
-            //'test/spec/build/Compiler.js'
         ],
 
         // preprocessors: {

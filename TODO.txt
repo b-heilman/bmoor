@@ -1,6 +1,12 @@
 - add bMoor.require and bMoor.include
-    - promise free, either it's there or it's not
-    - require will throw exception on miss, include returns undefined
+	- create new Quark class
+		- Quark( path, injection )
+		- getRequirements() : what is still required to be loaded
+		- canEval() : are there any outstanding requirements
+		- eval() : evaluates the promise, throws exception if not all requirements
+		- load() : returns back an eval wrapped in a promise, loads requirements
+	- promise free, either it's there or it's not
+	- require will throw exception on miss, include returns undefined
 
 - managing quarks
 	- see what are being waited on

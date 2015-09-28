@@ -7,7 +7,7 @@ describe("bmoor.build.Compiler", function() {
 	beforeEach(bMoor.test.injector(['bmoor.build.Compiler',function( C ){
 		Compiler = C.$constructor;
 	}]));
-
+	
 	describe('basically', function(){
 		it("should allow the declaration of a Compiler", function(){
 			expect( Compiler ).toBeDefined();
@@ -15,10 +15,9 @@ describe("bmoor.build.Compiler", function() {
 
 		beforeEach(function(){
 			log = [];
-			root = {};
 
 			compiler = new Compiler();
-			compiler.setRoot( root );
+			root = compiler.newRoot();
 
 			compiler.addModule( 0, 'test.Foo', ['foo', function( foo ){
 				log.push( foo );
@@ -46,7 +45,7 @@ describe("bmoor.build.Compiler", function() {
 				foobar : 3,
 				foo : 1,
 				bar : 2
-			}).$getDefinition();
+			}).$instantiate();
 
 			expect( log ).toEqual( [2,1,3] );
 			expect( root.Aname ).toBeDefined();
@@ -56,29 +55,28 @@ describe("bmoor.build.Compiler", function() {
 		});
 
 		it("should allow previously defined objects to be mocked", function(){
+			var t;
+
 			compiler.make( 'Aname', {
 				foobar : 3,
 				foo : 1,
 				bar : 2
-			}).$getDefinition();
+			}).$instantiate();
 
 			log = [];
 
-			compiler.mock( 'Aname', {
+			t = compiler.mock( 'Aname', {
 				foobar : 7,
 				foo : 5,
 				bar : 6
-			}).then(function( o ){
-				t = o;
-			});	
+			}).$instantiate();
 
 			expect( log ).toEqual( [2,1,3] ); // because the original defintion doesn't inject
-			expect( t ).toBeDefined();
 			expect( t.prototype.foo ).toBe( 'foo' );
 			expect( t.prototype.bar ).toBe( true );
 			expect( t.prototype.foobar ).toBe( false );
 		});
-
+		
 		it("should run allow for injection in defintions", function(){
 			var t;
 
@@ -96,7 +94,7 @@ describe("bmoor.build.Compiler", function() {
 				}]
 			);
 
-			t.$getDefinition();
+			t.$instantiate();
 
 			expect( log ).toEqual( [12,11,13] );
 			expect( root.Aname ).toBeDefined();
@@ -114,7 +112,7 @@ describe("bmoor.build.Compiler", function() {
 			root.foo = 11;
 			root.bar = 12;
 
-			temp.setRoot(r);
+			r = temp.newRoot();
 			r.foobar = 23;
 			r.foo = 21;
 			r.bar = 22;
@@ -129,7 +127,7 @@ describe("bmoor.build.Compiler", function() {
 				}]
 			);
 
-			t.$getDefinition();
+			t.$instantiate();
 
 			expect( log ).toEqual( [12,11,13] );
 			expect( root.Aname ).toBeDefined();
@@ -148,7 +146,7 @@ describe("bmoor.build.Compiler", function() {
 				}]
 			);
 
-			t.$getDefinition();
+			t.$instantiate();
 
 			expect( log ).toEqual( [22,21,23] );
 			expect( r.Aname ).toBeDefined();
@@ -172,16 +170,14 @@ describe("bmoor.build.Compiler", function() {
 						bar : b
 					}
 				}]
-			).$getDefinition();
+			).$instantiate();
 
 			log = [];
 
-			compiler.mock( 'Aname', {
+			t = compiler.mock( 'Aname', {
 				foobar : 27,
 				bar : 26
-			}).then(function( o ){
-				t = o;
-			});
+			}).$instantiate();
 
 			expect( log ).toEqual( [26,1,27] );
 			expect( t ).toBeDefined();
@@ -191,9 +187,9 @@ describe("bmoor.build.Compiler", function() {
 		});
 
 		it("should run allow for defining constants", function(){
-			compiler.define( 'Woot', 1 );
-			compiler.define( 'Foo', {} );
-			compiler.define( 'Bar', true );
+			compiler.define( 'Woot', 1 ).$instantiate();
+			compiler.define( 'Foo', {} ).$instantiate();
+			compiler.define( 'Bar', true ).$instantiate();
 
 			expect( root.Woot ).toBe( 1 );
 			expect( root.Foo ).toBeDefined();
@@ -203,10 +199,8 @@ describe("bmoor.build.Compiler", function() {
 	
 	describe('inheritance', function(){
 		beforeEach(function(){
-			root = {};
 			compiler = new Compiler();
-
-			compiler.setRoot( root );
+			root = compiler.newRoot();
 
 			compiler.addModule( 90, 'bmoor.build.ModInherit', 
 				['-id','-namespace','-name', '-mount','-parent',
@@ -251,10 +245,9 @@ describe("bmoor.build.Compiler", function() {
 				properties : {
 					eins : 'one'
 				}
-			}).$getDefinition();
+			}).$instantiate();
 
 			expect( root.Test1.prototype.eins ).toBe('one');
-			expect( root.Test1.$ready ).toBeUndefined();
 
 			compiler.make('Test2', [
 				'Test1',
@@ -266,12 +259,11 @@ describe("bmoor.build.Compiler", function() {
 						}
 					}
 				}]
-			).$getDefinition();
+			).$instantiate();
 
 			expect( root.Test2 ).toBeDefined();
 			expect( root.Test2.prototype.eins ).toBeDefined();
 			expect( root.Test2.prototype.zwei ).toBe('two');
-			expect( root.Test2.$ready ).toBeUndefined();
 		});
 	});
 
@@ -289,25 +281,80 @@ describe("bmoor.build.Compiler", function() {
 		});
 	});
 
+	describe('defining', function(){
+		var Quark,
+			compiler,
+			root;
+
+		function IncludeEcho(){}
+
+		beforeEach(function(){
+			compiler = bMoor.test.clone();
+			root = compiler.newRoot();
+
+			compiler.make('testing.Echo', [function(){
+				return {
+					construct: IncludeEcho,
+					properties: {
+						echo: function(){
+							return 'hello world';
+						}
+					}
+				}
+			}]);
+
+			Quark = bMoor.require('bmoor.build.Quark');
+		});
+
+		it( 'should set up the Quark correctly', function(){
+			expect( root.testing.Echo instanceof Quark ).toBe( true );
+		});
+
+		it( 'should evaluate the Quark correctly', function(){
+			root.testing.Echo.$instantiate();
+
+			expect( root.testing.Echo instanceof Quark ).toBe( false );
+			expect( root.testing.Echo === IncludeEcho ).toBe( true );
+			expect( IncludeEcho.prototype.echo ).toBeDefined();
+		});
+
+		it( 'should be able to hanlde injection', function(){
+			var test;
+
+			bMoor.inject(['testing.Echo', function( E ){
+				test = E;
+			}], root);
+
+			expect( test ).toBeDefined();
+			expect( test === IncludeEcho ).toBe( true );
+		});
+	});
+
 	describe('injection of a remade class', function(){
 		var E, T;
 
-		bMoor.make('testing.Echo', [function(){
-			return {
-				construct: function IncludeEcho(){},
-				properties: {
-					echo: function(){
-						return 'hello world';
+		function IncludeEcho(){}
+
+		function IncludeTest(){}
+
+		bMoor.make('testing.Echo', [
+			function MakeEcho(){
+				return {
+					construct: IncludeEcho,
+					properties: {
+						echo: function(){
+							return 'hello world';
+						}
 					}
 				}
 			}
-		}]);
+		]);
 
 		bMoor.make('testing.Test', [
 			'testing.Echo',
-			function( Echo ){
+			function MakeTest( Echo ){
 				return {
-					construct: function IncludeTest(){},
+					construct: IncludeTest,
 					properties: {
 						test: function(){
 							var t = new Echo();
@@ -318,34 +365,10 @@ describe("bmoor.build.Compiler", function() {
 			}
 		]);
 
-		bMoor.test.injector([
-			'testing.Echo', 'testing.Test',
-			function( Echo, Test ){
-				E = Echo;
-				T = Test;
-				
-				it( 'should inject testing.Test correctly', function(){
-					expect( T.prototype.test ).toBeDefined();
-				});
-
-				it( 'should inject testing.Echo correctly', function(){
-					expect( E.prototype.echo ).toBeDefined();
-				});
-			}
-		])();
-
-		it('should intially define things correctly', function(){
-			var e = new E(),
-				t = new T();
-
-			expect( e.echo() ).toBe('hello world');
-			expect( t.test() ).toBe('hello world');
-		});
-
 		bMoor.make('testing.Junk', [
-			function(){
+			function MakeJunk(){
 				return {
-					construct: function IncludeJunkEcho(){},
+					construct: function IncludeJunk(){},
 					properties: {
 						echo: function(){
 							return 'junk';
@@ -355,58 +378,84 @@ describe("bmoor.build.Compiler", function() {
 			}
 		]);
 
-		describe('with injection', function(){
-			var J,
-				T;
-
-			bMoor.test.injector(
-				['testing.Junk', 'testing.Test',
-				function( Junk, Test ){
-					J = Junk;
-					T = Test;
-				}],
-				{
-					'testing.Junk' : 'testing.Echo'
+		bMoor.make('testing.Top', [
+			'testing.Test',
+			function( Test ){
+				return {
+					construct: function IncludeTop(){},
+					properties: {
+						top: function(){
+							var t = new Test();
+							return t.test();
+						}
+					}
 				}
-			)();
+			}
+		]);
+
+		describe('bmoor.test.injector', function(){
+			it('should intially define things correctly', function(){
+				var e,
+					t;
+
+				bMoor.test.injector([
+					'testing.Echo', 'testing.Test',
+					function( Echo, Test ){
+						e = new Echo();
+						t = new Test();
+					}
+				])();
+
+				expect( e.echo() ).toBe('hello world');
+				expect( t.test() ).toBe('hello world');
+			});
 			
 			it('should allow a class to be replaced', function(){
-				var j = new J(),
-					t = new T();
+				var j,
+					t;
 
-				expect( J.prototype.echo ).toBeDefined();
-				expect( T.prototype.test ).toBeDefined();
+				bMoor.test.injector(
+					['testing.Junk', 'testing.Test',
+					function( Junk, Test ){
+						j = new Junk();
+						t = new Test();
+					}],
+					{
+						'testing.Junk' : 'testing.Echo'
+					}
+				)();
 
 				expect( j.echo() ).toBe('junk');
 				expect( t.test() ).toBe('junk');
 			});
-		});
+			
+			it('should go back to normal after override', function(){
+				var e,
+					t;
 
+				bMoor.test.injector([
+					'testing.Echo', 'testing.Test',
+					function( Echo, Test ){
+						e = new Echo();
+						t = new Test();
+					}
+				])();
+
+				expect( e.echo() ).toBe('hello world');
+				expect( t.test() ).toBe('hello world');
+			});
+		});
+		
 		describe('add an extra level', function(){
 			var T;
-
-			bMoor.make('testing.Top', [
-				'testing.Test',
-				function( Test ){
-					return {
-						construct: function IncludeTop(){},
-						properties: {
-							top: function(){
-								var t = new Test();
-								return t.test();
-							}
-						}
-					}
-				}
-			]);
 
 			it('should work normal at first', function(){
 				var T,
 					t;
 
 				bMoor.test.injector(
-					['testing.Top', 'testing.Echo',
-					function( Top, E ){
+					['testing.Top',
+					function( Top ){
 						T = Top;
 					}]
 				)();

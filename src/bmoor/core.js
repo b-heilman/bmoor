@@ -4,7 +4,7 @@ var bMoor = {};
 	'use strict';
 
 	var uid = 0,
-		_root = {},
+		_root,
 		msie,
 		environment,
 		aliases = {};
@@ -29,6 +29,39 @@ var bMoor = {};
 			isNode : true
 		};
 	}
+
+	function NavNode(){
+	}
+
+	NavNode.prototype.$clone = function( path, root ){
+		var t = new NavNode();
+
+		if ( !root ){
+			root = t;
+		}else{
+			set( path, t, root );
+		}
+
+		if ( !path ){
+			path = '';
+		}else{
+			path += '.';
+		}
+
+		safe( this, function( node, p ){
+			if ( node instanceof NavNode ){
+				node.$clone( path+p, root );
+			}else if ( bMoor.isQuark(node) ) {
+				node.clone( path+p, root );
+			}else{
+				t[p] = node;
+			}
+		});
+
+		return t;
+	};
+
+	_root = new NavNode();
 
 	function nextUid(){
 		return ++uid;
@@ -97,7 +130,7 @@ var bMoor = {};
 				nextSpace = space[ i ];
 					
 				if ( isUndefined(curSpace[nextSpace]) ){
-					curSpace[ nextSpace ] = {};
+					curSpace[ nextSpace ] = new NavNode();
 				}
 					
 				curSpace = curSpace[ nextSpace ];
@@ -105,6 +138,10 @@ var bMoor = {};
 
 			old = curSpace[ val ];
 			curSpace[ val ] = value;
+
+			if ( isFunction(old) && old._$deferred ){
+				old( value );
+			}
 		}
 
 		return old;
@@ -167,7 +204,7 @@ var bMoor = {};
 				nextSpace = space[i];
 					
 				if ( isUndefined(curSpace[nextSpace]) ){
-					curSpace[nextSpace] = {};
+					curSpace[nextSpace] = new NavNode();
 				}
 				
 				curSpace = curSpace[nextSpace];
@@ -290,13 +327,12 @@ var bMoor = {};
 	 * @param {string|array} name The namespace
 	 * @param {something} obj The value to set the namespace to
 	 **/
-	// TODO : is this really needed?
 	function plugin( name, obj ){ 
 		set( name, obj, bMoor ); 
 	}
 
 	/**
-	 * object
+	 *----object
 	 **/
 
 	/**
@@ -437,7 +473,6 @@ var bMoor = {};
 	}
 
 	function override( to, from, deep ){
-		//console.log( to );
 		safe( from, function( f, key ){
 			var t = to[ key ];
 
@@ -775,6 +810,24 @@ var bMoor = {};
 		return isArray( obj ) && isFunction( obj[obj.length-1] );
 	}
 
+	function makeInjectable( inj, functionSafe ){
+		if ( isInjectable(inj) ){
+			return inj;
+		}else if ( isFunction(inj) ){
+			if ( functionSafe ){
+				return [function(){
+					return inj;
+				}];
+			}else{
+				return [inj];
+			}
+		}else if ( isDefined(inj) ){
+			return [function(){
+				return inj;
+			}];
+		}
+	}
+
 	/**
 	 * Call a function against all elements of an array like object, from 0 to length.  
 	 *
@@ -915,9 +968,7 @@ var bMoor = {};
 	function dwrap( value ){
 		var d;
 
-		if ( isQuark(value) ){
-			return value.$getDefinition(); // this way they get when the quark is ready
-		}else if ( isObject(value) && value.then ){ // assume it's a promise
+		if ( isObject(value) && value.then ){ // assume it's a promise
 			return value;
 		}else{
 			d = new Defer(); 
@@ -943,80 +994,8 @@ var bMoor = {};
 	}
 
 	/**
-	 * Wraps the value in a promise and returns the promise
-	 *
-	 * TODO : this should pass back the object of structure : { quark, ready } 
-	 *
-	 * @function makeQuark
-	 * @namespace bMoor
-	 * @param {string|array} namespace The path to the quark
-	 * @param {object} root The root of the namespace to position the quark, defaults to bMoor.namespace.root
-	 * @return {Quark}
-	 **/
-	function makeQuark( namespace, root ){
-		var path = parse( namespace ),
-			def = exists( path ),
-			defer,
-			quark = function Quark (){
-				throw new Error( 'You tried to construct a Quark: '+path.join('.') );
-			};
-
-		if ( isQuark(def) ){
-			return def;
-		}else{
-			root = root || bMoor.namespace.root;
-						
-			quark.$isQuark = true;
-
-			if ( Defer ){
-				quark.$getDefinition = function(){
-					defer = new Defer();
-
-					if ( def ){
-						defer.resolve( def() );
-					}
-
-					return defer.promise;
-				};
-
-				quark.$set = function( construct ){
-					if ( path ){
-						set( path, construct, root );
-					}
-
-					if ( defer ){
-						defer.resolve( construct );
-					}
-				};
-
-				quark.$setDefinition = function( construct ){
-					def = function(){
-						return dwrap( construct() ).then(function( obj ){
-							// replace yourself
-							if ( path ){
-								set( path, obj, root );
-							}
-
-							return obj;
-						});
-					};
-
-					if ( defer ){
-						defer.resolve( def() );
-					}
-				};
-			}
-
-			set( path, quark, root );
-
-			return quark;
-		}
-	}
-
-	/**
-	 * Check to see if the element exists, if not, create a Quark in its place
-	 *
-	 * TODO : It might be better if this is set up to always return a promise?
+	 * Check to see if the element exists, if not, create a Quark in its place.
+	 * This is later replaced by Quark's ensure
 	 *
 	 * @function ensure
 	 * @namespace bMoor
@@ -1024,44 +1003,29 @@ var bMoor = {};
 	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
 	 * @return {Quark}
 	 **/
-	function ensure( namespace, root, debug ){
-		var obj = exists( namespace, root, debug );
+	function ensure( namespace, root ){
+		var obj = exists( namespace, root ),
+			d,
+			t;
 		
 		if ( obj ){
 			return dwrap( obj );
 		}else{
-			return makeQuark( namespace, root ).$getDefinition();
-		}
-	}
+			d = new Defer();
 
+			t = function( obj ){
+				d.resolve( obj );
+			};
+			t._$deferred = d.promise;
 
-	/**
-	 * Accepts a string and returns back the object reference
-	 *
-	 * @function decode
-	 * @namespace bMoor
-	 * @param {string} str The string that needs to be decoded
-	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
-	 * @return {object}
-	 **/
-	function decode( str, root ){
-		var ch = str.charAt( 0 );
-		
-		if ( ch === '@' ){
-			return check( str.substr(1), root );
-		}else if ( ch === '-' ){
-			return exists( str.substr(1), root );
-		}else{
-			if ( ch === '+' ){
-				str = str.substr(1);
-			}
+			bMoor.set( namespace, t, root);
 			
-			return ensure( str, root );
+			return d.promise;
 		}
 	}
 
 	/**
-	 * Accepts an array, and returns an array of the same size, but the values inside it decoded to
+	 * Accepts an array, and returns an array of the same size, but the values inside it ensured to
 	 * values or object referenced by the string values
 	 *
 	 * @function translate
@@ -1074,11 +1038,7 @@ var bMoor = {};
 		var rtn = [];
 
 		loop( arr, function( value, key ){
-			if ( isString(value) ){
-				rtn[key] = bMoor.decode( value, root );
-			}else{
-				rtn[key] = value;
-			}
+			rtn[key] = bMoor.ensure( value, root );
 		});
 
 		return rtn;
@@ -1098,13 +1058,13 @@ var bMoor = {};
 		var obj;
 
 		if ( isString(req) ){
-			return ensure( req, root );
+			return bMoor.ensure( req, root );
 		}else if( isArrayLike(req) ){
 			obj = new DeferGroup();
 
 			loop( req, function( r, key ){
 				if ( translate && isString(r) ){
-					r = ensure( r, root );
+					r = bMoor.ensure( r, root );
 				}
 
 				if ( isDeferred(r) ){
@@ -1135,38 +1095,95 @@ var bMoor = {};
 	 * @param {object} context The context to call the function against
 	 * @return {bmoor.defer.Promise}
 	 **/
-	function inject( arr, root, context ){
-		var func;
-
-		// TODO : is there a way to do a no wait injection?
-		if ( isFunction(arr) ){
-			func = arr;
-			arr = [];
-		}else if ( isInjectable(arr) ){
-			func = arr[ arr.length - 1 ];
-		}else{
-			throw new Error(
-				'inject needs arr to be either Injectable or Function, received:' + typeof( arr )
-			);
-		}
-
+	function inject( injection, root, context ){
+		var inj = inject.getInjections( injection ),
+			func = inject.getMethod( injection );
+		
 		if ( !context ){
 			context = bMoor;
 		}
 
-		return request( translate(arr,root), false, root ).then(function( args ){
+		return request( translate(inj,root), false, root ).then(function( args ){
 			return func.apply( context, args );
 		});
 	}
 
-	inject.getInjections = function( obj ){
-		if ( isInjectable(obj) ){
-			return obj.slice(0,-1);
+	inject.getMethod = function( injection ){
+		if ( isInjectable(injection) ){
+			return injection[ injection.length-1 ];
+		}else if ( isFunction(injection) ){
+			return injection;
+		}else{
+			throw new Error(
+				'inject needs arr to be either Injectable or Function, received:' + typeof( injection )
+			);
+		}
+	};
+
+	inject.getInjections = function( injection ){
+		if ( isInjectable(injection) ){
+			return injection.slice(0,-1);
 		}else{
 			return [];
 		}
 	};
 	
+	function invoke( injection, root, context ){
+		var i, c,
+			func = inject.getMethod( injection ),
+			arr = inject.getInjections( injection ),
+			args = [];
+		
+		if ( !context ){
+			context = bMoor;
+		}
+
+		for ( i = 0, c = arr.length; i < c; i++ ){
+			args.push( bMoor.makeReady(arr[i],root) );
+		}
+
+		return func.apply( context, args );
+	}
+
+	/**
+	 * Accepts a string and returns back the object reference
+	 *
+	 * @function decode
+	 * @namespace bMoor
+	 * @param {string} str The string that needs to be decoded
+	 * @param {object} root The root of the namespace to search, defaults to bMoor.namespace.root
+	 * @return {object}
+	 **/
+	 function decode( injection, root, context ){
+		var i, c,
+			ch,
+			str,
+			func = inject.getMethod( injection ),
+			arr = inject.getInjections( injection ),
+			args = [];
+		
+		if ( !context ){
+			context = bMoor;
+		}
+
+		for ( i = 0, c = arr.length; i < c; i++ ){
+			str = arr[i];
+			ch = str.charAt( 0 );
+		
+			if ( ch === '@' ){
+				args.push( check(str.substr(1),root) );
+			}else{
+				if ( ch === '-' ){
+					str = str.substr(1);
+				}
+
+				args.push( exists(str,root) );
+			}
+		}
+
+		return func.apply( context, args );
+	}
+
 	/**
 	 * Borrowed From Angular : I can't write it better
 	 * ----------------------------------------
@@ -1893,12 +1910,12 @@ var bMoor = {};
 		'register'    : register, // defines an alias
 		'check'       : check,	// checks for an alias
 		// injection ---v--------
-		'makeQuark'   : makeQuark,
 		'ensure'      : ensure,
-		'decode'      : decode,
 		'request'     : request,
 		'translate'   : translate,
-		'inject'      : inject,
+		'inject'      : inject, // injection allowing for delay
+		'invoke'      : invoke, // inline injection
+		'decode'      : decode,
 		'plugin'      : plugin, // adds it to bMoor
 		// loop --------v--------
 		'loop'        : loop, // array
@@ -1918,6 +1935,11 @@ var bMoor = {};
 		'isEmpty'     : isEmpty, 
 		'isQuark'     : isQuark,
 		'isInjectable' : isInjectable,
+		// makers --------v--------
+		'makeInjectable' : makeInjectable,
+		'makeNav'      : function(){
+			return new NavNode();
+		},
 		// data --------v--------
 		'data' : {
 			'setUid' : setUid,
@@ -1925,8 +1947,8 @@ var bMoor = {};
 		},
 		// object ------v--------
 		'object' : {
-			'safe'      : safe,
-			'naked'     : naked,
+			'safe'      : safe,  // own + no _ + no $
+			'naked'     : naked, // safe + not function
 			'mask'      : mask,
 			'equals'    : equals,
 			'inherit' : inherit,

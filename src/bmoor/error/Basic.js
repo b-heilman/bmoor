@@ -1,4 +1,4 @@
-bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
+bMoor.make( 'bmoor.error.Basic', [function(undefined){
 	'use strict';
 
 	return {
@@ -42,8 +42,7 @@ bMoor.make( 'bmoor.error.Basic', ['@undefined',function(undefined){
 		properties : {
 			// makes it more uniform how browsers display error
 			toString : function(){
-				return this.name + ': ' + this.message; 
-					
+				return this.name + ': ' + this.message;
 			}
 		}
 	};

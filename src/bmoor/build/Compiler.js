@@ -6,34 +6,42 @@ Allows for the compilation of object from a definition structure
 @constructor
 **/
 bMoor.inject(
-	['bmoor.defer.Basic',
-	function( Defer ){
+	['bmoor.defer.Basic', 'bmoor.build.Quark',
+	function( Defer, Quark ){
 		'use strict';
 
-		var eCompiler = bMoor.makeQuark('bmoor.build.Compiler'),
-			Compiler = function(){
+		var Compiler = function(){
 				this.preProcess = [];
 				this.postProcess = [];
+				this.defines = {};
 				this.clean = true;
 				this.makes = {};
-				this.defines = {};
 				this.root = bMoor.namespace.root;
 			},
 			instance;
 
 		Compiler.prototype.clone = function(){
 			var t = new Compiler();
-			t.preProcess = bMoor.object.extend( [], this.preProcess );
+
 			t.postProcess = bMoor.object.extend( [], this.postProcess );
+			t.preProcess = bMoor.object.extend( [], this.preProcess );
 			t.clean = this.clean;
 
-			t.makes = bMoor.object.extend( {}, this.makes );
-			t.defines = bMoor.object.extend( {}, this.defines );
-			t.root = bMoor.object.override( {}, this.root, true );
+			t.defines = {};
+			bMoor.object.safe( this.defines, function( def, name ){
+				t.defines[name] =  def.slice(0);
+			});
+			
+			t.makes = {};
+			bMoor.object.safe( this.makes, function( def, name ){
+				t.makes[name] =  def.slice(0);
+			});
+
+			t.root = this.root.$clone();
 
 			return t;
 		};
-		
+
 		function Abstract(){}
 
 		bMoor.plugin( 'isAbstract', function( obj ){
@@ -44,9 +52,7 @@ bMoor.inject(
 		 * The internal construction engine for the system.  Generates the class and uses all modules.
 		 **/
 		function make( dis, definition ){
-			var obj,
-				$d = new Defer(),
-				promise = $d.promise;
+			var obj;
 
 			// a hash has been passed in to be processed
 			if ( bMoor.isObject(definition) ){
@@ -68,7 +74,6 @@ bMoor.inject(
 							return definition.parent.apply( this, arguments );
 						}
 					};
-					obj.$generic = true; // TODO : Why do I care?
 				}
 
 				if ( !dis.clean ){
@@ -82,37 +87,31 @@ bMoor.inject(
 					dis.clean = true;
 				}
 
+				// defines a class
+				definition.$aliases = {
+					'constructor' : obj
+				};
+
 				bMoor.loop( dis.preProcess, function( maker ){
-					promise = promise.then(function( target ){
-						return bMoor.inject( maker.module, definition, target ).then(function( t ){
-							return t ? t : target;
-						});
-					});
+					obj = bMoor.decode( maker.module, definition, obj, true ) || obj;
 				});
 
 				bMoor.loop( dis.postProcess, function( maker ){
-					promise = promise.then(function( target ){
-						return bMoor.inject( maker.module, definition, target ).then(function( t ){
-							return t ? t : target;
-						});
-					});
+					obj = bMoor.decode( maker.module, definition, obj, true ) || obj;
 				});
 
-				// defines a class
-				definition.$aliases = {
-					'this' : obj,
-					whenDefined : promise
-				};
-				
-				$d.resolve( obj );
-
-				return promise;
+				return obj;
 			}else{
 				throw new Error(
 					'Constructor has no idea how to handle as definition of ' + definition
 				);
 			}
 		}
+
+		Compiler.prototype.newRoot = function(){
+			this.root = bMoor.makeNav();
+			return this.root;
+		};
 
 		/**
 		 * Add a module to the build process
@@ -160,139 +159,48 @@ bMoor.inject(
 		 *
 		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the defined object
 		 */
-		Compiler.prototype.make = function( name, definition ){
+		Compiler.prototype.make = function( name, definition, root ){
 			var dis = this,
-				namespace,
+				injection,
+				generator,
 				quark;
 
-			if ( bMoor.isString(name) ){
-				namespace = bMoor.parseNS( name );
-			}else{
+			if ( !bMoor.isString(name) ){
 				throw new Error(
 					JSON.stringify(name) + ' > ' +
 					JSON.stringify(definition) + ' > ' +
 					'message : you need to define a name and needs to be either a string or an array'
 				);
 			}
-			
-			this.makes[ name ] = definition;
 
-			quark = bMoor.makeQuark( namespace, this.root );
-			
-			quark.$setDefinition(function(){
-				return dis.build( definition ).then(function( result ){
-					if ( result.prototype ){
-						result.prototype._$name = name;
-					}else{
-						result._$name = name;
-					}
+			quark = Quark.create( name, root || this.root );
 
-					return result;
-				});
-			});
+			if ( bMoor.isInjectable(definition) ){
+				generator = definition[definition.length-1];
+				if ( generator._$raw ){
+					generator = generator._$raw;
+				}
+				injection = definition;
+			}else{
+				if ( bMoor.isFunction(definition) ){
+					generator = definition;
+				}else{
+					generator = function(){
+						return definition;
+					};
+				}
+				injection = [generator];
+			}
+			
+			injection[injection.length-1] = function(){
+				return make( dis, generator.apply(null,arguments) );
+			};
+			injection[injection.length-1]._$raw = generator;
+
+			this.makes[ name ] = injection;
+			quark.$setInjection( injection );
 
 			return quark;
-		};
-
-		Compiler.prototype.setRoot = function( r ){
-			this.root = r;
-		};
-
-		Compiler.prototype.build = function( definition ){
-			var dis = this;
-
-			if ( !bMoor.isInjectable(definition) ){
-				(function(){
-					var d = definition;
-					definition = [function(){
-						return d;
-					}];
-				}());
-			}
-
-			return bMoor.inject( definition, this.root ).then(function( def ){
-				return make( dis, def );
-			});
-		};
-
-		Compiler.prototype.redeclair = function( name ){
-			var i, c,
-				def = this.makes[ name ],
-				opt,
-				requirements;
-
-			if ( this.makes[name] ){
-				opt = 'make';
-			}else{
-				def = this.defines[name];
-
-				if ( this.defines[name] ){
-					opt = 'define';
-				}
-			}
-
-			if ( opt ){
-				requirements = bMoor.inject.getInjections( def );
-				
-				for( i = 0, c = requirements.length; i < c; i++ ){
-					this.redeclair( requirements[i] );
-				}
-
-				this[opt]( name, def );
-			}
-		};
-
-		Compiler.prototype.override = function( overrides ){
-			var root = this.root,
-				makes = this.makes;
-
-			bMoor.iterate( overrides, function( setTo, getFrom ){
-				if ( bMoor.isString(getFrom) ){
-					getFrom = bMoor.get( getFrom, root );
-					delete makes[ getFrom ];
-				}
-
-				if ( bMoor.isQuark(getFrom) ){
-					getFrom.$getDefinition().then(function( def ){
-						bMoor.set( setTo, def, root );
-					});
-				}else{
-					bMoor.set( setTo, getFrom, root );
-				}
-
-				// I think this works
-				delete makes[ setTo ];
-			});
-		};
-		/**
-		 * Create a mock of a previously defined object
-		 *
-		 * @this {bmoor.build.Compiler}
-		 * @access mock
-		 *
-		 * @param {string} name The name of the definition to create a mock of
-		 * @param {object} mocks Hash containing the mocks to user to override in the build
-		 *
-		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
-		 */
-		Compiler.prototype.mock = function( name, mocks ){
-			var dis = this,
-				r = bMoor.object.extend( {}, this.root, mocks ),
-				definition = this.makes[name];
-
-			if ( !bMoor.isInjectable(definition) ){
-				// TODO : bMoor.makeInjectable
-				(function(){
-					var d = definition;
-					definition = [function(){
-						return d;
-					}];
-				}());
-			}
-
-			return bMoor.inject( definition, r ).then(function( def ){
-				return make( dis, def );
-			});
 		};
 
 		/**
@@ -306,36 +214,110 @@ bMoor.inject(
 		 *
 		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
 		 */
-		Compiler.prototype.define = function( name, definition ){
-			var namespace,
+		Compiler.prototype.define = function( name, definition, root ){
+			var injection,
 				quark;
 
-			if ( bMoor.isString(name) ){
-				namespace = bMoor.parseNS( name );
-			}else{
+			if ( !bMoor.isString(name) ){
 				throw new Error(
 					JSON.stringify(name) + ' > ' +
 					JSON.stringify(definition) + ' > ' +
-					'message : you need to define a name and needs to be either a string or an array'
+					'message : you need to define a name and needs to be either a string'
 				);
 			}
 
-			quark = bMoor.makeQuark( name, this.root );
-			
+			quark = Quark.create( name, root || this.root );
+
 			if ( bMoor.isInjectable(definition) ){
-				bMoor.inject( definition, this.root ).then(function( v ){
-					quark.$set( v );
-				});
-				this.defines[ name ] =  definition;
+				injection = definition;
 			}else{
-				quark.$set( definition );
+				injection = [function(){
+					return definition;
+				}];
 			}
+
+			this.defines[ name ] = injection;
+			quark.$setInjection( injection );
 
 			return quark;
 		};
 
+		function redeclair( compiler, name, lock ){
+			var i, c,
+				opt,
+				injection = compiler.makes[ name ],
+				t;
+
+			if ( injection ){
+				opt = 'make';
+			}else{
+				injection = compiler.defines[name];
+
+				if ( !injection ){
+					throw new Error( 'could not redeclair: '+name+'\nmakes('+
+						Object.keys(compiler.makes)+')\ndefines('+
+						Object.keys(compiler.defines)+')'
+					);
+				}
+				opt = 'define';
+			}
+			
+			t = bMoor.get( name, compiler.root );
+			if ( t.$$lock !== lock ){
+				for( i = 0, c = injection.length-1; i < c; i++ ){
+					/**
+					with mocks there was a bug that the mock would loop on its own primary it was mocking
+					**/
+					if ( injection[i] !== name ){
+						redeclair( compiler, injection[i], lock );
+					}
+				}
+
+				bMoor.del( name, compiler.root );
+				compiler[opt]( name, injection, compiler.root );
+				bMoor.get( name, compiler.root ).$$lock = lock;
+			}
+		}
+
+		function override( compiler, overrides, lock ){
+			var root = compiler.root;
+
+			// { getFrom -> setTo }
+			bMoor.iterate( overrides, function( setTo, getFrom ){
+				var from = bMoor.get( getFrom, root );
+
+				if ( from instanceof Quark ){
+					from = from.$instantiate();
+				}
+
+				from.$$lock = lock;
+				bMoor.set( setTo, from, root );
+			});
+		}
+
+		/**
+		 * Create a mock of a previously defined object
+		 *
+		 * @this {bmoor.build.Compiler}
+		 * @access mock
+		 *
+		 * @param {string} name The name of the definition to create a mock of
+		 * @param {object} mocks Hash containing the mocks to user to override in the build
+		 *
+		 * @return {bmoor.defer.Promise} A quark's promise that will eventually return the mock object
+		 */
+		Compiler.prototype.mock = function( name, mocks ){
+			return this.make( 
+				'',
+				this.makes[name],
+				bMoor.object.extend( {}, this.root, mocks )
+			);
+		};
+
 		instance = new Compiler();
 		instance.$constructor = Compiler; // because it is a singleton
+
+		bMoor.set( 'bmoor.build.Compiler', instance );
 
 		bMoor.plugin( 'make', function( namespace, definition ){
 			return instance.make( namespace, definition );
@@ -345,19 +327,24 @@ bMoor.inject(
 			return instance.define( namespace, value );
 		});
 
+		var injectionLock = 1;
 		bMoor.plugin( 'test', {
+			clone: function(){
+				return instance.clone();
+			},
 			debug : function( path ){
-				console.log( 'clone', path, bMoor.get(path,instance.clone().root) );
-				console.log( 'primary', path, bMoor.get(path,instance.root) );
+				console.log( 'clone', path, bMoor.exists(path,instance.clone().root) );
+				console.log( 'primary', path, bMoor.exists(path,instance.root) );
 			},
 			injector : function( injection, overrides ){
 				return function(){
-					var clone = instance.clone();
+					var clone = instance.clone(),
+						lock = injectionLock++;
 
 					if ( overrides ){
-						clone.override( overrides );
+						override( clone, overrides, lock );
 						bMoor.iterate( bMoor.inject.getInjections(injection), function( name ){
-							clone.redeclair( name );
+							redeclair( clone, name, lock );
 						});
 					}
 
@@ -365,13 +352,7 @@ bMoor.inject(
 				};
 			},
 			make : function( definition ){
-				var t;
-
-				instance.clone().build( definition ).then(function( built ){
-					t = built;
-				});
-
-				return t;
+				return instance.make( '', definition ).$instantiate();
 			},
 			mock : function( namespace, mock ){
 				var t;
@@ -383,7 +364,5 @@ bMoor.inject(
 				return t;
 			}
 		});
-		
-		eCompiler.$set( instance );
 	}
 ]);
