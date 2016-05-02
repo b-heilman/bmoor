@@ -47,7 +47,9 @@ var bmoor =
 
 	'use strict';
 
-	module.exports = __webpack_require__(1);
+	var bmoor = __webpack_require__(1);
+
+	module.exports = bmoor;
 
 /***/ },
 /* 1 */

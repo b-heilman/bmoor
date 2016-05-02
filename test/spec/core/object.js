@@ -1,18 +1,4 @@
 describe("Testing object functions", function() {
-	// instantiate
-	it('should allow for the instantiation of objects from classes', function(){
-		var wasCalled = false;
-
-		function Foo( dude, hey ){
-			wasCalled = true;
-			this.dude = dude;
-			this.hey = hey;
-		}
-
-		expect( bMoor.object.instantiate(Foo,['derp','woot']).dude ).toBe( 'derp' );
-		expect( wasCalled ).toBe( true );
-	});
-	
 	// mask
 	it('should allow for the creation of object from a base object', function(){
 		var t,
@@ -26,7 +12,9 @@ describe("Testing object functions", function() {
 
 		t = new Foo();
 
-		v = bMoor.object.mask( t );
+		v = bmoor.object.mask( t );
+
+		expect( v.bar ).toBe( 'yay' );
 	});
 
 
@@ -38,7 +26,7 @@ describe("Testing object functions", function() {
 			'woot' : 3
 		};
 
-		bMoor.object.extend( t, {
+		bmoor.object.extend( t, {
 			'yay' : 'sup',
 			'foo' : 'foo2'
 		},{
@@ -57,7 +45,7 @@ describe("Testing object functions", function() {
 	// map
 	it('should allow for the mapping of variables onto an object', function(){
 		var o = {},
-			t = bMoor.object.explode({
+			t = bmoor.object.explode({
 				hello:'world'
 			},{
 				'eins': 1, 
@@ -75,7 +63,7 @@ describe("Testing object functions", function() {
 
 	it('should allow for a new variable to be created from a map', function(){
 		var o = {},
-			t = bMoor.object.explode({},
+			t = bmoor.object.explode({},
 			{
 				'eins': 1, 
 				'foo.bar': 'woot',
@@ -87,6 +75,7 @@ describe("Testing object functions", function() {
 		expect( t.hello.world ).toBe( o );
 	});
 
+	/*
 	describe('override', function(){
 		it( 'should prune old properties', function(){
 			var t = {
@@ -97,7 +86,7 @@ describe("Testing object functions", function() {
 					}
 				}
 
-			bMoor.object.override( t, {
+			bmoor.object.override( t, {
 				drei : 3
 			});
 
@@ -120,7 +109,7 @@ describe("Testing object functions", function() {
 					}
 				};
 
-			bMoor.object.override( t, o );
+			bmoor.object.override( t, o );
 
 			o.drei.hello = 'woot';
 
@@ -141,14 +130,14 @@ describe("Testing object functions", function() {
 					}
 				};
 
-			bMoor.object.override( t, o, true );
+			bmoor.object.override( t, o, true );
 
 			o.drei.hello = 'woot';
 
 			expect( t.drei.hello ).toBe( 'world' );
 		});
 	});
-
+	*/
 	it( 'should allow for data to be merged', function(){
 		var t = {
 			eins : 1,
@@ -159,7 +148,7 @@ describe("Testing object functions", function() {
 			drei : 3
 		}
 
-		bMoor.object.merge( t, {
+		bmoor.object.merge( t, {
 			eins : 2,
 			zwei : {
 				foo : 2

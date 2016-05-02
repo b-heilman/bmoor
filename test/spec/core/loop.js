@@ -1,9 +1,9 @@
 describe('Testing error handling functionality', function(){
 	//loop
-	it('should allow looping through array like elements with bMoor.loop', function(){
+	it('should allow looping through array like elements with bmoor.loop', function(){
 		var t = [0,1,2,3];
 
-		bMoor.loop(t, function( v, i ){
+		bmoor.loop(t, function( v, i ){
 			expect( v ).toBe( i );
 
 			this[i] = true;
@@ -12,11 +12,11 @@ describe('Testing error handling functionality', function(){
 		expect( t ).toEqual( [true,true,true,true] );
 	});
 
-	it('should allow looping through array like elements with bMoor.loop, while allowing alternate scope', function(){
+	it('should allow looping through array like elements with bmoor.loop, while allowing alternate scope', function(){
 		var t = [0,1,2,3],
 			t2 = [];
 
-		bMoor.loop(t, function( v, i ){
+		bmoor.loop(t, function( v, i ){
 			expect( v ).toBe( i );
 
 			this[i] = true;
@@ -26,24 +26,24 @@ describe('Testing error handling functionality', function(){
 	});
 
 	//each
-	it('should allow looping through hash\'s own properites with bMoor.each', function(){
+	it('should allow looping through hash\'s own properites with bmoor.each', function(){
 		var t = { 
 				eins : true
 			};
 
-		bMoor.each( t, function(v,k){
+		bmoor.each( t, function(v,k){
 			expect( k ).toBe( 'eins' );
 			expect( v ).toBe( true );
 		});
 	});
 
-	it('should allow looping through hash\'s own properites with bMoor.each, while allowing alternate scope', function(){
+	it('should allow looping through hash\'s own properites with bmoor.each, while allowing alternate scope', function(){
 		var t = { 
 				eins : true
 			},
 			t2 = {};
 
-		bMoor.each( t, function(v,k){
+		bmoor.each( t, function(v,k){
 			expect( k ).toBe( 'eins' );
 			expect( v ).toBe( true );
 
@@ -54,7 +54,7 @@ describe('Testing error handling functionality', function(){
 	});
 
 	//iterate
-	it('should allow looping through object\'s own properites, ignoring special vars with bMoor.iterate', function(){
+	it('should allow looping through object\'s own properites, ignoring special vars with bmoor.iterate', function(){
 		function f(){
 			this.eins = true;
 			this._hidden = true;
@@ -65,7 +65,7 @@ describe('Testing error handling functionality', function(){
 		var t = new f(),
 			t2 = {};
 
-		bMoor.iterate( t, function(v,k){
+		bmoor.iterate( t, function(v,k){
 			expect( k ).toBe( 'eins' );
 			expect( v ).toBe( true );
 

@@ -1,87 +1,67 @@
-'use strict';
+var $ = require('gulp-load-plugins')(),
+	gulp = require('gulp'),
+	map = require('map-stream'),
+	webpack = require('gulp-webpack'),
+	karma = require('gulp-karma'),
+	jshint = require('gulp-jshint'),
+	stylish = require('jshint-stylish');
 
-var gulp = require( 'gulp' );
-var map = require('map-stream');
-var watch = require('gulp-watch');
+var env = require('./config/env.js');
 
-// testing and linting
-var jshint = require('gulp-jshint');
-var stylish = require('jshint-stylish');
-var yuidoc = require('gulp-yuidoc');
-var Karma = require('karma').Server;
-
-// demo ability
-var express = require( 'express' );
-var server = express();
-
-// minify javascript
-var pkg = require('./package.json');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var header = require('gulp-header');
-var footer = require('gulp-footer');
-
-// other settings
-var buildDir = './dist/',
-	demoDir = './demo/',
-	docDir = './doc/',
-	externals = [
-	],
-	jsSrc = [
-        './src/bmoor/core.js',
-		'./src/bmoor/build/*.js',
-        './src/bmoor/build/modules/*.js',
-		'./src/bmoor/defer/*.js',
-		'./src/bmoor/flow/*.js',
-		'./src/bmoor/error/*.js',
-        './src/bmoor/extender/*.js'
-    ],
-    jsOut = 'bmoor.js',
-    jsMin = 'bmoor.min.js',
-    jsHeader = '/** <%= pkg.name %> v<%= pkg.version %> **/\n';
-
-gulp.task( 'launch-server', function() {
-	externals.forEach(function( src ){
-		gulp.src( src ).pipe( gulp.dest(demoDir) );
-	});
-
-    server.use(express.static(demoDir));
-    server.listen( 9000 );
+gulp.task('demo', function() {
+	return gulp.src(env.jsSrc)
+		.pipe(webpack({
+			entry: './'+env.demoConfig,
+			module: {
+				loaders: [{
+					test: /\.js$/,
+					loader: "babel-loader",
+					query: {
+    				presets: ['es2015']
+  				}
+				}],
+			},
+			output: {
+				filename: 'demo.js',
+				library: env.library,
+				libraryTarget: "var"
+			}
+		}))
+		.pipe(gulp.dest(env.demoDir));
 });
 
-gulp.task( 'watch', function(){
-    gulp.watch( jsSrc, ['build-js'] );
+gulp.task('library', function() {
+	return gulp.src(env.jsDemo)
+		.pipe(webpack({
+			entry: './'+env.libraryConfig,
+			module: {
+				loaders: [{
+					test: /\.js$/,
+					loader: "babel-loader",
+					query: {
+    				presets: ['es2015']
+  				}
+				}],
+			},
+			output: {
+				filename: env.name+'.js',
+				library: env.library,
+				libraryTarget: "var"
+			},
+			externals: env.externals
+		}))
+		.pipe(gulp.dest(env.distDir));
 });
 
-gulp.task( 'serve', ['watch', 'launch-server'] );
-
-gulp.task('doc', function() {
-    gulp.src( jsSrc )
-        .pipe( yuidoc() )
-        .pipe( gulp.dest(docDir) );
-});
-
-gulp.task('concat-js', function() {
-    gulp.src( jsSrc )
-        .pipe( concat(jsOut) )
-        .pipe( header(';(function(){\n' + jsHeader, {pkg:pkg }) )
-        .pipe( footer('\n}());') )
-        .pipe( gulp.dest(demoDir) )
-        .pipe( gulp.dest(buildDir) );
-
-    gulp.src( './src/bmock/**/*.js' )
-        .pipe( concat('bmock.js') )
-        .pipe( gulp.dest(buildDir) );
-});
-
-gulp.task('build-js', ['concat-js'], function(){
-    gulp.src( jsSrc )
-        .pipe( concat(jsMin) )
-        .pipe( uglify() )
-        .pipe( header(';(function(){\n' + jsHeader, {pkg:pkg}) )
-        .pipe( footer('\n}());') )
-        .pipe( gulp.dest(demoDir) )
-        .pipe( gulp.dest(buildDir) );
+gulp.task('test', ['build'], function() {
+	return gulp.src('aaa')
+			.pipe(karma({
+					configFile: env.karmaConfig,
+					action: 'run'
+			}))
+			.on('error', function(err) {
+					throw err;
+			});
 });
 
 var failOnError = function() {
@@ -94,50 +74,31 @@ var failOnError = function() {
 };
 
 gulp.task('build-lint', function() {
-    gulp.src( jsSrc )
+    gulp.src( env.jsSrc )
         .pipe( jshint() )
         .pipe( jshint.reporter(stylish) )
         .pipe( failOnError() );
 });
 
 gulp.task('lint', function() {
-    gulp.src( jsSrc )
+    gulp.src( env.jsSrc )
         .pipe( jshint() )
         .pipe( jshint.reporter(stylish) );
 });
 
-gulp.task('test', function (done) {
-    ( new Karma({
-        configFile: __dirname + '/karma.conf.js',
-        port: 9999,
-        singleRun: true,
-        browsers: ['PhantomJS']
-    }, done) ).start();
+gulp.task('build', ['build-lint', 'demo','library'] );
+
+gulp.task('watch', ['build'], function(){
+	gulp.watch(env.jsSrc, ['lint', 'demo','library']);
 });
 
-gulp.task('test-chrome', function (done) {
-    ( new Karma({
-        configFile: __dirname + '/karma.conf.js',
-        port: 9999,
-        singleRun: false,
-        browsers: ['Chrome']
-    }, done) ).start();
+gulp.task('serve', ['watch'], function() {
+	gulp.src(env.demoDir)
+		.pipe($.webserver({
+			port: 8000,
+			host: 'localhost',
+			fallback: 'index.html',
+			livereload: true,
+			open: true
+		}))
 });
-
-/*
-simple:{
-	singleRun: true,
-	browsers: ['PhantomJS']
-},
-windows:{
-	singleRun: true,
-	browsers: ['Chrome','Firefox','Internet Explorer']
-},
-mac:{
-	singleRun: true,
-	browsers: ['Chrome','Firefox','Safari']
-}
-*/
-gulp.task( 'build', ['test', 'build-lint','build-js'] );
-
-gulp.task( 'build-serve', ['build','serve'] );
