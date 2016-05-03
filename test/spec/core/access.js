@@ -61,4 +61,36 @@ describe("Testing object setting/getting", function() {
 		expect( t.zwei ).toBeDefined();
 		expect( t.zwei.drei ).toBeUndefined();
 	});
+
+	it('should load variables in - 1', function(){
+		var t = {
+				eins : [
+					{ a: 1 },
+					{ a: 2 }
+				]
+			};
+
+		expect( bmoor.load(t,'eins[]a') ).toEqual( [1,2] );
+	});
+
+	it('should load variables in - 2', function(){
+		var t = [
+				{ a: 1 },
+				{ a: 2 }
+			];
+
+		expect( bmoor.load(t,'[]a') ).toEqual( [1,2] );
+	});
+
+	it('should allow the making of a loader', function(){
+		var t = {
+				eins : [
+					{ a: 1 },
+					{ a: 2 }
+				]
+			},
+			fn = bmoor.makeLoader('eins[]a');
+
+		expect( fn(t) ).toEqual( [1,2] );
+	});
 });

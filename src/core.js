@@ -166,17 +166,18 @@ function parse( space ){
  * @return {something}
  **/
 export function set( root, space, value ){
-	var old,
+	var i, c, 
+		old,
 		val,
 		nextSpace,
 		curSpace = root;
 	
-	if ( space && (isString(space) || isArrayLike(space)) ){
-		space = parse( space );
+	if ( isString(space) ){
+		space = space.split('.');
 
 		val = space.pop();
 
-		for( var i = 0; i < space.length; i++ ){
+		for( i = 0, c = space.length; i < c; i++ ){
 			nextSpace = space[ i ];
 				
 			if ( isUndefined(curSpace[nextSpace]) ){
@@ -216,7 +217,7 @@ function _makeSetter( property, next ){
 export function makeSetter( space ){
 	var i,
 		fn,
-		readings = parse( space );
+		readings = space.split('.');
 
 	for( i = readings.length-1; i > -1; i-- ){
 		fn = _makeSetter( readings[i], fn );
@@ -235,43 +236,44 @@ export function makeSetter( space ){
  * @return {array}
  **/
 export function get( root, space ){
-	var curSpace = root,
+	var i, c,
+		curSpace = root,
 		nextSpace;
 	
-	if ( space && (isString(space) || isArrayLike(space)) ){
-		space = parse( space );
-		
-		for( var i = 0; i < space.length; i++ ){
-			nextSpace = space[i];
-				
-			if ( isUndefined(curSpace[nextSpace]) ){
-				return;
-			}
+	if ( isString(space) ){
+		if ( space.length ){
+			space = space.split('.');
 			
-			curSpace = curSpace[nextSpace];
+			for( i = 0, c = space.length; i < c; i++ ){
+				nextSpace = space[i];
+					
+				if ( isUndefined(curSpace[nextSpace]) ){
+					return;
+				}
+				
+				curSpace = curSpace[nextSpace];
+			}
 		}
 
 		return curSpace;
-	}else if ( isObject(space) ){
-		return space;
 	}else{
-		throw new Error('unsupported type');
+		throw new Error('unsupported type: '+space);
 	}
 }
 
 function _makeGetter( property, next ){
 	if ( next ){
-		return function( ctx ){
+		return function( obj ){
 			try {
-				return next( ctx[property] );
+				return next( obj[property] );
 			}catch( ex ){
 				return undefined;
 			}
 		};
 	}else{
-		return function( ctx ){
+		return function( obj ){
 			try {
-				return ctx[property];
+				return obj[property];
 			}catch( ex ){
 				return undefined;
 			}
@@ -281,14 +283,71 @@ function _makeGetter( property, next ){
 
 export function makeGetter( space ){
 	var i,
-		fn,
-		readings = parse( space );
+		fn;
 
-	for( i = readings.length-1; i > -1; i-- ){
-		fn = _makeGetter( readings[i], fn );
+	if ( space.length ){
+		space = space.split('.');
+
+		for( i = space.length-1; i > -1; i-- ){
+			fn = _makeGetter( space[i], fn );
+		}
+	}else{
+		return function( obj ){
+			return obj;
+		};
 	}
 
 	return fn;
+}
+
+export function load( root, space ){
+	var i, c,
+		arr,
+		res;
+
+	space = space.split('[]');
+	if ( space.length === 1 ){
+		return [ get(root,space[0]) ];
+	}else{
+		arr = get( root, space[0] );
+		res = [];
+
+		if ( arr ){
+			for( i = 0, c = arr.length; i < c; i++ ){
+				res.push( get(arr[i],space[1]) );
+			}
+		}
+
+		return res;
+	}
+}
+
+export function makeLoader( space ){
+	var getArray,
+		getVariable;
+
+	space = space.split('[]');
+
+	if ( space.length === 1 ){
+		return [ makeGetter(space[0]) ];
+	}else{
+		getArray = makeGetter( space[0] );
+		getVariable = makeGetter( space[1] );
+
+		return function( obj ){
+			var i, c, 
+				arr = getArray(obj),
+				res = [];
+
+			if ( arr ){
+				for( i = 0, c = arr.length; i < c; i++ ){
+					res.push( getVariable(arr[i]) );
+				}
+			}
+
+			return res;
+		};
+	}
 }
 
 /**
