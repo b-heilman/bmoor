@@ -63,6 +63,7 @@ var bmoor =
 	bmoor.object = __webpack_require__(6);
 	bmoor.build = __webpack_require__(7);
 	bmoor.string = __webpack_require__(11);
+	bmoor.promise = __webpack_require__(12);
 
 	module.exports = bmoor;
 
@@ -504,9 +505,13 @@ var bmoor =
 			context = arr;
 		}
 
-		for (i = 0, c = arr.length; i < c; ++i) {
-			if (i in arr) {
-				fn.call(context, arr[i], i, arr);
+		if (arr.forEach) {
+			arr.forEach(fn, context);
+		} else {
+			for (i = 0, c = arr.length; i < c; ++i) {
+				if (i in arr) {
+					fn.call(context, arr[i], i, arr);
+				}
 			}
 		}
 	}
@@ -1569,7 +1574,7 @@ var bmoor =
 
 /***/ },
 /* 11 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -1579,6 +1584,10 @@ var bmoor =
 	exports.trim = trim;
 	exports.ltrim = ltrim;
 	exports.rtrim = rtrim;
+	exports.getCommands = getCommands;
+	exports.getFormatter = getFormatter;
+	var bmoor = __webpack_require__(2);
+
 	function trim(str, chr) {
 		if (!chr) {
 			chr = '\\s';
@@ -1598,6 +1607,148 @@ var bmoor =
 			chr = '\\s';
 		}
 		return str.replace(new RegExp(chr + '+$', 'g'), '');
+	}
+
+	// TODO : eventually I will make getCommands and getFormatter more complicated, but for now
+	//        they work by staying simple
+	function getCommands(str) {
+		var commands = str.split('|');
+
+		commands.forEach(function (command, key) {
+			var args = command.split(':');
+
+			args.forEach(function (arg, k) {
+				args[k] = trim(arg);
+			});
+
+			commands[key] = {
+				command: command,
+				method: args.shift(),
+				args: args
+			};
+		});
+
+		return commands;
+	}
+
+	function stackFunctions(newer, older) {
+		return function (o) {
+			return older(newer(o));
+		};
+	}
+
+	var filters = {
+		precision: function precision(dec) {
+			dec = parseInt(dec, 10);
+
+			return function (num) {
+				return parseFloat(num, 10).toFixed(dec);
+			};
+		},
+		currency: function currency() {
+			return function (num) {
+				return '$' + num;
+			};
+		}
+	};
+
+	function doFilters(ters) {
+		var fn, command, filter;
+
+		while (ters.length) {
+			command = ters.pop();
+			fn = filters[command.method].apply(null, command.args);
+
+			if (filter) {
+				filter = stackFunctions(fn, filter);
+			} else {
+				filter = fn;
+			}
+		}
+
+		return filter;
+	}
+
+	function doVariable(lines) {
+		var fn, dex, line, getter, commands, remainder;
+
+		if (!lines.length) {
+			return null;
+		} else {
+			line = lines.shift();
+			dex = line.indexOf('}}');
+			fn = doVariable(lines);
+
+			if (dex === -1) {
+				return function () {
+					return '--no close--';
+				};
+			} else if (dex === 0) {
+				remainder = line.substr(2);
+				getter = function getter(o) {
+					if (bmoor.isObject(o)) {
+						return JSON.stringify(o);
+					} else {
+						return o;
+					}
+				};
+			} else {
+				commands = getCommands(line.substr(0, dex));
+				remainder = line.substr(dex + 2);
+				getter = bmoor.makeGetter(commands.shift().command);
+
+				if (commands.length) {
+					getter = stackFunctions(getter, doFilters(commands, getter));
+				}
+			}
+
+			//let's optimize this a bit
+			if (fn) {
+				// we have a child method
+				return function (obj) {
+					return getter(obj) + remainder + fn(obj);
+				};
+			} else {
+				// this is the last variable
+				return function (obj) {
+					return getter(obj) + remainder;
+				};
+			}
+		}
+	}
+
+	function getFormatter(str) {
+		var fn,
+		    lines = str.split(/{{/g);
+
+		if (lines.length > 1) {
+			str = lines.shift();
+			fn = doVariable(lines);
+
+			return function (obj) {
+				return str + fn(obj);
+			};
+		} else {
+			return function () {
+				return str;
+			};
+		}
+	}
+	getFormatter.filters = filters;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	exports.always = always;
+	function always(promise, func) {
+		promise.then(func, func);
+		return promise;
 	}
 
 /***/ }

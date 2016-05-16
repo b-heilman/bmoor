@@ -403,9 +403,13 @@ export function loop( arr, fn, context ){
 		context = arr;
 	}
 
-	for ( i = 0, c = arr.length; i < c; ++i ){
-		if ( i in arr ) {
-			fn.call(context, arr[i], i, arr);
+	if ( arr.forEach ){
+		arr.forEach( fn, context );
+	}else{
+		for ( i = 0, c = arr.length; i < c; ++i ){
+			if ( i in arr ) {
+				fn.call(context, arr[i], i, arr);
+			}
 		}
 	}
 }

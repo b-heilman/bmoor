@@ -6,5 +6,6 @@ bmoor.array = require('./array.js');
 bmoor.object = require('./object.js');
 bmoor.build = require('./build.js');
 bmoor.string = require('./string.js');
+bmoor.promise = require('./promise.js');
 
 module.exports = bmoor;

@@ -89,13 +89,13 @@ gulp.task('lint', function() {
 gulp.task('build', ['build-lint', 'demo','library'] );
 
 gulp.task('watch', ['build'], function(){
-	gulp.watch(env.jsSrc, ['lint', 'demo','library']);
+	gulp.watch(env.jsSrc.concat(['./'+env.demoConfig]), ['lint', 'demo','library']);
 });
 
 gulp.task('serve', ['watch'], function() {
 	gulp.src(env.demoDir)
 		.pipe($.webserver({
-			port: 8000,
+			port: 9000,
 			host: 'localhost',
 			fallback: 'index.html',
 			livereload: true,
