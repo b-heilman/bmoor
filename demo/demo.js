@@ -95,6 +95,8 @@ var bmoor =
 	exports.makeSetter = makeSetter;
 	exports.get = get;
 	exports.makeGetter = makeGetter;
+	exports.exec = exec;
+	exports.makeExec = makeExec;
 	exports.load = load;
 	exports.makeLoader = makeLoader;
 	exports.del = del;
@@ -401,6 +403,71 @@ var bmoor =
 			return function (obj) {
 				return obj;
 			};
+		}
+
+		return fn;
+	}
+
+	function exec(root, space, args, ctx) {
+		var i,
+		    c,
+		    last,
+		    nextSpace,
+		    curSpace = root;
+
+		if (isString(space)) {
+			if (space.length) {
+				space = space.split('.');
+
+				for (i = 0, c = space.length; i < c; i++) {
+					nextSpace = space[i];
+
+					if (isUndefined(curSpace[nextSpace])) {
+						return;
+					}
+
+					last = curSpace;
+					curSpace = curSpace[nextSpace];
+				}
+			}
+
+			if (curSpace) {
+				return curSpace.apply(ctx || last, args || []);
+			}
+		}
+
+		throw new Error('unsupported eval: ' + space);
+	}
+
+	function _makeExec(property, next) {
+		if (next) {
+			return function (obj, args, ctx) {
+				try {
+					return next(obj[property], args, ctx);
+				} catch (ex) {
+					return undefined;
+				}
+			};
+		} else {
+			return function (obj, args, ctx) {
+				return obj[property].apply(ctx || obj, args || []);
+			};
+		}
+	}
+
+	function makeExec(space) {
+		var i, fn;
+
+		if (space.length) {
+			space = space.split('.');
+
+			fn = _makeExec(space[space.length - 1]);
+
+			for (i = space.length - 2; i > -1; i--) {
+				fn = _makeExec(space[i], fn);
+			}
+		} else {
+			throw new Error('unsupported eval: ' + space);
 		}
 
 		return fn;

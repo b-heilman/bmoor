@@ -25,6 +25,40 @@ describe("Testing object setting/getting", function() {
 		expect( f2(t) ).toBe(3);
 	});
 
+	it('should have exec working', function(){
+		var t = {
+				eins : function( eins ){
+					return 1+'-'+eins;
+				},
+				zwei: {
+					drei: function(){
+						return 3;
+					}
+				}
+			};
+
+		expect( bmoor.exec(t,'eins',[1]) ).toBe('1-1');
+		expect( bmoor.exec(t,'zwei.drei') ).toBe(3);
+	});
+
+	it('should have makeExec working', function(){
+		var t = {
+				eins : function( eins ){
+					return 1+'-'+eins;
+				},
+				zwei: {
+					drei: function(){
+						return 3;
+					}
+				}
+			},
+			f1 = bmoor.makeExec('eins'),
+			f2 = bmoor.makeExec('zwei.drei');
+
+		expect( f1(t,[1]) ).toBe('1-1');
+		expect( f2(t) ).toBe(3);
+	});
+
 	it('should have set working', function(){
 		var t = {};
 
