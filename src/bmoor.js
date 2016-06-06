@@ -8,4 +8,6 @@ bmoor.build = require('./build.js');
 bmoor.string = require('./string.js');
 bmoor.promise = require('./promise.js');
 
+bmoor.decorators = require('./decorators.js');
+
 module.exports = bmoor;

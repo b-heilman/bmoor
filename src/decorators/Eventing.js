@@ -1,5 +1,5 @@
-export default class Eventing {
-	on ( event, cb ){
+var Eventing = {
+	on: function ( event, cb ){
 		var dis = this;
 
 		if ( !this._$listeners ){
@@ -18,9 +18,8 @@ export default class Eventing {
 				1
 			);
 		};
-	}
-
-	subscribe ( subscriptions ){
+	},
+	subscribe: function( subscriptions ){
 		var dis = this,
 			kills = [],
 			events =  Object.keys(subscriptions);
@@ -36,9 +35,8 @@ export default class Eventing {
 				kill();
 			});
 		};
-	}
-
-	trigger ( event, arg ){
+	},
+	trigger: function( event, arg ){
 		var listeners,
 			i, c;
 
@@ -52,4 +50,8 @@ export default class Eventing {
 			}
 		}
 	}
-}
+};
+
+export {
+	Eventing as decorator
+};

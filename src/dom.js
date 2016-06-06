@@ -129,8 +129,6 @@ export function triggerEvent( elements, eventName, eventData ){
 
 				event = new EventClass( eventName, eventData );
 			}catch( ex ){
-				console.log('event trigger failing over');
-
 				// slightly older style, give some backwards compatibility
 				switch (eventName) {
 					case 'click':

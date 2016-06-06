@@ -65,6 +65,8 @@ var bmoor =
 	bmoor.string = __webpack_require__(11);
 	bmoor.promise = __webpack_require__(12);
 
+	bmoor.decorators = __webpack_require__(13);
+
 	module.exports = bmoor;
 
 /***/ },
@@ -887,8 +889,6 @@ var bmoor =
 
 					event = new EventClass(eventName, eventData);
 				} catch (ex) {
-					console.log('event trigger failing over');
-
 					// slightly older style, give some backwards compatibility
 					switch (eventName) {
 						case 'click':
@@ -1817,6 +1817,77 @@ var bmoor =
 		promise.then(func, func);
 		return promise;
 	}
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+		Eventing: __webpack_require__(14).decorator
+	};
+
+/***/ },
+/* 14 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	var Eventing = {
+		on: function on(event, cb) {
+			var dis = this;
+
+			if (!this._$listeners) {
+				this._$listeners = {};
+			}
+
+			if (!this._$listeners[event]) {
+				this._$listeners[event] = [];
+			}
+
+			this._$listeners[event].push(cb);
+
+			return function clear$on() {
+				dis._$listeners[event].splice(dis._$listeners[event].indexOf(cb), 1);
+			};
+		},
+		subscribe: function subscribe(subscriptions) {
+			var dis = this,
+			    kills = [],
+			    events = Object.keys(subscriptions);
+
+			events.forEach(function (event) {
+				var action = subscriptions[event];
+
+				kills.push(dis.$on(event, action));
+			});
+
+			return function killAll() {
+				kills.forEach(function (kill) {
+					kill();
+				});
+			};
+		},
+		trigger: function trigger(event, arg) {
+			var listeners, i, c;
+
+			if (this._$listeners) {
+				listeners = this._$listeners[event];
+
+				if (listeners) {
+					for (i = 0, c = listeners.length; i < c; i++) {
+						listeners[i](arg);
+					}
+				}
+			}
+		}
+	};
+
+	exports.decorator = Eventing;
 
 /***/ }
 /******/ ]);
