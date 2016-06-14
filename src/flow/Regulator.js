@@ -2,7 +2,7 @@ function __now(){
 	return +(new Date());
 }
 
-export default class Regulator {
+module.exports = class Regulator {
 	constructor( func, min, max, context ){
 		var dis = this;
 
@@ -51,4 +51,4 @@ export default class Regulator {
 	shift ( diff ){
 		this.nextTime += diff;
 	}
-}
+};

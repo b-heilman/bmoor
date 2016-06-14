@@ -9,7 +9,7 @@
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isUndefined( value ) {
+function isUndefined( value ) {
 	return value === undefined;
 }
 
@@ -21,7 +21,7 @@ export function isUndefined( value ) {
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isDefined( value ) {
+function isDefined( value ) {
 	return value !== undefined;
 }
 
@@ -33,7 +33,7 @@ export function isDefined( value ) {
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isString( value ){
+function isString( value ){
 	return typeof value === 'string';
 }
 
@@ -45,7 +45,7 @@ export function isString( value ){
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isNumber( value ){
+function isNumber( value ){
 	return typeof value === 'number';
 }
 
@@ -57,7 +57,7 @@ export function isNumber( value ){
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isFunction( value ){
+function isFunction( value ){
 	return typeof value === 'function';
 }
 
@@ -69,7 +69,7 @@ export function isFunction( value ){
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isObject( value ){
+function isObject( value ){
 	return value  && typeof value === 'object';
 }
 
@@ -81,7 +81,7 @@ export function isObject( value ){
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isBoolean( value ){
+function isBoolean( value ){
 	return typeof value === 'boolean';
 }
 
@@ -93,7 +93,7 @@ export function isBoolean( value ){
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isArrayLike( value ) {
+function isArrayLike( value ) {
 	// for me, if you have a length, I'm assuming you're array like, might change
 	if ( value ){
 		return isObject( value ) && ( value.length === 0 || (0 in value && (value.length-1) in value) );
@@ -110,7 +110,7 @@ export function isArrayLike( value ) {
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isArray( value ) {
+function isArray( value ) {
 	return value instanceof Array;
 }
 
@@ -125,7 +125,7 @@ export function isArray( value ) {
  * @param {something} value The variable to test
  * @return {boolean}
  **/
-export function isEmpty( value ){
+function isEmpty( value ){
 	var key;
 
 	if ( isObject(value) ){
@@ -165,7 +165,7 @@ function parse( space ){
  * @param {something} value The value to set the namespace to
  * @return {something}
  **/
-export function set( root, space, value ){
+function set( root, space, value ){
 	var i, c, 
 		old,
 		val,
@@ -214,7 +214,7 @@ function _makeSetter( property, next ){
 	}
 }
 
-export function makeSetter( space ){
+function makeSetter( space ){
 	var i,
 		fn,
 		readings = space.split('.');
@@ -235,7 +235,7 @@ export function makeSetter( space ){
  * @param {string|array|function} space The namespace
  * @return {array}
  **/
-export function get( root, space ){
+function get( root, space ){
 	var i, c,
 		curSpace = root,
 		nextSpace;
@@ -281,7 +281,7 @@ function _makeGetter( property, next ){
 	}
 }
 
-export function makeGetter( space ){
+function makeGetter( space ){
 	var i,
 		fn;
 
@@ -300,7 +300,7 @@ export function makeGetter( space ){
 	return fn;
 }
 
-export function exec( root, space, args, ctx ){
+function exec( root, space, args, ctx ){
 	var i, c,
 		last,
 		nextSpace,
@@ -346,7 +346,7 @@ function _makeExec( property, next ){
 	}
 }
 
-export function makeExec( space ){
+function makeExec( space ){
 	var i,
 		fn;
 
@@ -365,7 +365,7 @@ export function makeExec( space ){
 	return fn;
 }
 
-export function load( root, space ){
+function load( root, space ){
 	var i, c,
 		arr,
 		res;
@@ -387,7 +387,7 @@ export function load( root, space ){
 	}
 }
 
-export function makeLoader( space ){
+function makeLoader( space ){
 	var getArray,
 		getVariable;
 
@@ -424,7 +424,7 @@ export function makeLoader( space ){
  * @param {string|array} space The namespace
  * @return {something}
  **/
-export function del( root, space ){
+function del( root, space ){
 	var old,
 		val,
 		nextSpace,
@@ -461,7 +461,7 @@ export function del( root, space ){
  * @param {function} fn The function to call against each element
  * @param {object} context The context to call each function against
  **/
-export function loop( arr, fn, context ){
+function loop( arr, fn, context ){
 	var i, c;
 
 	if ( !context ){
@@ -488,7 +488,7 @@ export function loop( arr, fn, context ){
  * @param {function} fn The function to call against each element
  * @param {object} context The context to call each function against
  **/
-export function each( obj, fn, context ){
+function each( obj, fn, context ){
 	var key;
 
 	if ( !context ){
@@ -512,7 +512,7 @@ export function each( obj, fn, context ){
  * @param {function} fn The function to call against each element
  * @param {object} context The scope to call each function against
  **/
-export function iterate( obj, fn, context ){
+function iterate( obj, fn, context ){
 	var key;
 
 	if ( !context ){
@@ -536,7 +536,7 @@ export function iterate( obj, fn, context ){
  * @param {function} fn The function to call against each element
  * @param {object} scope The scope to call each function against
  **/
-export function safe( obj, fn, context ){
+function safe( obj, fn, context ){
 	var key;
 
 	if ( !context ){
@@ -550,7 +550,7 @@ export function safe( obj, fn, context ){
 	}
 }
 
-export function naked( obj, fn, context ){
+function naked( obj, fn, context ){
 	safe( obj, function( t, k, o ){
 		if ( !isFunction(t) ){
 			fn.call( context, t, k, o );
@@ -558,86 +558,33 @@ export function naked( obj, fn, context ){
 	});
 }
 
-/**
- * Borrowed From Angular : I can't write it better
- * ----------------------------------------
- *
- * Implementation Notes for non-IE browsers
- * ----------------------------------------
- * Assigning a URL to the href property of an anchor DOM node, even one attached to the DOM,
- * results both in the normalizing and parsing of the URL.  Normalizing means that a relative
- * URL will be resolved into an absolute URL in the context of the application document.
- * Parsing means that the anchor node's host, hostname, protocol, port, pathname and related
- * properties are all populated to reflect the normalized URL.  This approach has wide
- * compatibility - Safari 1+, Mozilla 1+, Opera 7+,e etc.  See
- * http://www.aptana.com/reference/html/api/HTMLAnchorElement.html
- *
- * Implementation Notes for IE
- * ---------------------------
- * IE >= 8 and <= 10 normalizes the URL when assigned to the anchor node similar to the other
- * browsers.  However, the parsed components will not be set if the URL assigned did not specify
- * them.  (e.g. if you assign a.href = 'foo', then a.protocol, a.host, etc. will be empty.)  We
- * work around that by performing the parsing in a 2nd step by taking a previously normalized
- * URL (e.g. by assigning to a.href) and assigning it a.href again.  This correctly populates the
- * properties such as protocol, hostname, port, etc.
- *
- * IE7 does not normalize the URL when assigned to an anchor node.  (Apparently, it does, if one
- * uses the inner HTML approach to assign the URL as part of an HTML snippet -
- * http://stackoverflow.com/a/472729)  However, setting img[src] does normalize the URL.
- * Unfortunately, setting img[src] to something like 'javascript:foo' on IE throws an exception.
- * Since the primary usage for normalizing URLs is to sanitize such URLs, we can't use that
- * method and IE < 8 is unsupported.
- *
- * References:
- *   http://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement
- *   http://www.aptana.com/reference/html/api/HTMLAnchorElement.html
- *   http://url.spec.whatwg.org/#urlutils
- *   https://github.com/angular/angular.js/pull/2902
- *   http://james.padolsey.com/javascript/parsing-urls-with-the-dom/
- *
- * @function
- * @param {string} url The URL to be parsed.
- * @description Normalizes and parses a URL.
- * @returns {object} Returns the normalized URL as a dictionary.
- *
- *   | member name   | Description |
- *   |---------------|-------------|
- *   | href          | A normalized version of the provided URL if it was not an absolute URL |
- *   | protocol      | The protocol including the trailing colon                              |
- *   | host          | The host and port (if the port is non-default) of the normalizedUrl    |
- *   | search        | The search params, minus the question mark                             |
- *   | hash          | The hash string, minus the hash symbol
- *   | hostname      | The hostname
- *   | port          | The port, without ':'
- *   | pathname      | The pathname, beginning with '/'
- *
- */
- // TODO : Whhhhyyyy do I have this here?
- /*
-function urlResolve( url ) {
-	var href = url,
-		urlParsingNode = document.createElement('a');
-
-	if (msie) {
-		// Normalize before parse.  Refer Implementation Notes on why this is
-		// done in two steps on IE.
-		urlParsingNode.setAttribute('href', href);
-		href = urlParsingNode.href;
-	}
-
-	urlParsingNode.setAttribute('href', href);
-
-	// urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
-	return {
-		href: urlParsingNode.href,
-		protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
-		host: urlParsingNode.host,
-		search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
-		hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
-		hostname: urlParsingNode.hostname,
-		port: urlParsingNode.port,
-		pathname: (urlParsingNode.pathname.charAt(0) === '/') ? 
-			urlParsingNode.pathname : '/' + urlParsingNode.pathname
-	};
-}
-*/
+module.exports = {
+	// booleans
+	isUndefined: isUndefined,
+	isDefined: isDefined,
+	isString: isString,
+	isNumber: isNumber,
+	isFunction: isFunction,
+	isObject: isObject,
+	isBoolean: isBoolean,
+	isArrayLike: isArrayLike,
+	isArray: isArray,
+	isEmpty: isEmpty,
+	// access
+	parse: parse,
+	set: set,
+	makeSetter: makeSetter,
+	get: get,
+	makeGetter: makeGetter,
+	exec: exec,
+	makeExec: makeExec,
+	load: load,
+	makeLoader: makeLoader,
+	del: del,
+	// controls
+	loop: loop,
+	each: each,
+	iterate: iterate,
+	safe: safe,
+	naked: naked
+};

@@ -29,8 +29,8 @@ function override( key, target, action ){
 	}
 }
 
-export default function( to, from ){
+module.exports = function( to, from ){
 	bmoor.iterate( from, function( val, key ){
 		override( key, to, val );
 	});
-}
+};

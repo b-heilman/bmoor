@@ -65,7 +65,7 @@ var bmoor =
 	bmoor.string = __webpack_require__(11);
 	bmoor.promise = __webpack_require__(12);
 
-	bmoor.decorators = __webpack_require__(13);
+	bmoor.interfaces = __webpack_require__(13);
 
 	module.exports = bmoor;
 
@@ -75,36 +75,8 @@ var bmoor =
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-	exports.isUndefined = isUndefined;
-	exports.isDefined = isDefined;
-	exports.isString = isString;
-	exports.isNumber = isNumber;
-	exports.isFunction = isFunction;
-	exports.isObject = isObject;
-	exports.isBoolean = isBoolean;
-	exports.isArrayLike = isArrayLike;
-	exports.isArray = isArray;
-	exports.isEmpty = isEmpty;
-	exports.set = set;
-	exports.makeSetter = makeSetter;
-	exports.get = get;
-	exports.makeGetter = makeGetter;
-	exports.exec = exec;
-	exports.makeExec = makeExec;
-	exports.load = load;
-	exports.makeLoader = makeLoader;
-	exports.del = del;
-	exports.loop = loop;
-	exports.each = each;
-	exports.iterate = iterate;
-	exports.safe = safe;
-	exports.naked = naked;
 	/**
 	 * Library Functions
 	 **/
@@ -664,89 +636,36 @@ var bmoor =
 		});
 	}
 
-	/**
-	 * Borrowed From Angular : I can't write it better
-	 * ----------------------------------------
-	 *
-	 * Implementation Notes for non-IE browsers
-	 * ----------------------------------------
-	 * Assigning a URL to the href property of an anchor DOM node, even one attached to the DOM,
-	 * results both in the normalizing and parsing of the URL.  Normalizing means that a relative
-	 * URL will be resolved into an absolute URL in the context of the application document.
-	 * Parsing means that the anchor node's host, hostname, protocol, port, pathname and related
-	 * properties are all populated to reflect the normalized URL.  This approach has wide
-	 * compatibility - Safari 1+, Mozilla 1+, Opera 7+,e etc.  See
-	 * http://www.aptana.com/reference/html/api/HTMLAnchorElement.html
-	 *
-	 * Implementation Notes for IE
-	 * ---------------------------
-	 * IE >= 8 and <= 10 normalizes the URL when assigned to the anchor node similar to the other
-	 * browsers.  However, the parsed components will not be set if the URL assigned did not specify
-	 * them.  (e.g. if you assign a.href = 'foo', then a.protocol, a.host, etc. will be empty.)  We
-	 * work around that by performing the parsing in a 2nd step by taking a previously normalized
-	 * URL (e.g. by assigning to a.href) and assigning it a.href again.  This correctly populates the
-	 * properties such as protocol, hostname, port, etc.
-	 *
-	 * IE7 does not normalize the URL when assigned to an anchor node.  (Apparently, it does, if one
-	 * uses the inner HTML approach to assign the URL as part of an HTML snippet -
-	 * http://stackoverflow.com/a/472729)  However, setting img[src] does normalize the URL.
-	 * Unfortunately, setting img[src] to something like 'javascript:foo' on IE throws an exception.
-	 * Since the primary usage for normalizing URLs is to sanitize such URLs, we can't use that
-	 * method and IE < 8 is unsupported.
-	 *
-	 * References:
-	 *   http://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement
-	 *   http://www.aptana.com/reference/html/api/HTMLAnchorElement.html
-	 *   http://url.spec.whatwg.org/#urlutils
-	 *   https://github.com/angular/angular.js/pull/2902
-	 *   http://james.padolsey.com/javascript/parsing-urls-with-the-dom/
-	 *
-	 * @function
-	 * @param {string} url The URL to be parsed.
-	 * @description Normalizes and parses a URL.
-	 * @returns {object} Returns the normalized URL as a dictionary.
-	 *
-	 *   | member name   | Description |
-	 *   |---------------|-------------|
-	 *   | href          | A normalized version of the provided URL if it was not an absolute URL |
-	 *   | protocol      | The protocol including the trailing colon                              |
-	 *   | host          | The host and port (if the port is non-default) of the normalizedUrl    |
-	 *   | search        | The search params, minus the question mark                             |
-	 *   | hash          | The hash string, minus the hash symbol
-	 *   | hostname      | The hostname
-	 *   | port          | The port, without ':'
-	 *   | pathname      | The pathname, beginning with '/'
-	 *
-	 */
-	// TODO : Whhhhyyyy do I have this here?
-	/*
-	function urlResolve( url ) {
-	var href = url,
-		urlParsingNode = document.createElement('a');
-
-	if (msie) {
-		// Normalize before parse.  Refer Implementation Notes on why this is
-		// done in two steps on IE.
-		urlParsingNode.setAttribute('href', href);
-		href = urlParsingNode.href;
-	}
-
-	urlParsingNode.setAttribute('href', href);
-
-	// urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
-	return {
-		href: urlParsingNode.href,
-		protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
-		host: urlParsingNode.host,
-		search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
-		hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
-		hostname: urlParsingNode.hostname,
-		port: urlParsingNode.port,
-		pathname: (urlParsingNode.pathname.charAt(0) === '/') ? 
-			urlParsingNode.pathname : '/' + urlParsingNode.pathname
+	module.exports = {
+		// booleans
+		isUndefined: isUndefined,
+		isDefined: isDefined,
+		isString: isString,
+		isNumber: isNumber,
+		isFunction: isFunction,
+		isObject: isObject,
+		isBoolean: isBoolean,
+		isArrayLike: isArrayLike,
+		isArray: isArray,
+		isEmpty: isEmpty,
+		// access
+		parse: parse,
+		set: set,
+		makeSetter: makeSetter,
+		get: get,
+		makeGetter: makeGetter,
+		exec: exec,
+		makeExec: makeExec,
+		load: load,
+		makeLoader: makeLoader,
+		del: del,
+		// controls
+		loop: loop,
+		each: each,
+		iterate: iterate,
+		safe: safe,
+		naked: naked
 	};
-	}
-	*/
 
 /***/ },
 /* 3 */
@@ -754,13 +673,6 @@ var bmoor =
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.bringForward = bringForward;
-	exports.addClass = addClass;
-	exports.removeClass = removeClass;
-	exports.triggerEvent = triggerEvent;
 	var bmoor = __webpack_require__(2),
 	    regex = {};
 
@@ -781,20 +693,6 @@ var bmoor =
 		}
 
 		return elements;
-	}
-
-	function bringForward(elements) {
-		var i, c, node;
-
-		elements = massage(elements);
-
-		for (i = 0, c = elements.length; i < c; i++) {
-			node = elements[i];
-
-			if (node.parentNode) {
-				node.parentNode.appendChild(node);
-			}
-		}
 	}
 
 	function addClass(elements, className) {
@@ -923,17 +821,33 @@ var bmoor =
 		}
 	}
 
+	function bringForward(elements) {
+		var i, c, node;
+
+		elements = massage(elements);
+
+		for (i = 0, c = elements.length; i < c; i++) {
+			node = elements[i];
+
+			if (node.parentNode) {
+				node.parentNode.appendChild(node);
+			}
+		}
+	}
+
+	module.exports = {
+		addClass: addClass,
+		removeClass: removeClass,
+		triggerEvent: triggerEvent,
+		bringForward: bringForward
+	};
+
 /***/ },
 /* 4 */
 /***/ function(module, exports) {
 
 	"use strict";
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.setUid = setUid;
-	exports.getUid = getUid;
 	var _id = 0;
 
 	function nextUid() {
@@ -958,21 +872,17 @@ var bmoor =
 		return obj.$$bmoorUid;
 	}
 
+	module.exports = {
+		setUid: setUid,
+		getUid: getUid
+	};
+
 /***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.indexOf = indexOf;
-	exports.remove = remove;
-	exports.removeAll = removeAll;
-	exports.bisect = bisect;
-	exports.filter = filter;
-	exports.compare = compare;
 	var bmoor = __webpack_require__(2);
 
 	/**
@@ -1116,6 +1026,7 @@ var bmoor =
 			}
 		}
 	}
+
 	/**
 	 * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
 	 *
@@ -1209,27 +1120,23 @@ var bmoor =
 		};
 	}
 
+	module.exports = {
+		indexOf: indexOf,
+		remove: remove,
+		removeAll: removeAll,
+		bisect: bisect,
+		filter: filter,
+		compare: compare
+	};
+
 /***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-	exports.values = values;
-	exports.keys = keys;
-	exports.explode = explode;
-	exports.mask = mask;
-	exports.extend = extend;
-	exports.empty = empty;
-	exports.copy = copy;
-	exports.merge = merge;
-	exports.equals = equals;
 	var bmoor = __webpack_require__(2);
 
 	function values(obj) {
@@ -1361,77 +1268,6 @@ var bmoor =
 		return to;
 	}
 
-	/*
-	function arrayOverride( to, from, deep ){
-		var i, c,
-			f,
-			t;
-
-		if ( isArrayLike(to) && isArrayLike(from) ){
-			to.length = from.length;
-		}
-
-		for( i = 0, c = from.length; i < c; i++ ){
-			f = from[i];
-			t = to[i];
-
-			if ( t === undefined && !deep ){
-				to[ i ] = f;
-			} else if ( isArrayLike(f) ){
-				if ( !isArrayLike(t) ){
-					t = to[i] = [];
-				}
-
-				arrayOverride( t, f, deep );
-			} else if ( isObject(f) ){
-				if ( !isObject(t) ){
-					t = to[i] = {};
-				}
-
-				override( t, f, deep );
-			} else if ( f !== t ){
-				to[ i ] = f;
-			}
-		}
-
-		return to;
-	}
-
-	// will do a deep copy of to <- from[1], removing anything in to that isn't in from
-	export function override( to, from, deep ){
-		safe( from, function( f, key ){
-			var t = to[ key ];
-
-			if ( t === undefined && (!deep||f&&f.$constructor) ){
-				to[ key ] = f;
-			}else if ( isArrayLike(f) ){
-				if ( !isArrayLike(t) ){
-					t = to[ key ] = [];
-				}
-
-				arrayOverride( t, f, deep );
-			}else if ( isObject(f) ){
-				if ( !isObject(t) ){
-					t = to[ key ] = {};
-				}
-
-				override( t, f, deep );
-			}else if ( f !== t ){
-				to[ key ] = f;
-			}
-		});
-
-		// now we prune the 'to'
-		safe( to, function( f, key){
-			if ( from[key] === undefined ){
-				delete to[key];
-			}
-		});
-
-		return to;
-	}
-	*/
-
 	/**
 	 * A general comparison algorithm to test if two objects are equal
 	 *
@@ -1500,17 +1336,80 @@ var bmoor =
 		return false;
 	}
 
+	module.exports = {
+		keys: keys,
+		values: values,
+		explode: explode,
+		mask: mask,
+		extend: extend,
+		empty: empty,
+		copy: copy,
+		merge: merge,
+		equals: equals
+	};
+
 /***/ },
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = {
-		mixin: __webpack_require__(8).default,
-		decorate: __webpack_require__(9).default,
-		plugin: __webpack_require__(10).default
-	};
+	var bmoor = __webpack_require__(2),
+	    mixin = __webpack_require__(8),
+	    plugin = __webpack_require__(9),
+	    decorate = __webpack_require__(10);
+
+	function proc(action, proto, def) {
+		var i, c;
+
+		if (bmoor.isArray(def)) {
+			for (i = 0, c = def.length; i < c; i++) {
+				action(proto, def[i]);
+			}
+		} else {
+			action(proto, def);
+		}
+	}
+
+	function maker(root, config, base) {
+		if (!base) {
+			base = function BmoorPrototype() {};
+
+			if (config) {
+				if (bmoor.isFunction(root)) {
+					base = function BmoorPrototype() {
+						root.apply(this, arguments);
+					};
+
+					base.prototype = Object.create(root.prototype);
+				} else {
+					base.prototype = Object.create(root);
+				}
+			} else {
+				config = root;
+			}
+		}
+
+		if (config.mixin) {
+			proc(mixin, base.prototype, config.mixin);
+		}
+
+		if (config.decorate) {
+			proc(decorate, base.prototype, config.decorate);
+		}
+
+		if (config.plugin) {
+			proc(plugin, base.prototype, config.plugin);
+		}
+
+		return base;
+	}
+
+	maker.mixin = mixin;
+	maker.decorate = decorate;
+	maker.plugin = plugin;
+
+	module.exports = maker;
 
 /***/ },
 /* 8 */
@@ -1518,17 +1417,13 @@ var bmoor =
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
+	var bmoor = __webpack_require__(2);
 
-	exports.default = function (to, from) {
+	module.exports = function (to, from) {
 		bmoor.iterate(from, function (val, key) {
 			to[key] = val;
 		});
 	};
-
-	var bmoor = __webpack_require__(2);
 
 /***/ },
 /* 9 */
@@ -1536,66 +1431,7 @@ var bmoor =
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-	exports.default = function (to, from) {
-		bmoor.iterate(from, function (val, key) {
-			override(key, to, val);
-		});
-	};
-
-	var bmoor = __webpack_require__(2);
-
-	function override(key, target, action) {
-		var old = target[key];
-
-		if (old === undefined) {
-			target[key] = action;
-		} else {
-			if (bmoor.isFunction(action)) {
-				if (bmoor.isFunction(old)) {
-					target[key] = function () {
-						var backup = this.$old,
-						    rtn;
-
-						this.$old = old;
-
-						rtn = action.apply(this, arguments);
-
-						this.$old = backup;
-
-						return rtn;
-					};
-				} else {
-					console.log('attempting to decorate ' + key + ' an instance of ' + (typeof old === 'undefined' ? 'undefined' : _typeof(old)));
-				}
-			} else {
-				console.log('attempting to decorate with ' + key + ' and instance of ' + (typeof action === 'undefined' ? 'undefined' : _typeof(action)));
-			}
-		}
-	}
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-	exports.default = function (to, from, ctx) {
-		bmoor.iterate(from, function (val, key) {
-			override(key, to, val, ctx);
-		});
-	};
 
 	var bmoor = __webpack_require__(2);
 
@@ -1639,20 +1475,63 @@ var bmoor =
 		}
 	}
 
+	module.exports = function (to, from, ctx) {
+		bmoor.iterate(from, function (val, key) {
+			override(key, to, val, ctx);
+		});
+	};
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+	var bmoor = __webpack_require__(2);
+
+	function override(key, target, action) {
+		var old = target[key];
+
+		if (old === undefined) {
+			target[key] = action;
+		} else {
+			if (bmoor.isFunction(action)) {
+				if (bmoor.isFunction(old)) {
+					target[key] = function () {
+						var backup = this.$old,
+						    rtn;
+
+						this.$old = old;
+
+						rtn = action.apply(this, arguments);
+
+						this.$old = backup;
+
+						return rtn;
+					};
+				} else {
+					console.log('attempting to decorate ' + key + ' an instance of ' + (typeof old === 'undefined' ? 'undefined' : _typeof(old)));
+				}
+			} else {
+				console.log('attempting to decorate with ' + key + ' and instance of ' + (typeof action === 'undefined' ? 'undefined' : _typeof(action)));
+			}
+		}
+	}
+
+	module.exports = function (to, from) {
+		bmoor.iterate(from, function (val, key) {
+			override(key, to, val);
+		});
+	};
+
 /***/ },
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.trim = trim;
-	exports.ltrim = ltrim;
-	exports.rtrim = rtrim;
-	exports.getCommands = getCommands;
-	exports.getFormatter = getFormatter;
 	var bmoor = __webpack_require__(2);
 
 	function trim(str, chr) {
@@ -1801,7 +1680,16 @@ var bmoor =
 			};
 		}
 	}
+
 	getFormatter.filters = filters;
+
+	module.exports = {
+		trim: trim,
+		ltrim: ltrim,
+		rtrim: rtrim,
+		getCommands: getCommands,
+		getFormatter: getFormatter
+	};
 
 /***/ },
 /* 12 */
@@ -1809,14 +1697,14 @@ var bmoor =
 
 	"use strict";
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	exports.always = always;
 	function always(promise, func) {
 		promise.then(func, func);
 		return promise;
 	}
+
+	module.exports = {
+		always: always
+	};
 
 /***/ },
 /* 13 */
@@ -1825,7 +1713,7 @@ var bmoor =
 	'use strict';
 
 	module.exports = {
-		Eventing: __webpack_require__(14).decorator
+		Eventing: __webpack_require__(14)
 	};
 
 /***/ },
@@ -1834,10 +1722,7 @@ var bmoor =
 
 	"use strict";
 
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	var Eventing = {
+	module.exports = {
 		on: function on(event, cb) {
 			var dis = this;
 
@@ -1863,7 +1748,7 @@ var bmoor =
 			events.forEach(function (event) {
 				var action = subscriptions[event];
 
-				kills.push(dis.$on(event, action));
+				kills.push(dis.on(event, action));
 			});
 
 			return function killAll() {
@@ -1886,8 +1771,6 @@ var bmoor =
 			}
 		}
 	};
-
-	exports.decorator = Eventing;
 
 /***/ }
 /******/ ]);

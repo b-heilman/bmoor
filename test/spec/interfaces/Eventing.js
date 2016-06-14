@@ -1,7 +1,7 @@
-describe('bmoor.decorators.Eventing', function(){
+describe('bmoor.interfaces.Eventing', function(){
 	var obj,
 		triggered,
-		Eventing = bmoor.decorators.Eventing;
+		Eventing = bmoor.interfaces.Eventing;
 
 	beforeEach(function(){
 		obj = {};

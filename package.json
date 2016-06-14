@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git://github.com/b-heilman/bmoor.git"
   },
-  "main": "src/bmoor.js",
+  "main": "bmoor.js",
   "scripts": {
     "demo": "gulp serve",
     "build": "gulp build"
@@ -27,6 +27,7 @@
     "gulp-load-plugins": "^1.2.2",
     "gulp-webpack": "^1.5.0",
     "gulp-webserver": "^0.9.1",
+    "gulp-yuidoc": "^0.1.2",
     "jasmine": "^2.4.1",
     "jshint": "^2.9.2",
     "jshint-stylish": "^2.1.0",

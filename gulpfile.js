@@ -4,9 +4,16 @@ var $ = require('gulp-load-plugins')(),
 	webpack = require('gulp-webpack'),
 	karma = require('gulp-karma'),
 	jshint = require('gulp-jshint'),
-	stylish = require('jshint-stylish');
+	stylish = require('jshint-stylish'),
+	yuidoc = require('gulp-yuidoc');
 
 var env = require('./config/env.js');
+
+gulp.task('doc', function() {
+    gulp.src(env.jsSrc)
+        .pipe(yuidoc())
+        .pipe(gulp.dest('./documentation'));
+});
 
 gulp.task('demo', function() {
 	return gulp.src(env.jsSrc)

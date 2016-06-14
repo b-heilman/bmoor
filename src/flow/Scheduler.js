@@ -2,7 +2,7 @@ function __now(){
 	return +(new Date());
 }		
 
-export default class Scheduler{
+module.exports = class Scheduler{
 	constructor(){
 		this.$scripts = {};
 		this.$master = this.schedule = [];
@@ -122,4 +122,4 @@ export default class Scheduler{
 			this.$lock = false;
 		}
 	}
-}
+};

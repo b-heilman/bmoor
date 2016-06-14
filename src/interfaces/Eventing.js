@@ -1,4 +1,4 @@
-var Eventing = {
+module.exports = {
 	on: function ( event, cb ){
 		var dis = this;
 
@@ -27,7 +27,7 @@ var Eventing = {
 		events.forEach(function( event ){
 			var action = subscriptions[event];
 
-			kills.push( dis.$on(event,action) );
+			kills.push( dis.on(event,action) );
 		});
 
 		return function killAll(){
@@ -50,8 +50,4 @@ var Eventing = {
 			}
 		}
 	}
-};
-
-export {
-	Eventing as decorator
 };

@@ -1,4 +1,8 @@
-export function always( promise, func ){
+function always( promise, func ){
 	promise.then(func, func);
 	return promise;
 }
+
+module.exports = {
+	always: always
+};

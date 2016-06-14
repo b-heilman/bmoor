@@ -1,6 +1,6 @@
 var bmoor = require('./core.js');
 
-export function values( obj ){
+function values( obj ){
 	var res = [];
 
 	bmoor.naked( obj, function( v ){
@@ -10,7 +10,7 @@ export function values( obj ){
 	return res;
 }
 
-export function keys( obj ){
+function keys( obj ){
 	var res = [];
 
 	if ( Object.keys ){
@@ -33,7 +33,7 @@ export function keys( obj ){
  * @param {object} mappings An object orientended as [ namespace ] => value
  * @return {object} The object that has had content mapped into it
  **/
-export function explode( target, mappings ){
+function explode( target, mappings ){
 	bmoor.iterate( mappings, function( val, mapping ){
 		bmoor.set( target, mapping, val );
 	});
@@ -50,7 +50,7 @@ export function explode( target, mappings ){
  * @param {array} args The arguments to pass to the constructor
  * @return {object} The new object that has been constructed
  **/
-export function mask( obj ){
+function mask( obj ){
 	if ( Object.create ){
 		var T = function Masked(){};
 
@@ -71,7 +71,7 @@ export function mask( obj ){
  * @param {...object} src Source object(s).
  * @returns {object} Reference to `dst`.
  **/
-export function extend( to ){
+function extend( to ){
 	bmoor.loop( arguments, function(cpy){
 		if ( cpy !== to ) {
 			if ( to && to.extend ){
@@ -88,20 +88,20 @@ export function extend( to ){
 	return to;
 }
 
-export function empty( to ){
+function empty( to ){
 	bmoor.iterate( to, function( v, k ){
 		delete to[k]; // TODO : would it be ok to set it to undefined?
 	});
 }
 
-export function copy( to ){
+function copy( to ){
 	empty( to );
 
 	return extend.apply( undefined, arguments );
 }
 
 // Deep copy version of extend
-export function merge( to ){
+function merge( to ){
 	var from,
 		i, c,
 		m = function( val, key ){
@@ -129,77 +129,6 @@ export function merge( to ){
 	return to;
 }
 
-/*
-function arrayOverride( to, from, deep ){
-	var i, c,
-		f,
-		t;
-
-	if ( isArrayLike(to) && isArrayLike(from) ){
-		to.length = from.length;
-	}
-
-	for( i = 0, c = from.length; i < c; i++ ){
-		f = from[i];
-		t = to[i];
-
-		if ( t === undefined && !deep ){
-			to[ i ] = f;
-		} else if ( isArrayLike(f) ){
-			if ( !isArrayLike(t) ){
-				t = to[i] = [];
-			}
-
-			arrayOverride( t, f, deep );
-		} else if ( isObject(f) ){
-			if ( !isObject(t) ){
-				t = to[i] = {};
-			}
-
-			override( t, f, deep );
-		} else if ( f !== t ){
-			to[ i ] = f;
-		}
-	}
-
-	return to;
-}
-
-// will do a deep copy of to <- from[1], removing anything in to that isn't in from
-export function override( to, from, deep ){
-	safe( from, function( f, key ){
-		var t = to[ key ];
-
-		if ( t === undefined && (!deep||f&&f.$constructor) ){
-			to[ key ] = f;
-		}else if ( isArrayLike(f) ){
-			if ( !isArrayLike(t) ){
-				t = to[ key ] = [];
-			}
-
-			arrayOverride( t, f, deep );
-		}else if ( isObject(f) ){
-			if ( !isObject(t) ){
-				t = to[ key ] = {};
-			}
-
-			override( t, f, deep );
-		}else if ( f !== t ){
-			to[ key ] = f;
-		}
-	});
-
-	// now we prune the 'to'
-	safe( to, function( f, key){
-		if ( from[key] === undefined ){
-			delete to[key];
-		}
-	});
-
-	return to;
-}
-*/
-
 /**
  * A general comparison algorithm to test if two objects are equal
  *
@@ -209,7 +138,7 @@ export function override( to, from, deep ){
  * @param {object} obj2 The object into which to copy the content
  * @preturns {boolean}
  **/
-export function equals( obj1, obj2 ){
+function equals( obj1, obj2 ){
 	var t1 = typeof obj1,
 		t2 = typeof obj2,
 		c,
@@ -267,3 +196,15 @@ export function equals( obj1, obj2 ){
 
 	return false;
 }
+
+module.exports = {
+	keys: keys,
+	values: values,
+	explode: explode,
+	mask: mask,
+	extend: extend,
+	empty: empty,
+	copy: copy,
+	merge: merge,
+	equals: equals
+};

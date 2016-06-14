@@ -20,22 +20,7 @@ function massage( elements ){
 	return elements;
 }
 
-export function bringForward( elements ){
-	var i, c,
-		node;
-
-	elements = massage( elements );
-
-	for( i = 0, c = elements.length; i < c; i++ ){
-		node = elements[i];
-
-		if ( node.parentNode ){
-			node.parentNode.appendChild( node );
-		}
-	}
-}
-
-export function addClass( elements, className ){
+function addClass( elements, className ){
 	var i, c,
 		node,
 		baseClass,
@@ -53,7 +38,7 @@ export function addClass( elements, className ){
 	}
 }
 
-export function removeClass( elements, className ){
+function removeClass( elements, className ){
 	var i, c,
 		node,
 		reg = getReg( className );
@@ -66,7 +51,7 @@ export function removeClass( elements, className ){
 	}
 }
 
-export function triggerEvent( elements, eventName, eventData ){
+function triggerEvent( elements, eventName, eventData ){
 	var i, c,
 		doc,
 		node,
@@ -162,3 +147,25 @@ export function triggerEvent( elements, eventName, eventData ){
 		}
 	}
 }
+
+function bringForward( elements ){
+	var i, c,
+		node;
+
+	elements = massage( elements );
+
+	for( i = 0, c = elements.length; i < c; i++ ){
+		node = elements[i];
+
+		if ( node.parentNode ){
+			node.parentNode.appendChild( node );
+		}
+	}
+}
+
+module.exports = {
+	addClass: addClass,
+	removeClass: removeClass,
+	triggerEvent: triggerEvent,
+	bringForward: bringForward
+};

@@ -4,7 +4,7 @@ function nextUid(){
 	return ++_id;
 }
 
-export function setUid( obj ){
+function setUid( obj ){
 	var t = obj.$$bmoorUid;
 
 	if ( !t ){
@@ -14,10 +14,15 @@ export function setUid( obj ){
 	return t;
 }
 
-export function getUid( obj ){
+function getUid( obj ){
 	if ( !obj.$$bmoorUid ){
 		setUid( obj );
 	}
 
 	return obj.$$bmoorUid;
 }
+
+module.exports = {
+	setUid: setUid,
+	getUid: getUid
+};

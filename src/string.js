@@ -1,20 +1,20 @@
 var bmoor = require('./core.js');
 
-export function trim( str, chr ){
+function trim( str, chr ){
 	if ( !chr ){
 		chr = '\\s';
 	}
 	return str.replace( new RegExp('^'+chr+'+|'+chr+'+$','g'), '' );
 }
 
-export function ltrim( str, chr ){
+function ltrim( str, chr ){
 	if ( !chr ){
 		chr = '\\s';
 	}
 	return str.replace( new RegExp('^'+chr+'+','g'), '' );
 }
 
-export function rtrim( str, chr ){
+function rtrim( str, chr ){
 	if ( !chr ){
 		chr = '\\s';
 	}
@@ -23,7 +23,7 @@ export function rtrim( str, chr ){
 
 // TODO : eventually I will make getCommands and getFormatter more complicated, but for now
 //        they work by staying simple
-export function getCommands( str ){
+function getCommands( str ){
 	var commands = str.split('|');
 
 	commands.forEach(function( command, key ){
@@ -136,7 +136,7 @@ function doVariable( lines ){
 	}
 }
 
-export function getFormatter( str ){
+function getFormatter( str ){
 	var fn,
 		lines = str.split(/{{/g);
 
@@ -153,4 +153,13 @@ export function getFormatter( str ){
 		};
 	}
 }
+
 getFormatter.filters = filters;
+
+module.exports = {
+	trim: trim,
+	ltrim: ltrim,
+	rtrim: rtrim,
+	getCommands: getCommands,
+	getFormatter: getFormatter
+};

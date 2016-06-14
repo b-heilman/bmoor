@@ -40,8 +40,8 @@ function override( key, target, action, plugin ){
 	}
 }
 
-export default function( to, from, ctx ){
+module.exports = function( to, from, ctx ){
 	bmoor.iterate( from, function( val, key ){
 		override( key, to, val, ctx );
 	});
-}
+};

@@ -10,7 +10,7 @@ var bmoor = require('./core.js');
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {integer} -1 if not found, otherwise the location of the element
  **/
-export function indexOf( arr, searchElement, fromIndex ){
+function indexOf( arr, searchElement, fromIndex ){
 	if ( arr.indexOf ){
 		return arr.indexOf( searchElement, fromIndex );
 	} else {
@@ -49,7 +49,7 @@ export function indexOf( arr, searchElement, fromIndex ){
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {array} array containing removed element
  **/
-export function remove( arr, searchElement, fromIndex ){
+function remove( arr, searchElement, fromIndex ){
 	var pos = indexOf( arr, searchElement, fromIndex );
 
 	if ( pos > -1 ){
@@ -67,7 +67,7 @@ export function remove( arr, searchElement, fromIndex ){
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {integer} number of elements removed
  **/
-export function removeAll( arr, searchElement, fromIndex ){
+function removeAll( arr, searchElement, fromIndex ){
 	var r,
 		pos = indexOf( arr, searchElement, fromIndex );
 
@@ -81,7 +81,7 @@ export function removeAll( arr, searchElement, fromIndex ){
 	}
 }
 
-export function bisect( arr, value, func, preSorted ){
+function bisect( arr, value, func, preSorted ){
 	var idx,
 		val,
 		bottom = 0,
@@ -141,6 +141,7 @@ export function bisect( arr, value, func, preSorted ){
 		}
 	}
 }
+
 /**
  * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
  *
@@ -151,7 +152,7 @@ export function bisect( arr, value, func, preSorted ){
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {integer} number of elements removed
  **/
-export function filter( arr, func, thisArg ){
+function filter( arr, func, thisArg ){
 	if ( arr.filter ){
 		return arr.filter( func, thisArg );
 	}else{
@@ -179,7 +180,6 @@ export function filter( arr, func, thisArg ){
 	}
 }
 
-
 /**
  * Compare two arrays, 
  *
@@ -190,7 +190,7 @@ export function filter( arr, func, thisArg ){
  * @param {function} func The comparison function
  * @return {object} an object containing the elements unique to the left, matched, and unqiue to the right
  **/
-export function compare( arr1, arr2, func ){
+function compare( arr1, arr2, func ){
 	var cmp,
 		left = [],
 		right = [],
@@ -233,3 +233,12 @@ export function compare( arr1, arr2, func ){
 		right : right
 	};
 }
+
+module.exports = {
+	indexOf: indexOf,
+	remove: remove,
+	removeAll: removeAll,
+	bisect: bisect,
+	filter: filter,
+	compare: compare
+};
