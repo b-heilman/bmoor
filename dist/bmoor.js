@@ -1757,15 +1757,19 @@ var bmoor =
 				});
 			};
 		},
-		trigger: function trigger(event, arg) {
-			var listeners, i, c;
+		trigger: function trigger(event) {
+			var listeners,
+			    i,
+			    c,
+			    args = Array.prototype.slice.call(arguments, 1);
 
 			if (this._$listeners) {
 				listeners = this._$listeners[event];
 
 				if (listeners) {
+					listeners = listeners.slice(0);
 					for (i = 0, c = listeners.length; i < c; i++) {
-						listeners[i](arg);
+						listeners[i].apply(this, args);
 					}
 				}
 			}

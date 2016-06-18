@@ -37,4 +37,18 @@ describe('bmoor.interfaces.Eventing', function(){
 
 		expect( triggered ).toBe( false );
 	});
+
+	it('should pass multiple arguments', function(){
+		var eins,
+			zwei;
+
+		obj.on('foo', function( arg1, arg2 ){
+			eins = arg1;
+			zwei = arg2;
+		});
+		obj.trigger( 'foo', 'hello', 'world' );
+
+		expect( eins ).toBe( 'hello' );
+		expect( zwei ).toBe( 'world' );
+	});
 });

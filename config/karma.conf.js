@@ -17,8 +17,8 @@ module.exports = function(config) {
             //------------
             //'test/lib/**.js',
             //'test/mock/**/*.js',
-            'test/spec/*.js',
-            'test/spec/**/*.js'
+            'test/*.js',
+            'test/**/*.js'
         ],
 
         reporters: ['progress'],

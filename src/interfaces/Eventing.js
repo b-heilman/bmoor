@@ -36,16 +36,18 @@ module.exports = {
 			});
 		};
 	},
-	trigger: function( event, arg ){
+	trigger: function( event ){
 		var listeners,
-			i, c;
+			i, c,
+			args = Array.prototype.slice.call(arguments,1);
 
 		if ( this._$listeners ){
 			listeners = this._$listeners[event];
 
 			if ( listeners ){
+				listeners = listeners.slice(0);
 				for( i = 0, c = listeners.length; i < c; i++ ){
-					listeners[i]( arg );
+					listeners[i].apply( this, args );
 				}
 			}
 		}
