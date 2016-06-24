@@ -1,7 +1,7 @@
 var $ = require('gulp-load-plugins')(),
 	gulp = require('gulp'),
 	map = require('map-stream'),
-	webpack = require('gulp-webpack'),
+	webpack = require('webpack-stream'),
 	karma = require('gulp-karma'),
 	jshint = require('gulp-jshint'),
 	stylish = require('jshint-stylish'),
@@ -24,8 +24,8 @@ gulp.task('demo', function() {
 					test: /\.js$/,
 					loader: "babel-loader",
 					query: {
-    				presets: ['es2015']
-  				}
+	    				presets: ['es2015']
+	  				}
 				}],
 			},
 			output: {
@@ -46,8 +46,8 @@ gulp.task('library', function() {
 					test: /\.js$/,
 					loader: "babel-loader",
 					query: {
-    				presets: ['es2015']
-  				}
+	    				presets: ['es2015']
+	  				}
 				}],
 			},
 			output: {

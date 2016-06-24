@@ -689,12 +689,61 @@ var bmoor =
 		return reg;
 	}
 
+	function getBoundryBox(element) {
+		return element.getBoundingClientRect();
+	}
+
+	function centerOn(element, target, doc) {
+		var el = getBoundryBox(element),
+		    targ = getBoundryBox(target);
+
+		if (!doc) {
+			doc = document;
+		}
+
+		element.style.top = targ.top + targ.height / 2 - el.height / 2;
+		element.style.left = targ.left + targ.width / 2 - el.width / 2;
+		element.style.position = 'absolute';
+
+		doc.body.appendChild(element);
+	}
+
 	function massage(elements) {
 		if (!bmoor.isArrayLike(elements)) {
 			elements = [elements];
 		}
 
 		return elements;
+	}
+
+	function getDomCollection(elements, doc) {
+		var i,
+		    c,
+		    j,
+		    co,
+		    el,
+		    selection,
+		    els = [];
+
+		if (!doc) {
+			doc = document;
+		}
+
+		elements = massage(elements);
+
+		for (i = 0, c = elements.length; i < c; i++) {
+			el = elements[i];
+			if (bmoor.isString(el)) {
+				selection = doc.querySelectorAll(el);
+				for (j = 0, co = selection.length; j < co; j++) {
+					els.push(selection[j]);
+				}
+			} else {
+				els.push(el);
+			}
+		}
+
+		return els;
 	}
 
 	function addClass(elements, className) {
@@ -838,6 +887,9 @@ var bmoor =
 	}
 
 	module.exports = {
+		getBoundryBox: getBoundryBox,
+		getDomCollection: getDomCollection,
+		centerOn: centerOn,
 		addClass: addClass,
 		removeClass: removeClass,
 		triggerEvent: triggerEvent,
