@@ -2,15 +2,32 @@
 
 <head>
 	<script src="demo.js"></script>
+	<style>
+		@keyframes pulse {
+			0%,100% {
+				transform: scale(0.5) translate(50%,50%);
+			}
+			50% {
+				transform: scale(1.0);
+			}
+		}
+
+		#target .aura{
+			animation: pulse 2s cubic-bezier(.79,.14,.15,.86) infinite;
+		}
+	</style>
 </head>
 <body>
 	<h5 id="bmoor" onclick="console.log('hello - click trigger worked')">Welcome to bMoor</h5>
 
-	<div style="position: relative; top: 10px; left: 10px; width: 20px; height: 20px; border: 1px solid black;">
+	<div id="wrapper"
+		style="position: relative; top: 10px; left: 10px; width: 20px; height: 20px; border: 1px solid black;">
 		<span id="positioned"
 			style="position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; border: 1px solid red;"></span>
-		<span id="target"
-			style="position: absolute; top: 20px; left: 20px; width: 5px; height: 5px; border: 1px solid blue;"></span>
+		<svg id="target" viewBox="0 0 120 120" style="width: 10px; height: 10px">
+			<circle cx="50%" cy="50%" r="50%" style="fill: red;" class="aura"/>
+			<circle cx="50%" cy="50%" r="20%" style="fill: pink;"/>
+		</svg>
 	</div>
 	<script src="test.js"></script>
 </body>
