@@ -705,13 +705,12 @@ var bmoor =
 	function centerOn(element, target, doc) {
 		var el = getBoundryBox(element),
 		    targ = getBoundryBox(target),
-		    pos = getScrollPosition();
+		    pos = getScrollPosition(doc);
 
 		if (!doc) {
 			doc = document;
 		}
 
-		console.log(targ);
 		element.style.top = pos.top + targ.top + targ.height / 2 - el.height / 2;
 		element.style.left = pos.left + targ.left + targ.width / 2 - el.width / 2;
 		element.style.right = '';
@@ -727,7 +726,7 @@ var bmoor =
 		    y = targ.y + targ.height / 2,
 		    centerX = window.innerWidth / 2,
 		    centerY = window.innerHeight / 2,
-		    pos = getScrollPosition();
+		    pos = getScrollPosition(doc);
 
 		if (!doc) {
 			doc = document;
@@ -736,9 +735,6 @@ var bmoor =
 		if (!offset) {
 			offset = 0;
 		}
-
-		console.log(pos);
-		console.log(targ);
 
 		if (x < centerX) {
 			// right side has more room
@@ -762,7 +758,6 @@ var bmoor =
 			element.style.top = '';
 		}
 
-		console.log(element.style.left, element.style.top, element.style.right, element.style.bottom);
 		element.style.position = 'absolute';
 		doc.body.appendChild(element);
 	}
@@ -958,6 +953,7 @@ var bmoor =
 	}
 
 	module.exports = {
+		getScrollPosition: getScrollPosition,
 		getBoundryBox: getBoundryBox,
 		getDomElement: getDomElement,
 		getDomCollection: getDomCollection,

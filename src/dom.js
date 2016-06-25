@@ -36,7 +36,6 @@ function centerOn( element, target, doc ){
 		doc = document;
 	}
 
-	console.log( targ );
 	element.style.top = pos.top + targ.top + targ.height/2 - el.height / 2;
 	element.style.left = pos.left + targ.left + targ.width/2 - el.width / 2;
 	element.style.right = '';
@@ -62,9 +61,6 @@ function showOn( element, target, offset, doc ){
 		offset = 0;
 	}
 
-	console.log( pos );
-	console.log( targ );
-
 	if ( x < centerX ){
 		// right side has more room
 		element.style.left = pos.left + targ.right + offset;
@@ -87,7 +83,6 @@ function showOn( element, target, offset, doc ){
 		element.style.top = '';
 	}
 	
-	console.log( element.style.left, element.style.top, element.style.right, element.style.bottom );
 	element.style.position = 'absolute';
 	doc.body.appendChild( element );
 }
