@@ -12,20 +12,33 @@ function getReg( className ){
 	return reg;
 }
 
+function getScrollPosition( doc ){
+	if ( !doc ){
+		doc = document;
+	}
+
+	return {
+		left:  window.pageXOffset || ( doc.documentElement || doc.body ).scrollLeft ,
+		top: window.pageYOffset || ( doc.documentElement || doc.body ).scrollTop
+	};
+}
+
 function getBoundryBox( element ){
 	return element.getBoundingClientRect();
 }
 
 function centerOn( element, target, doc ){
 	var el = getBoundryBox(element),
-		targ = getBoundryBox( target );
+		targ = getBoundryBox( target ),
+		pos = getScrollPosition( doc );
 
 	if ( !doc ){
 		doc = document;
 	}
 
-	element.style.top = targ.top + targ.height/2 - el.height / 2;
-	element.style.left = targ.left + targ.width/2 - el.width / 2;
+	console.log( targ );
+	element.style.top = pos.top + targ.top + targ.height/2 - el.height / 2;
+	element.style.left = pos.left + targ.left + targ.width/2 - el.width / 2;
 	element.style.right = '';
 	element.style.bottom = '';
 
@@ -38,7 +51,8 @@ function showOn( element, target, offset, doc ){
 		x = targ.x + targ.width / 2,
 		y = targ.y + targ.height / 2,
 		centerX = window.innerWidth / 2,
-		centerY = window.innerHeight / 2;
+		centerY = window.innerHeight / 2,
+		pos = getScrollPosition( doc );
 
 	if ( !doc ){
 		doc = document;
@@ -48,28 +62,32 @@ function showOn( element, target, offset, doc ){
 		offset = 0;
 	}
 
+	console.log( pos );
+	console.log( targ );
+
 	if ( x < centerX ){
 		// right side has more room
-		element.style.left = targ.right + offset;
+		element.style.left = pos.left + targ.right + offset;
 		element.style.right = '';
 	}else{
 		// left side has more room
 		//element.style.left = targ.left - el.width - offset;
-		element.style.right = window.innerWidth - (targ.left - offset);
+		element.style.right = window.innerWidth - (targ.left - offset) - pos.left;
 		element.style.left = '';
 	}
 
 	if ( y < centerY ){
 		// more room on bottom
-		element.style.top = targ.bottom + offset;
+		element.style.top = pos.top + targ.bottom + offset + pos.top;
 		element.style.bottom = '';
 	}else{
 		// more room on top
 		//element.style.top = targ.top - el.height - offset;
-		element.style.bottom = window.innerHeight - (targ.top - offset);
+		element.style.bottom = window.innerHeight - (targ.top - offset) - pos.top;
 		element.style.top = '';
 	}
 	
+	console.log( element.style.left, element.style.top, element.style.right, element.style.bottom );
 	element.style.position = 'absolute';
 	doc.body.appendChild( element );
 }
@@ -266,6 +284,7 @@ function bringForward( elements ){
 }
 
 module.exports = {
+	getScrollPosition: getScrollPosition,
 	getBoundryBox: getBoundryBox,
 	getDomElement: getDomElement,
 	getDomCollection: getDomCollection,

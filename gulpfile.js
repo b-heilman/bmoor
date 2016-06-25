@@ -29,9 +29,7 @@ gulp.task('demo', function() {
 				}],
 			},
 			output: {
-				filename: 'demo.js',
-				library: env.library,
-				libraryTarget: "var"
+				filename: 'demo.js'
 			}
 		}))
 		.pipe(gulp.dest(env.demoDir));
