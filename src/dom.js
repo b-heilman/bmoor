@@ -45,8 +45,9 @@ function centerOn( element, target, doc ){
 	doc.body.appendChild( element );
 }
 
-function showOn( element, target, offset, doc ){
-	var targ = getBoundryBox( target ),
+function showOn( element, target, doc ){
+	var direction,
+		targ = getBoundryBox( target ),
 		x = targ.x + targ.width / 2,
 		y = targ.y + targ.height / 2,
 		centerX = window.innerWidth / 2,
@@ -57,34 +58,35 @@ function showOn( element, target, offset, doc ){
 		doc = document;
 	}
 
-	if ( !offset ){
-		offset = 0;
-	}
-
 	if ( x < centerX ){
 		// right side has more room
-		element.style.left = pos.left + targ.right + offset;
+		direction = 'r';
+		element.style.left = pos.left + targ.right;
 		element.style.right = '';
 	}else{
 		// left side has more room
 		//element.style.left = targ.left - el.width - offset;
-		element.style.right = window.innerWidth - (targ.left - offset) - pos.left;
+		direction = 'l';
+		element.style.right = window.innerWidth - targ.left - pos.left;
 		element.style.left = '';
 	}
 
 	if ( y < centerY ){
 		// more room on bottom
-		element.style.top = pos.top + targ.bottom + offset + pos.top;
+		direction = 'b' + direction;
+		element.style.top = pos.top + targ.bottom;
 		element.style.bottom = '';
 	}else{
 		// more room on top
-		//element.style.top = targ.top - el.height - offset;
-		element.style.bottom = window.innerHeight - (targ.top - offset) - pos.top;
+		direction = 't' + direction;
+		element.style.bottom = window.innerHeight - targ.top - pos.top;
 		element.style.top = '';
 	}
 	
 	element.style.position = 'absolute';
 	doc.body.appendChild( element );
+
+	return direction;
 }
 
 function massage( elements ){
