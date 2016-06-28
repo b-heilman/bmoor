@@ -1,4 +1,9 @@
-var _id = 0;
+/**
+ * Array helper functions
+ * @module bmoor.data
+ **/
+
+ var _id = 0;
 
 function nextUid(){
 	return ++_id;

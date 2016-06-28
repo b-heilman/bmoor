@@ -1,12 +1,13 @@
 /**
- * Library Functions
+ * The core of bmoor's usefulness
+ * @module bmoor
  **/
+
 /**
  * Tests if the value is undefined
  *
  * @function isUndefined
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value - The variable to test
  * @return {boolean}
  **/
 function isUndefined( value ) {
@@ -17,8 +18,7 @@ function isUndefined( value ) {
  * Tests if the value is not undefined
  *
  * @function isDefined
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isDefined( value ) {
@@ -29,8 +29,7 @@ function isDefined( value ) {
  * Tests if the value is a string
  *
  * @function isString
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isString( value ){
@@ -41,8 +40,7 @@ function isString( value ){
  * Tests if the value is numeric
  *
  * @function isNumber
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isNumber( value ){
@@ -53,8 +51,7 @@ function isNumber( value ){
  * Tests if the value is a function
  *
  * @function isFuncion
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isFunction( value ){
@@ -65,8 +62,7 @@ function isFunction( value ){
  * Tests if the value is an object
  *
  * @function isObject
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isObject( value ){
@@ -77,8 +73,7 @@ function isObject( value ){
  * Tests if the value is a boolean
  *
  * @function isBoolean
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isBoolean( value ){
@@ -89,8 +84,7 @@ function isBoolean( value ){
  * Tests if the value can be used as an array
  *
  * @function isArrayLike
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isArrayLike( value ) {
@@ -106,8 +100,7 @@ function isArrayLike( value ) {
  * Tests if the value is an array
  *
  * @function isArray
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isArray( value ) {
@@ -121,8 +114,7 @@ function isArray( value ) {
  * If other, is not defined
  *
  * @function isEmpty
- * @namespace bMoor
- * @param {something} value The variable to test
+ * @param {*} value The variable to test
  * @return {boolean}
  **/
 function isEmpty( value ){
@@ -159,11 +151,10 @@ function parse( space ){
  * Sets a value to a namespace, returns the old value
  *
  * @function set
- * @namespace bMoor
  * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
  * @param {string|array} space The namespace
- * @param {something} value The value to set the namespace to
- * @return {something}
+ * @param {*} value The value to set the namespace to
+ * @return {*}
  **/
 function set( root, space, value ){
 	var i, c, 
@@ -230,7 +221,6 @@ function makeSetter( space ){
  * get a value from a namespace, if it doesn't exist, the path will be created
  *
  * @function get
- * @namespace bMoor
  * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
  * @param {string|array|function} space The namespace
  * @return {array}
@@ -419,10 +409,9 @@ function makeLoader( space ){
  * Delete a namespace, returns the old value
  *
  * @function del
- * @namespace bMoor
  * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
  * @param {string|array} space The namespace
- * @return {something}
+ * @return {*}
  **/
 function del( root, space ){
 	var old,
@@ -456,7 +445,6 @@ function del( root, space ){
  * Call a function against all elements of an array like object, from 0 to length.  
  *
  * @function loop
- * @namespace bMoor
  * @param {array} arr The array to iterate through
  * @param {function} fn The function to call against each element
  * @param {object} context The context to call each function against
@@ -483,7 +471,6 @@ function loop( arr, fn, context ){
  * Call a function against all own properties of an object.  
  *
  * @function each
- * @namespace bMoor
  * @param {object} arr The object to iterate through
  * @param {function} fn The function to call against each element
  * @param {object} context The context to call each function against
@@ -507,7 +494,6 @@ function each( obj, fn, context ){
  * In this framework, $ implies a system function, _ implies private, so skip _
  *
  * @function iterate
- * @namespace bMoor
  * @param {object} obj The object to iterate through
  * @param {function} fn The function to call against each element
  * @param {object} context The scope to call each function against
@@ -531,10 +517,9 @@ function iterate( obj, fn, context ){
  * In this framework, $ implies a system function, _ implies private, so skip both
  *
  * @function safe
- * @namespace bMoor
- * @param {object} obj The object to iterate through
- * @param {function} fn The function to call against each element
- * @param {object} scope The scope to call each function against
+ * @param {object} obj - The object to iterate through
+ * @param {function} fn - The function to call against each element
+ * @param {object} scope - The scope to call each function against
  **/
 function safe( obj, fn, context ){
 	var key;

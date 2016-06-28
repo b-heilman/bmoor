@@ -5,14 +5,17 @@ var $ = require('gulp-load-plugins')(),
 	karma = require('gulp-karma'),
 	jshint = require('gulp-jshint'),
 	stylish = require('jshint-stylish'),
-	yuidoc = require('gulp-yuidoc');
+	doc = require('gulp-jsdoc3');
 
 var env = require('./config/env.js');
 
 gulp.task('doc', function() {
     gulp.src(env.jsSrc)
-        .pipe(yuidoc())
-        .pipe(gulp.dest('./documentation'));
+        .pipe(doc({
+        	opts: {
+        		destination: './documentation'
+        	}
+        }));
 });
 
 gulp.task('demo', function() {

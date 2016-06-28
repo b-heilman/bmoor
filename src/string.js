@@ -1,5 +1,10 @@
 var bmoor = require('./core.js');
 
+/**
+ * Array helper functions
+ * @module bmoor.string
+ **/
+
 function trim( str, chr ){
 	if ( !chr ){
 		chr = '\\s';

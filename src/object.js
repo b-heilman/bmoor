@@ -1,3 +1,8 @@
+/**
+ * Object helper functions
+ * @module bmoor.object
+ **/
+
 var bmoor = require('./core.js');
 
 function values( obj ){
@@ -28,7 +33,6 @@ function keys( obj ){
  * Takes a hash and uses the indexs as namespaces to add properties to an objs
  *
  * @function explode
- * @namespace bMoor
  * @param {object} target The object to map the variables onto
  * @param {object} mappings An object orientended as [ namespace ] => value
  * @return {object} The object that has had content mapped into it
@@ -45,7 +49,6 @@ function explode( target, mappings ){
  * Create a new instance from an object and some arguments
  *
  * @function mask
- * @namespace bMoor
  * @param {function} obj The basis for the constructor
  * @param {array} args The arguments to pass to the constructor
  * @return {object} The new object that has been constructed
@@ -66,7 +69,6 @@ function mask( obj ){
  * Create a new instance from an object and some arguments.  This is a shallow copy to <- from[...]
  * 
  * @function extend
- * @namespace bMoor
  * @param {object} to Destination object.
  * @param {...object} src Source object(s).
  * @returns {object} Reference to `dst`.
@@ -133,7 +135,6 @@ function merge( to ){
  * A general comparison algorithm to test if two objects are equal
  *
  * @function equals
- * @namespace bMoor
  * @param {object} obj1 The object to copy the content from
  * @param {object} obj2 The object into which to copy the content
  * @preturns {boolean}

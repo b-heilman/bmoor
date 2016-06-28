@@ -1,12 +1,16 @@
+/**
+ * Array helper functions
+ * @module bmoor.array
+ **/
+
 var bmoor = require('./core.js');
 
 /**
  * Search an array for an element, starting at the begining or a specified location
  *
  * @function indexOf
- * @namespace bMoor
  * @param {array} arr An array to be searched
- * @param {something} searchElement Content for which to be searched
+ * @param {*} searchElement Content for which to be searched
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {integer} -1 if not found, otherwise the location of the element
  **/
@@ -43,9 +47,8 @@ function indexOf( arr, searchElement, fromIndex ){
  * Search an array for an element and remove it, starting at the begining or a specified location
  *
  * @function remove
- * @namespace bMoor
  * @param {array} arr An array to be searched
- * @param {something} searchElement Content for which to be searched
+ * @param {*} searchElement Content for which to be searched
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {array} array containing removed element
  **/
@@ -61,9 +64,8 @@ function remove( arr, searchElement, fromIndex ){
  * Search an array for an element and remove all instances of it, starting at the begining or a specified location
  *
  * @function remove
- * @namespace bMoor
  * @param {array} arr An array to be searched
- * @param {something} searchElement Content for which to be searched
+ * @param {*} searchElement Content for which to be searched
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {integer} number of elements removed
  **/
@@ -146,9 +148,8 @@ function bisect( arr, value, func, preSorted ){
  * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
  *
  * @function remove
- * @namespace bMoor
  * @param {array} arr An array to be searched
- * @param {something} searchElement Content for which to be searched
+ * @param {*} searchElement Content for which to be searched
  * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
  * @return {integer} number of elements removed
  **/
@@ -184,7 +185,6 @@ function filter( arr, func, thisArg ){
  * Compare two arrays, 
  *
  * @function remove
- * @namespace bMoor
  * @param {array} arr1 An array to be compared
  * @param {array} arr2 An array to be compared
  * @param {function} func The comparison function
