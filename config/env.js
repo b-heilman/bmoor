@@ -2,12 +2,14 @@ var fs = require('fs'),
 	name = JSON.parse(fs.readFileSync('./package.json')).name,
 	config = {
 		name: name.toLowerCase(),
-		library: name.toLowerCase(),
+		library: name.toLowerCase().replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); }),
 		distDir: 'dist/',
 		demoDir: 'demo/',
 		configDir: 'config/',
 		jsSrc: ['src/*.js','src/**/*.js'],
-		externals: {}
+		externals: {
+			'bmoor': 'bmoor'
+		}
 	};
 
 config.karmaConfig = config.configDir+'karma.conf.js';

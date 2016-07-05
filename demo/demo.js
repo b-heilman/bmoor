@@ -122,14 +122,15 @@
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
 	/**
-	 * Library Functions
+	 * The core of bmoor's usefulness
+	 * @module bmoor
 	 **/
+
 	/**
 	 * Tests if the value is undefined
 	 *
 	 * @function isUndefined
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value - The variable to test
 	 * @return {boolean}
 	 **/
 	function isUndefined(value) {
@@ -140,8 +141,7 @@
 	 * Tests if the value is not undefined
 	 *
 	 * @function isDefined
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isDefined(value) {
@@ -152,8 +152,7 @@
 	 * Tests if the value is a string
 	 *
 	 * @function isString
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isString(value) {
@@ -164,8 +163,7 @@
 	 * Tests if the value is numeric
 	 *
 	 * @function isNumber
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isNumber(value) {
@@ -176,8 +174,7 @@
 	 * Tests if the value is a function
 	 *
 	 * @function isFuncion
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isFunction(value) {
@@ -188,8 +185,7 @@
 	 * Tests if the value is an object
 	 *
 	 * @function isObject
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isObject(value) {
@@ -200,8 +196,7 @@
 	 * Tests if the value is a boolean
 	 *
 	 * @function isBoolean
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isBoolean(value) {
@@ -212,8 +207,7 @@
 	 * Tests if the value can be used as an array
 	 *
 	 * @function isArrayLike
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isArrayLike(value) {
@@ -229,8 +223,7 @@
 	 * Tests if the value is an array
 	 *
 	 * @function isArray
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isArray(value) {
@@ -244,8 +237,7 @@
 	 * If other, is not defined
 	 *
 	 * @function isEmpty
-	 * @namespace bMoor
-	 * @param {something} value The variable to test
+	 * @param {*} value The variable to test
 	 * @return {boolean}
 	 **/
 	function isEmpty(value) {
@@ -282,11 +274,10 @@
 	 * Sets a value to a namespace, returns the old value
 	 *
 	 * @function set
-	 * @namespace bMoor
 	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @param {string|array} space The namespace
-	 * @param {something} value The value to set the namespace to
-	 * @return {something}
+	 * @param {*} value The value to set the namespace to
+	 * @return {*}
 	 **/
 	function set(root, space, value) {
 		var i,
@@ -354,7 +345,6 @@
 	 * get a value from a namespace, if it doesn't exist, the path will be created
 	 *
 	 * @function get
-	 * @namespace bMoor
 	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @param {string|array|function} space The namespace
 	 * @return {array}
@@ -541,10 +531,9 @@
 	 * Delete a namespace, returns the old value
 	 *
 	 * @function del
-	 * @namespace bMoor
 	 * @param {object} root The root of the namespace, bMoor.namespace.root if not defined
 	 * @param {string|array} space The namespace
-	 * @return {something}
+	 * @return {*}
 	 **/
 	function del(root, space) {
 		var old,
@@ -578,7 +567,6 @@
 	 * Call a function against all elements of an array like object, from 0 to length.  
 	 *
 	 * @function loop
-	 * @namespace bMoor
 	 * @param {array} arr The array to iterate through
 	 * @param {function} fn The function to call against each element
 	 * @param {object} context The context to call each function against
@@ -605,7 +593,6 @@
 	 * Call a function against all own properties of an object.  
 	 *
 	 * @function each
-	 * @namespace bMoor
 	 * @param {object} arr The object to iterate through
 	 * @param {function} fn The function to call against each element
 	 * @param {object} context The context to call each function against
@@ -629,7 +616,6 @@
 	 * In this framework, $ implies a system function, _ implies private, so skip _
 	 *
 	 * @function iterate
-	 * @namespace bMoor
 	 * @param {object} obj The object to iterate through
 	 * @param {function} fn The function to call against each element
 	 * @param {object} context The scope to call each function against
@@ -653,10 +639,9 @@
 	 * In this framework, $ implies a system function, _ implies private, so skip both
 	 *
 	 * @function safe
-	 * @namespace bMoor
-	 * @param {object} obj The object to iterate through
-	 * @param {function} fn The function to call against each element
-	 * @param {object} scope The scope to call each function against
+	 * @param {object} obj - The object to iterate through
+	 * @param {function} fn - The function to call against each element
+	 * @param {object} scope - The scope to call each function against
 	 **/
 	function safe(obj, fn, context) {
 		var key;
@@ -764,8 +749,9 @@
 		doc.body.appendChild(element);
 	}
 
-	function showOn(element, target, offset, doc) {
-		var targ = getBoundryBox(target),
+	function showOn(element, target, doc) {
+		var direction,
+		    targ = getBoundryBox(target),
 		    x = targ.x + targ.width / 2,
 		    y = targ.y + targ.height / 2,
 		    centerX = window.innerWidth / 2,
@@ -776,34 +762,35 @@
 			doc = document;
 		}
 
-		if (!offset) {
-			offset = 0;
-		}
-
 		if (x < centerX) {
 			// right side has more room
-			element.style.left = pos.left + targ.right + offset;
+			direction = 'r';
+			element.style.left = pos.left + targ.right;
 			element.style.right = '';
 		} else {
 			// left side has more room
 			//element.style.left = targ.left - el.width - offset;
-			element.style.right = window.innerWidth - (targ.left - offset) - pos.left;
+			direction = 'l';
+			element.style.right = window.innerWidth - targ.left - pos.left;
 			element.style.left = '';
 		}
 
 		if (y < centerY) {
 			// more room on bottom
-			element.style.top = pos.top + targ.bottom + offset + pos.top;
+			direction = 'b' + direction;
+			element.style.top = pos.top + targ.bottom;
 			element.style.bottom = '';
 		} else {
 			// more room on top
-			//element.style.top = targ.top - el.height - offset;
-			element.style.bottom = window.innerHeight - (targ.top - offset) - pos.top;
+			direction = 't' + direction;
+			element.style.bottom = window.innerHeight - targ.top - pos.top;
 			element.style.top = '';
 		}
 
 		element.style.position = 'absolute';
 		doc.body.appendChild(element);
+
+		return direction;
 	}
 
 	function massage(elements) {
@@ -1015,6 +1002,11 @@
 
 	"use strict";
 
+	/**
+	 * Array helper functions
+	 * @module bmoor.data
+	 **/
+
 	var _id = 0;
 
 	function nextUid() {
@@ -1050,15 +1042,19 @@
 
 	'use strict';
 
+	/**
+	 * Array helper functions
+	 * @module bmoor.array
+	 **/
+
 	var bmoor = __webpack_require__(2);
 
 	/**
 	 * Search an array for an element, starting at the begining or a specified location
 	 *
 	 * @function indexOf
-	 * @namespace bMoor
 	 * @param {array} arr An array to be searched
-	 * @param {something} searchElement Content for which to be searched
+	 * @param {*} searchElement Content for which to be searched
 	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
 	 * @return {integer} -1 if not found, otherwise the location of the element
 	 **/
@@ -1095,9 +1091,8 @@
 	 * Search an array for an element and remove it, starting at the begining or a specified location
 	 *
 	 * @function remove
-	 * @namespace bMoor
 	 * @param {array} arr An array to be searched
-	 * @param {something} searchElement Content for which to be searched
+	 * @param {*} searchElement Content for which to be searched
 	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
 	 * @return {array} array containing removed element
 	 **/
@@ -1113,9 +1108,8 @@
 	 * Search an array for an element and remove all instances of it, starting at the begining or a specified location
 	 *
 	 * @function remove
-	 * @namespace bMoor
 	 * @param {array} arr An array to be searched
-	 * @param {something} searchElement Content for which to be searched
+	 * @param {*} searchElement Content for which to be searched
 	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
 	 * @return {integer} number of elements removed
 	 **/
@@ -1198,9 +1192,8 @@
 	 * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
 	 *
 	 * @function remove
-	 * @namespace bMoor
 	 * @param {array} arr An array to be searched
-	 * @param {something} searchElement Content for which to be searched
+	 * @param {*} searchElement Content for which to be searched
 	 * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
 	 * @return {integer} number of elements removed
 	 **/
@@ -1237,7 +1230,6 @@
 	 * Compare two arrays, 
 	 *
 	 * @function remove
-	 * @namespace bMoor
 	 * @param {array} arr1 An array to be compared
 	 * @param {array} arr2 An array to be compared
 	 * @param {function} func The comparison function
@@ -1304,6 +1296,11 @@
 
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
+	/**
+	 * Object helper functions
+	 * @module bmoor.object
+	 **/
+
 	var bmoor = __webpack_require__(2);
 
 	function values(obj) {
@@ -1334,7 +1331,6 @@
 	 * Takes a hash and uses the indexs as namespaces to add properties to an objs
 	 *
 	 * @function explode
-	 * @namespace bMoor
 	 * @param {object} target The object to map the variables onto
 	 * @param {object} mappings An object orientended as [ namespace ] => value
 	 * @return {object} The object that has had content mapped into it
@@ -1351,7 +1347,6 @@
 	 * Create a new instance from an object and some arguments
 	 *
 	 * @function mask
-	 * @namespace bMoor
 	 * @param {function} obj The basis for the constructor
 	 * @param {array} args The arguments to pass to the constructor
 	 * @return {object} The new object that has been constructed
@@ -1372,7 +1367,6 @@
 	 * Create a new instance from an object and some arguments.  This is a shallow copy to <- from[...]
 	 * 
 	 * @function extend
-	 * @namespace bMoor
 	 * @param {object} to Destination object.
 	 * @param {...object} src Source object(s).
 	 * @returns {object} Reference to `dst`.
@@ -1439,7 +1433,6 @@
 	 * A general comparison algorithm to test if two objects are equal
 	 *
 	 * @function equals
-	 * @namespace bMoor
 	 * @param {object} obj1 The object to copy the content from
 	 * @param {object} obj2 The object into which to copy the content
 	 * @preturns {boolean}
@@ -1700,6 +1693,11 @@
 	'use strict';
 
 	var bmoor = __webpack_require__(2);
+
+	/**
+	 * Array helper functions
+	 * @module bmoor.string
+	 **/
 
 	function trim(str, chr) {
 		if (!chr) {
