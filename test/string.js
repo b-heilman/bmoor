@@ -63,8 +63,16 @@ describe("bmoor.string", function() {
 
 		formatter = bmoor.string.getFormatter('- {{value|test1:arg|test2}} -');
 
+		expect( formatter.$vars ).toEqual( ['value'] );
 		expect( called ).toBe( true );
 		expect( formatter({value:12}) ).toBe('- final -');
+	});
+
+	it("should stack multiple vars", function(){
+		var formatter = bmoor.string.getFormatter('- {{value}} - {{foo.bar}} -');
+
+		expect( formatter.$vars ).toEqual( ['foo.bar','value'] );
+		expect( formatter({value:12,foo:{bar:10}}) ).toBe('- 12 - 10 -');
 	});
 
 	it("should allow for the building of formatted statements", function(){

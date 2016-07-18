@@ -90,9 +90,11 @@ function doFilters( ters ){
 
 function doVariable( lines ){
 	var fn,
+		rtn,
 		dex,
 		line,
 		getter,
+		command,
 		commands,
 		remainder;
 
@@ -105,9 +107,10 @@ function doVariable( lines ){
 		
 		if ( dex === -1 ){
 			return function(){
-				return '--no close--';
+				return '| no close |';
 			};
 		}else if ( dex === 0 ){
+			// is looks like this {{}}
 			remainder = line.substr(2);
 			getter = function( o ){
 				if ( bmoor.isObject(o) ){
@@ -118,10 +121,11 @@ function doVariable( lines ){
 			};
 		}else{
 			commands = getCommands( line.substr(0,dex) );
+			command = commands.shift().command;
 			remainder = line.substr(dex+2);
-			getter = bmoor.makeGetter( commands.shift().command );
+			getter = bmoor.makeGetter( command );
 
-			if( commands.length ){
+			if ( commands.length ){
 				getter = stackFunctions( getter, doFilters(commands,getter) );
 			}
 		}
@@ -129,34 +133,46 @@ function doVariable( lines ){
 		//let's optimize this a bit
 		if ( fn ){
 			// we have a child method
-			return function( obj ){
+			rtn = function( obj ){
 				return getter(obj)+remainder+fn(obj);
 			};
+			rtn.$vars = fn.$vars;
 		}else{
 			// this is the last variable
-			return function( obj ){
+			rtn = function( obj ){
 				return getter(obj)+remainder;
 			};
+			rtn.$vars = [];
 		}
+
+		if ( command ){
+			rtn.$vars.push(command);
+		}
+
+		return rtn;
 	}
 }
 
 function getFormatter( str ){
 	var fn,
+		rtn,
 		lines = str.split(/{{/g);
 
 	if ( lines.length > 1 ){
 		str = lines.shift();
 		fn = doVariable( lines );
-
-		return function( obj ){
+		rtn = function( obj ){
 			return str + fn( obj );
 		};
+		rtn.$vars = fn.$vars;
 	}else{
-		return function(){
+		rtn = function(){
 			return str;
 		};
+		rtn.$vars = [];
 	}
+
+	return rtn;
 }
 
 getFormatter.filters = filters;
