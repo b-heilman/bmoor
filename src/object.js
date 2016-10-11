@@ -50,18 +50,23 @@ function explode( target, mappings ){
 	return target;
 }
 
-function implode( obj ){
+function implode( obj, ignore ){
 	var rtn = {};
 
+	if ( !ignore ){
+		ignore = {};
+	}
+
 	bmoor.iterate( obj, function( val, key ){
-		var t;
+		var t = ignore[key];
 
 		if ( bmoor.isObject(val) ){
-			t = implode( val );
-			bmoor.iterate( t, function( v, k ){
-				rtn[key+'.'+k] = v;
-			});
-		}else{
+			if ( !t || bmoor.isObject(t) ){
+				bmoor.iterate( implode(val,t), function( v, k ){
+					rtn[key+'.'+k] = v;
+				});
+			}
+		}else if ( !t ){
 			rtn[key] = val;
 		}
 	});

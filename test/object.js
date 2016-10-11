@@ -36,4 +36,23 @@ describe("bmoor.object", function() {
 			'foo.bar.hello': 'world'
 		});
 	});
+
+	it("should operate implode correctly - with an ignore", function(){
+		var t = {
+				time: {
+					start: 99,
+					stop: 100
+				},
+				id: 'woot',
+				foo: {
+					bar: {
+						hello: 'world'
+					}
+				}
+			}
+
+		expect( bmoor.object.implode(t,{time:{start:true},id:true,foo:true}) ).toEqual({
+			'time.stop': 100
+		});
+	});
 });
