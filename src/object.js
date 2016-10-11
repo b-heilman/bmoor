@@ -61,7 +61,9 @@ function implode( obj, ignore ){
 		var t = ignore[key];
 
 		if ( bmoor.isObject(val) ){
-			if ( !t || bmoor.isObject(t) ){
+			if ( t === false ){
+				rtn[key] = val;
+			} else if ( !t || bmoor.isObject(t) ){
 				bmoor.iterate( implode(val,t), function( v, k ){
 					rtn[key+'.'+k] = v;
 				});
