@@ -1292,11 +1292,35 @@ var bmoor =
 	 * @return {object} The object that has had content mapped into it
 	 **/
 	function explode(target, mappings) {
+		if (!mappings) {
+			mappings = target;
+			target = {};
+		}
+
 		bmoor.iterate(mappings, function (val, mapping) {
 			bmoor.set(target, mapping, val);
 		});
 
 		return target;
+	}
+
+	function implode(obj) {
+		var rtn = {};
+
+		bmoor.iterate(obj, function (val, key) {
+			var t;
+
+			if (bmoor.isObject(val)) {
+				t = implode(val);
+				bmoor.iterate(t, function (v, k) {
+					rtn[key + '.' + k] = v;
+				});
+			} else {
+				rtn[key] = val;
+			}
+		});
+
+		return rtn;
 	}
 
 	/**
@@ -1456,6 +1480,7 @@ var bmoor =
 		keys: keys,
 		values: values,
 		explode: explode,
+		implode: implode,
 		mask: mask,
 		extend: extend,
 		empty: empty,
