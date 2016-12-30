@@ -109,7 +109,7 @@
 	bmoor.string = __webpack_require__(11);
 	bmoor.promise = __webpack_require__(12);
 
-	bmoor.interfaces = __webpack_require__(13);
+	bmoor.Eventing = __webpack_require__(13);
 
 	module.exports = bmoor;
 
@@ -1919,73 +1919,82 @@
 
 /***/ },
 /* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	module.exports = {
-		Eventing: __webpack_require__(14)
-	};
-
-/***/ },
-/* 14 */
 /***/ function(module, exports) {
 
 	"use strict";
 
-	module.exports = {
-		on: function on(event, cb) {
-			var dis = this;
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-			if (!this._$listeners) {
-				this._$listeners = {};
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var Eventing = function () {
+		function Eventing() {
+			_classCallCheck(this, Eventing);
+		}
+
+		_createClass(Eventing, [{
+			key: "on",
+			value: function on(event, cb) {
+				var dis = this;
+
+				if (!this._listeners) {
+					this._listeners = {};
+				}
+
+				if (!this._listeners[event]) {
+					this._listeners[event] = [];
+				}
+
+				this._listeners[event].push(cb);
+
+				return function clear$on() {
+					dis._listeners[event].splice(dis._listeners[event].indexOf(cb), 1);
+				};
 			}
+		}, {
+			key: "subscribe",
+			value: function subscribe(subscriptions) {
+				var dis = this,
+				    kills = [],
+				    events = Object.keys(subscriptions);
 
-			if (!this._$listeners[event]) {
-				this._$listeners[event] = [];
-			}
+				events.forEach(function (event) {
+					var action = subscriptions[event];
 
-			this._$listeners[event].push(cb);
-
-			return function clear$on() {
-				dis._$listeners[event].splice(dis._$listeners[event].indexOf(cb), 1);
-			};
-		},
-		subscribe: function subscribe(subscriptions) {
-			var dis = this,
-			    kills = [],
-			    events = Object.keys(subscriptions);
-
-			events.forEach(function (event) {
-				var action = subscriptions[event];
-
-				kills.push(dis.on(event, action));
-			});
-
-			return function killAll() {
-				kills.forEach(function (kill) {
-					kill();
+					kills.push(dis.on(event, action));
 				});
-			};
-		},
-		trigger: function trigger(event) {
-			var listeners,
-			    i,
-			    c,
-			    args = Array.prototype.slice.call(arguments, 1);
 
-			if (this._$listeners) {
-				listeners = this._$listeners[event];
+				return function killAll() {
+					kills.forEach(function (kill) {
+						kill();
+					});
+				};
+			}
+		}, {
+			key: "trigger",
+			value: function trigger(event) {
+				var i,
+				    c,
+				    listeners,
+				    args = Array.prototype.slice.call(arguments, 1);
 
-				if (listeners) {
-					listeners = listeners.slice(0);
-					for (i = 0, c = listeners.length; i < c; i++) {
-						listeners[i].apply(this, args);
+				if (this._listeners) {
+					listeners = this._listeners[event];
+
+					if (listeners) {
+						listeners = listeners.slice(0);
+						for (i = 0, c = listeners.length; i < c; i++) {
+							listeners[i].apply(this, args);
+						}
 					}
 				}
 			}
-		}
-	};
+		}]);
+
+		return Eventing;
+	}();
+
+	module.exports = Eventing;
 
 /***/ }
 /******/ ]);

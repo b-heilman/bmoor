@@ -1,13 +1,11 @@
 describe('bmoor.interfaces.Eventing', function(){
 	var obj,
 		triggered,
-		Eventing = bmoor.interfaces.Eventing;
+		Eventing = bmoor.Eventing;
 
 	beforeEach(function(){
-		obj = {};
+		obj = new Eventing();
 		triggered = false;
-
-		bmoor.build.mixin( obj, Eventing );
 
 		obj.on('boom', function( args ){
 			triggered = args;

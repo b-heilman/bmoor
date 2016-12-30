@@ -1,25 +1,26 @@
-module.exports = {
-	on: function ( event, cb ){
+class Eventing {
+	on( event, cb ){
 		var dis = this;
 
-		if ( !this._$listeners ){
-			this._$listeners = {};
+		if ( !this._listeners ){
+			this._listeners = {};
 		}
 
-		if ( !this._$listeners[event] ){
-			this._$listeners[event] = [];
+		if ( !this._listeners[event] ){
+			this._listeners[event] = [];
 		}
 
-		this._$listeners[event].push( cb );
+		this._listeners[event].push( cb );
 
 		return function clear$on(){
-			dis._$listeners[event].splice(
-				dis._$listeners[event].indexOf( cb ),
+			dis._listeners[event].splice(
+				dis._listeners[event].indexOf( cb ),
 				1
 			);
 		};
-	},
-	subscribe: function( subscriptions ){
+	}
+
+	subscribe( subscriptions ){
 		var dis = this,
 			kills = [],
 			events =  Object.keys(subscriptions);
@@ -35,14 +36,15 @@ module.exports = {
 				kill();
 			});
 		};
-	},
-	trigger: function( event ){
-		var listeners,
-			i, c,
+	}
+
+	trigger( event ){
+		var i, c,
+			listeners,
 			args = Array.prototype.slice.call(arguments,1);
 
-		if ( this._$listeners ){
-			listeners = this._$listeners[event];
+		if ( this._listeners ){
+			listeners = this._listeners[event];
 
 			if ( listeners ){
 				listeners = listeners.slice(0);
@@ -52,4 +54,6 @@ module.exports = {
 			}
 		}
 	}
-};
+}
+
+module.exports = Eventing;

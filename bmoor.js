@@ -8,6 +8,6 @@ bmoor.build = require('./src/build.js');
 bmoor.string = require('./src/string.js');
 bmoor.promise = require('./src/promise.js');
 
-bmoor.interfaces = require('./src/interfaces.js');
+bmoor.Eventing = require('./src/Eventing.js');
 
 module.exports = bmoor;
