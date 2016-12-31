@@ -1930,16 +1930,14 @@
 	var Eventing = function () {
 		function Eventing() {
 			_classCallCheck(this, Eventing);
+
+			this._listeners = {};
 		}
 
 		_createClass(Eventing, [{
 			key: "on",
 			value: function on(event, cb) {
 				var dis = this;
-
-				if (!this._listeners) {
-					this._listeners = {};
-				}
 
 				if (!this._listeners[event]) {
 					this._listeners[event] = [];

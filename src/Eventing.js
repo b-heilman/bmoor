@@ -1,10 +1,11 @@
 class Eventing {
+
+	constructor(){
+		this._listeners = {};
+	}
+
 	on( event, cb ){
 		var dis = this;
-
-		if ( !this._listeners ){
-			this._listeners = {};
-		}
 
 		if ( !this._listeners[event] ){
 			this._listeners[event] = [];
