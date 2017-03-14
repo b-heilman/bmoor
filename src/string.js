@@ -66,6 +66,11 @@ var filters = {
 		return function( num ){
 			return '$'+num;
 		};
+	},
+	url: function(){
+		return function( param ){
+			return encodeURIComponent( param );
+		};
 	}
 };
 
@@ -76,12 +81,16 @@ function doFilters( ters ){
 
 	while( ters.length ){
 		command = ters.pop();
-		fn = filters[command.method].apply(null,command.args);
+		fn = filters[command.method];
+		
+		if ( fn ){
+			fn = fn.apply( null, command.args );
 
-		if ( filter ){
-			filter = stackFunctions( fn, filter );
-		}else{
-			filter = fn;
+			if ( filter ){
+				filter = stackFunctions( fn, filter );
+			}else{
+				filter = fn;
+			}
 		}
 	}
 
@@ -126,7 +135,11 @@ function doVariable( lines ){
 			getter = bmoor.makeGetter( command );
 
 			if ( commands.length ){
-				getter = stackFunctions( getter, doFilters(commands,getter) );
+				commands = doFilters(commands,getter);
+
+				if ( commands ){
+					getter = stackFunctions( getter, commands );
+				}
 			}
 		}
 

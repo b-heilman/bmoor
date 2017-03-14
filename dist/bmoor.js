@@ -1748,6 +1748,11 @@ var bmoor =
 			return function (num) {
 				return '$' + num;
 			};
+		},
+		url: function url() {
+			return function (param) {
+				return encodeURIComponent(param);
+			};
 		}
 	};
 
@@ -1756,12 +1761,16 @@ var bmoor =
 
 		while (ters.length) {
 			command = ters.pop();
-			fn = filters[command.method].apply(null, command.args);
+			fn = filters[command.method];
 
-			if (filter) {
-				filter = stackFunctions(fn, filter);
-			} else {
-				filter = fn;
+			if (fn) {
+				fn = fn.apply(null, command.args);
+
+				if (filter) {
+					filter = stackFunctions(fn, filter);
+				} else {
+					filter = fn;
+				}
 			}
 		}
 
@@ -1799,7 +1808,11 @@ var bmoor =
 				getter = bmoor.makeGetter(command);
 
 				if (commands.length) {
-					getter = stackFunctions(getter, doFilters(commands, getter));
+					commands = doFilters(commands, getter);
+
+					if (commands) {
+						getter = stackFunctions(getter, commands);
+					}
 				}
 			}
 

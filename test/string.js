@@ -95,4 +95,18 @@ describe("bmoor.string", function() {
 		expect( formatter({name:'Brian',cost:12.3}) )
 			.toBe('Hi Brian you owe $12.30');
 	});
+
+	it("should allow for url encoding", function(){
+		var formatter = bmoor.string.getFormatter('/{{category|url}}/{{id|url}}');
+
+		expect( formatter({category:'users&friends+lovedones',id:12.3}) )
+			.toBe('/users%26friends%2Blovedones/12.3');
+	});
+
+	it("should ignore invalid filters", function(){
+		var formatter = bmoor.string.getFormatter('/{{category|junk}}/{{id|woot}}');
+
+		expect( formatter({category:'users&friends',id:12.3}) )
+			.toBe('/users&friends/12.3');
+	});
 });
