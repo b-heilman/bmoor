@@ -11,6 +11,17 @@ describe("Testing object setting/getting", function() {
 		expect( bmoor.get(t,'zwei.drei') ).toBe(3);
 	});
 
+	it('should have get working with empty strings', function(){
+		var t = {
+				eins : 1,
+				zwei: {
+					drei: 3
+				}
+			};
+
+		expect( bmoor.get(t,'') ).toBe(t);
+	});
+
 	it('should have makeGetter working', function(){
 		var t = {
 				eins : 1,
@@ -25,38 +36,16 @@ describe("Testing object setting/getting", function() {
 		expect( f2(t) ).toBe(3);
 	});
 
-	it('should have exec working', function(){
+	it('should have makeGetter working with empty strings', function(){
 		var t = {
-				eins : function( eins ){
-					return 1+'-'+eins;
-				},
+				eins : 1,
 				zwei: {
-					drei: function(){
-						return 3;
-					}
-				}
-			};
-
-		expect( bmoor.exec(t,'eins',[1]) ).toBe('1-1');
-		expect( bmoor.exec(t,'zwei.drei') ).toBe(3);
-	});
-
-	it('should have makeExec working', function(){
-		var t = {
-				eins : function( eins ){
-					return 1+'-'+eins;
-				},
-				zwei: {
-					drei: function(){
-						return 3;
-					}
+					drei: 3
 				}
 			},
-			f1 = bmoor.makeExec('eins'),
-			f2 = bmoor.makeExec('zwei.drei');
+			f1 = bmoor.makeGetter('');
 
-		expect( f1(t,[1]) ).toBe('1-1');
-		expect( f2(t) ).toBe(3);
+		expect( f1(t) ).toBe(t);
 	});
 
 	it('should have set working', function(){
@@ -94,37 +83,5 @@ describe("Testing object setting/getting", function() {
 		expect( t.eins ).toBeUndefined();
 		expect( t.zwei ).toBeDefined();
 		expect( t.zwei.drei ).toBeUndefined();
-	});
-
-	it('should load variables in - 1', function(){
-		var t = {
-				eins : [
-					{ a: 1 },
-					{ a: 2 }
-				]
-			};
-
-		expect( bmoor.load(t,'eins[]a') ).toEqual( [1,2] );
-	});
-
-	it('should load variables in - 2', function(){
-		var t = [
-				{ a: 1 },
-				{ a: 2 }
-			];
-
-		expect( bmoor.load(t,'[]a') ).toEqual( [1,2] );
-	});
-
-	it('should allow the making of a loader', function(){
-		var t = {
-				eins : [
-					{ a: 1 },
-					{ a: 2 }
-				]
-			},
-			fn = bmoor.makeLoader('eins[]a');
-
-		expect( fn(t) ).toEqual( [1,2] );
 	});
 });

@@ -135,15 +135,18 @@ function isEmpty( value ){
 	return true;
 }
 
-function parse( space ){
-	if ( !space ){
+function parse( path ){
+	if ( !path ){
 		return [];
-	}else if ( isString(space) ){
-		return space.split('.'); // turn strings into an array
-	}else if ( isArray(space) ){
-		return space.slice(0);
+	}else if ( isString(path) ){
+		return path.split('.');
+	}else if ( isArray(path) ){
+		return path.slice(0);
 	}else{
-		return space;
+		throw new Error(
+			'unable to parse path: '+
+			path+ ' : '+typeof(path)
+		);
 	}
 }
 
@@ -163,24 +166,22 @@ function set( root, space, value ){
 		nextSpace,
 		curSpace = root;
 	
-	if ( isString(space) ){
-		space = space.split('.');
+	space = parse(space);
 
-		val = space.pop();
+	val = space.pop();
 
-		for( i = 0, c = space.length; i < c; i++ ){
-			nextSpace = space[ i ];
-				
-			if ( isUndefined(curSpace[nextSpace]) ){
-				curSpace[ nextSpace ] = {};
-			}
-				
-			curSpace = curSpace[ nextSpace ];
+	for( i = 0, c = space.length; i < c; i++ ){
+		nextSpace = space[ i ];
+			
+		if ( isUndefined(curSpace[nextSpace]) ){
+			curSpace[ nextSpace ] = {};
 		}
-
-		old = curSpace[ val ];
-		curSpace[ val ] = value;
+			
+		curSpace = curSpace[ nextSpace ];
 	}
+
+	old = curSpace[ val ];
+	curSpace[ val ] = value;
 
 	return old;
 }
@@ -208,7 +209,7 @@ function _makeSetter( property, next ){
 function makeSetter( space ){
 	var i,
 		fn,
-		readings = space.split('.');
+		readings = parse(space);
 
 	for( i = readings.length-1; i > -1; i-- ){
 		fn = _makeSetter( readings[i], fn );
@@ -225,30 +226,26 @@ function makeSetter( space ){
  * @param {string|array|function} space The namespace
  * @return {array}
  **/
-function get( root, space ){
+function get( root, path ){
 	var i, c,
-		curSpace = root,
-		nextSpace;
+		space,
+		nextSpace,
+		curSpace = root;
 	
-	if ( isString(space) ){
-		if ( space.length ){
-			space = space.split('.');
-			
-			for( i = 0, c = space.length; i < c; i++ ){
-				nextSpace = space[i];
-					
-				if ( isUndefined(curSpace[nextSpace]) ){
-					return;
-				}
+	space = parse(path);
+	if ( space.length ){
+		for( i = 0, c = space.length; i < c; i++ ){
+			nextSpace = space[i];
 				
-				curSpace = curSpace[nextSpace];
+			if ( isUndefined(curSpace[nextSpace]) ){
+				return;
 			}
+			
+			curSpace = curSpace[nextSpace];
 		}
-
-		return curSpace;
-	}else{
-		throw new Error('unsupported type: '+space);
 	}
+
+	return curSpace;
 }
 
 function _makeGetter( property, next ){
@@ -271,13 +268,12 @@ function _makeGetter( property, next ){
 	}
 }
 
-function makeGetter( space ){
+function makeGetter( path ){
 	var i,
-		fn;
+		fn,
+		space = parse(path);
 
 	if ( space.length ){
-		space = space.split('.');
-
 		for( i = space.length-1; i > -1; i-- ){
 			fn = _makeGetter( space[i], fn );
 		}
@@ -288,121 +284,6 @@ function makeGetter( space ){
 	}
 
 	return fn;
-}
-
-function exec( root, space, args, ctx ){
-	var i, c,
-		last,
-		nextSpace,
-		curSpace = root;
-	
-	if ( isString(space) ){
-		if ( space.length ){
-			space = space.split('.');
-			
-			for( i = 0, c = space.length; i < c; i++ ){
-				nextSpace = space[i];
-					
-				if ( isUndefined(curSpace[nextSpace]) ){
-					return;
-				}
-				
-				last = curSpace;
-				curSpace = curSpace[nextSpace];
-			}
-		}
-
-		if ( curSpace ){
-			return curSpace.apply( ctx||last, args||[] );
-		}
-	}
-	
-	throw new Error('unsupported eval: '+space);
-}
-
-function _makeExec( property, next ){
-	if ( next ){
-		return function( obj, args, ctx ){
-			try {
-				return next( obj[property], args, ctx );
-			}catch( ex ){
-				return undefined;
-			}
-		};
-	}else{
-		return function( obj, args, ctx ){
-			return obj[property].apply( ctx||obj, args||[] );
-		};
-	}
-}
-
-function makeExec( space ){
-	var i,
-		fn;
-
-	if ( space.length ){
-		space = space.split('.');
-
-		fn = _makeExec( space[space.length-1] );
-
-		for( i = space.length-2; i > -1; i-- ){
-			fn = _makeExec( space[i], fn );
-		}
-	}else{
-		throw new Error('unsupported eval: '+space);
-	}
-
-	return fn;
-}
-
-function load( root, space ){
-	var i, c,
-		arr,
-		res;
-
-	space = space.split('[]');
-	if ( space.length === 1 ){
-		return [ get(root,space[0]) ];
-	}else{
-		arr = get( root, space[0] );
-		res = [];
-
-		if ( arr ){
-			for( i = 0, c = arr.length; i < c; i++ ){
-				res.push( get(arr[i],space[1]) );
-			}
-		}
-
-		return res;
-	}
-}
-
-function makeLoader( space ){
-	var getArray,
-		getVariable;
-
-	space = space.split('[]');
-
-	if ( space.length === 1 ){
-		return [ makeGetter(space[0]) ];
-	}else{
-		getArray = makeGetter( space[0] );
-		getVariable = makeGetter( space[1] );
-
-		return function( obj ){
-			var i, c, 
-				arr = getArray(obj),
-				res = [];
-
-			if ( arr ){
-				for( i = 0, c = arr.length; i < c; i++ ){
-					res.push( getVariable(arr[i]) );
-				}
-			}
-
-			return res;
-		};
-	}
 }
 
 /**
@@ -561,10 +442,6 @@ module.exports = {
 	makeSetter: makeSetter,
 	get: get,
 	makeGetter: makeGetter,
-	exec: exec,
-	makeExec: makeExec,
-	load: load,
-	makeLoader: makeLoader,
 	del: del,
 	// controls
 	loop: loop,
