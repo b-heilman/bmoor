@@ -1861,20 +1861,32 @@ var bmoor =
 		}, {
 			key: "trigger",
 			value: function trigger(event) {
-				var i,
-				    c,
-				    listeners,
-				    args = Array.prototype.slice.call(arguments, 1);
+				var _this = this;
 
-				if (this._listeners) {
-					listeners = this._listeners[event];
+				var args = Array.prototype.slice.call(arguments, 1);
 
-					if (listeners) {
-						listeners = listeners.slice(0);
-						for (i = 0, c = listeners.length; i < c; i++) {
-							listeners[i].apply(this, args);
-						}
+				if (this._listeners && this._listeners[event]) {
+					if (!this._triggering) {
+						this._triggering = {};
+						// I want to do this to enforce more async / promise style
+						setTimeout(function () {
+							Object.keys(_this._triggering).forEach(function (event) {
+								var vars = _this._triggering[event];
+
+								_this._listeners[event].forEach(function (cb) {
+									cb.apply(_this, vars);
+								});
+							});
+
+							if (_this._listeners.stable) {
+								_this._listeners.stable.forEach(function (cb) {
+									cb.apply(_this);
+								});
+							}
+						}, 0);
 					}
+
+					this._triggering[event] = args;
 				}
 			}
 		}]);

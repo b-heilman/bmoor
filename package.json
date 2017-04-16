@@ -1,13 +1,13 @@
 {
   "name": "bmoor",
-  "version": "0.3.21",
+  "version": "0.3.22",
+  "author": "Brian Heilman <das.ist.junk@gmail.com>",
+  "description": "A system for pulling your site together",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/b-heilman/bmoor.git"
   },
-  "author": "Brian Heilman <das.ist.junk@gmail.com>",
-  "description": "A system for pulling your site together",
-  "license": "MIT",
   "main": "bmoor.js",
   "scripts": {
     "demo": "gulp serve",

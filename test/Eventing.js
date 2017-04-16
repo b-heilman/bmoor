@@ -1,4 +1,4 @@
-describe('bmoor.interfaces.Eventing', function(){
+describe('bmoor.Eventing', function(){
 	var obj,
 		triggered,
 		Eventing = bmoor.Eventing;
@@ -16,27 +16,36 @@ describe('bmoor.interfaces.Eventing', function(){
 		expect( obj.on ).toBeDefined();
 	});
 
-	it('should properly trigger', function(){
+	it('should properly trigger', function( done ){
 		obj.trigger( 'boom', 'doop' );
 		
-		expect( triggered ).toBe('doop');
+		setTimeout(function(){
+			expect( triggered ).toBe('doop');
+			done();
+		});
 	});
 
-	it('should pass in arguments', function(){
+	it('should pass in arguments', function( done ){
 		var t = {};
 
 		obj.trigger( 'boom', t );
 
-		expect( triggered ).toBe( t );
+		setTimeout(function(){
+			expect( triggered ).toBe( t );
+			done();
+		});
 	});
 
-	it('should pass in arguments', function(){
+	it('should pass in arguments', function( done ){
 		obj.trigger( 'foo', null );
 
-		expect( triggered ).toBe( false );
+		setTimeout(function(){
+			expect( triggered ).toBe( false );
+			done();
+		});
 	});
 
-	it('should pass multiple arguments', function(){
+	it('should pass multiple arguments', function( done ){
 		var eins,
 			zwei;
 
@@ -46,7 +55,11 @@ describe('bmoor.interfaces.Eventing', function(){
 		});
 		obj.trigger( 'foo', 'hello', 'world' );
 
-		expect( eins ).toBe( 'hello' );
-		expect( zwei ).toBe( 'world' );
+		obj.on('stable', function(){
+			expect( eins ).toBe( 'hello' );
+			expect( zwei ).toBe( 'world' );
+
+			done();
+		});
 	});
 });

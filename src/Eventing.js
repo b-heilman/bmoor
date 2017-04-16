@@ -40,19 +40,30 @@ class Eventing {
 	}
 
 	trigger( event ){
-		var i, c,
-			listeners,
-			args = Array.prototype.slice.call(arguments,1);
+		var args = Array.prototype.slice.call(arguments,1);
 
-		if ( this._listeners ){
-			listeners = this._listeners[event];
+		if ( this._listeners && this._listeners[event] ){
+			if ( !this._triggering ){
+				this._triggering = {};
+				// I want to do this to enforce more async / promise style
+				setTimeout(() => {
+					Object.keys(this._triggering).forEach( ( event ) => {
+						var vars = this._triggering[event];
 
-			if ( listeners ){
-				listeners = listeners.slice(0);
-				for( i = 0, c = listeners.length; i < c; i++ ){
-					listeners[i].apply( this, args );
-				}
+						this._listeners[event].forEach( ( cb ) => {
+							cb.apply( this, vars );
+						});
+					});
+
+					if ( this._listeners.stable ){
+						this._listeners.stable.forEach( ( cb ) => {
+							cb.apply( this );
+						});
+					}
+				},0);
 			}
+
+			this._triggering[ event ] = args;
 		}
 	}
 }
