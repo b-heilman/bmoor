@@ -62,4 +62,35 @@ describe('bmoor.Eventing', function(){
 			done();
 		});
 	});
+
+	it('should handle recursive events', function( done ){
+		var step1 = false,
+			step2 = false,
+			stable = false;
+
+		obj.on('stable', function(){
+			stable = true;
+			expect( step1 ).toBe( true );
+			expect( step2 ).toBe( true );
+
+			done();
+		});
+
+		obj.on('step-1', function(){
+			step1 = true;
+
+			expect( step2 ).toBe( false );
+			expect( stable ).toBe( false );
+
+			obj.trigger('step-2');
+		});
+
+		obj.on('step-2', function(){
+			step2 = true;
+
+			expect( stable ).toBe( false );
+		});
+
+		obj.trigger('step-1');
+	});
 });

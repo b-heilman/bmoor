@@ -47,15 +47,19 @@ class Eventing {
 				this._triggering = {};
 				// I want to do this to enforce more async / promise style
 				setTimeout(() => {
-					Object.keys(this._triggering).forEach( ( event ) => {
-						var vars = this._triggering[event];
+					var events = this._triggering;
+
+					this._triggering = null;
+					
+					Object.keys(events).forEach( ( event ) => {
+						var vars = events[event];
 
 						this._listeners[event].forEach( ( cb ) => {
 							cb.apply( this, vars );
 						});
 					});
 
-					if ( this._listeners.stable ){
+					if ( !this._triggering && this._listeners.stable ){
 						this._listeners.stable.forEach( ( cb ) => {
 							cb.apply( this );
 						});

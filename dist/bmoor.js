@@ -1870,15 +1870,19 @@ var bmoor =
 						this._triggering = {};
 						// I want to do this to enforce more async / promise style
 						setTimeout(function () {
-							Object.keys(_this._triggering).forEach(function (event) {
-								var vars = _this._triggering[event];
+							var events = _this._triggering;
+
+							_this._triggering = null;
+
+							Object.keys(events).forEach(function (event) {
+								var vars = events[event];
 
 								_this._listeners[event].forEach(function (cb) {
 									cb.apply(_this, vars);
 								});
 							});
 
-							if (_this._listeners.stable) {
+							if (!_this._triggering && _this._listeners.stable) {
 								_this._listeners.stable.forEach(function (cb) {
 									cb.apply(_this);
 								});
