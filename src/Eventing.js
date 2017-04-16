@@ -42,7 +42,7 @@ class Eventing {
 	trigger( event ){
 		var args = Array.prototype.slice.call(arguments,1);
 
-		if ( this._listeners && this._listeners[event] ){
+		if ( this.hasWaiting(event) ){
 			if ( !this._triggering ){
 				this._triggering = {};
 				// I want to do this to enforce more async / promise style
@@ -69,6 +69,10 @@ class Eventing {
 
 			this._triggering[ event ] = args;
 		}
+	}
+
+	hasWaiting( event ){
+		return !!this._listeners[event];
 	}
 }
 

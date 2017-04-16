@@ -1865,7 +1865,7 @@ var bmoor =
 
 				var args = Array.prototype.slice.call(arguments, 1);
 
-				if (this._listeners && this._listeners[event]) {
+				if (this.hasWaiting(event)) {
 					if (!this._triggering) {
 						this._triggering = {};
 						// I want to do this to enforce more async / promise style
@@ -1892,6 +1892,11 @@ var bmoor =
 
 					this._triggering[event] = args;
 				}
+			}
+		}, {
+			key: "hasWaiting",
+			value: function hasWaiting(event) {
+				return !!this._listeners[event];
 			}
 		}]);
 
