@@ -1774,21 +1774,23 @@ var bmoor =
 
 	var master = {};
 
-	var Memory = function Memory(title) {
+	var Memory = function Memory() {
 		_classCallCheck(this, Memory);
 
 		var index = {};
 
-		this.register = function (name, obj) {
-			if (index[name]) {
-				throw new Error('Memory - ' + title + ' already has ' + name);
-			} else {
-				index[name] = obj;
-			}
-		};
-
 		this.check = function (name) {
 			return index[name];
+		};
+
+		this.register = function (name, obj) {
+			index[name] = obj;
+		};
+
+		this.clear = function (name) {
+			if (name in index) {
+				delete index[name];
+			}
 		};
 	};
 

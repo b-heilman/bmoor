@@ -6,7 +6,7 @@ var fs = require('fs'),
 		distDir: 'dist/',
 		demoDir: 'demo/',
 		configDir: 'config/',
-		jsSrc: ['src/*.js','src/**/*.js'],
+		jsSrc: ['src/**/*.js','!src/**/*.spec.js'],
 		externals: {
 			'bmoor': 'bmoor'
 		}
