@@ -161,7 +161,6 @@ function parse( path ){
  **/
 function set( root, space, value ){
 	var i, c, 
-		old,
 		val,
 		nextSpace,
 		curSpace = root;
@@ -180,10 +179,9 @@ function set( root, space, value ){
 		curSpace = curSpace[ nextSpace ];
 	}
 
-	old = curSpace[ val ];
 	curSpace[ val ] = value;
 
-	return old;
+	return curSpace;
 }
 
 function _makeSetter( property, next ){
@@ -199,9 +197,8 @@ function _makeSetter( property, next ){
 		};
 	}else{
 		return function( ctx, value ){
-			var t = ctx[property];
 			ctx[property] = value;
-			return t;
+			return ctx;
 		};
 	}
 }

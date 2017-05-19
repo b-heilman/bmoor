@@ -239,7 +239,6 @@ var bmoor =
 	function set(root, space, value) {
 		var i,
 		    c,
-		    old,
 		    val,
 		    nextSpace,
 		    curSpace = root;
@@ -258,10 +257,9 @@ var bmoor =
 			curSpace = curSpace[nextSpace];
 		}
 
-		old = curSpace[val];
 		curSpace[val] = value;
 
-		return old;
+		return curSpace;
 	}
 
 	function _makeSetter(property, next) {
@@ -277,9 +275,8 @@ var bmoor =
 			};
 		} else {
 			return function (ctx, value) {
-				var t = ctx[property];
 				ctx[property] = value;
-				return t;
+				return ctx;
 			};
 		}
 	}
