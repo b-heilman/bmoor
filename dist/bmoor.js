@@ -1826,17 +1826,41 @@ var bmoor =
 		_createClass(Eventing, [{
 			key: "on",
 			value: function on(event, cb) {
-				var dis = this;
+				var listeners;
 
 				if (!this._listeners[event]) {
 					this._listeners[event] = [];
 				}
 
-				this._listeners[event].push(cb);
+				listeners = this._listeners[event];
+
+				listeners.push(cb);
 
 				return function clear$on() {
-					dis._listeners[event].splice(dis._listeners[event].indexOf(cb), 1);
+					listeners.splice(listeners.indexOf(cb), 1);
 				};
+			}
+		}, {
+			key: "once",
+			value: function once(event, cb) {
+				var clear,
+				    fn = function fn() {
+					cb.apply(this, arguments);
+					clear();
+				};
+
+				clear = this.on(event, fn);
+
+				return clear;
+			}
+		}, {
+			key: "next",
+			value: function next(event, cb) {
+				if (this._triggering && this._triggering[event]) {
+					this.once(event, cb);
+				} else {
+					cb();
+				}
 			}
 		}, {
 			key: "subscribe",
@@ -1867,6 +1891,7 @@ var bmoor =
 				if (this.hasWaiting(event)) {
 					if (!this._triggering) {
 						this._triggering = {};
+
 						// I want to do this to enforce more async / promise style
 						setTimeout(function () {
 							var events = _this._triggering;
@@ -1876,16 +1901,10 @@ var bmoor =
 							Object.keys(events).forEach(function (event) {
 								var vars = events[event];
 
-								_this._listeners[event].forEach(function (cb) {
+								_this._listeners[event].slice(0).forEach(function (cb) {
 									cb.apply(_this, vars);
 								});
 							});
-
-							if (!_this._triggering && _this._listeners.stable) {
-								_this._listeners.stable.forEach(function (cb) {
-									cb.apply(_this);
-								});
-							}
 						}, 0);
 					}
 

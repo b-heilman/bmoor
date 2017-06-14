@@ -22,7 +22,7 @@ describe('bmoor.Eventing', function(){
 		setTimeout(function(){
 			expect( triggered ).toBe('doop');
 			done();
-		});
+		},0);
 	});
 
 	it('should pass in arguments', function( done ){
@@ -33,7 +33,7 @@ describe('bmoor.Eventing', function(){
 		setTimeout(function(){
 			expect( triggered ).toBe( t );
 			done();
-		});
+		},0);
 	});
 
 	it('should pass in arguments', function( done ){
@@ -53,9 +53,10 @@ describe('bmoor.Eventing', function(){
 			eins = arg1;
 			zwei = arg2;
 		});
+
 		obj.trigger( 'foo', 'hello', 'world' );
 
-		obj.on('stable', function(){
+		obj.on('foo', function(){
 			expect( eins ).toBe( 'hello' );
 			expect( zwei ).toBe( 'world' );
 
@@ -67,14 +68,6 @@ describe('bmoor.Eventing', function(){
 		var step1 = false,
 			step2 = false,
 			stable = false;
-
-		obj.on('stable', function(){
-			stable = true;
-			expect( step1 ).toBe( true );
-			expect( step2 ).toBe( true );
-
-			done();
-		});
 
 		obj.on('step-1', function(){
 			step1 = true;
@@ -91,6 +84,39 @@ describe('bmoor.Eventing', function(){
 			expect( stable ).toBe( false );
 		});
 
+		obj.on('step-2', function(){
+			stable = true;
+			expect( step1 ).toBe( true );
+			expect( step2 ).toBe( true );
+
+			done();
+		});
+
 		obj.trigger('step-1');
+	});
+
+	it('should clear event when a once is applied', function( done ){
+		var value;
+
+		obj.once('test-1', function( v ){
+			value = v;
+		});
+
+		obj.on('test-1', function( v ){
+			if ( v != 2 ){
+				obj.trigger('test-1', v+1);
+			}else{
+				obj.trigger('test-2', v+1);
+			}
+		});
+
+		obj.on('test-2', function( v ){
+			expect( value ).toBe( 0 );
+			expect( v ).toBe( 3 );
+
+			done();
+		});
+
+		obj.trigger('test-1', 0);
 	});
 });
