@@ -54,14 +54,14 @@ describe('bmoor.Eventing', function(){
 			zwei = arg2;
 		});
 
-		obj.trigger( 'foo', 'hello', 'world' );
-
 		obj.on('foo', function(){
 			expect( eins ).toBe( 'hello' );
 			expect( zwei ).toBe( 'world' );
 
 			done();
 		});
+
+		obj.trigger( 'foo', 'hello', 'world' );
 	});
 
 	it('should handle recursive events', function( done ){

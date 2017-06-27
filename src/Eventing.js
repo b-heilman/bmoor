@@ -23,21 +23,13 @@ class Eventing {
 	once( event, cb ){
 		var clear,
 			fn = function(){
-				cb.apply( this, arguments );
 				clear();
+				cb.apply( this, arguments );
 			};
 
 		clear = this.on( event, fn );
 
 		return clear;
-	}
-
-	next( event, cb ){
-		if ( this._triggering && this._triggering[event] ){
-			this.once( event, cb );
-		}else{
-			cb();
-		}
 	}
 
 	subscribe( subscriptions ){
@@ -62,26 +54,9 @@ class Eventing {
 		var args = Array.prototype.slice.call(arguments,1);
 
 		if ( this.hasWaiting(event) ){
-			if ( !this._triggering ){
-				this._triggering = {};
-				
-				// I want to do this to enforce more async / promise style
-				setTimeout(() => {
-					var events = this._triggering;
-
-					this._triggering = null;
-					
-					Object.keys(events).forEach( ( event ) => {
-						var vars = events[event];
-
-						this._listeners[event].slice(0).forEach( ( cb ) => {
-							cb.apply( this, vars );
-						});
-					});
-				},0);
-			}
-
-			this._triggering[ event ] = args;
+			this._listeners[event].slice(0).forEach( ( cb ) => {
+				cb.apply( this, args );
+			});
 		}
 	}
 
