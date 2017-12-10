@@ -15,6 +15,23 @@ describe("bmoor.object", function() {
 		});
 	});
 
+	it("should operate makeExploder correctly", function(){
+		var t = {
+				'eins.zwei': 12,
+				'eins.drei': 13,
+				'fier': 4
+			},
+			explode = bmoor.object.makeExploder( Object.keys(t) );
+
+		expect( explode(t) ).toEqual({
+			eins: {
+				zwei: 12,
+				drei: 13
+			},
+			fier: 4
+		});
+	});
+
 	it("should operate implode correctly", function(){
 		var t = {
 				time: {

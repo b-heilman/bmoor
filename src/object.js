@@ -50,6 +50,34 @@ function explode( target, mappings ){
 	return target;
 }
 
+function makeExploder( paths ){
+	var fn;
+
+	paths.forEach(function( path ){
+		var old = fn,
+			setter = bmoor.makeSetter( path );
+
+		if ( old ){
+			fn = function( ctx, obj ){
+				setter( ctx, obj[path] );
+				old( ctx, obj );
+			};
+		}else{
+			fn = function( ctx, obj ){
+				setter( ctx, obj[path] );
+			};
+		}
+	});
+
+	return function( obj ){
+		var rtn = {};
+
+		fn( rtn, obj );
+
+		return rtn;
+	};
+}
+
 function implode( obj, ignore ){
 	var rtn = {};
 
@@ -233,6 +261,7 @@ module.exports = {
 	keys: keys,
 	values: values,
 	explode: explode,
+	makeExploder: makeExploder,
 	implode: implode,
 	mask: mask,
 	extend: extend,

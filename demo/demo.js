@@ -1401,6 +1401,34 @@
 		return target;
 	}
 
+	function makeExploder(paths) {
+		var fn;
+
+		paths.forEach(function (path) {
+			var old = fn,
+			    setter = bmoor.makeSetter(path);
+
+			if (old) {
+				fn = function fn(ctx, obj) {
+					setter(ctx, obj[path]);
+					old(ctx, obj);
+				};
+			} else {
+				fn = function fn(ctx, obj) {
+					setter(ctx, obj[path]);
+				};
+			}
+		});
+
+		return function (obj) {
+			var rtn = {};
+
+			fn(rtn, obj);
+
+			return rtn;
+		};
+	}
+
 	function implode(obj, ignore) {
 		var rtn = {};
 
@@ -1584,6 +1612,7 @@
 		keys: keys,
 		values: values,
 		explode: explode,
+		makeExploder: makeExploder,
 		implode: implode,
 		mask: mask,
 		extend: extend,
@@ -1889,22 +1918,13 @@
 			value: function once(event, cb) {
 				var clear,
 				    fn = function fn() {
-					cb.apply(this, arguments);
 					clear();
+					cb.apply(this, arguments);
 				};
 
 				clear = this.on(event, fn);
 
 				return clear;
-			}
-		}, {
-			key: "next",
-			value: function next(event, cb) {
-				if (this._triggering && this._triggering[event]) {
-					this.once(event, cb);
-				} else {
-					cb();
-				}
 			}
 		}, {
 			key: "subscribe",
