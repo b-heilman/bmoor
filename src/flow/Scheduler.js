@@ -1,5 +1,5 @@
 function __now(){
-	return +(new Date());
+	return Date.now();
 }		
 
 module.exports = class Scheduler{

@@ -103,14 +103,15 @@
 
 	bmoor.dom = __webpack_require__(3);
 	bmoor.data = __webpack_require__(4);
-	bmoor.array = __webpack_require__(5);
-	bmoor.build = __webpack_require__(6);
-	bmoor.object = __webpack_require__(10);
-	bmoor.string = __webpack_require__(11);
-	bmoor.promise = __webpack_require__(12);
+	bmoor.flow = __webpack_require__(5);
+	bmoor.array = __webpack_require__(9);
+	bmoor.build = __webpack_require__(10);
+	bmoor.object = __webpack_require__(14);
+	bmoor.string = __webpack_require__(15);
+	bmoor.promise = __webpack_require__(16);
 
-	bmoor.Memory = __webpack_require__(13);
-	bmoor.Eventing = __webpack_require__(14);
+	bmoor.Memory = __webpack_require__(17);
+	bmoor.Eventing = __webpack_require__(18);
 
 	module.exports = bmoor;
 
@@ -917,6 +918,175 @@
 
 	'use strict';
 
+	module.exports = {
+		soon: __webpack_require__(6),
+		debounce: __webpack_require__(7),
+		window: __webpack_require__(8)
+	};
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = function (cb, time, settings) {
+		var ctx, args, timeout;
+
+		if (!settings) {
+			settings = {};
+		}
+
+		function fire() {
+			timeout = null;
+			cb.apply(settings.context || ctx, args);
+		}
+
+		var fn = function sooned() {
+			ctx = this;
+			args = arguments;
+
+			if (!timeout) {
+				timeout = setTimeout(fire, time);
+			}
+		};
+
+		fn.clear = function () {
+			clearTimeout(timeout);
+			timeout = null;
+		};
+
+		fn.flush = function () {
+			fire();
+			fn.clear();
+		};
+
+		return fn;
+	};
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = function (cb, time, settings) {
+		var ctx, args, limit, timeout;
+
+		if (!settings) {
+			settings = {};
+		}
+
+		function fire() {
+			timeout = null;
+			cb.apply(settings.context || ctx, args);
+		}
+
+		function run() {
+			var now = Date.now();
+
+			if (now >= limit) {
+				fire();
+			} else {
+				timeout = setTimeout(run, limit - now);
+			}
+		}
+
+		var fn = function debounced() {
+			var now = Date.now();
+
+			ctx = this;
+			args = arguments;
+			limit = now + time;
+
+			if (!timeout) {
+				timeout = setTimeout(run, time);
+			}
+		};
+
+		fn.clear = function () {
+			clearTimeout(timeout);
+			timeout = null;
+			limit = null;
+		};
+
+		fn.flush = function () {
+			fire();
+			fn.clear();
+		};
+
+		fn.shift = function (diff) {
+			limit += diff;
+		};
+
+		return fn;
+	};
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = function (cb, min, max, settings) {
+		var ctx, args, next, limit, timeout;
+
+		if (!settings) {
+			settings = {};
+		}
+
+		function fire() {
+			limit = null;
+			cb.apply(settings.context || ctx, args);
+		}
+
+		function run() {
+			var now = Date.now();
+
+			if (now >= limit || now >= next) {
+				fire();
+			} else {
+				timeout = setTimeout(run, Math.min(limit, next) - now);
+			}
+		}
+
+		var fn = function windowed() {
+			var now = Date.now();
+
+			ctx = this;
+			args = arguments;
+			next = now + min;
+
+			if (!limit) {
+				limit = now + max;
+				timeout = setTimeout(run, min);
+			}
+		};
+
+		fn.clear = function () {
+			clearTimeout(timeout);
+			timeout = null;
+			limit = null;
+		};
+
+		fn.flush = function () {
+			fire();
+			fn.clear();
+		};
+
+		fn.shift = function (diff) {
+			limit += diff;
+		};
+
+		return fn;
+	};
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	/**
 	 * Array helper functions
 	 * @module bmoor.array
@@ -1164,15 +1334,15 @@
 	};
 
 /***/ },
-/* 6 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var bmoor = __webpack_require__(2),
-	    mixin = __webpack_require__(7),
-	    plugin = __webpack_require__(8),
-	    decorate = __webpack_require__(9);
+	    mixin = __webpack_require__(11),
+	    plugin = __webpack_require__(12),
+	    decorate = __webpack_require__(13);
 
 	function proc(action, proto, def) {
 		var i, c;
@@ -1227,7 +1397,7 @@
 	module.exports = maker;
 
 /***/ },
-/* 7 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1241,7 +1411,7 @@
 	};
 
 /***/ },
-/* 8 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1297,7 +1467,7 @@
 	};
 
 /***/ },
-/* 9 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1342,7 +1512,7 @@
 	};
 
 /***/ },
-/* 10 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1623,7 +1793,7 @@
 	};
 
 /***/ },
-/* 11 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1820,7 +1990,7 @@
 	};
 
 /***/ },
-/* 12 */
+/* 16 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1835,7 +2005,7 @@
 	};
 
 /***/ },
-/* 13 */
+/* 17 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1880,7 +2050,7 @@
 	};
 
 /***/ },
-/* 14 */
+/* 18 */
 /***/ function(module, exports) {
 
 	"use strict";
