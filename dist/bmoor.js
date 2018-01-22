@@ -1966,29 +1966,70 @@ var bmoor =
 
 	'use strict';
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var master = {};
 
-	var Memory = function Memory() {
-		_classCallCheck(this, Memory);
+	var Memory = function () {
+		function Memory() {
+			_classCallCheck(this, Memory);
 
-		var index = {};
+			var index = {};
 
-		this.check = function (name) {
-			return index[name];
-		};
+			this.get = function (name) {
+				return index[name];
+			};
 
-		this.register = function (name, obj) {
-			index[name] = obj;
-		};
+			this.check = function (name) {
+				console.log('Memory::check will soon removed');
+				return index[name];
+			};
 
-		this.clear = function (name) {
-			if (name in index) {
-				delete index[name];
+			this.isSet = function (name) {
+				return !!index[name];
+			};
+
+			this.register = function (name, obj) {
+				index[name] = obj;
+			};
+
+			this.clear = function (name) {
+				if (name in index) {
+					delete index[name];
+				}
+			};
+
+			this.keys = function () {
+				return Object.keys(index);
+			};
+		}
+
+		_createClass(Memory, [{
+			key: 'import',
+			value: function _import(json) {
+				var _this = this;
+
+				Object.keys(json).forEach(function (key) {
+					_this.register(key, json[key]);
+				});
 			}
-		};
-	};
+		}, {
+			key: 'export',
+			value: function _export() {
+				var _this2 = this;
+
+				return this.keys().reduce(function (rtn, key) {
+					rtn[key] = _this2.get(key);
+
+					return rtn;
+				}, {});
+			}
+		}]);
+
+		return Memory;
+	}();
 
 	module.exports = {
 		Memory: Memory,

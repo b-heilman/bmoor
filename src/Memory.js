@@ -4,8 +4,17 @@ class Memory{
 	constructor(){
 		var index = {};
 
-		this.check = function( name ){
+		this.get = function( name ){
 			return index[name];
+		};
+
+		this.check = function( name ){
+			console.log( 'Memory::check will soon removed');
+			return index[name];
+		};
+
+		this.isSet = function( name ){
+			return !!index[name];
 		};
 
 		this.register = function( name, obj ){
@@ -17,6 +26,24 @@ class Memory{
 				delete index[name];
 			}
 		};
+
+		this.keys = function(){
+			return Object.keys(index);
+		};
+	}
+
+	import( json ){
+		Object.keys( json ).forEach( ( key ) => {
+			this.register( key, json[key] );
+		});
+	}
+
+	export(){
+		return this.keys().reduce( ( rtn, key ) =>{
+			rtn[key] = this.get( key );
+
+			return rtn;
+		},{});
 	}
 }
 
