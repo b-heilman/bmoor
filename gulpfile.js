@@ -2,21 +2,13 @@ var $ = require('gulp-load-plugins')(),
 	gulp = require('gulp'),
 	map = require('map-stream'),
 	webpack = require('webpack-stream'),
-	karma = require('gulp-karma'),
+	Karma = require('karma').Server,
 	jshint = require('gulp-jshint'),
-	stylish = require('jshint-stylish'),
-	doc = require('gulp-jsdoc3');
+	stylish = require('jshint-stylish');
 
 var env = require('./config/env.js');
 
-gulp.task('doc', function() {
-    gulp.src(env.jsSrc)
-        .pipe(doc({
-        	opts: {
-        		destination: './documentation'
-        	}
-        }));
-});
+var server;
 
 gulp.task('demo', function() {
 	return gulp.src(env.jsSrc)
@@ -27,12 +19,14 @@ gulp.task('demo', function() {
 					test: /\.js$/,
 					loader: "babel-loader",
 					query: {
-	    				presets: ['es2015']
-	  				}
+    					presets: ['es2015']
+  					}
 				}],
 			},
 			output: {
-				filename: 'demo.js'
+				filename: 'demo.js',
+				library: env.library,
+				libraryTarget: "var"
 			}
 		}))
 		.pipe(gulp.dest(env.demoDir));
@@ -47,8 +41,8 @@ gulp.task('library', function() {
 					test: /\.js$/,
 					loader: "babel-loader",
 					query: {
-	    				presets: ['es2015']
-	  				}
+    				presets: ['es2015']
+  				}
 				}],
 			},
 			output: {
@@ -61,15 +55,25 @@ gulp.task('library', function() {
 		.pipe(gulp.dest(env.distDir));
 });
 
-gulp.task('test', ['build'], function() {
-	return gulp.src('aaa')
-			.pipe(karma({
-					configFile: env.karmaConfig,
-					action: 'run'
-			}))
-			.on('error', function(err) {
-					throw err;
-			});
+gulp.task('test-noexit', ['build'], function( done ) {
+	new Karma({
+		configFile: __dirname +'/'+ env.karmaConfig
+	},function(){
+		done();
+	}).start();
+});
+
+gulp.task('test', ['test-noexit'], function( done ) {
+	process.exit();
+});
+
+gulp.task('test-ie', ['build','test-server'], function( done ) {
+	new Karma({
+		configFile: __dirname +'/'+ env.karmaConfig,
+		browsers: ['IE']
+	}, function(){
+		done();
+	}).start();
 });
 
 var failOnError = function() {
@@ -100,7 +104,7 @@ gulp.task('watch', ['build'], function(){
 	gulp.watch(env.jsSrc.concat(['./'+env.demoConfig]), ['lint', 'demo','library']);
 });
 
-gulp.task('serve', ['watch'], function() {
+gulp.task('serve', ['watch','test-noexit'], function() {
 	gulp.src(env.demoDir)
 		.pipe($.webserver({
 			port: 9000,
