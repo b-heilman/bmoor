@@ -72,4 +72,31 @@ describe("bmoor.object", function() {
 			'time.stop': 100
 		});
 	});
+
+	describe('::merge', function(){
+		it('should replace null correctly', function(){
+			expect( bmoor.object.merge({
+				foo: null,
+				bar: { a: 'ok'},
+				hello: {
+					world: 1,
+					other: 'thing'
+				}
+			},{
+				foo: 'bar',
+				bar: null,
+				hello: {
+					world: null
+				}
+			}))
+			.toEqual({
+				foo: 'bar',
+				bar: null,
+				hello: {
+					world: null,
+					other: 'thing'
+				}
+			})
+		});
+	});
 });

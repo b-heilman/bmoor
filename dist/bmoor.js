@@ -1649,16 +1649,14 @@ var bmoor =
 		for (i = 1, c = arguments.length; i < c; i++) {
 			from = arguments[i];
 
-			if (to === from || !from) {
+			if (to === from) {
 				continue;
 			} else if (to && to.merge) {
 				to.merge(from);
+			} else if (!bmoor.isObject(from)) {
+				to = from;
 			} else if (!bmoor.isObject(to)) {
-				if (bmoor.isObject(from)) {
-					to = merge({}, from);
-				} else {
-					to = from;
-				}
+				to = merge({}, from);
 			} else {
 				bmoor.safe(from, m);
 			}
