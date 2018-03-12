@@ -67,7 +67,28 @@ function stack( calls, settings ){
 	});
 }
 
+function hash( obj ){
+	var rtn = {};
+
+	return Promise.all(Object.keys(obj).map(function( key ){
+		var p = obj[key];
+
+		if ( p && p.then ){
+			p.then(function( v ){
+				rtn[key] = v;
+			});
+		}else{
+			rtn[key] = p;
+		}
+
+		return p;
+	})).then(function(){
+		return rtn;
+	});
+}
+
 module.exports = {
-	always: always,
-	stack: stack
+	hash: hash,
+	stack: stack,
+	always: always
 };

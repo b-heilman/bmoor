@@ -46,17 +46,6 @@ describe("bmoor.array", function() {
 		]);
 	});
 
-	// indexOf
-	it("should support indexOf", function(){
-		expect( bmoor.array.indexOf(['a','c','b','c'],'c') ).toBe( 1 );
-		expect( bmoor.array.indexOf(['a','c','b','c'],'a') ).toBe( 0 );
-		expect( bmoor.array.indexOf(['a','c','b','c'],'c',1) ).toBe( 1 );
-		expect( bmoor.array.indexOf(['a','c','b','c'],'c',2) ).toBe( 3 );
-		expect( bmoor.array.indexOf(['a','c','b','c'],'d') ).toBe( -1 );
-		expect( bmoor.array.indexOf([1,2,3],3) ).toBe( 2 );
-		expect( bmoor.array.indexOf([1,2,3],3,-2) ).toBe( 2 );
-	});
-
 	// remove
 	it("should support remove", function(){
 		expect( bmoor.array.remove(['a','c','b','c'],'a') ).toBe( 'a' );
@@ -69,19 +58,6 @@ describe("bmoor.array", function() {
 		expect( bmoor.array.removeAll(['a','c','b','c'],'a').length ).toBe( 1 );
 		expect( bmoor.array.removeAll(['a','c','b','c'],'c').length ).toBe( 2 );
 		expect( bmoor.array.removeAll(['a','c','b','c'],'d').length ).toBe( 0 );
-	});
-
-	// filter
-	it("should support filter", function(){
-		expect( bmoor.array.filter(['a','c','b','c'],function( x ){
-			return x === 'a';
-		}).length ).toBe( 1 );
-		expect( bmoor.array.filter(['a','c','b','c'],function( x ){
-			return x === 'c';
-		}).length ).toBe( 2 );
-		expect( bmoor.array.filter(['a','c','b','c'],function( x ){
-			return x === 'd';
-		}).length ).toBe( 0 );
 	});
 
 	// bisect
@@ -196,6 +172,65 @@ describe("bmoor.array", function() {
 
 			expect( t ).toBeUndefined();
 			expect( arr[1] ).toBe( 13 );
+		});
+	});
+
+	describe('::unique', function(){
+		it('should make an unique array with no helper methods', function(){
+			expect( bmoor.array.unique([1,2,3,4,5,1,2,7,1,2,5,8]) )
+			.toEqual([1,2,3,4,5,7,8])
+		});
+
+		it('should not run sort if true is passed', function(){
+			expect( bmoor.array.unique([1,1,1,2,2,3,4,5,5],true) )
+			.toEqual([1,2,3,4,5])
+		});
+
+		it('should use the sort method if passed', function(){
+			expect( bmoor.array.unique([1,2,3,4,5,1,2,5], (a,b) => a-b) )
+			.toEqual([1,2,3,4,5])
+		});
+
+		it('should apply sort and uniqueness', function(){
+			expect( 
+				bmoor.array.unique(
+					[{x:1},{x:2},{x:3},{x:4},{x:5},{x:1},{x:2},{x:5}], 
+					(a,b) => a.x-b.x,
+					d => d.x
+				)
+			).toEqual([{x:1},{x:2},{x:3},{x:4},{x:5}])
+		});
+
+		it('should use uniqueness without sort', function(){
+			expect( 
+				bmoor.array.unique(
+					[{x:1},{x:2},{x:3},{x:4},{x:5},{x:1},{x:2},{x:5}], 
+					false,
+					d => d.x
+				)
+			).toEqual([{x:1},{x:2},{x:3},{x:4},{x:5}])
+		});
+	});
+
+	describe('::intersection', function(){
+		it('should properly check intersection of two arrays', function(){
+			expect(
+				bmoor.array.intersection(
+					[1,2,3,4,5,6],
+					[2,3,4,7,8]
+				)
+			).toEqual([2,3,4])
+		});
+	});
+
+	describe('::difference', function(){
+		it('should properly check difference of two arrays', function(){
+			expect(
+				bmoor.array.difference(
+					[1,2,3,4,5,6],
+					[2,3,4,7,8]
+				)
+			).toEqual([1,5,6])
 		});
 	});
 });

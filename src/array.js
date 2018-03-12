@@ -6,44 +6,6 @@
 var bmoor = require('./core.js');
 
 /**
- * Search an array for an element, starting at the begining or a specified location
- *
- * @function indexOf
- * @param {array} arr An array to be searched
- * @param {*} searchElement Content for which to be searched
- * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
- * @return {integer} -1 if not found, otherwise the location of the element
- **/
-function indexOf( arr, searchElement, fromIndex ){
-	if ( arr.indexOf ){
-		return arr.indexOf( searchElement, fromIndex );
-	} else {
-		var length = parseInt( arr.length, 0 );
-
-		fromIndex = +fromIndex || 0;
-
-		if (Math.abs(fromIndex) === Infinity){
-			fromIndex = 0;
-		}
-
-		if (fromIndex < 0){
-			fromIndex += length;
-			if (fromIndex < 0) {
-				fromIndex = 0;
-			}
-		}
-
-		for ( ; fromIndex < length; fromIndex++ ){
-			if ( arr[fromIndex] === searchElement ){
-				return fromIndex;
-			}
-		}
-
-		return -1;
-	}
-}
-
-/**
  * Search an array for an element and remove it, starting at the begining or a specified location
  *
  * @function remove
@@ -53,7 +15,7 @@ function indexOf( arr, searchElement, fromIndex ){
  * @return {array} array containing removed element
  **/
 function remove( arr, searchElement, fromIndex ){
-	var pos = indexOf( arr, searchElement, fromIndex );
+	var pos = arr.indexOf( searchElement, fromIndex );
 
 	if ( pos > -1 ){
 		return arr.splice( pos, 1 )[0];
@@ -71,7 +33,7 @@ function remove( arr, searchElement, fromIndex ){
  **/
 function removeAll( arr, searchElement, fromIndex ){
 	var r,
-		pos = indexOf( arr, searchElement, fromIndex );
+		pos = arr.indexOf( searchElement, fromIndex );
 
 	if ( pos > -1 ){
 		r = removeAll( arr, searchElement, pos+1 );
@@ -145,44 +107,7 @@ function bisect( arr, value, func, preSorted ){
 }
 
 /**
- * Generate a new array whose content is a subset of the intial array, but satisfies the supplied function
- *
- * @function remove
- * @param {array} arr An array to be searched
- * @param {*} searchElement Content for which to be searched
- * @param {integer} fromIndex The begining index from which to begin the search, defaults to 0
- * @return {integer} number of elements removed
- **/
-function filter( arr, func, thisArg ){
-	if ( arr.filter ){
-		return arr.filter( func, thisArg );
-	}else{
-		var i,
-			val,
-			t = Object( this ), // jshint ignore:line
-			c = parseInt( t.length, 10 ),
-			res = [];
-
-		if ( !bmoor.isFunction(func) ){
-			throw new Error('func needs to be a function');
-		}
-
-		for ( i = 0; i < c; i++ ){
-			if ( i in t ){
-				val = t[i];
-
-				if ( func.call(thisArg, val, i, t) ){
-					res.push( val );
-				}
-			}
-		}
-
-		return res;
-	}
-}
-
-/**
- * Compare two arrays, 
+ * Compare two arrays.
  *
  * @function remove
  * @param {array} arr1 An array to be compared
@@ -234,11 +159,103 @@ function compare( arr1, arr2, func ){
 	};
 }
 
+/**
+ * Create a new array that is completely unique
+ *
+ * @function unique
+ * @param {array} arr The array to be made unique
+ * @param {function|boolean} sort If boolean === true, array is presorted.  If function, use to sort
+ **/
+function unique( arr, sort, uniqueFn ){
+	var rtn = [];
+
+	if ( arr.length ){
+		if ( sort ){
+			// more efficient because I can presort
+			if ( bmoor.isFunction(sort) ){
+				arr = arr.slice(0).sort(sort);
+			}
+
+			let last;
+			
+			for( let i = 0, c = arr.length; i < c; i++ ){
+				let d = arr[i],
+					v = uniqueFn ? uniqueFn(d) : d;
+
+				if ( v !== last ){
+					last = v;
+					rtn.push( d );
+				}
+			}
+		}else if ( uniqueFn ){
+			let hash = {};
+
+			for( let i = 0, c = arr.length; i < c; i++ ){
+				let d = arr[i],
+					v = uniqueFn(d);
+
+				if ( !hash[v] ){
+					hash[v] = true;
+					rtn.push( d );
+				}
+			}
+		}else{
+			// greedy and inefficient
+			for( let i = 0, c = arr.length; i < c; i++ ){
+			 	let d = arr[i];
+
+			 	if ( rtn.indexOf(d) === -1 ){
+			 		rtn.push( d );
+			 	}
+			}
+		}
+	}
+
+	return rtn;
+}
+
+// I could probably make this sexier, like allow uniqueness algorithm, but I'm keeping it simple for now
+function intersection( arr1, arr2 ){
+	var rtn = [];
+
+	if ( arr1.length > arr2.length ){
+		let t = arr1;
+
+		arr1 = arr2;
+		arr2 = t;
+	}
+
+	for( let i = 0, c = arr1.length; i < c; i++ ){
+		let d = arr1[i];
+
+		if ( arr2.indexOf(d) !== -1 ){
+			rtn.push( d );
+		}
+	}
+
+	return rtn;
+}
+
+function difference( arr1, arr2 ){
+	var rtn = [];
+
+	for( let i = 0, c = arr1.length; i < c; i++ ){
+		let d = arr1[i];
+
+		if ( arr2.indexOf(d) === -1 ){
+			rtn.push( d );
+		}
+	}
+
+	return rtn;
+}
+
 module.exports = {
-	indexOf: indexOf,
 	remove: remove,
 	removeAll: removeAll,
 	bisect: bisect,
-	filter: filter,
-	compare: compare
+	compare: compare,
+	unique: unique,
+	intersection: intersection,
+	difference: difference
 };
