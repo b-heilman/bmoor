@@ -2,7 +2,7 @@ var bmoor = require('./core.js'),
 	regex = {};
 
 // TODO: put in a polyfill block
-if ( window && !bmoor.isFunction(window.CustomEvent) ){
+if ( typeof(window) !== 'undefined' && !bmoor.isFunction(window.CustomEvent) ){
 
 	let CustomEvent = function( event, params ) {
 		params = params || { bubbles: false, cancelable: false, detail: undefined };
@@ -19,7 +19,7 @@ if ( window && !bmoor.isFunction(window.CustomEvent) ){
 	window.CustomEvent = CustomEvent;
 }
 
-if ( Element && !Element.prototype.matches ) {
+if ( typeof(Element) !== 'undefined' && !Element.prototype.matches ) {
     Element.prototype.matches = Element.prototype.msMatchesSelector;
 }
 
