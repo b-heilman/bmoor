@@ -19,7 +19,7 @@ gulp.task('demo', function() {
 					test: /\.js$/,
 					loader: "babel-loader",
 					query: {
-    					presets: ['es2015']
+    					presets: ['env']
   					}
 				}],
 			},
@@ -41,7 +41,7 @@ gulp.task('library', function() {
 					test: /\.js$/,
 					loader: "babel-loader",
 					query: {
-    				presets: ['es2015']
+    				presets: ['env']
   				}
 				}],
 			},

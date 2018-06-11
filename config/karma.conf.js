@@ -10,6 +10,14 @@ module.exports = function(config) {
         // testing framework to use (jasmine/mocha/qunit/...)
         frameworks: ['jasmine'],
 
+        plugins: [
+            require("karma-webpack"),
+            'karma-jasmine',
+            'karma-chrome-launcher',
+            'karma-ie-launcher',
+            'karma-sourcemap-loader'
+        ],
+
         // list of files / patterns to load in the browser
         files: [
             'dist/bmoor.js',
@@ -34,10 +42,11 @@ module.exports = function(config) {
                     test: /\.js$/,
                     loader: "babel-loader",
                     options: {
-                        presets: ['es2015']
+                        presets: ['env']
                     }
                 }]
-            }
+            },
+            devtool: 'inline-source-map'
         },
 
         webpackMiddleware: {
@@ -50,13 +59,6 @@ module.exports = function(config) {
                 chunks: false
             }
         },
-
-        plugins: [
-            require("karma-webpack"),
-            'karma-jasmine',
-            'karma-chrome-launcher',
-            'karma-ie-launcher'
-        ],
 
         client: {
             captureConsole: true
