@@ -625,7 +625,7 @@ var bmoor = __webpack_require__(0),
     regex = {};
 
 // TODO: put in a polyfill block
-if (!bmoor.isFunction(window.CustomEvent)) {
+if (window && !bmoor.isFunction(window.CustomEvent)) {
 
 	var _CustomEvent = function _CustomEvent(event, params) {
 		params = params || { bubbles: false, cancelable: false, detail: undefined };
@@ -642,7 +642,7 @@ if (!bmoor.isFunction(window.CustomEvent)) {
 	window.CustomEvent = _CustomEvent;
 }
 
-if (!Element.prototype.matches) {
+if (Element && !Element.prototype.matches) {
 	Element.prototype.matches = Element.prototype.msMatchesSelector;
 }
 
