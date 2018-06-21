@@ -229,6 +229,10 @@ function get( root, path ){
 		nextSpace,
 		curSpace = root;
 	
+	if ( !root ){
+		return root;
+	}
+
 	space = parse(path);
 	if ( space.length ){
 		for( i = 0, c = space.length; i < c; i++ ){
