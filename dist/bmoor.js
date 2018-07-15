@@ -303,6 +303,10 @@ function get(root, path) {
 	    nextSpace,
 	    curSpace = root;
 
+	if (!root) {
+		return root;
+	}
+
 	space = parse(path);
 	if (space.length) {
 		for (i = 0, c = space.length; i < c; i++) {
@@ -2114,11 +2118,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var master = {};
 
 var Memory = function () {
-	function Memory() {
+	function Memory(name) {
 		_classCallCheck(this, Memory);
 
 		var index = {};
 
+		this.name = name;
 		this.get = function (name) {
 			return index[name];
 		};

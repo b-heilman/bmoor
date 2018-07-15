@@ -1,33 +1,34 @@
 var master = {};
 
 class Memory{
-	constructor(){
+	constructor( name ){
 		var index = {};
 
-		this.get = function( name ){
+		this.name = name;
+		this.get = ( name ) => {
 			return index[name];
 		};
 
-		this.check = function( name ){
+		this.check = ( name ) => {
 			console.log( 'Memory::check will soon removed');
 			return index[name];
 		};
 
-		this.isSet = function( name ){
+		this.isSet = ( name ) => {
 			return !!index[name];
 		};
 
-		this.register = function( name, obj ){
+		this.register = ( name, obj ) => {
 			index[name] = obj;
 		};
 
-		this.clear = function( name ){
+		this.clear = ( name ) => {
 			if ( name in index ){
 				delete index[name];
 			}
 		};
 
-		this.keys = function(){
+		this.keys = () => {
 			return Object.keys(index);
 		};
 	}
