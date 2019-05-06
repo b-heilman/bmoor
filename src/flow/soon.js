@@ -17,8 +17,8 @@ module.exports = function( cb, time, settings ){
 		ctx = this;
 		args = arguments;
 
-		if ( !timeout ){
-			timeout = setTimeout( fire, time );
+		if (!timeout){
+			timeout = setTimeout(fire, time);
 		}
 	};
 
@@ -30,6 +30,10 @@ module.exports = function( cb, time, settings ){
 	fn.flush = function(){
 		fire();
 		fn.clear();
+	};
+
+	fn.active = function(){
+		return !!timeout;
 	};
 
 	return fn;

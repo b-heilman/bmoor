@@ -255,6 +255,8 @@ function equals( obj1, obj2 ){
 	return false;
 }
 
+// TODO : property watch
+
 module.exports = {
 	keys: keys,
 	values: values,

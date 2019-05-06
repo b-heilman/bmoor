@@ -250,6 +250,51 @@ function difference( arr1, arr2 ){
 	return rtn;
 }
 
+function watch( arr, insert, remove, preload ){
+	if (insert){
+		let oldPush = arr.push.bind(arr);
+		let oldUnshift = arr.unshift.bind(arr);
+
+		arr.push = function(...args){
+			args.forEach(insert);
+
+			oldPush(...args);
+		};
+
+		arr.unshift = function(...args){
+			args.forEach(insert);
+
+			oldUnshift(...args);
+		};
+
+		if(preload){
+			arr.forEach(insert);
+		}
+	}
+
+	if (remove){
+		let oldShift = arr.shift.bind(arr);
+		let oldPop = arr.pop.bind(arr);
+		let oldSplice = arr.splice.bind(arr);
+
+		arr.shift = function(...args){
+			remove(oldShift(...args));
+		};
+
+		arr.pop = function(...args){
+			remove(oldPop(...args));
+		};
+
+		arr.splice = function(...args){
+			var res = oldSplice(...args);
+
+			res.forEach(remove);
+
+			return res;
+		};
+	}
+}
+
 module.exports = {
 	remove: remove,
 	removeAll: removeAll,
@@ -257,5 +302,6 @@ module.exports = {
 	compare: compare,
 	unique: unique,
 	intersection: intersection,
-	difference: difference
+	difference: difference,
+	watch: watch
 };

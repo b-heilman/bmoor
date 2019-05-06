@@ -233,4 +233,57 @@ describe("bmoor.array", function() {
 			).toEqual([1,5,6])
 		});
 	});
+
+	describe('::watch', function(){
+		it('should wrap interfaces to arrays to broadcast changes', function(){
+			var arr = [1,2,3,4,5,6];
+			var inserted = [];
+			var removed = [];
+
+			bmoor.array.watch(
+				arr,
+				function(datum){
+					inserted.push(datum);
+				},
+				function(datum){
+					removed.push(datum);
+				}
+			);
+
+			arr.unshift(-1,0);
+			arr.push(7);
+
+			expect(arr.slice(0)).toEqual([-1,0,1,2,3,4,5,6,7]);
+			expect(inserted).toEqual([-1,0,7]);
+
+			arr.pop();
+			arr.shift();
+
+			arr.splice(1,2);
+
+			expect(arr.slice(0)).toEqual([0,3,4,5,6]);
+			expect(removed).toEqual([7,-1,1,2]);
+		});
+
+		it('should preload', function(){
+			var arr = [1,2,3,4,5,6];
+			var inserted = [];
+			var removed = [];
+
+			bmoor.array.watch(
+				arr,
+				function(datum){
+					inserted.push(datum);
+				},
+				function(datum){
+					removed.push(datum);
+				},
+				true
+			);
+
+			expect(arr.slice(0)).toEqual([1,2,3,4,5,6]);
+			expect(inserted).toEqual([1,2,3,4,5,6]);
+			expect(removed).toEqual([]);
+		});
+	});
 });

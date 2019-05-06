@@ -12,7 +12,7 @@ module.exports = function( cb, min, max, settings ){
 
 	function fire(){
 		limit = null;
-		cb.apply( settings.context || ctx, args );
+		cb.apply(settings.context || ctx, args);
 	}
 
 	function run(){
@@ -21,7 +21,7 @@ module.exports = function( cb, min, max, settings ){
 		if ( now >= limit || now >= next ){
 			fire();
 		}else{
-			timeout = setTimeout( run, Math.min(limit,next)-now );
+			timeout = setTimeout(run, Math.min(limit,next)-now);
 		}
 	}
 
@@ -34,12 +34,12 @@ module.exports = function( cb, min, max, settings ){
 
 		if ( !limit ){
 			limit = now + max;
-			timeout = setTimeout( run, min );
+			timeout = setTimeout(run, min);
 		}
 	};
 
 	fn.clear = function(){
-		clearTimeout( timeout );
+		clearTimeout(timeout);
 		timeout = null;
 		limit = null;
 	};
@@ -51,6 +51,10 @@ module.exports = function( cb, min, max, settings ){
 
 	fn.shift = function( diff ){
 		limit += diff;
+	};
+
+	fn.active = function(){
+		return !!limit;
 	};
 
 	return fn;

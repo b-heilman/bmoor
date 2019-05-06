@@ -16,7 +16,7 @@ class Eventing {
 		listeners.push( cb );
 
 		return function clear$on(){
-			listeners.splice( listeners.indexOf(cb), 1 );
+			listeners.splice(listeners.indexOf(cb), 1);
 		};
 	}
 

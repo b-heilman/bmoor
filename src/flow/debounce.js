@@ -32,7 +32,7 @@ module.exports = function( cb, time, settings ){
 		limit = now + time;
 
 		if ( !timeout ){
-			timeout = setTimeout( run, time );
+			timeout = setTimeout(run, time);
 		}
 	};
 
@@ -49,6 +49,10 @@ module.exports = function( cb, time, settings ){
 
 	fn.shift = function( diff ){
 		limit += diff;
+	};
+
+	fn.active = function(){
+		return !!timeout;
 	};
 
 	return fn;
