@@ -7,19 +7,19 @@ class Observable extends Eventing {
 	constructor(settings = {}){
 		super();
 
-		// I need both hot and currentValue because currentValue
-		// could really be anything, I suppose I could do in, but 
-		// that seems more annoying, less performant?
-		this.hot = false;
 		this.settings = settings;
 
 		this._next = flowWindow(() => {
-			this.trigger('next', this.currentValue);
+			const args = this.currentArgs;
+			this.trigger('next', ...args);
 		}, settings.windowMin||0, settings.windowMax||30);
 
-		this.next = function(val = this){
-			this.hot = true;
-			this.currentValue = val;
+		this.next = function(...args){
+			if (!args.length){
+				args = [this];
+			}
+
+			this.currentArgs = args;
 
 			this._next();
 		};
@@ -28,7 +28,7 @@ class Observable extends Eventing {
 	subscribe(onNext, onError, onComplete){
 		let config = null;
 
-		if (core.isFunction(onNext)){
+		if (core.isFunction(onNext) || core.isArray(onNext)){
 			config = {
 				next: onNext,
 				error: onError ? onError : function(){
@@ -42,9 +42,22 @@ class Observable extends Eventing {
 			config = onNext;
 		}
 
-		if (this.hot && config.next){
+		if (this.currentArgs && config.next){
+			let fn = null;
+
 			// make it act like a hot observable
-			config.next(this.currentValue);
+			const args = this.currentArgs;
+			const cb = config.next;
+
+			if (core.isArray(cb)){
+				if (cb.length){
+					fn = cb.shift();
+				}
+			} else {
+				fn = cb;
+			}
+
+			fn(...args);
 		}
 
 		return super.subscribe(config);
@@ -52,7 +65,7 @@ class Observable extends Eventing {
 
 	// return back a promise that is active on the 'next'
 	promise(){
-		if (!this.hot || this._next.active()){
+		if (!this.currentArgs || this._next.active()){
 			if (!this._promise){
 				this._promise = new Promise((resolve, reject) => {
 					let next = null;
@@ -76,12 +89,14 @@ class Observable extends Eventing {
 
 			return this._promise;
 		} else {
-			return Promise.resolve(this.currentValue);
+			const args = this.currentArgs;
+
+			return Promise.resolve(...args);
 		}
 	}
 
 	destroy(){
-		this.hot = false;
+		this.currentArgs = null;
 
 		this.trigger('complete');
 	}

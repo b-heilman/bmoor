@@ -56,6 +56,33 @@ describe('bmoor.Eventing', function(){
 				done();
 			}, 40);
 		});
+
+		it('should work with an array for orders of called', function(){
+			let called = 0;
+			let firstCall = null;
+			let secondCall = null;
+
+			obj.on('test', [
+				function(var1){
+					firstCall = var1;
+				},
+				function(var2){
+					secondCall = var2;
+				}
+			]);
+
+			obj.on('test', function(){
+				called++;
+			});
+
+			obj.trigger('test', 'var-1');
+			obj.trigger('test', 'var-2');
+			obj.trigger('test', 'var-3');
+
+			expect(firstCall).toBe('var-1');
+			expect(secondCall).toBe('var-2');
+			expect(called).toBe(3);
+		});
 	});
 
 	it('should pass in arguments', function( done ){

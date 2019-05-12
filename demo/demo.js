@@ -61,7 +61,7 @@ var bmoor =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -597,648 +597,6 @@ module.exports = function (cb, min, max, settings) {
 "use strict";
 
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Eventing = function () {
-	function Eventing() {
-		_classCallCheck(this, Eventing);
-
-		this._listeners = {};
-	}
-
-	_createClass(Eventing, [{
-		key: "on",
-		value: function on(event, cb) {
-			var listeners = null;
-
-			if (!this._listeners[event]) {
-				this._listeners[event] = [];
-			}
-
-			listeners = this._listeners[event];
-
-			listeners.push(cb);
-
-			return function clear$on() {
-				listeners.splice(listeners.indexOf(cb), 1);
-			};
-		}
-	}, {
-		key: "once",
-		value: function once(event, cb) {
-			var clear = null;
-			var fn = function fn() {
-				clear();
-				cb.apply(undefined, arguments);
-			};
-
-			clear = this.on(event, fn);
-
-			return clear;
-		}
-	}, {
-		key: "subscribe",
-		value: function subscribe(subscriptions) {
-			var dis = this;
-			var kills = [];
-			var events = Object.keys(subscriptions);
-
-			events.forEach(function (event) {
-				var action = subscriptions[event];
-
-				kills.push(dis.on(event, action));
-			});
-
-			return function killAll() {
-				kills.forEach(function (kill) {
-					kill();
-				});
-			};
-		}
-	}, {
-		key: "trigger",
-		value: function trigger(event) {
-			for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-				args[_key - 1] = arguments[_key];
-			}
-
-			if (this.hasWaiting(event)) {
-				// slice and deep copy in case someone gets cute and unregisters
-				try {
-					return Promise.all(this._listeners[event].slice(0).map(function (cb) {
-						return cb.apply(undefined, args);
-					}));
-				} catch (ex) {
-					return Promise.reject(ex);
-				}
-			} else {
-				return Promise.resolve([]);
-			}
-		}
-	}, {
-		key: "hasWaiting",
-		value: function hasWaiting(event) {
-			return !!this._listeners[event];
-		}
-	}]);
-
-	return Eventing;
-}();
-
-module.exports = Eventing;
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var bmoor = __webpack_require__(4);
-
-bmoor.dom.triggerEvent(bmoor.dom.getDomElement('#bmoor'), 'click');
-
-var target = bmoor.dom.getDomElement('#target'),
-    positioned = bmoor.dom.getDomElement('#positioned');
-
-bmoor.dom.centerOn(target, positioned);
-
-setTimeout(function () {
-	target.style.width = 50;
-	target.style.height = 50;
-
-	bmoor.dom.centerOn(target, positioned);
-}, 2000);
-
-setTimeout(function () {
-	bmoor.dom.getDomCollection('#wrapper')[0].style.position = 'static';
-	positioned.style.position = 'fixed';
-
-	positioned.style.left = '20%';
-	positioned.style.top = '20%';
-
-	bmoor.dom.showOn(target, positioned);
-}, 4000);
-
-setTimeout(function () {
-	positioned.style.left = '20%';
-	positioned.style.top = '80%';
-
-	bmoor.dom.showOn(target, positioned);
-}, 6000);
-
-setTimeout(function () {
-	positioned.style.left = '80%';
-	positioned.style.top = '80%';
-
-	bmoor.dom.showOn(target, positioned);
-}, 8000);
-
-setTimeout(function () {
-	positioned.style.left = '80%';
-	positioned.style.top = '20%';
-
-	bmoor.dom.showOn(target, positioned);
-}, 10000);
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var bmoor = Object.create(__webpack_require__(0));
-
-bmoor.dom = __webpack_require__(5);
-bmoor.data = __webpack_require__(6);
-bmoor.flow = __webpack_require__(7);
-bmoor.array = __webpack_require__(10);
-bmoor.build = __webpack_require__(11);
-bmoor.object = __webpack_require__(15);
-bmoor.string = __webpack_require__(16);
-bmoor.promise = __webpack_require__(17);
-
-bmoor.Memory = __webpack_require__(18);
-bmoor.Eventing = __webpack_require__(2);
-bmoor.Observable = __webpack_require__(19);
-
-module.exports = bmoor;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var bmoor = __webpack_require__(0),
-    regex = {};
-
-// TODO: put in a polyfill block
-if (typeof window !== 'undefined' && !bmoor.isFunction(window.CustomEvent)) {
-
-	var _CustomEvent = function _CustomEvent(event, params) {
-		params = params || { bubbles: false, cancelable: false, detail: undefined };
-
-		var evt = document.createEvent('CustomEvent');
-
-		evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-
-		return evt;
-	};
-
-	_CustomEvent.prototype = window.Event.prototype;
-
-	window.CustomEvent = _CustomEvent;
-}
-
-if (typeof Element !== 'undefined' && !Element.prototype.matches) {
-	Element.prototype.matches = Element.prototype.msMatchesSelector;
-}
-
-function getReg(className) {
-	var reg = regex[className];
-
-	if (!reg) {
-		reg = new RegExp('(?:^|\\s)' + className + '(?!\\S)');
-		regex[className] = reg;
-	}
-
-	return reg;
-}
-
-function getScrollPosition(doc) {
-	if (!doc) {
-		doc = document;
-	}
-
-	return {
-		left: window.pageXOffset || (doc.documentElement || doc.body).scrollLeft,
-		top: window.pageYOffset || (doc.documentElement || doc.body).scrollTop
-	};
-}
-
-function getBoundryBox(element) {
-	return element.getBoundingClientRect();
-}
-
-function centerOn(element, target, doc) {
-	var el = getBoundryBox(element),
-	    targ = getBoundryBox(target),
-	    pos = getScrollPosition(doc);
-
-	if (!doc) {
-		doc = document;
-	}
-
-	element.style.top = pos.top + targ.top + targ.height / 2 - el.height / 2;
-	element.style.left = pos.left + targ.left + targ.width / 2 - el.width / 2;
-	element.style.right = '';
-	element.style.bottom = '';
-
-	element.style.position = 'absolute';
-	doc.body.appendChild(element);
-}
-
-function showOn(element, target, doc) {
-	var direction,
-	    targ = getBoundryBox(target),
-	    x = targ.x + targ.width / 2,
-	    y = targ.y + targ.height / 2,
-	    centerX = window.innerWidth / 2,
-	    centerY = window.innerHeight / 2,
-	    pos = getScrollPosition(doc);
-
-	if (!doc) {
-		doc = document;
-	}
-
-	if (x < centerX) {
-		// right side has more room
-		direction = 'r';
-		element.style.left = pos.left + targ.right;
-		element.style.right = '';
-	} else {
-		// left side has more room
-		//element.style.left = targ.left - el.width - offset;
-		direction = 'l';
-		element.style.right = window.innerWidth - targ.left - pos.left;
-		element.style.left = '';
-	}
-
-	if (y < centerY) {
-		// more room on bottom
-		direction = 'b' + direction;
-		element.style.top = pos.top + targ.bottom;
-		element.style.bottom = '';
-	} else {
-		// more room on top
-		direction = 't' + direction;
-		element.style.bottom = window.innerHeight - targ.top - pos.top;
-		element.style.top = '';
-	}
-
-	element.style.position = 'absolute';
-	doc.body.appendChild(element);
-
-	return direction;
-}
-
-function massage(elements) {
-	if (!bmoor.isArrayLike(elements)) {
-		elements = [elements];
-	}
-
-	return elements;
-}
-
-function getDomElement(element, doc) {
-	if (!doc) {
-		doc = document;
-	}
-
-	if (bmoor.isString(element)) {
-		return doc.querySelector(element);
-	} else {
-		return element;
-	}
-}
-
-function getDomCollection(elements, doc) {
-	var i,
-	    c,
-	    j,
-	    co,
-	    el,
-	    selection,
-	    els = [];
-
-	if (!doc) {
-		doc = document;
-	}
-
-	elements = massage(elements);
-
-	for (i = 0, c = elements.length; i < c; i++) {
-		el = elements[i];
-		if (bmoor.isString(el)) {
-			selection = doc.querySelectorAll(el);
-			for (j = 0, co = selection.length; j < co; j++) {
-				els.push(selection[j]);
-			}
-		} else {
-			els.push(el);
-		}
-	}
-
-	return els;
-}
-
-function addClass(elements, className) {
-	var i,
-	    c,
-	    node,
-	    baseClass,
-	    reg = getReg(className);
-
-	elements = massage(elements);
-
-	for (i = 0, c = elements.length; i < c; i++) {
-		node = elements[i];
-		baseClass = node.getAttribute('class') || '';
-
-		if (!baseClass.match(reg)) {
-			node.setAttribute('class', baseClass + ' ' + className);
-		}
-	}
-}
-
-function removeClass(elements, className) {
-	var i,
-	    c,
-	    node,
-	    reg = getReg(className);
-
-	elements = massage(elements);
-
-	for (i = 0, c = elements.length; i < c; i++) {
-		node = elements[i];
-		node.setAttribute('class', (node.getAttribute('class') || '').replace(reg, ''));
-	}
-}
-
-function bringForward(elements) {
-	var i, c, node;
-
-	elements = massage(elements);
-
-	for (i = 0, c = elements.length; i < c; i++) {
-		node = elements[i];
-
-		if (node.parentNode) {
-			node.parentNode.appendChild(node);
-		}
-	}
-}
-
-function triggerEvent(node, eventName, eventData, eventSettings) {
-	if (node.dispatchEvent) {
-		if (!eventSettings) {
-			eventSettings = { 'view': window, 'bubbles': true, 'cancelable': true };
-		} else {
-			if (eventSettings.bubbles === undefined) {
-				eventSettings.bubbles = true;
-			}
-			if (eventSettings.cancelable === undefined) {
-				eventSettings.cancelable = true;
-			}
-		}
-
-		eventSettings.detail = eventData;
-
-		var event = new CustomEvent(eventName, eventSettings);
-		event.$bmoor = true; // allow detection of bmoor events
-
-		node.dispatchEvent(event);
-	} else if (node.fireEvent) {
-		var doc = void 0;
-
-		if (!bmoor.isString(eventName)) {
-			throw new Error('Can not throw custom events in IE');
-		}
-
-		if (node.ownerDocument) {
-			doc = node.ownerDocument;
-		} else if (node.nodeType === 9) {
-			// the node may be the document itself, nodeType 9 = DOCUMENT_NODE
-			doc = node;
-		} else if (typeof document !== 'undefined') {
-			doc = document;
-		} else {
-			throw new Error('Invalid node passed to fireEvent: ' + node.id);
-		}
-
-		var _event = doc.createEventObject();
-		_event.detail = eventData;
-		_event.$bmoor = true; // allow detection of bmoor events
-
-		node.fireEvent('on' + eventName, _event);
-	} else {
-		throw new Error('We can not trigger events here');
-	}
-}
-
-function onEvent(node, eventName, cb, qualifier) {
-	node.addEventListener(eventName, function (event) {
-		if (qualifier && !(event.target || event.srcElement).matches(qualifier)) {
-			return;
-		}
-
-		cb(event.detail, event);
-	});
-}
-
-module.exports = {
-	getScrollPosition: getScrollPosition,
-	getBoundryBox: getBoundryBox,
-	getDomElement: getDomElement,
-	getDomCollection: getDomCollection,
-	showOn: showOn,
-	centerOn: centerOn,
-	addClass: addClass,
-	removeClass: removeClass,
-	bringForward: bringForward,
-	triggerEvent: triggerEvent,
-	onEvent: onEvent,
-	on: function on(node, settings) {
-		Object.keys(settings).forEach(function (eventName) {
-			var ops = settings[eventName];
-
-			if (bmoor.isFunction(ops)) {
-				onEvent(node, eventName, ops);
-			} else {
-				Object.keys(ops).forEach(function (qualifier) {
-					var cb = ops[qualifier];
-
-					onEvent(node, eventName, cb, qualifier);
-				});
-			}
-		});
-	}
-};
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Array helper functions
- * @module bmoor.data
- **/
-
-var _id = 0;
-
-function nextUid() {
-	return ++_id;
-}
-
-function setUid(obj) {
-	var t = obj.$$bmoorUid;
-
-	if (!t) {
-		t = obj.$$bmoorUid = nextUid();
-	}
-
-	return t;
-}
-
-function getUid(obj) {
-	if (!obj.$$bmoorUid) {
-		setUid(obj);
-	}
-
-	return obj.$$bmoorUid;
-}
-
-module.exports = {
-	setUid: setUid,
-	getUid: getUid
-};
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = {
-	soon: __webpack_require__(8),
-	debounce: __webpack_require__(9),
-	window: __webpack_require__(1)
-};
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function (cb, time, settings) {
-	var ctx, args, timeout;
-
-	if (!settings) {
-		settings = {};
-	}
-
-	function fire() {
-		timeout = null;
-		cb.apply(settings.context || ctx, args);
-	}
-
-	var fn = function sooned() {
-		ctx = this;
-		args = arguments;
-
-		if (!timeout) {
-			timeout = setTimeout(fire, time);
-		}
-	};
-
-	fn.clear = function () {
-		clearTimeout(timeout);
-		timeout = null;
-	};
-
-	fn.flush = function () {
-		fire();
-		fn.clear();
-	};
-
-	fn.active = function () {
-		return !!timeout;
-	};
-
-	return fn;
-};
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function (cb, time, settings) {
-	var ctx, args, limit, timeout;
-
-	if (!settings) {
-		settings = {};
-	}
-
-	function fire() {
-		timeout = null;
-		cb.apply(settings.context || ctx, args);
-	}
-
-	function run() {
-		var now = Date.now();
-
-		if (now >= limit) {
-			fire();
-		} else {
-			timeout = setTimeout(run, limit - now);
-		}
-	}
-
-	var fn = function debounced() {
-		var now = Date.now();
-
-		ctx = this;
-		args = arguments;
-		limit = now + time;
-
-		if (!timeout) {
-			timeout = setTimeout(run, time);
-		}
-	};
-
-	fn.clear = function () {
-		clearTimeout(timeout);
-		timeout = null;
-		limit = null;
-	};
-
-	fn.flush = function () {
-		fire();
-		fn.clear();
-	};
-
-	fn.shift = function (diff) {
-		limit += diff;
-	};
-
-	fn.active = function () {
-		return !!timeout;
-	};
-
-	return fn;
-};
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 /**
  * Array helper functions
  * @module bmoor.array
@@ -1553,6 +911,670 @@ module.exports = {
 	intersection: intersection,
 	difference: difference,
 	watch: watch
+};
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var core = __webpack_require__(0);
+var array = __webpack_require__(2);
+
+var Eventing = function () {
+	function Eventing() {
+		_classCallCheck(this, Eventing);
+
+		this._listeners = {};
+	}
+
+	_createClass(Eventing, [{
+		key: 'on',
+		value: function on(event, cb) {
+			var listeners = null;
+
+			if (!this._listeners[event]) {
+				this._listeners[event] = [];
+			}
+
+			listeners = this._listeners[event];
+
+			listeners.push(cb);
+
+			return function clear$on() {
+				listeners.splice(listeners.indexOf(cb), 1);
+			};
+		}
+	}, {
+		key: 'once',
+		value: function once(event, cb) {
+			var clear = null;
+			var fn = function fn() {
+				clear();
+				cb.apply(undefined, arguments);
+			};
+
+			clear = this.on(event, fn);
+
+			return clear;
+		}
+	}, {
+		key: 'subscribe',
+		value: function subscribe(subscriptions) {
+			var dis = this;
+			var kills = [];
+			var events = Object.keys(subscriptions);
+
+			events.forEach(function (event) {
+				var action = subscriptions[event];
+
+				kills.push(dis.on(event, action));
+			});
+
+			return function killAll() {
+				kills.forEach(function (kill) {
+					kill();
+				});
+			};
+		}
+	}, {
+		key: 'trigger',
+		value: function trigger(event) {
+			for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+				args[_key - 1] = arguments[_key];
+			}
+
+			if (this.hasWaiting(event)) {
+				// slice and deep copy in case someone gets cute and unregisters
+				try {
+					var callbacks = this._listeners[event];
+					return Promise.all(callbacks.slice(0).map(function (cb) {
+						var fn = null;
+
+						if (core.isArray(cb)) {
+							if (cb.length) {
+								fn = cb.shift();
+							}
+
+							if (!cb.length) {
+								array.remove(callbacks, cb);
+							}
+						} else {
+							fn = cb;
+						}
+
+						if (fn) {
+							return fn.apply(undefined, args);
+						} else {
+							return;
+						}
+					}));
+				} catch (ex) {
+					return Promise.reject(ex);
+				}
+			} else {
+				return Promise.resolve([]);
+			}
+		}
+	}, {
+		key: 'hasWaiting',
+		value: function hasWaiting(event) {
+			return !!this._listeners[event];
+		}
+	}]);
+
+	return Eventing;
+}();
+
+module.exports = Eventing;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var bmoor = __webpack_require__(5);
+
+bmoor.dom.triggerEvent(bmoor.dom.getDomElement('#bmoor'), 'click');
+
+var target = bmoor.dom.getDomElement('#target'),
+    positioned = bmoor.dom.getDomElement('#positioned');
+
+bmoor.dom.centerOn(target, positioned);
+
+setTimeout(function () {
+	target.style.width = 50;
+	target.style.height = 50;
+
+	bmoor.dom.centerOn(target, positioned);
+}, 2000);
+
+setTimeout(function () {
+	bmoor.dom.getDomCollection('#wrapper')[0].style.position = 'static';
+	positioned.style.position = 'fixed';
+
+	positioned.style.left = '20%';
+	positioned.style.top = '20%';
+
+	bmoor.dom.showOn(target, positioned);
+}, 4000);
+
+setTimeout(function () {
+	positioned.style.left = '20%';
+	positioned.style.top = '80%';
+
+	bmoor.dom.showOn(target, positioned);
+}, 6000);
+
+setTimeout(function () {
+	positioned.style.left = '80%';
+	positioned.style.top = '80%';
+
+	bmoor.dom.showOn(target, positioned);
+}, 8000);
+
+setTimeout(function () {
+	positioned.style.left = '80%';
+	positioned.style.top = '20%';
+
+	bmoor.dom.showOn(target, positioned);
+}, 10000);
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var bmoor = Object.create(__webpack_require__(0));
+
+bmoor.dom = __webpack_require__(6);
+bmoor.data = __webpack_require__(7);
+bmoor.flow = __webpack_require__(8);
+bmoor.array = __webpack_require__(2);
+bmoor.build = __webpack_require__(11);
+bmoor.object = __webpack_require__(15);
+bmoor.string = __webpack_require__(16);
+bmoor.promise = __webpack_require__(17);
+
+bmoor.Memory = __webpack_require__(18);
+bmoor.Eventing = __webpack_require__(3);
+bmoor.Observable = __webpack_require__(19);
+
+module.exports = bmoor;
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var bmoor = __webpack_require__(0),
+    regex = {};
+
+// TODO: put in a polyfill block
+if (typeof window !== 'undefined' && !bmoor.isFunction(window.CustomEvent)) {
+
+	var _CustomEvent = function _CustomEvent(event, params) {
+		params = params || { bubbles: false, cancelable: false, detail: undefined };
+
+		var evt = document.createEvent('CustomEvent');
+
+		evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+
+		return evt;
+	};
+
+	_CustomEvent.prototype = window.Event.prototype;
+
+	window.CustomEvent = _CustomEvent;
+}
+
+if (typeof Element !== 'undefined' && !Element.prototype.matches) {
+	Element.prototype.matches = Element.prototype.msMatchesSelector;
+}
+
+function getReg(className) {
+	var reg = regex[className];
+
+	if (!reg) {
+		reg = new RegExp('(?:^|\\s)' + className + '(?!\\S)');
+		regex[className] = reg;
+	}
+
+	return reg;
+}
+
+function getScrollPosition(doc) {
+	if (!doc) {
+		doc = document;
+	}
+
+	return {
+		left: window.pageXOffset || (doc.documentElement || doc.body).scrollLeft,
+		top: window.pageYOffset || (doc.documentElement || doc.body).scrollTop
+	};
+}
+
+function getBoundryBox(element) {
+	return element.getBoundingClientRect();
+}
+
+function centerOn(element, target, doc) {
+	var el = getBoundryBox(element),
+	    targ = getBoundryBox(target),
+	    pos = getScrollPosition(doc);
+
+	if (!doc) {
+		doc = document;
+	}
+
+	element.style.top = pos.top + targ.top + targ.height / 2 - el.height / 2;
+	element.style.left = pos.left + targ.left + targ.width / 2 - el.width / 2;
+	element.style.right = '';
+	element.style.bottom = '';
+
+	element.style.position = 'absolute';
+	doc.body.appendChild(element);
+}
+
+function showOn(element, target, doc) {
+	var direction,
+	    targ = getBoundryBox(target),
+	    x = targ.x + targ.width / 2,
+	    y = targ.y + targ.height / 2,
+	    centerX = window.innerWidth / 2,
+	    centerY = window.innerHeight / 2,
+	    pos = getScrollPosition(doc);
+
+	if (!doc) {
+		doc = document;
+	}
+
+	if (x < centerX) {
+		// right side has more room
+		direction = 'r';
+		element.style.left = pos.left + targ.right;
+		element.style.right = '';
+	} else {
+		// left side has more room
+		//element.style.left = targ.left - el.width - offset;
+		direction = 'l';
+		element.style.right = window.innerWidth - targ.left - pos.left;
+		element.style.left = '';
+	}
+
+	if (y < centerY) {
+		// more room on bottom
+		direction = 'b' + direction;
+		element.style.top = pos.top + targ.bottom;
+		element.style.bottom = '';
+	} else {
+		// more room on top
+		direction = 't' + direction;
+		element.style.bottom = window.innerHeight - targ.top - pos.top;
+		element.style.top = '';
+	}
+
+	element.style.position = 'absolute';
+	doc.body.appendChild(element);
+
+	return direction;
+}
+
+function massage(elements) {
+	if (!bmoor.isArrayLike(elements)) {
+		elements = [elements];
+	}
+
+	return elements;
+}
+
+function getDomElement(element, doc) {
+	if (!doc) {
+		doc = document;
+	}
+
+	if (bmoor.isString(element)) {
+		return doc.querySelector(element);
+	} else {
+		return element;
+	}
+}
+
+function getDomCollection(elements, doc) {
+	var i,
+	    c,
+	    j,
+	    co,
+	    el,
+	    selection,
+	    els = [];
+
+	if (!doc) {
+		doc = document;
+	}
+
+	elements = massage(elements);
+
+	for (i = 0, c = elements.length; i < c; i++) {
+		el = elements[i];
+		if (bmoor.isString(el)) {
+			selection = doc.querySelectorAll(el);
+			for (j = 0, co = selection.length; j < co; j++) {
+				els.push(selection[j]);
+			}
+		} else {
+			els.push(el);
+		}
+	}
+
+	return els;
+}
+
+function addClass(elements, className) {
+	var i,
+	    c,
+	    node,
+	    baseClass,
+	    reg = getReg(className);
+
+	elements = massage(elements);
+
+	for (i = 0, c = elements.length; i < c; i++) {
+		node = elements[i];
+		baseClass = node.getAttribute('class') || '';
+
+		if (!baseClass.match(reg)) {
+			node.setAttribute('class', baseClass + ' ' + className);
+		}
+	}
+}
+
+function removeClass(elements, className) {
+	var i,
+	    c,
+	    node,
+	    reg = getReg(className);
+
+	elements = massage(elements);
+
+	for (i = 0, c = elements.length; i < c; i++) {
+		node = elements[i];
+		node.setAttribute('class', (node.getAttribute('class') || '').replace(reg, ''));
+	}
+}
+
+function bringForward(elements) {
+	var i, c, node;
+
+	elements = massage(elements);
+
+	for (i = 0, c = elements.length; i < c; i++) {
+		node = elements[i];
+
+		if (node.parentNode) {
+			node.parentNode.appendChild(node);
+		}
+	}
+}
+
+function triggerEvent(node, eventName, eventData, eventSettings) {
+	if (node.dispatchEvent) {
+		if (!eventSettings) {
+			eventSettings = { 'view': window, 'bubbles': true, 'cancelable': true };
+		} else {
+			if (eventSettings.bubbles === undefined) {
+				eventSettings.bubbles = true;
+			}
+			if (eventSettings.cancelable === undefined) {
+				eventSettings.cancelable = true;
+			}
+		}
+
+		eventSettings.detail = eventData;
+
+		var event = new CustomEvent(eventName, eventSettings);
+		event.$bmoor = true; // allow detection of bmoor events
+
+		node.dispatchEvent(event);
+	} else if (node.fireEvent) {
+		var doc = void 0;
+
+		if (!bmoor.isString(eventName)) {
+			throw new Error('Can not throw custom events in IE');
+		}
+
+		if (node.ownerDocument) {
+			doc = node.ownerDocument;
+		} else if (node.nodeType === 9) {
+			// the node may be the document itself, nodeType 9 = DOCUMENT_NODE
+			doc = node;
+		} else if (typeof document !== 'undefined') {
+			doc = document;
+		} else {
+			throw new Error('Invalid node passed to fireEvent: ' + node.id);
+		}
+
+		var _event = doc.createEventObject();
+		_event.detail = eventData;
+		_event.$bmoor = true; // allow detection of bmoor events
+
+		node.fireEvent('on' + eventName, _event);
+	} else {
+		throw new Error('We can not trigger events here');
+	}
+}
+
+function onEvent(node, eventName, cb, qualifier) {
+	node.addEventListener(eventName, function (event) {
+		if (qualifier && !(event.target || event.srcElement).matches(qualifier)) {
+			return;
+		}
+
+		cb(event.detail, event);
+	});
+}
+
+module.exports = {
+	getScrollPosition: getScrollPosition,
+	getBoundryBox: getBoundryBox,
+	getDomElement: getDomElement,
+	getDomCollection: getDomCollection,
+	showOn: showOn,
+	centerOn: centerOn,
+	addClass: addClass,
+	removeClass: removeClass,
+	bringForward: bringForward,
+	triggerEvent: triggerEvent,
+	onEvent: onEvent,
+	on: function on(node, settings) {
+		Object.keys(settings).forEach(function (eventName) {
+			var ops = settings[eventName];
+
+			if (bmoor.isFunction(ops)) {
+				onEvent(node, eventName, ops);
+			} else {
+				Object.keys(ops).forEach(function (qualifier) {
+					var cb = ops[qualifier];
+
+					onEvent(node, eventName, cb, qualifier);
+				});
+			}
+		});
+	}
+};
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Array helper functions
+ * @module bmoor.data
+ **/
+
+var _id = 0;
+
+function nextUid() {
+	return ++_id;
+}
+
+function setUid(obj) {
+	var t = obj.$$bmoorUid;
+
+	if (!t) {
+		t = obj.$$bmoorUid = nextUid();
+	}
+
+	return t;
+}
+
+function getUid(obj) {
+	if (!obj.$$bmoorUid) {
+		setUid(obj);
+	}
+
+	return obj.$$bmoorUid;
+}
+
+module.exports = {
+	setUid: setUid,
+	getUid: getUid
+};
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+	soon: __webpack_require__(9),
+	debounce: __webpack_require__(10),
+	window: __webpack_require__(1)
+};
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function (cb, time, settings) {
+	var ctx, args, timeout;
+
+	if (!settings) {
+		settings = {};
+	}
+
+	function fire() {
+		timeout = null;
+		cb.apply(settings.context || ctx, args);
+	}
+
+	var fn = function sooned() {
+		ctx = this;
+		args = arguments;
+
+		if (!timeout) {
+			timeout = setTimeout(fire, time);
+		}
+	};
+
+	fn.clear = function () {
+		clearTimeout(timeout);
+		timeout = null;
+	};
+
+	fn.flush = function () {
+		fire();
+		fn.clear();
+	};
+
+	fn.active = function () {
+		return !!timeout;
+	};
+
+	return fn;
+};
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function (cb, time, settings) {
+	var ctx, args, limit, timeout;
+
+	if (!settings) {
+		settings = {};
+	}
+
+	function fire() {
+		timeout = null;
+		cb.apply(settings.context || ctx, args);
+	}
+
+	function run() {
+		var now = Date.now();
+
+		if (now >= limit) {
+			fire();
+		} else {
+			timeout = setTimeout(run, limit - now);
+		}
+	}
+
+	var fn = function debounced() {
+		var now = Date.now();
+
+		ctx = this;
+		args = arguments;
+		limit = now + time;
+
+		if (!timeout) {
+			timeout = setTimeout(run, time);
+		}
+	};
+
+	fn.clear = function () {
+		clearTimeout(timeout);
+		timeout = null;
+		limit = null;
+	};
+
+	fn.flush = function () {
+		fire();
+		fn.clear();
+	};
+
+	fn.shift = function (diff) {
+		limit += diff;
+	};
+
+	fn.active = function () {
+		return !!timeout;
+	};
+
+	return fn;
 };
 
 /***/ }),
@@ -2416,6 +2438,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -2424,7 +2448,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var core = __webpack_require__(0);
 var flowWindow = __webpack_require__(1);
-var Eventing = __webpack_require__(2);
+var Eventing = __webpack_require__(3);
 
 var Observable = function (_Eventing) {
 	_inherits(Observable, _Eventing);
@@ -2434,23 +2458,25 @@ var Observable = function (_Eventing) {
 
 		_classCallCheck(this, Observable);
 
-		// I need both hot and currentValue because currentValue
-		// could really be anything, I suppose I could do in, but 
-		// that seems more annoying, less performant?
 		var _this = _possibleConstructorReturn(this, (Observable.__proto__ || Object.getPrototypeOf(Observable)).call(this));
 
-		_this.hot = false;
 		_this.settings = settings;
 
 		_this._next = flowWindow(function () {
-			_this.trigger('next', _this.currentValue);
+			var args = _this.currentArgs;
+			_this.trigger.apply(_this, ['next'].concat(_toConsumableArray(args)));
 		}, settings.windowMin || 0, settings.windowMax || 30);
 
 		_this.next = function () {
-			var val = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this;
+			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+				args[_key] = arguments[_key];
+			}
 
-			this.hot = true;
-			this.currentValue = val;
+			if (!args.length) {
+				args = [this];
+			}
+
+			this.currentArgs = args;
 
 			this._next();
 		};
@@ -2464,7 +2490,7 @@ var Observable = function (_Eventing) {
 
 			var config = null;
 
-			if (core.isFunction(onNext)) {
+			if (core.isFunction(onNext) || core.isArray(onNext)) {
 				config = {
 					next: onNext,
 					error: onError ? onError : function () {
@@ -2478,9 +2504,22 @@ var Observable = function (_Eventing) {
 				config = onNext;
 			}
 
-			if (this.hot && config.next) {
+			if (this.currentArgs && config.next) {
+				var fn = null;
+
 				// make it act like a hot observable
-				config.next(this.currentValue);
+				var args = this.currentArgs;
+				var cb = config.next;
+
+				if (core.isArray(cb)) {
+					if (cb.length) {
+						fn = cb.shift();
+					}
+				} else {
+					fn = cb;
+				}
+
+				fn.apply(undefined, _toConsumableArray(args));
 			}
 
 			return _get(Observable.prototype.__proto__ || Object.getPrototypeOf(Observable.prototype), 'subscribe', this).call(this, config);
@@ -2493,7 +2532,7 @@ var Observable = function (_Eventing) {
 		value: function promise() {
 			var _this3 = this;
 
-			if (!this.hot || this._next.active()) {
+			if (!this.currentArgs || this._next.active()) {
 				if (!this._promise) {
 					this._promise = new Promise(function (resolve, reject) {
 						var next = null;
@@ -2517,13 +2556,15 @@ var Observable = function (_Eventing) {
 
 				return this._promise;
 			} else {
-				return Promise.resolve(this.currentValue);
+				var args = this.currentArgs;
+
+				return Promise.resolve.apply(Promise, _toConsumableArray(args));
 			}
 		}
 	}, {
 		key: 'destroy',
 		value: function destroy() {
-			this.hot = false;
+			this.currentArgs = null;
 
 			this.trigger('complete');
 		}

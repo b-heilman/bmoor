@@ -1,4 +1,7 @@
 
+const core = require('./core.js');
+const array = require('./array.js');
+
 class Eventing {
 
 	constructor(){
@@ -55,9 +58,29 @@ class Eventing {
 		if (this.hasWaiting(event)){
 			// slice and deep copy in case someone gets cute and unregisters
 			try {
-				return Promise.all(this._listeners[event].slice(0)
-					.map(cb => cb(...args))
-				);
+				const callbacks = this._listeners[event];
+				return Promise.all(callbacks.slice(0).map(cb => {
+					let fn = null;
+
+					if (core.isArray(cb)){
+						if (cb.length){
+							fn = cb.shift();
+						}
+						
+						if (!cb.length){
+							array.remove(callbacks, cb);
+						}
+					} else {
+						fn = cb;
+					}
+
+					if (fn){
+						return fn(...args);
+					} else {
+						return;
+					}
+					
+				}));
 			} catch(ex) {
 				return Promise.reject(ex);
 			}

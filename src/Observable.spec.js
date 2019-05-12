@@ -61,6 +61,27 @@ describe('Observable', function(){
 
 			expect(val).toBe(123);
 		});
+
+		it('should call the first method in a stack', function(){
+			const ob = new Observable();
+
+			ob.next(123);
+
+			let firstCall = null;
+			let secondCall = null;
+
+			ob.subscribe([
+				function(var1){
+					firstCall = var1;
+				},
+				function(var2){
+					secondCall = var2;
+				}
+			]);
+
+			expect(firstCall).toBe(123);
+			expect(secondCall).toBe(null);
+		});
 	});
 
 	describe('::promise', function(){
