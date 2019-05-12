@@ -1,11 +1,12 @@
+
 class Eventing {
 
 	constructor(){
 		this._listeners = {};
 	}
 
-	on( event, cb ){
-		var listeners;
+	on(event, cb){
+		let listeners = null;
 
 		if ( !this._listeners[event] ){
 			this._listeners[event] = [];
@@ -20,27 +21,27 @@ class Eventing {
 		};
 	}
 
-	once( event, cb ){
-		var clear,
-			fn = function(){
-				clear();
-				cb.apply( this, arguments );
-			};
+	once(event, cb){
+		let clear = null;
+		const fn = function(...args){
+			clear();
+			cb(...args);
+		};
 
-		clear = this.on( event, fn );
+		clear = this.on(event, fn);
 
 		return clear;
 	}
 
 	subscribe( subscriptions ){
-		var dis = this,
-			kills = [],
-			events =  Object.keys(subscriptions);
+		const dis = this;
+		const kills = [];
+		const events =  Object.keys(subscriptions);
 
 		events.forEach(function( event ){
 			var action = subscriptions[event];
 
-			kills.push( dis.on(event,action) );
+			kills.push(dis.on(event, action));
 		});
 
 		return function killAll(){
@@ -50,13 +51,18 @@ class Eventing {
 		};
 	}
 
-	trigger( event ){
-		var args = Array.prototype.slice.call(arguments,1);
-
-		if ( this.hasWaiting(event) ){
-			this._listeners[event].slice(0).forEach( ( cb ) => {
-				cb.apply( this, args );
-			});
+	trigger(event, ...args){
+		if (this.hasWaiting(event)){
+			// slice and deep copy in case someone gets cute and unregisters
+			try {
+				return Promise.all(this._listeners[event].slice(0)
+					.map(cb => cb(...args))
+				);
+			} catch(ex) {
+				return Promise.reject(ex);
+			}
+		} else {
+			return Promise.resolve([]);
 		}
 	}
 

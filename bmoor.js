@@ -11,5 +11,6 @@ bmoor.promise = require('./src/promise.js');
 
 bmoor.Memory = require('./src/Memory.js');
 bmoor.Eventing = require('./src/Eventing.js');
+bmoor.Observable = require('./src/Observable.js');
 
 module.exports = bmoor;

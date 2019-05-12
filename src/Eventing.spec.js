@@ -16,13 +16,46 @@ describe('bmoor.Eventing', function(){
 		expect( obj.on ).toBeDefined();
 	});
 
-	it('should properly trigger', function( done ){
-		obj.trigger( 'boom', 'doop' );
-		
-		setTimeout(function(){
-			expect( triggered ).toBe('doop');
-			done();
-		},0);
+	describe('::trigger', function(){
+		it('should properly trigger', function( done ){
+			obj.trigger( 'boom', 'doop' );
+			
+			setTimeout(function(){
+				expect( triggered ).toBe('doop');
+				done();
+			},0);
+		});
+
+		it('should return back a promise that returns when all complete', function(done){
+			obj.on('test', function(){
+				return new Promise((resolve) => {
+					setTimeout(resolve, 10);
+				});
+			});
+
+			obj.on('test', function(){
+				return new Promise((resolve) => {
+					setTimeout(resolve, 30);
+				});
+			});
+
+			let returned = false;
+
+			obj.trigger('test')
+			.then(function(){
+				returned = true;
+			});
+
+			setTimeout(function(){
+				expect(returned).toBe(false);
+			}, 20);
+
+			setTimeout(function(){
+				expect(returned).toBe(true);
+
+				done();
+			}, 40);
+		});
 	});
 
 	it('should pass in arguments', function( done ){

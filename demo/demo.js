@@ -61,7 +61,7 @@ var bmoor =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -583,6 +583,10 @@ module.exports = function (cb, min, max, settings) {
 		limit += diff;
 	};
 
+	fn.active = function () {
+		return !!limit;
+	};
+
 	return fn;
 };
 
@@ -593,7 +597,106 @@ module.exports = function (cb, min, max, settings) {
 "use strict";
 
 
-var bmoor = __webpack_require__(3);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Eventing = function () {
+	function Eventing() {
+		_classCallCheck(this, Eventing);
+
+		this._listeners = {};
+	}
+
+	_createClass(Eventing, [{
+		key: "on",
+		value: function on(event, cb) {
+			var listeners = null;
+
+			if (!this._listeners[event]) {
+				this._listeners[event] = [];
+			}
+
+			listeners = this._listeners[event];
+
+			listeners.push(cb);
+
+			return function clear$on() {
+				listeners.splice(listeners.indexOf(cb), 1);
+			};
+		}
+	}, {
+		key: "once",
+		value: function once(event, cb) {
+			var clear = null;
+			var fn = function fn() {
+				clear();
+				cb.apply(undefined, arguments);
+			};
+
+			clear = this.on(event, fn);
+
+			return clear;
+		}
+	}, {
+		key: "subscribe",
+		value: function subscribe(subscriptions) {
+			var dis = this;
+			var kills = [];
+			var events = Object.keys(subscriptions);
+
+			events.forEach(function (event) {
+				var action = subscriptions[event];
+
+				kills.push(dis.on(event, action));
+			});
+
+			return function killAll() {
+				kills.forEach(function (kill) {
+					kill();
+				});
+			};
+		}
+	}, {
+		key: "trigger",
+		value: function trigger(event) {
+			for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+				args[_key - 1] = arguments[_key];
+			}
+
+			if (this.hasWaiting(event)) {
+				// slice and deep copy in case someone gets cute and unregisters
+				try {
+					return Promise.all(this._listeners[event].slice(0).map(function (cb) {
+						return cb.apply(undefined, args);
+					}));
+				} catch (ex) {
+					return Promise.reject(ex);
+				}
+			} else {
+				return Promise.resolve([]);
+			}
+		}
+	}, {
+		key: "hasWaiting",
+		value: function hasWaiting(event) {
+			return !!this._listeners[event];
+		}
+	}]);
+
+	return Eventing;
+}();
+
+module.exports = Eventing;
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var bmoor = __webpack_require__(4);
 
 bmoor.dom.triggerEvent(bmoor.dom.getDomElement('#bmoor'), 'click');
 
@@ -641,7 +744,7 @@ setTimeout(function () {
 }, 10000);
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -649,22 +752,23 @@ setTimeout(function () {
 
 var bmoor = Object.create(__webpack_require__(0));
 
-bmoor.dom = __webpack_require__(4);
-bmoor.data = __webpack_require__(5);
-bmoor.flow = __webpack_require__(6);
-bmoor.array = __webpack_require__(9);
-bmoor.build = __webpack_require__(10);
-bmoor.object = __webpack_require__(14);
-bmoor.string = __webpack_require__(15);
-bmoor.promise = __webpack_require__(16);
+bmoor.dom = __webpack_require__(5);
+bmoor.data = __webpack_require__(6);
+bmoor.flow = __webpack_require__(7);
+bmoor.array = __webpack_require__(10);
+bmoor.build = __webpack_require__(11);
+bmoor.object = __webpack_require__(15);
+bmoor.string = __webpack_require__(16);
+bmoor.promise = __webpack_require__(17);
 
-bmoor.Memory = __webpack_require__(17);
-bmoor.Eventing = __webpack_require__(18);
+bmoor.Memory = __webpack_require__(18);
+bmoor.Eventing = __webpack_require__(2);
+bmoor.Observable = __webpack_require__(19);
 
 module.exports = bmoor;
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -967,7 +1071,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1008,20 +1112,20 @@ module.exports = {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 module.exports = {
-	soon: __webpack_require__(7),
-	debounce: __webpack_require__(8),
+	soon: __webpack_require__(8),
+	debounce: __webpack_require__(9),
 	window: __webpack_require__(1)
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1058,11 +1162,15 @@ module.exports = function (cb, time, settings) {
 		fn.clear();
 	};
 
+	fn.active = function () {
+		return !!timeout;
+	};
+
 	return fn;
 };
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1117,11 +1225,15 @@ module.exports = function (cb, time, settings) {
 		limit += diff;
 	};
 
+	fn.active = function () {
+		return !!timeout;
+	};
+
 	return fn;
 };
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1444,16 +1556,16 @@ module.exports = {
 };
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var bmoor = __webpack_require__(0),
-    mixin = __webpack_require__(11),
-    plugin = __webpack_require__(12),
-    decorate = __webpack_require__(13);
+    mixin = __webpack_require__(12),
+    plugin = __webpack_require__(13),
+    decorate = __webpack_require__(14);
 
 function proc(action, proto, def) {
 	var i, c;
@@ -1508,7 +1620,7 @@ maker.plugin = plugin;
 module.exports = maker;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1523,7 +1635,7 @@ module.exports = function (to, from) {
 };
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1580,7 +1692,7 @@ module.exports = function (to, from, ctx) {
 };
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1626,7 +1738,7 @@ module.exports = function (to, from) {
 };
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1908,7 +2020,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2106,7 +2218,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2206,7 +2318,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2294,7 +2406,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2302,88 +2414,125 @@ module.exports = {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Eventing = function () {
-	function Eventing() {
-		_classCallCheck(this, Eventing);
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-		this._listeners = {};
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var core = __webpack_require__(0);
+var flowWindow = __webpack_require__(1);
+var Eventing = __webpack_require__(2);
+
+var Observable = function (_Eventing) {
+	_inherits(Observable, _Eventing);
+
+	function Observable() {
+		var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+		_classCallCheck(this, Observable);
+
+		// I need both hot and currentValue because currentValue
+		// could really be anything, I suppose I could do in, but 
+		// that seems more annoying, less performant?
+		var _this = _possibleConstructorReturn(this, (Observable.__proto__ || Object.getPrototypeOf(Observable)).call(this));
+
+		_this.hot = false;
+		_this.settings = settings;
+
+		_this._next = flowWindow(function () {
+			_this.trigger('next', _this.currentValue);
+		}, settings.windowMin || 0, settings.windowMax || 30);
+
+		_this.next = function () {
+			var val = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this;
+
+			this.hot = true;
+			this.currentValue = val;
+
+			this._next();
+		};
+		return _this;
 	}
 
-	_createClass(Eventing, [{
-		key: "on",
-		value: function on(event, cb) {
-			var listeners;
+	_createClass(Observable, [{
+		key: 'subscribe',
+		value: function subscribe(onNext, onError, onComplete) {
+			var _this2 = this;
 
-			if (!this._listeners[event]) {
-				this._listeners[event] = [];
+			var config = null;
+
+			if (core.isFunction(onNext)) {
+				config = {
+					next: onNext,
+					error: onError ? onError : function () {
+						// anything for default?
+					},
+					complete: onComplete ? onComplete : function () {
+						_this2.destroy();
+					}
+				};
+			} else {
+				config = onNext;
 			}
 
-			listeners = this._listeners[event];
+			if (this.hot && config.next) {
+				// make it act like a hot observable
+				config.next(this.currentValue);
+			}
 
-			listeners.push(cb);
-
-			return function clear$on() {
-				listeners.splice(listeners.indexOf(cb), 1);
-			};
+			return _get(Observable.prototype.__proto__ || Object.getPrototypeOf(Observable.prototype), 'subscribe', this).call(this, config);
 		}
+
+		// return back a promise that is active on the 'next'
+
 	}, {
-		key: "once",
-		value: function once(event, cb) {
-			var clear,
-			    fn = function fn() {
-				clear();
-				cb.apply(this, arguments);
-			};
+		key: 'promise',
+		value: function promise() {
+			var _this3 = this;
 
-			clear = this.on(event, fn);
+			if (!this.hot || this._next.active()) {
+				if (!this._promise) {
+					this._promise = new Promise(function (resolve, reject) {
+						var next = null;
+						var error = null;
 
-			return clear;
-		}
-	}, {
-		key: "subscribe",
-		value: function subscribe(subscriptions) {
-			var dis = this,
-			    kills = [],
-			    events = Object.keys(subscriptions);
+						next = _this3.once('next', function (val) {
+							_this3._promise = null;
 
-			events.forEach(function (event) {
-				var action = subscriptions[event];
+							error();
+							resolve(val);
+						});
 
-				kills.push(dis.on(event, action));
-			});
+						error = _this3.once('error', function (ex) {
+							_this3._promise = null;
 
-			return function killAll() {
-				kills.forEach(function (kill) {
-					kill();
-				});
-			};
-		}
-	}, {
-		key: "trigger",
-		value: function trigger(event) {
-			var _this = this;
+							next();
+							reject(ex);
+						});
+					});
+				}
 
-			var args = Array.prototype.slice.call(arguments, 1);
-
-			if (this.hasWaiting(event)) {
-				this._listeners[event].slice(0).forEach(function (cb) {
-					cb.apply(_this, args);
-				});
+				return this._promise;
+			} else {
+				return Promise.resolve(this.currentValue);
 			}
 		}
 	}, {
-		key: "hasWaiting",
-		value: function hasWaiting(event) {
-			return !!this._listeners[event];
+		key: 'destroy',
+		value: function destroy() {
+			this.hot = false;
+
+			this.trigger('complete');
 		}
 	}]);
 
-	return Eventing;
-}();
+	return Observable;
+}(Eventing);
 
-module.exports = Eventing;
+module.exports = Observable;
 
 /***/ })
 /******/ ]);
