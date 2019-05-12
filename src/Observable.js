@@ -11,12 +11,13 @@ class Observable extends Eventing {
 
 		this._next = flowWindow(() => {
 			const args = this.currentArgs;
+			
 			this.trigger('next', ...args);
 		}, settings.windowMin||0, settings.windowMax||30);
 
 		this.next = function(...args){
 			if (!args.length){
-				args = [this];
+				throw new Error('Observable::next, must be called with arguments');
 			}
 
 			this.currentArgs = args;
@@ -42,7 +43,14 @@ class Observable extends Eventing {
 			config = onNext;
 		}
 
+		const disconnect = super.subscribe(config);
+
 		if (this.currentArgs && config.next){
+			this._next();
+			/**
+			* This would enable the observable to fire immediately, but I'm going to stick
+			* with trying to keep it async, even if hot
+			**
 			let fn = null;
 
 			// make it act like a hot observable
@@ -58,9 +66,10 @@ class Observable extends Eventing {
 			}
 
 			fn(...args);
+			*/
 		}
 
-		return super.subscribe(config);
+		return disconnect;
 	}
 
 	// return back a promise that is active on the 'next'

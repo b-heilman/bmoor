@@ -2419,6 +2419,7 @@ var Observable = function (_Eventing) {
 
 		_this._next = flowWindow(function () {
 			var args = _this.currentArgs;
+
 			_this.trigger.apply(_this, ['next'].concat(_toConsumableArray(args)));
 		}, settings.windowMin || 0, settings.windowMax || 30);
 
@@ -2428,7 +2429,7 @@ var Observable = function (_Eventing) {
 			}
 
 			if (!args.length) {
-				args = [this];
+				throw new Error('Observable::next, must be called with arguments');
 			}
 
 			this.currentArgs = args;
@@ -2459,25 +2460,30 @@ var Observable = function (_Eventing) {
 				config = onNext;
 			}
 
+			var disconnect = _get(Observable.prototype.__proto__ || Object.getPrototypeOf(Observable.prototype), 'subscribe', this).call(this, config);
+
 			if (this.currentArgs && config.next) {
-				var fn = null;
-
-				// make it act like a hot observable
-				var args = this.currentArgs;
-				var cb = config.next;
-
-				if (core.isArray(cb)) {
-					if (cb.length) {
-						fn = cb.shift();
-					}
-				} else {
-					fn = cb;
-				}
-
-				fn.apply(undefined, _toConsumableArray(args));
+				this._next();
+				/**
+    * This would enable the observable to fire immediately, but I'm going to stick
+    * with trying to keep it async, even if hot
+    **
+    let fn = null;
+    		// make it act like a hot observable
+    const args = this.currentArgs;
+    const cb = config.next;
+    		if (core.isArray(cb)){
+    	if (cb.length){
+    		fn = cb.shift();
+    	}
+    } else {
+    	fn = cb;
+    }
+    		fn(...args);
+    */
 			}
 
-			return _get(Observable.prototype.__proto__ || Object.getPrototypeOf(Observable.prototype), 'subscribe', this).call(this, config);
+			return disconnect;
 		}
 
 		// return back a promise that is active on the 'next'
