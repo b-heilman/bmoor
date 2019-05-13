@@ -15,15 +15,17 @@ class Observable extends Eventing {
 			this.trigger('next', ...args);
 		}, settings.windowMin||0, settings.windowMax||30);
 
-		this.next = function(...args){
-			if (!args.length){
-				throw new Error('Observable::next, must be called with arguments');
-			}
+		
+	}
 
-			this.currentArgs = args;
+	next(...args){
+		if (!args.length){
+			throw new Error('Observable::next, must be called with arguments');
+		}
 
-			this._next();
-		};
+		this.currentArgs = args;
+
+		this._next();
 	}
 
 	subscribe(onNext, onError, onComplete){

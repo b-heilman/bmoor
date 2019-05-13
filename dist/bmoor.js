@@ -2423,7 +2423,12 @@ var Observable = function (_Eventing) {
 			_this.trigger.apply(_this, ['next'].concat(_toConsumableArray(args)));
 		}, settings.windowMin || 0, settings.windowMax || 30);
 
-		_this.next = function () {
+		return _this;
+	}
+
+	_createClass(Observable, [{
+		key: 'next',
+		value: function next() {
 			for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 				args[_key] = arguments[_key];
 			}
@@ -2435,11 +2440,8 @@ var Observable = function (_Eventing) {
 			this.currentArgs = args;
 
 			this._next();
-		};
-		return _this;
-	}
-
-	_createClass(Observable, [{
+		}
+	}, {
 		key: 'subscribe',
 		value: function subscribe(onNext, onError, onComplete) {
 			var _this2 = this;
@@ -2517,9 +2519,9 @@ var Observable = function (_Eventing) {
 
 				return this._promise;
 			} else {
-				var args = this.currentArgs;
+				var _args = this.currentArgs;
 
-				return Promise.resolve.apply(Promise, _toConsumableArray(args));
+				return Promise.resolve.apply(Promise, _toConsumableArray(_args));
 			}
 		}
 	}, {
