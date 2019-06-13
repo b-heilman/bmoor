@@ -110,7 +110,7 @@ describe('Observable', function(){
 			expect(complete).toBe(true);
 		});
 
-		it('should fire next right away if hot', function(done){
+		it('should fire next right away if hot', function(){
 			let val = null;
 			const ob = new Observable();
 
@@ -120,11 +120,7 @@ describe('Observable', function(){
 				val = v;
 			});
 
-			ob.on('next', function(){
-				expect(val).toBe(123);
-
-				done();
-			});
+			expect(val).toBe(123);
 		});
 
 		it('should call the first method in a stack', function(done){
@@ -147,6 +143,34 @@ describe('Observable', function(){
 			ob.on('next', function(){
 				expect(firstCall).toBe(123);
 				expect(secondCall).toBe(null);
+
+				done();
+			});
+		});
+
+		it('should call the first method in a stack', function(done){
+			const ob = new Observable();
+
+			ob.next(123);
+
+			let firstCall = null;
+			let secondCall = null;
+
+			ob.subscribe([
+				function(var1){
+					firstCall = var1;
+				},
+				function(var2){
+					secondCall = var2;
+				}
+			]);
+
+			expect(firstCall).toBe(123);
+
+			ob.next(789);
+
+			ob.on('next', function(){	
+				expect(secondCall).toBe(789);
 
 				done();
 			});

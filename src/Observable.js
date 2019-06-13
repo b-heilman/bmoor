@@ -2,6 +2,7 @@
 const core = require('./core.js');
 const flowWindow = require('./flow/window.js');
 const Eventing = require('./Eventing.js');
+const {equals} = require('./array.js');
 
 class Observable extends Eventing {
 	constructor(settings = {}){
@@ -14,8 +15,6 @@ class Observable extends Eventing {
 			
 			this.trigger('next', ...args);
 		}, settings.windowMin||0, settings.windowMax||30);
-
-		
 	}
 
 	next(...args){
@@ -48,11 +47,6 @@ class Observable extends Eventing {
 		const disconnect = super.subscribe(config);
 
 		if (this.currentArgs && config.next){
-			this._next();
-			/**
-			* This would enable the observable to fire immediately, but I'm going to stick
-			* with trying to keep it async, even if hot
-			**
 			let fn = null;
 
 			// make it act like a hot observable
@@ -61,14 +55,30 @@ class Observable extends Eventing {
 
 			if (core.isArray(cb)){
 				if (cb.length){
-					fn = cb.shift();
+					if (this._next.active()){
+						fn = cb[0];
+
+						const myArgs = args;
+						cb[0] = function(...params){
+							if (equals(params, myArgs)){
+								// stub it for when next fires
+								// there's a possible race condition with this, that a second value comes in as
+								// the window is active... the second value will get eaten, so the else
+								// blow tries to help there
+							} else {
+								let f = cb.shift();
+								f(...params);
+							}
+						};
+					} else {
+						fn = cb.shift();
+					}
 				}
 			} else {
 				fn = cb;
 			}
 
 			fn(...args);
-			*/
 		}
 
 		return disconnect;

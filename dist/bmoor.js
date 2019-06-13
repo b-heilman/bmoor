@@ -849,6 +849,22 @@ function difference(arr1, arr2) {
 	return rtn;
 }
 
+function equals(arr1, arr2) {
+	if (arr1 === arr2) {
+		return true;
+	} else if (arr1.length !== arr2.length) {
+		return false;
+	} else {
+		for (var i = 0, c = arr1.length; i < c; i++) {
+			if (arr1[i] !== arr2[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+}
+
 function watch(arr, insert, remove, preload) {
 	if (insert) {
 		var oldPush = arr.push.bind(arr);
@@ -910,7 +926,8 @@ module.exports = {
 	unique: unique,
 	intersection: intersection,
 	difference: difference,
-	watch: watch
+	watch: watch,
+	equals: equals
 };
 
 /***/ }),
@@ -2405,6 +2422,9 @@ var core = __webpack_require__(0);
 var flowWindow = __webpack_require__(1);
 var Eventing = __webpack_require__(3);
 
+var _require = __webpack_require__(2),
+    equals = _require.equals;
+
 var Observable = function (_Eventing) {
 	_inherits(Observable, _Eventing);
 
@@ -2422,7 +2442,6 @@ var Observable = function (_Eventing) {
 
 			_this.trigger.apply(_this, ['next'].concat(_toConsumableArray(args)));
 		}, settings.windowMin || 0, settings.windowMax || 30);
-
 		return _this;
 	}
 
@@ -2465,24 +2484,42 @@ var Observable = function (_Eventing) {
 			var disconnect = _get(Observable.prototype.__proto__ || Object.getPrototypeOf(Observable.prototype), 'subscribe', this).call(this, config);
 
 			if (this.currentArgs && config.next) {
-				this._next();
-				/**
-    * This would enable the observable to fire immediately, but I'm going to stick
-    * with trying to keep it async, even if hot
-    **
-    let fn = null;
-    		// make it act like a hot observable
-    const args = this.currentArgs;
-    const cb = config.next;
-    		if (core.isArray(cb)){
-    	if (cb.length){
-    		fn = cb.shift();
-    	}
-    } else {
-    	fn = cb;
-    }
-    		fn(...args);
-    */
+				var fn = null;
+
+				// make it act like a hot observable
+				var _args = this.currentArgs;
+				var cb = config.next;
+
+				if (core.isArray(cb)) {
+					if (cb.length) {
+						if (this._next.active()) {
+							fn = cb[0];
+
+							var myArgs = _args;
+							cb[0] = function () {
+								for (var _len2 = arguments.length, params = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+									params[_key2] = arguments[_key2];
+								}
+
+								if (equals(params, myArgs)) {
+									// stub it for when next fires
+									// there's a possible race condition with this, that a second value comes in as
+									// the window is active... the second value will get eaten, so the else
+									// blow tries to help there
+								} else {
+									var f = cb.shift();
+									f.apply(undefined, params);
+								}
+							};
+						} else {
+							fn = cb.shift();
+						}
+					}
+				} else {
+					fn = cb;
+				}
+
+				fn.apply(undefined, _toConsumableArray(_args));
 			}
 
 			return disconnect;
@@ -2519,9 +2556,9 @@ var Observable = function (_Eventing) {
 
 				return this._promise;
 			} else {
-				var _args = this.currentArgs;
+				var _args2 = this.currentArgs;
 
-				return Promise.resolve.apply(Promise, _toConsumableArray(_args));
+				return Promise.resolve.apply(Promise, _toConsumableArray(_args2));
 			}
 		}
 	}, {

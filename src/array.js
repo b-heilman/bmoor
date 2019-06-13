@@ -215,7 +215,7 @@ function unique( arr, sort, uniqueFn ){
 }
 
 // I could probably make this sexier, like allow uniqueness algorithm, but I'm keeping it simple for now
-function intersection( arr1, arr2 ){
+function intersection(arr1, arr2){
 	var rtn = [];
 
 	if ( arr1.length > arr2.length ){
@@ -236,18 +236,34 @@ function intersection( arr1, arr2 ){
 	return rtn;
 }
 
-function difference( arr1, arr2 ){
+function difference(arr1, arr2){
 	var rtn = [];
 
-	for( let i = 0, c = arr1.length; i < c; i++ ){
+	for(let i = 0, c = arr1.length; i < c; i++){
 		let d = arr1[i];
 
-		if ( arr2.indexOf(d) === -1 ){
+		if (arr2.indexOf(d) === -1){
 			rtn.push( d );
 		}
 	}
 
 	return rtn;
+}
+
+function equals(arr1, arr2){
+	if (arr1 === arr2){
+		return true;
+	} else if (arr1.length !== arr2.length){
+		return false;
+	} else {
+		for(let i = 0, c = arr1.length; i < c; i++){
+			if (arr1[i] !== arr2[i]){
+				return false;
+			}
+		}
+
+		return true;
+	}
 }
 
 function watch( arr, insert, remove, preload ){
@@ -296,12 +312,13 @@ function watch( arr, insert, remove, preload ){
 }
 
 module.exports = {
-	remove: remove,
-	removeAll: removeAll,
-	bisect: bisect,
-	compare: compare,
-	unique: unique,
-	intersection: intersection,
-	difference: difference,
-	watch: watch
+	remove,
+	removeAll,
+	bisect,
+	compare,
+	unique,
+	intersection,
+	difference,
+	watch,
+	equals
 };
