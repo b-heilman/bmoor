@@ -2428,12 +2428,20 @@ var _require = __webpack_require__(2),
 var Observable = function (_Eventing) {
 	_inherits(Observable, _Eventing);
 
-	function Observable() {
-		var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	function Observable(actionFn) {
+		var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
 		_classCallCheck(this, Observable);
 
 		var _this = _possibleConstructorReturn(this, (Observable.__proto__ || Object.getPrototypeOf(Observable)).call(this));
+
+		if (core.isFunction(actionFn)) {
+			_this.action = function () {
+				actionFn(_this);
+			};
+		} else if (actionFn) {
+			settings = actionFn;
+		}
 
 		_this.settings = settings;
 
@@ -2483,43 +2491,47 @@ var Observable = function (_Eventing) {
 
 			var disconnect = _get(Observable.prototype.__proto__ || Object.getPrototypeOf(Observable.prototype), 'subscribe', this).call(this, config);
 
-			if (this.currentArgs && config.next) {
-				var fn = null;
+			if (this.currentArgs) {
+				if (config.next) {
+					var fn = null;
 
-				// make it act like a hot observable
-				var _args = this.currentArgs;
-				var cb = config.next;
+					// make it act like a hot observable
+					var _args = this.currentArgs;
+					var cb = config.next;
 
-				if (core.isArray(cb)) {
-					if (cb.length) {
-						if (this._next.active()) {
-							fn = cb[0];
+					if (core.isArray(cb)) {
+						if (cb.length) {
+							if (this._next.active()) {
+								fn = cb[0];
 
-							var myArgs = _args;
-							cb[0] = function () {
-								for (var _len2 = arguments.length, params = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-									params[_key2] = arguments[_key2];
-								}
+								var myArgs = _args;
+								cb[0] = function () {
+									for (var _len2 = arguments.length, params = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+										params[_key2] = arguments[_key2];
+									}
 
-								if (equals(params, myArgs)) {
-									// stub it for when next fires
-									// there's a possible race condition with this, that a second value comes in as
-									// the window is active... the second value will get eaten, so the else
-									// blow tries to help there
-								} else {
-									var f = cb.shift();
-									f.apply(undefined, params);
-								}
-							};
-						} else {
-							fn = cb.shift();
+									if (equals(params, myArgs)) {
+										// stub it for when next fires
+										// there's a possible race condition with this, that a second value comes in as
+										// the window is active... the second value will get eaten, so the else
+										// blow tries to help there
+									} else {
+										var f = cb.shift();
+										f.apply(undefined, params);
+									}
+								};
+							} else {
+								fn = cb.shift();
+							}
 						}
+					} else {
+						fn = cb;
 					}
-				} else {
-					fn = cb;
-				}
 
-				fn.apply(undefined, _toConsumableArray(_args));
+					fn.apply(undefined, _toConsumableArray(_args));
+				}
+			} else if (this.action) {
+				this.action();
 			}
 
 			return disconnect;
@@ -2541,17 +2553,21 @@ var Observable = function (_Eventing) {
 						next = _this3.once('next', function (val) {
 							_this3._promise = null;
 
-							error();
+							error(); // clean up sibling
 							resolve(val);
 						});
 
 						error = _this3.once('error', function (ex) {
 							_this3._promise = null;
 
-							next();
+							next(); // clean up sibling
 							reject(ex);
 						});
 					});
+				}
+
+				if (this.action) {
+					this.action();
 				}
 
 				return this._promise;

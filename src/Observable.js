@@ -5,8 +5,16 @@ const Eventing = require('./Eventing.js');
 const {equals} = require('./array.js');
 
 class Observable extends Eventing {
-	constructor(settings = {}){
+	constructor(actionFn, settings = {}){
 		super();
+
+		if (core.isFunction(actionFn)){
+			this.action = () => {
+				actionFn(this);
+			};
+		} else if (actionFn){
+			settings = actionFn;
+		}
 
 		this.settings = settings;
 
@@ -46,39 +54,43 @@ class Observable extends Eventing {
 
 		const disconnect = super.subscribe(config);
 
-		if (this.currentArgs && config.next){
-			let fn = null;
+		if (this.currentArgs){
+			if (config.next){
+				let fn = null;
 
-			// make it act like a hot observable
-			const args = this.currentArgs;
-			const cb = config.next;
+				// make it act like a hot observable
+				const args = this.currentArgs;
+				const cb = config.next;
 
-			if (core.isArray(cb)){
-				if (cb.length){
-					if (this._next.active()){
-						fn = cb[0];
+				if (core.isArray(cb)){
+					if (cb.length){
+						if (this._next.active()){
+							fn = cb[0];
 
-						const myArgs = args;
-						cb[0] = function(...params){
-							if (equals(params, myArgs)){
-								// stub it for when next fires
-								// there's a possible race condition with this, that a second value comes in as
-								// the window is active... the second value will get eaten, so the else
-								// blow tries to help there
-							} else {
-								let f = cb.shift();
-								f(...params);
-							}
-						};
-					} else {
-						fn = cb.shift();
+							const myArgs = args;
+							cb[0] = function(...params){
+								if (equals(params, myArgs)){
+									// stub it for when next fires
+									// there's a possible race condition with this, that a second value comes in as
+									// the window is active... the second value will get eaten, so the else
+									// blow tries to help there
+								} else {
+									let f = cb.shift();
+									f(...params);
+								}
+							};
+						} else {
+							fn = cb.shift();
+						}
 					}
+				} else {
+					fn = cb;
 				}
-			} else {
-				fn = cb;
-			}
 
-			fn(...args);
+				fn(...args);
+			}
+		} else if (this.action){
+			this.action();
 		}
 
 		return disconnect;
@@ -95,17 +107,21 @@ class Observable extends Eventing {
 					next = this.once('next', val => {
 						this._promise = null;
 
-						error();
+						error(); // clean up sibling
 						resolve(val);
 					});
 
 					error = this.once('error', ex => {
 						this._promise = null;
 
-						next();
+						next(); // clean up sibling
 						reject(ex);
 					});
 				});
+			}
+
+			if (this.action){
+				this.action();
 			}
 
 			return this._promise;

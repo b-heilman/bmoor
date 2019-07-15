@@ -78,25 +78,25 @@ function makeExploder( paths ){
 	};
 }
 
-function implode( obj, ignore ){
+function implode(obj, ignore){
 	var rtn = {};
 
 	if ( !ignore ){
 		ignore = {};
 	}
 
-	bmoor.iterate( obj, function( val, key ){
+	bmoor.iterate(obj, function(val, key){
 		var t = ignore[key];
 
-		if ( bmoor.isObject(val) ){
-			if ( t === false ){
+		if (bmoor.isObject(val)){
+			if (t === false){
 				rtn[key] = val;
-			} else if ( !t || bmoor.isObject(t) ){
-				bmoor.iterate( implode(val,t), function( v, k ){
+			} else if (!t || bmoor.isObject(t)){
+				bmoor.iterate(implode(val,t), function(v, k){
 					rtn[key+'.'+k] = v;
 				});
 			}
-		}else if ( !t ){
+		} else if (!t){
 			rtn[key] = val;
 		}
 	});
