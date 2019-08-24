@@ -32,8 +32,9 @@ describe("bmoor.object", function() {
 		});
 	});
 
-	it("should operate implode correctly", function(){
-		var t = {
+	describe(':: implode', function(){
+		it("should operate correctly", function(){
+			var t = {
 				time: {
 					start: 99,
 					stop: 100
@@ -43,14 +44,27 @@ describe("bmoor.object", function() {
 					bar: {
 						hello: 'world'
 					}
-				}
-			}
+				},
+				arr: [{
+					eins: 1,
+				}, {
+					zwei: 2
+				}],
+				double: [
+					[0]
+				]
+			};
 
-		expect( bmoor.object.implode(t) ).toEqual({
-			'time.start': 99,
-			'time.stop': 100,
-			'id': 'woot',
-			'foo.bar.hello': 'world'
+			expect(bmoor.object.implode(t))
+			.toEqual({
+				'time.start': 99,
+				'time.stop': 100,
+				'id': 'woot',
+				'foo.bar.hello': 'world',
+				'arr[0].eins': 1,
+				'arr[1].zwei': 2,
+				'double[0][0]': 0
+			});
 		});
 	});
 
@@ -80,22 +94,31 @@ describe("bmoor.object", function() {
 				bar: { a: 'ok'},
 				hello: {
 					world: 1,
-					other: 'thing'
-				}
+					other: 'thing',
+					arr: null
+				},
+				arr: [1, 2],
+				arr2: [8, 9]
 			},{
 				foo: 'bar',
 				bar: null,
 				hello: {
-					world: null
-				}
+					world: null,
+					arr: [1, 2]
+				},
+				arr: null,
+				arr2: [4, 5]
 			}))
 			.toEqual({
 				foo: 'bar',
 				bar: null,
 				hello: {
 					world: null,
-					other: 'thing'
-				}
+					other: 'thing',
+					arr: [1, 2]
+				},
+				arr: null,
+				arr2: [4, 5]
 			})
 		});
 	});

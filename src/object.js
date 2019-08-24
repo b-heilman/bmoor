@@ -43,8 +43,8 @@ function explode( target, mappings ){
 		target = {};
 	}
 
-	bmoor.iterate( mappings, function( val, mapping ){
-		bmoor.set( target, mapping, val );
+	bmoor.iterate(mappings, function(val, mapping){
+		bmoor.set(target, mapping, val);
 	});
 
 	return target;
@@ -81,23 +81,44 @@ function makeExploder( paths ){
 function implode(obj, ignore){
 	var rtn = {};
 
-	if ( !ignore ){
+	if (!ignore){
 		ignore = {};
 	}
+
+	const format = bmoor.isArray(obj) ?
+		function(key, next){
+			if (next){
+				if (next[0] === '['){
+					return '['+key+']'+next;
+				} else {
+					return '['+key+'].'+next;
+				}
+			} else {
+				return '['+key+']';
+			}
+		} : function(key, next){
+			if (next){
+				if (next[0] === '['){
+					return key+next;
+				} else {
+					return key+'.'+next;
+				}
+			} else {
+				return key;
+			}
+		};
 
 	bmoor.iterate(obj, function(val, key){
 		var t = ignore[key];
 
-		if (bmoor.isObject(val)){
-			if (t === false){
-				rtn[key] = val;
-			} else if (!t || bmoor.isObject(t)){
+		if (t !== true){
+			if (bmoor.isObject(val)){
 				bmoor.iterate(implode(val,t), function(v, k){
-					rtn[key+'.'+k] = v;
+					rtn[format(key,k)] = v;
 				});
+			} else {
+				rtn[format(key)] = val;
 			}
-		} else if (!t){
-			rtn[key] = val;
 		}
 	});
 
@@ -162,26 +183,28 @@ function copy( to ){
 }
 
 // Deep copy version of extend
-function merge( to ){
-	var from,
-		i, c,
-		m = function( val, key ){
-			to[ key ] = merge( to[key], val );
-		};
+function merge(to){
+	function m(val, key){
+		if (bmoor.isArray(val)){
+			to[key] = val;
+		} else {
+			to[key] = merge(to[key], val);
+		}
+	}
 
-	for( i = 1, c = arguments.length; i < c; i++ ){
-		from = arguments[i];
+	for(let i = 1, c = arguments.length; i < c; i++){
+		let from = arguments[i];
 
-		if ( to === from ){
+		if (to === from){
 			continue;
-		}else if ( to && to.merge ){
+		}else if (to && to.merge){
 			to.merge( from );
-		}else if ( !bmoor.isObject(from) ){
+		}else if (!bmoor.isObject(from)){
 			to = from;
-		}else if ( !bmoor.isObject(to) ){
-			to = merge( {}, from );
+		}else if (!bmoor.isObject(to)){
+			to = merge({}, from);
 		}else{
-			bmoor.safe( from, m );
+			bmoor.safe(from, m);
 		}
 	}
 	

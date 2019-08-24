@@ -136,13 +136,25 @@ function isEmpty( value ){
 }
 
 function parse( path ){
-	if ( !path ){
+	if (!path){
 		return [];
-	}else if ( isString(path) ){
-		return path.split('.');
-	}else if ( isArray(path) ){
+	} else if (isString(path)){
+		// this isn't perfect, I'm making it work with arrays though
+		if (path.indexOf('[') !== -1){
+			return path.match(/[^\]\[.]+/g)
+			.map(d => {
+				if (d[0] === '"' || d[0] === '\''){
+					return d.substring(1, d.length-1);
+				} else {
+					return d;
+				}
+			});
+		} else {
+			return path.split('.');
+		}
+	} else if (isArray(path)){
 		return path.slice(0);
-	}else{
+	} else {
 		throw new Error(
 			'unable to parse path: '+
 			path+ ' : '+typeof(path)

@@ -72,17 +72,44 @@ describe("Testing object setting/getting", function() {
 
 	it('should have del working', function(){
 		var t = {
-				eins : 1,
-				zwei: {
-					drei: 3
-				}
-			};
+			eins : 1,
+			zwei: {
+				drei: 3
+			}
+		};
 
 		expect( bmoor.del(t,'eins') ).toBe(1);
 		expect( bmoor.del(t,'zwei.drei') ).toBe(3);
 		expect( t.eins ).toBeUndefined();
 		expect( t.zwei ).toBeDefined();
 		expect( t.zwei.drei ).toBeUndefined();
+	});
+
+	describe('::parse', function(){
+		it('should parse an array correctly', function(){
+			expect(bmoor.parse([1,2,3]))
+			.toEqual([1,2,3]);
+		});
+
+		it('should parse dot notation correctly', function(){
+			expect(bmoor.parse('1.2.3'))
+			.toEqual(['1','2','3']);
+		});
+
+		it('should parse brackets correctly', function(){
+			expect(bmoor.parse('[1][2][3]'))
+			.toEqual(['1','2','3']);
+		});
+
+		it('should parse brackets with quotes correctly', function(){
+			expect(bmoor.parse('[\'1\']["2"][3]'))
+			.toEqual(['1','2','3']);
+		});
+
+		it('should parse mixed correctly', function(){
+			expect(bmoor.parse('foo["bar"].ok[hello]'))
+			.toEqual(['foo','bar','ok','hello']);
+		});
 	});
 });
 

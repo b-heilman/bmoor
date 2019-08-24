@@ -6,6 +6,8 @@ const {equals} = require('./array.js');
 
 class Observable extends Eventing {
 	constructor(actionFn, settings = {}){
+		console.warn('bmoor::Observable is being depricated for RXJS::Observable');
+
 		super();
 
 		if (core.isFunction(actionFn)){
@@ -133,6 +135,8 @@ class Observable extends Eventing {
 	}
 
 	destroy(){
+		super.destroy();
+		
 		this.currentArgs = null;
 
 		this.trigger('complete');

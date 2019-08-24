@@ -214,7 +214,18 @@ function parse(path) {
 	if (!path) {
 		return [];
 	} else if (isString(path)) {
-		return path.split('.');
+		// this isn't perfect, I'm making it work with arrays though
+		if (path.indexOf('[') !== -1) {
+			return path.match(/[^\]\[.]+/g).map(function (d) {
+				if (d[0] === '"' || d[0] === '\'') {
+					return d.substring(1, d.length - 1);
+				} else {
+					return d;
+				}
+			});
+		} else {
+			return path.split('.');
+		}
 	} else if (isArray(path)) {
 		return path.slice(0);
 	} else {
@@ -1044,6 +1055,17 @@ var Eventing = function () {
 		value: function hasWaiting(event) {
 			return !!this._listeners[event];
 		}
+	}, {
+		key: 'destroy',
+		value: function destroy() {
+			var _this = this;
+
+			Object.keys(this._listeners).forEach(function (key) {
+				delete _this._listeners[key];
+			});
+
+			this._listeners = null;
+		}
 	}]);
 
 	return Eventing;
@@ -1872,19 +1894,39 @@ function implode(obj, ignore) {
 		ignore = {};
 	}
 
+	var format = bmoor.isArray(obj) ? function (key, next) {
+		if (next) {
+			if (next[0] === '[') {
+				return '[' + key + ']' + next;
+			} else {
+				return '[' + key + '].' + next;
+			}
+		} else {
+			return '[' + key + ']';
+		}
+	} : function (key, next) {
+		if (next) {
+			if (next[0] === '[') {
+				return key + next;
+			} else {
+				return key + '.' + next;
+			}
+		} else {
+			return key;
+		}
+	};
+
 	bmoor.iterate(obj, function (val, key) {
 		var t = ignore[key];
 
-		if (bmoor.isObject(val)) {
-			if (t === false) {
-				rtn[key] = val;
-			} else if (!t || bmoor.isObject(t)) {
+		if (t !== true) {
+			if (bmoor.isObject(val)) {
 				bmoor.iterate(implode(val, t), function (v, k) {
-					rtn[key + '.' + k] = v;
+					rtn[format(key, k)] = v;
 				});
+			} else {
+				rtn[format(key)] = val;
 			}
-		} else if (!t) {
-			rtn[key] = val;
 		}
 	});
 
@@ -1949,15 +1991,16 @@ function copy(to) {
 
 // Deep copy version of extend
 function merge(to) {
-	var from,
-	    i,
-	    c,
-	    m = function m(val, key) {
-		to[key] = merge(to[key], val);
-	};
+	function m(val, key) {
+		if (bmoor.isArray(val)) {
+			to[key] = val;
+		} else {
+			to[key] = merge(to[key], val);
+		}
+	}
 
-	for (i = 1, c = arguments.length; i < c; i++) {
-		from = arguments[i];
+	for (var i = 1, c = arguments.length; i < c; i++) {
+		var from = arguments[i];
 
 		if (to === from) {
 			continue;
@@ -2371,6 +2414,8 @@ var master = {};
 
 var Memory = function () {
 	function Memory(name) {
+		var _this = this;
+
 		_classCallCheck(this, Memory);
 
 		var index = {};
@@ -2389,8 +2434,12 @@ var Memory = function () {
 			return !!index[name];
 		};
 
-		this.register = function (name, obj) {
+		this.set = function (name, obj) {
 			index[name] = obj;
+		};
+
+		this.register = function (name, obj) {
+			_this.set(name, obj);
 		};
 
 		this.clear = function (name) {
@@ -2407,19 +2456,19 @@ var Memory = function () {
 	_createClass(Memory, [{
 		key: 'import',
 		value: function _import(json) {
-			var _this = this;
+			var _this2 = this;
 
 			Object.keys(json).forEach(function (key) {
-				_this.register(key, json[key]);
+				_this2.register(key, json[key]);
 			});
 		}
 	}, {
 		key: 'export',
 		value: function _export() {
-			var _this2 = this;
+			var _this3 = this;
 
 			return this.keys().reduce(function (rtn, key) {
-				rtn[key] = _this2.get(key);
+				rtn[key] = _this3.get(key);
 
 				return rtn;
 			}, {});
@@ -2477,6 +2526,8 @@ var Observable = function (_Eventing) {
 		var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
 		_classCallCheck(this, Observable);
+
+		console.warn('bmoor::Observable is being depricated for RXJS::Observable');
 
 		var _this = _possibleConstructorReturn(this, (Observable.__proto__ || Object.getPrototypeOf(Observable)).call(this));
 
@@ -2625,6 +2676,8 @@ var Observable = function (_Eventing) {
 	}, {
 		key: 'destroy',
 		value: function destroy() {
+			_get(Observable.prototype.__proto__ || Object.getPrototypeOf(Observable.prototype), 'destroy', this).call(this);
+
 			this.currentArgs = null;
 
 			this.trigger('complete');

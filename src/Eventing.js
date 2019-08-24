@@ -92,6 +92,14 @@ class Eventing {
 	hasWaiting( event ){
 		return !!this._listeners[event];
 	}
+
+	destroy(){
+		Object.keys(this._listeners).forEach(key => {
+			delete this._listeners[key];
+		});
+
+		this._listeners = null;
+	}
 }
 
 module.exports = Eventing;

@@ -18,8 +18,12 @@ class Memory{
 			return !!index[name];
 		};
 
-		this.register = ( name, obj ) => {
+		this.set = ( name, obj ) => {
 			index[name] = obj;
+		};
+
+		this.register = ( name, obj ) => {
+			this.set(name, obj);
 		};
 
 		this.clear = ( name ) => {
