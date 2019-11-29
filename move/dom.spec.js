@@ -1,4 +1,10 @@
-describe("bmoor.dom", function() {
+
+const {expect} = require('chai');
+
+describe('bmoor.dom', function() {
+	
+	const bmoor = require('./index.js');
+
 	var dom = bmoor.dom;
 
 	describe('::onEvent, ::triggerEvent', function(){
@@ -18,7 +24,7 @@ describe("bmoor.dom", function() {
 
 		it('should allow triggering and catching a custom event', function( done ){
 			dom.onEvent( listener, 'foo-bar', function( data ){
-				expect(data).toEqual({hello:'world'});
+				expect(data).to.deep.equal({hello:'world'});
 
 				done();
 			});
@@ -28,7 +34,7 @@ describe("bmoor.dom", function() {
 
 		it('should allow catching custom thrown event', function( done ){
 			dom.onEvent( listener, 'foo-bar', function( data ){
-				expect(data).toEqual({hello:'world'});
+				expect(data).to.deep.equal({hello:'world'});
 
 				done();
 			});
@@ -87,8 +93,8 @@ describe("bmoor.dom", function() {
 
 			trigger1.dispatchEvent(event);
 
-			expect( span1 ).toBe( true );
-			expect( span2 ).toBe( false );
+			expect( span1 ).to.equal( true );
+			expect( span2 ).to.equal( false );
 		});
 	});
 });

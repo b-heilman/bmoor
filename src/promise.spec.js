@@ -1,8 +1,12 @@
-describe("bmoor.promise", function() {
-	var promise = bmoor.promise;
+
+const {expect} = require('chai');
+
+describe('bmoor.promise', function() {
+
+	const promise = require('./promise.js');
 
 	describe('::stack', function(){
-		it("should run correctly", function( done ){
+		it('should run correctly', function( done ){
 			var calls = 0,
 				stack = [];
 
@@ -19,8 +23,8 @@ describe("bmoor.promise", function() {
 			}
 
 			promise.stack(stack).then(function(){
-				expect( calls ).toBe( 10 ); // all the methods called
-				expect( stack.length ).toBe( 10 ); // don't be destructive
+				expect( calls ).to.equal( 10 ); // all the methods called
+				expect( stack.length ).to.equal( 10 ); // don't be destructive
 
 				done();
 			}, function( ex ){
@@ -29,7 +33,7 @@ describe("bmoor.promise", function() {
 			});
 		});
 
-		it("should run correctly, with staggered times", function( done ){
+		it('should run correctly, with staggered times', function( done ){
 			var calls = 0,
 				stack = [];
 
@@ -48,8 +52,8 @@ describe("bmoor.promise", function() {
 			}
 
 			promise.stack(stack).then(function(){
-				expect( calls ).toBe( 10 ); // all the methods called
-				expect( stack.length ).toBe( 10 ); // don't be destructive
+				expect( calls ).to.equal( 10 ); // all the methods called
+				expect( stack.length ).to.equal( 10 ); // don't be destructive
 
 				done();
 			}, function( ex ){
@@ -58,7 +62,7 @@ describe("bmoor.promise", function() {
 			});
 		});
 
-		it("should report back errors", function( done ){
+		it('should report back errors', function( done ){
 			var calls = 0,
 				stack = [];
 
@@ -78,8 +82,7 @@ describe("bmoor.promise", function() {
 				add();
 			}
 
-			let lastInfo,
-				updateCalled = false;
+			let lastInfo;
 
 			promise.stack(stack,{
 				limit: 10,
@@ -88,19 +91,19 @@ describe("bmoor.promise", function() {
 				update: function( info ){
 					lastInfo = info;
 
-					expect( info.active ).toBeDefined();
-					expect( info.remaining ).toBeDefined();
+					expect( info.active ).to.to.exist;
+					expect( info.remaining ).to.to.exist;
 				}
 			}).then(function(){
 				console.log( 'should not be called' );
 			}, function( errs ){
-				expect( calls ).toBe( 100 ); // all the methods called
-				expect( stack.length ).toBe( 100 ); // don't be destructive
-				expect( errs.length ).toBe( 50 );
+				expect( calls ).to.equal( 100 ); // all the methods called
+				expect( stack.length ).to.equal( 100 ); // don't be destructive
+				expect( errs.length ).to.equal( 50 );
 
 				setTimeout(function(){
-					expect( lastInfo.active ).toBe( 0 );
-					expect( lastInfo.remaining ).toBe( 0 );
+					expect( lastInfo.active ).to.equal( 0 );
+					expect( lastInfo.remaining ).to.equal( 0 );
 					done();
 				}, 301);
 			});

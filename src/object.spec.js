@@ -1,12 +1,19 @@
-describe("bmoor.object", function() {
-	it("should operate explode correctly", function(){
-		var t = {
-				'eins.zwei': 12,
-				'eins.drei': 13,
-				'fier': 4
-			}
 
-		expect( bmoor.object.explode(t) ).toEqual({
+const {expect} = require('chai');
+
+describe('bmoor.object', function() {
+	
+	const bmoor = require('./index.js');
+
+	it('should operate explode correctly', function(){
+		var t = {
+			'eins.zwei': 12,
+			'eins.drei': 13,
+			'fier': 4
+		};
+
+		expect(bmoor.object.explode(t))
+		.to.deep.equal({
 			eins: {
 				zwei: 12,
 				drei: 13
@@ -15,7 +22,7 @@ describe("bmoor.object", function() {
 		});
 	});
 
-	it("should operate makeExploder correctly", function(){
+	it('should operate makeExploder correctly', function(){
 		var t = {
 				'eins.zwei': 12,
 				'eins.drei': 13,
@@ -23,7 +30,8 @@ describe("bmoor.object", function() {
 			},
 			explode = bmoor.object.makeExploder( Object.keys(t) );
 
-		expect( explode(t) ).toEqual({
+		expect(explode(t))
+		.to.deep.equal({
 			eins: {
 				zwei: 12,
 				drei: 13
@@ -33,7 +41,7 @@ describe("bmoor.object", function() {
 	});
 
 	describe(':: implode', function(){
-		it("should operate correctly", function(){
+		it('should operate correctly', function(){
 			var t = {
 				time: {
 					start: 99,
@@ -56,7 +64,7 @@ describe("bmoor.object", function() {
 			};
 
 			expect(bmoor.object.implode(t))
-			.toEqual({
+			.to.deep.equal({
 				'time.start': 99,
 				'time.stop': 100,
 				'id': 'woot',
@@ -66,10 +74,9 @@ describe("bmoor.object", function() {
 				'double[0][0]': 0
 			});
 		});
-	});
 
-	it("should operate implode correctly - with an ignore", function(){
-		var t = {
+		it('should operate correctly', function(){
+			var t = {
 				time: {
 					start: 99,
 					stop: 100
@@ -79,10 +86,58 @@ describe("bmoor.object", function() {
 					bar: {
 						hello: 'world'
 					}
+				},
+				arr: [{
+					eins: 1,
+				}, {
+					zwei: 2
+				}],
+				double: [
+					[0]
+				]
+			};
+
+			expect(bmoor.object.implode(t, {skipArray: true}))
+			.to.deep.equal({
+				'time.start': 99,
+				'time.stop': 100,
+				'id': 'woot',
+				'foo.bar.hello': 'world',
+				'arr': [{
+					eins: 1,
+				}, {
+					zwei: 2
+				}],
+				'double': [
+					[0]
+				]
+			});
+		});
+	});
+
+	it('should operate implode correctly - with an ignore', function(){
+		var t = {
+			time: {
+				start: 99,
+				stop: 100
+			},
+			id: 'woot',
+			foo: {
+				bar: {
+					hello: 'world'
 				}
 			}
+		};
 
-		expect( bmoor.object.implode(t,{time:{start:true},id:true,foo:true}) ).toEqual({
+		expect(bmoor.object.implode(t, {
+			ignore: {
+				time:{
+					start:true
+				},
+				id: true,
+				foo: true
+			}
+		})).to.deep.equal({
 			'time.stop': 100
 		});
 	});
@@ -109,7 +164,7 @@ describe("bmoor.object", function() {
 				arr: null,
 				arr2: [4, 5]
 			}))
-			.toEqual({
+			.to.deep.equal({
 				foo: 'bar',
 				bar: null,
 				hello: {
@@ -119,7 +174,7 @@ describe("bmoor.object", function() {
 				},
 				arr: null,
 				arr2: [4, 5]
-			})
+			});
 		});
 	});
 });

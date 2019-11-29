@@ -1,7 +1,8 @@
 var window = require('./flow/window.js');
 
-function always( promise, func ){
+function always(promise, func){
 	promise.then(func, func);
+
 	return promise;
 }
 
@@ -18,7 +19,9 @@ function stack( calls, settings ){
 	let min = settings.min || 1,
 		max = settings.max || 10,
 		limit = settings.limit || 5,
-		update = window( settings.update || function(){}, min, max );
+		update = window(settings.update || function(){}, min, max);
+
+	// TODO : I should make this return back an observable
 
 	return new Promise(function( resolve, reject ){
 		var run,
@@ -34,7 +37,7 @@ function stack( calls, settings ){
 		function next(){
 			active--;
 
-			update( {active: active, remaining: callStack.length} );
+			update({active: active, remaining: callStack.length});
 
 			if ( callStack.length ){
 				if ( !timeout ){
@@ -70,19 +73,21 @@ function stack( calls, settings ){
 function hash( obj ){
 	var rtn = {};
 
-	return Promise.all(Object.keys(obj).map(function( key ){
-		var p = obj[key];
+	return Promise.all(
+		Object.keys(obj).map(function( key ){
+			var p = obj[key];
 
-		if ( p && p.then ){
-			p.then(function( v ){
-				rtn[key] = v;
-			});
-		}else{
-			rtn[key] = p;
-		}
+			if ( p && p.then ){
+				p.then(function( v ){
+					rtn[key] = v;
+				});
+			}else{
+				rtn[key] = p;
+			}
 
-		return p;
-	})).then(function(){
+			return p;
+		})
+	).then(function(){
 		return rtn;
 	});
 }

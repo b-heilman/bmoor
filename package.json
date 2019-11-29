@@ -1,45 +1,34 @@
+
 {
   "name": "bmoor",
-  "version": "0.5.1",
+  "version": "0.8.0",
   "author": "Brian Heilman <das.ist.junk@gmail.com>",
-  "description": "A system for pulling your site together",
+  "description": "A basic foundation for other libraries, establishing useful patterbs, and letting them be more.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/b-heilman/bmoor.git"
   },
-  "main": "bmoor.js",
+  "main": "src/index.js",
   "scripts": {
     "demo": "gulp serve",
     "build": "gulp build"
   },
   "dependencies": {
-    "babel-polyfill": "^6.26.0",
-    "es6-promise": "4.1.0",
-    "formdata-polyfill": "^3.0.9"
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-preset-env": "^1.7.0",
-    "gulp": "3.9.1",
+    "chai": "^4.2.0",
+    "gulp": "^4.0.2",
     "gulp-jsdoc3": "0.3.0",
     "gulp-jshint": "^2.1.0",
-    "gulp-load-plugins": "^1.5.0",
+    "gulp-mocha": "^7.0.2",
     "gulp-webserver": "0.9.1",
     "jasmine": "^2.9.0",
-    "jshint": "^2.9.5",
+    "jshint": "^2.10.3",
     "jshint-stylish": "2.1.0",
-    "karma": "^2.0.2",
-    "karma-chrome-launcher": "^2.2.0",
-    "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^1.1.1",
-    "karma-sourcemap-loader": "^0.3.7",
-    "karma-webpack": "^2.0.9",
-    "map-stream": "0.0.6",
-    "phantomjs-polyfill": "0.0.2",
-    "phantomjs-prebuilt": "^2.1.16",
-    "webpack": "^3.10.0",
-    "webpack-stream": "^4.0.0"
+    "mocha": "^6.2.2",
+    "sinon": "^7.5.0",
+    "yargs": "^15.0.2"
   }
 }

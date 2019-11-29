@@ -1,4 +1,9 @@
-describe("Testing object setting/getting", function() {
+
+const {expect} = require('chai');
+
+const bmoor = require('./index.js');
+
+describe('Testing object setting/getting', function() {
 	it('should have get working', function(){
 		var t = {
 				eins : 1,
@@ -7,8 +12,8 @@ describe("Testing object setting/getting", function() {
 				}
 			};
 
-		expect( bmoor.get(t,'eins') ).toBe(1);
-		expect( bmoor.get(t,'zwei.drei') ).toBe(3);
+		expect( bmoor.get(t,'eins') ).to.equal(1);
+		expect( bmoor.get(t,'zwei.drei') ).to.equal(3);
 	});
 
 	it('should have get working with empty strings', function(){
@@ -19,7 +24,7 @@ describe("Testing object setting/getting", function() {
 				}
 			};
 
-		expect( bmoor.get(t,'') ).toBe(t);
+		expect( bmoor.get(t,'') ).to.equal(t);
 	});
 
 	it('should have makeGetter working', function(){
@@ -32,8 +37,8 @@ describe("Testing object setting/getting", function() {
 			f1 = bmoor.makeGetter('eins'),
 			f2 = bmoor.makeGetter('zwei.drei');
 
-		expect( f1(t) ).toBe(1);
-		expect( f2(t) ).toBe(3);
+		expect( f1(t) ).to.equal(1);
+		expect( f2(t) ).to.equal(3);
 	});
 
 	it('should have makeGetter working with empty strings', function(){
@@ -45,7 +50,7 @@ describe("Testing object setting/getting", function() {
 			},
 			f1 = bmoor.makeGetter('');
 
-		expect( f1(t) ).toBe(t);
+		expect( f1(t) ).to.equal(t);
 	});
 
 	it('should have set working', function(){
@@ -54,8 +59,8 @@ describe("Testing object setting/getting", function() {
 		bmoor.set(t,'eins',1);
 		bmoor.set(t,'zwei.drei',3);
 
-		expect( t.eins ).toBe(1);
-		expect( t.zwei.drei ).toBe(3);
+		expect( t.eins ).to.equal(1);
+		expect( t.zwei.drei ).to.equal(3);
 	});
 
 	it('should have makeSetter working', function(){
@@ -66,8 +71,8 @@ describe("Testing object setting/getting", function() {
 		f1(t,1);
 		f2(t,3);
 
-		expect( t.eins ).toBe(1);
-		expect( t.zwei.drei ).toBe(3);
+		expect( t.eins ).to.equal(1);
+		expect( t.zwei.drei ).to.equal(3);
 	});
 
 	it('should have del working', function(){
@@ -78,125 +83,42 @@ describe("Testing object setting/getting", function() {
 			}
 		};
 
-		expect( bmoor.del(t,'eins') ).toBe(1);
-		expect( bmoor.del(t,'zwei.drei') ).toBe(3);
-		expect( t.eins ).toBeUndefined();
-		expect( t.zwei ).toBeDefined();
-		expect( t.zwei.drei ).toBeUndefined();
+		expect( bmoor.del(t,'eins') ).to.equal(1);
+		expect( bmoor.del(t,'zwei.drei') ).to.equal(3);
+		expect( t.eins ).to.not.exist;
+		expect( t.zwei ).to.exist;
+		expect( t.zwei.drei ).to.not.exist;
 	});
 
 	describe('::parse', function(){
 		it('should parse an array correctly', function(){
 			expect(bmoor.parse([1,2,3]))
-			.toEqual([1,2,3]);
+			.to.deep.equal([1,2,3]);
 		});
 
 		it('should parse dot notation correctly', function(){
 			expect(bmoor.parse('1.2.3'))
-			.toEqual(['1','2','3']);
+			.to.deep.equal(['1','2','3']);
 		});
 
 		it('should parse brackets correctly', function(){
 			expect(bmoor.parse('[1][2][3]'))
-			.toEqual(['1','2','3']);
+			.to.deep.equal(['1','2','3']);
 		});
 
 		it('should parse brackets with quotes correctly', function(){
 			expect(bmoor.parse('[\'1\']["2"][3]'))
-			.toEqual(['1','2','3']);
+			.to.deep.equal(['1','2','3']);
 		});
 
 		it('should parse mixed correctly', function(){
 			expect(bmoor.parse('foo["bar"].ok[hello]'))
-			.toEqual(['foo','bar','ok','hello']);
+			.to.deep.equal(['foo','bar','ok','hello']);
 		});
 	});
 });
 
-describe('Testing error handling functionality', function(){
-	//loop
-	it('should allow looping through array like elements with bmoor.loop', function(){
-		var t = [0,1,2,3];
-
-		bmoor.loop(t, function( v, i ){
-			expect( v ).toBe( i );
-
-			this[i] = true;
-		});
-
-		expect( t ).toEqual( [true,true,true,true] );
-	});
-
-	it('should allow looping through array like elements with bmoor.loop, while allowing alternate scope', function(){
-		var t = [0,1,2,3],
-			t2 = [];
-
-		bmoor.loop(t, function( v, i ){
-			expect( v ).toBe( i );
-
-			this[i] = true;
-		}, t2);
-
-		expect( t2 ).toEqual( [true,true,true,true] );
-	});
-
-	//each
-	it('should allow looping through hash\'s own properites with bmoor.each', function(){
-		var t = { 
-				eins : true
-			};
-
-		bmoor.each( t, function(v,k){
-			expect( k ).toBe( 'eins' );
-			expect( v ).toBe( true );
-		});
-	});
-
-	it('should allow looping through hash\'s own properites with bmoor.each, while allowing alternate scope', function(){
-		var t = { 
-				eins : true
-			},
-			t2 = {};
-
-		bmoor.each( t, function(v,k){
-			expect( k ).toBe( 'eins' );
-			expect( v ).toBe( true );
-
-			t2[ k ] = v;
-		});
-
-		expect( t2 ).toEqual( t );
-	});
-
-	//iterate
-	it('should allow looping through object\'s own properites, ignoring special vars with bmoor.iterate', function(){
-		function f(){
-			this.eins = true;
-			this._hidden = true;
-		}
-
-		f.prototype.foobar = function(){};
-
-		var t = new f(),
-			t2 = {};
-
-		bmoor.iterate( t, function(v,k){
-			expect( k ).toBe( 'eins' );
-			expect( v ).toBe( true );
-
-			t2[ k ] = v;
-		});
-
-		expect( t2 ).toEqual({
-			eins : true
-		});
-	});
-
-	//forEach
-	// TODO
-});
-
-describe("Testing object functions", function() {
+describe('Testing object functions', function() {
 	// mask
 	it('should allow for the creation of object from a base object', function(){
 		var t,
@@ -212,7 +134,7 @@ describe("Testing object functions", function() {
 
 		v = bmoor.object.mask( t );
 
-		expect( v.bar ).toBe( 'yay' );
+		expect( v.bar ).to.equal( 'yay' );
 	});
 
 
@@ -231,8 +153,8 @@ describe("Testing object functions", function() {
 			'woot' : '3!'
 		});
 
-		expect( t.foo ).toBe( 'foo2' );
-		expect( t.woot ).toBe( '3!' );
+		expect( t.foo ).to.equal( 'foo2' );
+		expect( t.woot ).to.equal( '3!' );
 	});
 	// copy
 	// TODO : yeah, need to do this one
@@ -253,10 +175,10 @@ describe("Testing object functions", function() {
 				'help.me': o
 			});
 
-		expect( t.eins ).toBe( 1 );
-		expect( t.foo.bar ).toBe( 'woot' );
-		expect( t.hello ).toBe( 'world' );
-		expect( t.help.me ).toBe( o );
+		expect( t.eins ).to.equal( 1 );
+		expect( t.foo.bar ).to.equal( 'woot' );
+		expect( t.hello ).to.equal( 'world' );
+		expect( t.help.me ).to.equal( o );
 	});
 
 	it('should allow for a new variable to be created from a map', function(){
@@ -270,7 +192,7 @@ describe("Testing object functions", function() {
 
 		expect( t.eins, 1 );
 		expect( t.foo.bar, 'woot' );
-		expect( t.hello.world ).toBe( o );
+		expect( t.hello.world ).to.equal( o );
 	});
 
 	/*
@@ -288,9 +210,9 @@ describe("Testing object functions", function() {
 				drei : 3
 			});
 
-			expect( t.eins ).toBeUndefined();
-			expect( t.zwei ).toBeUndefined();
-			expect( t.drei ).toBe( 3 );
+			expect( t.eins ).to.not.to.exist;
+			expect( t.zwei ).to.not.to.exist;
+			expect( t.drei ).to.equal( 3 );
 		});
 
 		it( 'should handle shallow object copy', function(){
@@ -311,7 +233,7 @@ describe("Testing object functions", function() {
 
 			o.drei.hello = 'woot';
 
-			expect( t.drei.hello ).toBe( 'woot' );
+			expect( t.drei.hello ).to.equal( 'woot' );
 		});
 
 		it( 'should handle deep object copy', function(){
@@ -332,7 +254,7 @@ describe("Testing object functions", function() {
 
 			o.drei.hello = 'woot';
 
-			expect( t.drei.hello ).toBe( 'world' );
+			expect( t.drei.hello ).to.equal( 'world' );
 		});
 	});
 	*/
@@ -344,7 +266,7 @@ describe("Testing object functions", function() {
 				bar : 2
 			},
 			drei : 3
-		}
+		};
 
 		bmoor.object.merge( t, {
 			eins : 2,
@@ -354,126 +276,126 @@ describe("Testing object functions", function() {
 			fier : 4
 		});
 
-		expect( t.eins ).toBe( 2 );
-		expect( t.zwei ).toBeDefined();
-		expect( t.zwei.foo ).toBe( 2 );
-		expect( t.drei ).toBe( 3 );
-		expect( t.fier ).toBe( 4 );
+		expect( t.eins ).to.equal( 2 );
+		expect( t.zwei ).to.to.exist;
+		expect( t.zwei.foo ).to.equal( 2 );
+		expect( t.drei ).to.equal( 3 );
+		expect( t.fier ).to.equal( 4 );
 	});
 });
 
 describe('Testing the test functions', function(){
 	// isBoolean
 	it('should be able to test booleans', function(){
-		expect( bmoor.isBoolean(true) ).toBe( true );
-		expect( bmoor.isBoolean(false) ).toBe( true );
-		expect( bmoor.isBoolean(1) ).toBe( false );
-		expect( bmoor.isBoolean(0) ).toBe( false );
+		expect( bmoor.isBoolean(true) ).to.equal( true );
+		expect( bmoor.isBoolean(false) ).to.equal( true );
+		expect( bmoor.isBoolean(1) ).to.equal( false );
+		expect( bmoor.isBoolean(0) ).to.equal( false );
 	});
 	// isDefined
 	it('should be able to test for variables being defined', function(){
 		var n = {},
 			t;
 
-		expect( bmoor.isDefined(true) ).toBe( true );
-		expect( bmoor.isDefined(false) ).toBe( true );
-		expect( bmoor.isDefined(1) ).toBe( true );
-		expect( bmoor.isDefined(0) ).toBe( true );
-		expect( bmoor.isDefined(n) ).toBe( true );
-		expect( bmoor.isDefined(t) ).toBe( false );
+		expect( bmoor.isDefined(true) ).to.equal( true );
+		expect( bmoor.isDefined(false) ).to.equal( true );
+		expect( bmoor.isDefined(1) ).to.equal( true );
+		expect( bmoor.isDefined(0) ).to.equal( true );
+		expect( bmoor.isDefined(n) ).to.equal( true );
+		expect( bmoor.isDefined(t) ).to.equal( false );
 	});
 	// isUndefined
 	it('should be able to test for variables being undefined', function(){
 		var n = {},
 			t;
 
-		expect( bmoor.isUndefined(true) ).toBe( false );
-		expect( bmoor.isUndefined(false) ).toBe( false );
-		expect( bmoor.isUndefined(1) ).toBe( false );
-		expect( bmoor.isUndefined(0) ).toBe( false );
-		expect( bmoor.isUndefined(n) ).toBe( false );
-		expect( bmoor.isUndefined(t) ).toBe( true );
+		expect( bmoor.isUndefined(true) ).to.equal( false );
+		expect( bmoor.isUndefined(false) ).to.equal( false );
+		expect( bmoor.isUndefined(1) ).to.equal( false );
+		expect( bmoor.isUndefined(0) ).to.equal( false );
+		expect( bmoor.isUndefined(n) ).to.equal( false );
+		expect( bmoor.isUndefined(t) ).to.equal( true );
 	});
 	// isArray
 	it('should be able to test for variables being arrays', function(){
-		expect( bmoor.isArray([]) ).toBe( true );
-		expect( bmoor.isArray({}) ).toBe( false );
-		expect( bmoor.isArray(1) ).toBe( false );
-		expect( bmoor.isArray({length:0}) ).toBe( false );
-		expect( bmoor.isArray('') ).toBe( false );
+		expect( bmoor.isArray([]) ).to.equal( true );
+		expect( bmoor.isArray({}) ).to.equal( false );
+		expect( bmoor.isArray(1) ).to.equal( false );
+		expect( bmoor.isArray({length:0}) ).to.equal( false );
+		expect( bmoor.isArray('') ).to.equal( false );
 	});
 	// isArrayLike
 	it('should be able to test for variables being array like', function(){
-		expect( bmoor.isArrayLike([]) ).toBe( true );
-		expect( bmoor.isArrayLike({}) ).toBe( false );
-		expect( bmoor.isArrayLike(1) ).toBe( false );
-		expect( bmoor.isArrayLike({length:0}) ).toBe( true );
-		expect( bmoor.isArrayLike('') ).toBe( false );
+		expect( bmoor.isArrayLike([]) ).to.equal( true );
+		expect( bmoor.isArrayLike({}) ).to.equal( false );
+		expect( bmoor.isArrayLike(1) ).to.equal( false );
+		expect( bmoor.isArrayLike({length:0}) ).to.equal( true );
+		expect( bmoor.isArrayLike('') ).to.equal( false );
 	});
 	// isObject
 	it('should be able to test for variables being an object', function(){
-		function f(){}
-		var t = new f();
+		function Temp(){}
+		var t = new Temp();
 
-		expect( bmoor.isObject([]) ).toBe( true );
-		expect( bmoor.isObject({}) ).toBe( true );
-		expect( bmoor.isObject(1) ).toBe( false );
-		expect( bmoor.isObject(false) ).toBe( false );
-		expect( bmoor.isObject(f) ).toBe( false );
-		expect( bmoor.isObject(t) ).toBe( true );
-		expect( bmoor.isObject('') ).toBeFalsy();
+		expect( bmoor.isObject([]) ).to.equal( true );
+		expect( bmoor.isObject({}) ).to.equal( true );
+		expect( bmoor.isObject(1) ).to.equal( false );
+		expect( bmoor.isObject(false) ).to.equal( false );
+		expect( bmoor.isObject(Temp) ).to.equal( false );
+		expect( bmoor.isObject(t) ).to.equal( true );
+		expect( bmoor.isObject('') ).to.equal( false );
 	});
 	// isFunction
 	it('should be able to test for variables being a function', function(){
-		function f(){}
-		var t = new f();
+		function Temp(){}
+		var t = new Temp();
 
-		expect( bmoor.isFunction([]) ).toBe( false );
-		expect( bmoor.isFunction({}) ).toBe( false );
-		expect( bmoor.isFunction(1) ).toBe( false );
-		expect( bmoor.isFunction(false) ).toBe( false );
-		expect( bmoor.isFunction(f) ).toBe( true );
-		expect( bmoor.isFunction(t) ).toBe( false );
-		expect( bmoor.isFunction('') ).toBeFalsy();
+		expect( bmoor.isFunction([]) ).to.equal( false );
+		expect( bmoor.isFunction({}) ).to.equal( false );
+		expect( bmoor.isFunction(1) ).to.equal( false );
+		expect( bmoor.isFunction(false) ).to.equal( false );
+		expect( bmoor.isFunction(Temp) ).to.equal( true );
+		expect( bmoor.isFunction(t) ).to.equal( false );
+		expect( bmoor.isFunction('') ).to.equal( false );
 	});
 	// isNumber
 	it('should be able to test for variables being a number', function(){
-		function f(){}
-		var t = new f();
+		function Temp(){}
+		var t = new Temp();
 
-		expect( bmoor.isNumber([]) ).toBe( false );
-		expect( bmoor.isNumber({}) ).toBe( false );
-		expect( bmoor.isNumber(1) ).toBe( true );
-		expect( bmoor.isNumber(false) ).toBe( false );
-		expect( bmoor.isNumber(f) ).toBe( false );
-		expect( bmoor.isNumber(t) ).toBe( false );
-		expect( bmoor.isNumber('') ).toBeFalsy();
+		expect( bmoor.isNumber([]) ).to.equal( false );
+		expect( bmoor.isNumber({}) ).to.equal( false );
+		expect( bmoor.isNumber(1) ).to.equal( true );
+		expect( bmoor.isNumber(false) ).to.equal( false );
+		expect( bmoor.isNumber(Temp) ).to.equal( false );
+		expect( bmoor.isNumber(t) ).to.equal( false );
+		expect( bmoor.isNumber('') ).to.equal( false );
 	});
 	
 	// isString
 	it('should be able to test for variables being a function', function(){
-		function f(){}
-		var t = new f();
+		function Temp(){}
+		var t = new Temp();
 
-		expect( bmoor.isString([]) ).toBe( false );
-		expect( bmoor.isString({}) ).toBe( false );
-		expect( bmoor.isString(1) ).toBe( false );
-		expect( bmoor.isString(false) ).toBe( false );
-		expect( bmoor.isString(f) ).toBe( false );
-		expect( bmoor.isString(t) ).toBe( false );
-		expect( bmoor.isString('') ).toBe( true );
+		expect( bmoor.isString([]) ).to.equal( false );
+		expect( bmoor.isString({}) ).to.equal( false );
+		expect( bmoor.isString(1) ).to.equal( false );
+		expect( bmoor.isString(false) ).to.equal( false );
+		expect( bmoor.isString(Temp) ).to.equal( false );
+		expect( bmoor.isString(t) ).to.equal( false );
+		expect( bmoor.isString('') ).to.equal( true );
 	});
 	
 	// isEmpty
 	it('should be able to test for variables being a function', function(){
 		var t;
 
-		expect( bmoor.isEmpty([]) ).toBe( true );
-		expect( bmoor.isEmpty({}) ).toBe( true );
-		expect( bmoor.isEmpty(0) ).toBe( false );
-		expect( bmoor.isEmpty(t) ).toBe( true );
-		expect( bmoor.isEmpty(null) ).toBe( false );
-		expect( bmoor.isEmpty([0]) ).toBe( false );
-		expect( bmoor.isEmpty({'v':0}) ).toBe( false );
+		expect( bmoor.isEmpty([]) ).to.equal( true );
+		expect( bmoor.isEmpty({}) ).to.equal( true );
+		expect( bmoor.isEmpty(0) ).to.equal( false );
+		expect( bmoor.isEmpty(t) ).to.equal( true );
+		expect( bmoor.isEmpty(null) ).to.equal( false );
+		expect( bmoor.isEmpty([0]) ).to.equal( false );
+		expect( bmoor.isEmpty({'v':0}) ).to.equal( false );
 	});
 });

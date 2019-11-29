@@ -1,4 +1,7 @@
 
+/**
+ * Basic debounce method, the time to call is N milliseconds after last call
+ **/
 module.exports = function( cb, time, settings ){
 	var ctx,
 		args,
@@ -24,7 +27,7 @@ module.exports = function( cb, time, settings ){
 		}
 	}
 
-	let fn = function debounced(){
+	let fn = function sooned(){
 		var now = Date.now();
 
 		ctx = this;

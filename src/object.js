@@ -5,30 +5,6 @@
 
 var bmoor = require('./core.js');
 
-function values( obj ){
-	var res = [];
-
-	bmoor.naked( obj, function( v ){
-		res.push( v );
-	});
-
-	return res;
-}
-
-function keys( obj ){
-	var res = [];
-
-	if ( Object.keys ){
-		return Object.keys(obj);
-	}else{
-		bmoor.naked( obj, function( v, key ){
-			res.push( key );
-		});
-
-		return res;
-	}
-}
-
 /**
  * Takes a hash and uses the indexs as namespaces to add properties to an objs
  *
@@ -43,9 +19,9 @@ function explode( target, mappings ){
 		target = {};
 	}
 
-	bmoor.iterate(mappings, function(val, mapping){
-		bmoor.set(target, mapping, val);
-	});
+	for(const key in mappings){
+		bmoor.set(target, key, mappings[key]);
+	}
 
 	return target;
 }
@@ -78,11 +54,12 @@ function makeExploder( paths ){
 	};
 }
 
-function implode(obj, ignore){
+function implode(obj, settings = {}){
 	var rtn = {};
 
-	if (!ignore){
-		ignore = {};
+	let ignore = {};
+	if (settings.ignore){
+		ignore = settings.ignore;
 	}
 
 	const format = bmoor.isArray(obj) ?
@@ -108,19 +85,24 @@ function implode(obj, ignore){
 			}
 		};
 
-	bmoor.iterate(obj, function(val, key){
-		var t = ignore[key];
+	for (const key in obj){
+		const val = obj[key];
+		const t = ignore[key];
 
 		if (t !== true){
-			if (bmoor.isObject(val)){
-				bmoor.iterate(implode(val,t), function(v, k){
-					rtn[format(key,k)] = v;
-				});
+			if (settings.skipArray && bmoor.isArray(val)){
+				rtn[format(key)] = val;
+			} else if (bmoor.isObject(val)){
+				const todo = implode(val, Object.assign({}, settings, {ignore:t}));
+
+				for(const k in todo){
+					rtn[format(key, k)] = todo[k];
+				}
 			} else {
 				rtn[format(key)] = val;
 			}
 		}
-	});
+	}
 
 	return rtn;
 }
@@ -153,33 +135,20 @@ function mask( obj ){
  * @param {...object} src Source object(s).
  * @returns {object} Reference to `dst`.
  **/
-function extend( to ){
-	bmoor.loop( arguments, function(cpy){
-		if ( cpy !== to ) {
-			if ( to && to.extend ){
-				to.extend( cpy );
-			}else{
-				bmoor.iterate( cpy, function(value, key){
-					to[key] = value;
-				});
-			}
-			
-		}
-	});
-
-	return to;
+function extend(){
+	return Object.assign(...arguments);
 }
 
 function empty( to ){
-	bmoor.iterate( to, function( v, k ){
-		delete to[k]; // TODO : would it be ok to set it to undefined?
-	});
+	for (const key in to){
+		delete to[key]; // TODO : would it be ok to set it to undefined?
+	}
 }
 
 function copy( to ){
 	empty( to );
 
-	return extend.apply( undefined, arguments );
+	return extend(...arguments);
 }
 
 // Deep copy version of extend
@@ -204,7 +173,9 @@ function merge(to){
 		}else if (!bmoor.isObject(to)){
 			to = merge({}, from);
 		}else{
-			bmoor.safe(from, m);
+			for(const key in from){
+				m(from[key], key);
+			}
 		}
 	}
 	
@@ -222,8 +193,6 @@ function merge(to){
 function equals( obj1, obj2 ){
 	var t1 = typeof obj1,
 		t2 = typeof obj2,
-		c,
-		i,
 		keyCheck;
 
 	if ( obj1 === obj2 ){
@@ -243,8 +212,8 @@ function equals( obj1, obj2 ){
 					return false; 
 				}
 
-				if ( (c = obj1.length) === obj2.length ){
-					for( i = 0; i < c; i++ ){
+				if (obj1.length === obj2.length){
+					for(let i = 0, c = obj1.length; i < c; i++){
 						if ( !equals(obj1[i], obj2[i]) ) { 
 							return false;
 						}
@@ -254,7 +223,7 @@ function equals( obj1, obj2 ){
 				}
 			}else if ( !bmoor.isArrayLike(obj2) ){
 				keyCheck = {};
-				for( i in obj1 ){
+				for(let i in obj1){
 					if ( obj1.hasOwnProperty(i) ){
 						if ( !equals(obj1[i],obj2[i]) ){
 							return false;
@@ -264,7 +233,7 @@ function equals( obj1, obj2 ){
 					}
 				}
 
-				for( i in obj2 ){
+				for(let i in obj2){
 					if ( obj2.hasOwnProperty(i) ){
 						if ( !keyCheck && obj2[i] !== undefined ){
 							return false;
@@ -281,8 +250,6 @@ function equals( obj1, obj2 ){
 // TODO : property watch
 
 module.exports = {
-	keys: keys,
-	values: values,
 	explode: explode,
 	makeExploder: makeExploder,
 	implode: implode,

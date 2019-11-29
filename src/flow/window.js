@@ -1,4 +1,7 @@
 
+/**
+ * A debounce method that has a sliding window, there's a minimum and maximum wait time
+ **/
 module.exports = function( cb, min, max, settings ){
 	var ctx,
 		args,
@@ -21,7 +24,7 @@ module.exports = function( cb, min, max, settings ){
 		if ( now >= limit || now >= next ){
 			fire();
 		}else{
-			timeout = setTimeout(run, Math.min(limit,next)-now);
+			timeout = setTimeout(run, Math.min(limit, next)-now);
 		}
 	}
 

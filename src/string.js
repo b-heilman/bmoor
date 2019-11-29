@@ -1,4 +1,3 @@
-var bmoor = require('./core.js');
 
 /**
  * Array helper functions
@@ -26,9 +25,9 @@ function rtrim( str, chr ){
 	return str.replace( new RegExp(chr+'+$','g'), '' );
 }
 
-// TODO : eventually I will make getCommands and getFormatter more complicated, but for now
-//        they work by staying simple
-function getCommands( str ){
+/*
+// TODO : Don't use these.  I wrote a tokenizer in bmoor-data, I will use that to write a parser library
+//   for methods like this
 	var commands = str.split('|');
 
 	commands.forEach(function( command, key ){
@@ -189,11 +188,9 @@ function getFormatter( str ){
 }
 
 getFormatter.filters = filters;
-
+*/
 module.exports = {
 	trim: trim,
 	ltrim: ltrim,
-	rtrim: rtrim,
-	getCommands: getCommands,
-	getFormatter: getFormatter
+	rtrim: rtrim
 };

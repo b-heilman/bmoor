@@ -1,44 +1,48 @@
 
-describe('bmoor.flow.debounce', function(){
-	var timerCallback;
+const {expect} = require('chai');
+const sinon = require('sinon');
 
+describe('bmoor.flow.debounce', function(){
+	const service = require('./debounce.js');
+
+	let clock = null;
 	function moveClock( increment ){
-		jasmine.clock().tick(increment);
+		clock.tick(increment);
 	}
 
+	let timerCallback = null;
 	beforeEach(function() {
-		timerCallback = jasmine.createSpy("timerCallback");
+		timerCallback = sinon.spy();
 
-		jasmine.clock().install();
-		jasmine.clock().mockDate( Date.now() );
+		clock = sinon.useFakeTimers();
 	});
 
 	afterEach(function() {
-		jasmine.clock().uninstall();
+		clock.restore();
 	});
 
-	it("should call a callback method within timeframe of last call", function() {
-		var fn = bmoor.flow.debounce(function() {
+	it('should call a callback method within timeframe of last call', function() {
+		var fn = service(function() {
 			timerCallback();
 		}, 10);
 
 		fn();
 		moveClock(5);
-		expect(timerCallback).not.toHaveBeenCalled();
+		expect(timerCallback.called).to.be.false;
 
 		fn();
 		moveClock(9);
-		expect(timerCallback).not.toHaveBeenCalled();
+		expect(timerCallback.called).to.be.false;
 
 		moveClock(1);
-		expect(timerCallback).toHaveBeenCalled();
-		expect(timerCallback.calls.count()).toEqual(1);
+		expect(timerCallback.called).to.be.true;
+		expect(timerCallback.callCount).to.equal(1);
 
 		fn();
 		moveClock(5);
-		expect(timerCallback.calls.count()).toEqual(1);
+		expect(timerCallback.callCount).to.equal(1);
 
 		moveClock(5);
-		expect(timerCallback.calls.count()).toEqual(2);
+		expect(timerCallback.callCount).to.equal(2);
 	});
 });

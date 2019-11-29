@@ -1,6 +1,12 @@
-describe("bmoor.array", function() {
+
+const {expect} = require('chai');
+
+describe('bmoor.array', function() {
+
+	const bmoor = require('./index.js');
+
 	// compare
-	it("should support the matching of two arrays", function(){
+	it('should support the matching of two arrays', function(){
 		var t = bmoor.array.compare(
 			[
 				{ val : 1 },
@@ -22,24 +28,24 @@ describe("bmoor.array", function() {
 			}
 		);
 
-		expect( t.left ).toEqual([
+		expect( t.left ).to.deep.equal([
 			{ val : 3 },
 			{ val : 6 }
 		]);
 
-		expect( t.intersection.left ).toEqual([
+		expect( t.intersection.left ).to.deep.equal([
 			{ val : 1 },
 			{ val : 5 },
 			{ val : 9 }
 		]);
 
-		expect( t.intersection.right ).toEqual([
+		expect( t.intersection.right ).to.deep.equal([
 			{ val : 1 },
 			{ val : 5 },
 			{ val : 9 }
 		]);
 
-		expect( t.right ).toEqual([
+		expect( t.right ).to.deep.equal([
 			{ val : 2 },
 			{ val : 4 },
 			{ val : 10 }
@@ -47,17 +53,17 @@ describe("bmoor.array", function() {
 	});
 
 	// remove
-	it("should support remove", function(){
-		expect( bmoor.array.remove(['a','c','b','c'],'a') ).toBe( 'a' );
-		expect( bmoor.array.remove(['a','c','b','c'],'c') ).toBe( 'c' );
-		expect( bmoor.array.remove(['a','c','b','c'],'d') ).toBeUndefined();
+	it('should support remove', function(){
+		expect( bmoor.array.remove(['a','c','b','c'],'a') ).to.equal( 'a' );
+		expect( bmoor.array.remove(['a','c','b','c'],'c') ).to.equal( 'c' );
+		expect( bmoor.array.remove(['a','c','b','c'],'d') ).to.not.exist;
 	});
 
 	// removeAll
-	it("should support removeAll", function(){
-		expect( bmoor.array.removeAll(['a','c','b','c'],'a').length ).toBe( 1 );
-		expect( bmoor.array.removeAll(['a','c','b','c'],'c').length ).toBe( 2 );
-		expect( bmoor.array.removeAll(['a','c','b','c'],'d').length ).toBe( 0 );
+	it('should support removeAll', function(){
+		expect( bmoor.array.removeAll(['a','c','b','c'],'a').length ).to.equal( 1 );
+		expect( bmoor.array.removeAll(['a','c','b','c'],'c').length ).to.equal( 2 );
+		expect( bmoor.array.removeAll(['a','c','b','c'],'d').length ).to.equal( 0 );
 	});
 
 	// bisect
@@ -70,8 +76,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 3 );
-			expect( t.right ).toBe( 3 );
+			expect( t.left ).to.equal( 3 );
+			expect( t.right ).to.equal( 3 );
 		});
 
 		it('should allow directly matching elements : center + 1', function(){
@@ -82,8 +88,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 4 );
-			expect( t.right ).toBe( 4 );
+			expect( t.left ).to.equal( 4 );
+			expect( t.right ).to.equal( 4 );
 		});
 
 		it('should allow directly matching elements : center + 2', function(){
@@ -94,8 +100,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 5 );
-			expect( t.right ).toBe( 5 );
+			expect( t.left ).to.equal( 5 );
+			expect( t.right ).to.equal( 5 );
 		});
 
 		it('should allow directly matching elements : center + 3', function(){
@@ -106,8 +112,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 6 );
-			expect( t.right ).toBe( 6 );
+			expect( t.left ).to.equal( 6 );
+			expect( t.right ).to.equal( 6 );
 		});
 
 		it('should allow directly matching elements : center + 1.5', function(){
@@ -118,8 +124,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 3 );
-			expect( t.right ).toBe( 4 );
+			expect( t.left ).to.equal( 3 );
+			expect( t.right ).to.equal( 4 );
 		});
 
 		it('should allow directly matching elements : center - 1', function(){
@@ -130,8 +136,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 2 );
-			expect( t.right ).toBe( 2 );
+			expect( t.left ).to.equal( 2 );
+			expect( t.right ).to.equal( 2 );
 		});
 
 		it('should allow directly matching elements : center - 2', function(){
@@ -142,8 +148,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 1 );
-			expect( t.right ).toBe( 1 );
+			expect( t.left ).to.equal( 1 );
+			expect( t.right ).to.equal( 1 );
 		});
 
 		it('should allow directly matching elements : center - 3', function(){
@@ -154,8 +160,8 @@ describe("bmoor.array", function() {
 				return x;
 			});
 
-			expect( t.left ).toBe( 0 );
-			expect( t.right ).toBe( 0 );
+			expect( t.left ).to.equal( 0 );
+			expect( t.right ).to.equal( 0 );
 		});
 
 		it('should not sort if already sorted', function(){
@@ -170,25 +176,25 @@ describe("bmoor.array", function() {
 				return x;
 			}, true);
 
-			expect( t ).toBeUndefined();
-			expect( arr[1] ).toBe( 13 );
+			expect( t ).to.not.exist;
+			expect( arr[1] ).to.equal( 13 );
 		});
 	});
 
 	describe('::unique', function(){
 		it('should make an unique array with no helper methods', function(){
 			expect( bmoor.array.unique([1,2,3,4,5,1,2,7,1,2,5,8]) )
-			.toEqual([1,2,3,4,5,7,8])
+			.to.deep.equal([1,2,3,4,5,7,8]);
 		});
 
 		it('should not run sort if true is passed', function(){
 			expect( bmoor.array.unique([1,1,1,2,2,3,4,5,5],true) )
-			.toEqual([1,2,3,4,5])
+			.to.deep.equal([1,2,3,4,5]);
 		});
 
 		it('should use the sort method if passed', function(){
 			expect( bmoor.array.unique([1,2,3,4,5,1,2,5], (a,b) => a-b) )
-			.toEqual([1,2,3,4,5])
+			.to.deep.equal([1,2,3,4,5]);
 		});
 
 		it('should apply sort and uniqueness', function(){
@@ -198,7 +204,7 @@ describe("bmoor.array", function() {
 					(a,b) => a.x-b.x,
 					d => d.x
 				)
-			).toEqual([{x:1},{x:2},{x:3},{x:4},{x:5}])
+			).to.deep.equal([{x:1},{x:2},{x:3},{x:4},{x:5}]);
 		});
 
 		it('should use uniqueness without sort', function(){
@@ -208,7 +214,7 @@ describe("bmoor.array", function() {
 					false,
 					d => d.x
 				)
-			).toEqual([{x:1},{x:2},{x:3},{x:4},{x:5}])
+			).to.deep.equal([{x:1},{x:2},{x:3},{x:4},{x:5}]);
 		});
 	});
 
@@ -219,7 +225,7 @@ describe("bmoor.array", function() {
 					[1,2,3,4,5,6],
 					[2,3,4,7,8]
 				)
-			).toEqual([2,3,4])
+			).to.deep.equal([2,3,4]);
 		});
 	});
 
@@ -230,7 +236,7 @@ describe("bmoor.array", function() {
 					[1,2,3,4,5,6],
 					[2,3,4,7,8]
 				)
-			).toEqual([1,5,6])
+			).to.deep.equal([1,5,6]);
 		});
 	});
 
@@ -253,16 +259,16 @@ describe("bmoor.array", function() {
 			arr.unshift(-1,0);
 			arr.push(7);
 
-			expect(arr.slice(0)).toEqual([-1,0,1,2,3,4,5,6,7]);
-			expect(inserted).toEqual([-1,0,7]);
+			expect(arr.slice(0)).to.deep.equal([-1,0,1,2,3,4,5,6,7]);
+			expect(inserted).to.deep.equal([-1,0,7]);
 
 			arr.pop();
 			arr.shift();
 
 			arr.splice(1,2);
 
-			expect(arr.slice(0)).toEqual([0,3,4,5,6]);
-			expect(removed).toEqual([7,-1,1,2]);
+			expect(arr.slice(0)).to.deep.equal([0,3,4,5,6]);
+			expect(removed).to.deep.equal([7,-1,1,2]);
 		});
 
 		it('should preload', function(){
@@ -281,9 +287,9 @@ describe("bmoor.array", function() {
 				true
 			);
 
-			expect(arr.slice(0)).toEqual([1,2,3,4,5,6]);
-			expect(inserted).toEqual([1,2,3,4,5,6]);
-			expect(removed).toEqual([]);
+			expect(arr.slice(0)).to.deep.equal([1,2,3,4,5,6]);
+			expect(inserted).to.deep.equal([1,2,3,4,5,6]);
+			expect(removed).to.deep.equal([]);
 		});
 	});
 });

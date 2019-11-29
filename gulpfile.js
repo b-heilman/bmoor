@@ -1,116 +1,72 @@
-var $ = require('gulp-load-plugins')(),
-	gulp = require('gulp'),
-	map = require('map-stream'),
-	webpack = require('webpack-stream'),
-	Karma = require('karma').Server,
-	jshint = require('gulp-jshint'),
-	stylish = require('jshint-stylish');
 
-var env = require('./config/env.js');
+const gulp = require('gulp');
+const mochaRun = require('gulp-mocha');
+const jshint = require('gulp-jshint');
+const stylish = require('jshint-stylish');
 
-var server;
+const testFiles = [
+	'./src/*.spec.js',
+	'./src/**/*.spec.js'
+];
 
-gulp.task('demo', function() {
-	return gulp.src(env.jsSrc)
-		.pipe(webpack({
-			entry: './'+env.demoConfig,
-			module: {
-				loaders: [{
-					test: /\.js$/,
-					loader: "babel-loader",
-					query: {
-    					presets: ['env']
-  					}
-				}],
-			},
-			output: {
-				filename: 'demo.js',
-				library: env.library,
-				libraryTarget: "var"
-			}
-		}))
-		.pipe(gulp.dest(env.demoDir));
-});
+const lintFiles = [
+	'./src/*.js',
+	'./src/**/*.js'
+];
 
-gulp.task('library', function() {
-	return gulp.src(env.jsDemo)
-		.pipe(webpack({
-			entry: './'+env.libraryConfig,
-			module: {
-				loaders: [{
-					test: /\.js$/,
-					loader: "babel-loader",
-					query: {
-    				presets: ['env']
-  				}
-				}],
-			},
-			output: {
-				filename: env.name+'.js',
-				library: env.library,
-				libraryTarget: "var"
-			},
-			externals: env.externals
-		}))
-		.pipe(gulp.dest(env.distDir));
-});
+function getTestFiles() {
+	let fname = require('yargs').argv.file;
 
-gulp.task('test-noexit', ['build'], function( done ) {
-	new Karma({
-		configFile: __dirname +'/'+ env.karmaConfig
-	},function(){
-		done();
-	}).start();
-});
+	if (fname) {
+		return gulp.src([
+			// './test/bootstrap.js',
+			fname
+		], {read: false});
+	} else {
+		return gulp.src([
+			// './test/bootstrap.js',
+		].concat(testFiles), {read: false});
+	}
+}
 
-gulp.task('test', ['test-noexit'], function( done ) {
-	process.exit();
-});
+function runTests(files, onError) {
+	let argv = require('yargs').argv;
+	let handler = onError || function(ex){
+		console.log('error?');
+		console.log(ex);
+	};
 
-gulp.task('test-ie', ['build','test-server'], function( done ) {
-	new Karma({
-		configFile: __dirname +'/'+ env.karmaConfig,
-		browsers: ['IE']
-	}, function(){
-		done();
-	}).start();
-});
+	return files.pipe(
+		mochaRun({
+			reporter: 'list',
+			verbose: argv.verbose
+		})
+	).on('error', handler);
+}
 
-var failOnError = function() {
-    return map(function(file, cb) {
-        if (!file.jshint.success) {
-            process.exit(1);
-        }
-        cb(null, file);
-    });
-};
+function test() {
+	return runTests(getTestFiles());
+}
 
-gulp.task('build-lint', function() {
-    gulp.src( env.jsSrc )
-        .pipe( jshint() )
-        .pipe( jshint.reporter(stylish) )
-        .pipe( failOnError() );
-});
+function getLintFiles(){
+	let fname = require('yargs').argv.file;
 
-gulp.task('lint', function() {
-    gulp.src( env.jsSrc )
-        .pipe( jshint() )
-        .pipe( jshint.reporter(stylish) );
-});
+	if (fname) {
+		return gulp.src([fname]);
+	} else {
+		return gulp.src(lintFiles);
+	}
+}
 
-gulp.task('build', ['build-lint', 'demo','library'] );
+function runLint(files) {
+	return files.pipe(
+    	jshint()
+    ).pipe(jshint.reporter(stylish));
+}
 
-gulp.task('watch', ['build'], function(){
-	gulp.watch(env.jsSrc.concat(['./'+env.demoConfig]), ['lint', 'demo','library']);
-});
+function lint(){
+	return runLint(getLintFiles());
+}
 
-gulp.task('serve', ['watch','test-noexit'], function() {
-	gulp.src(env.demoDir)
-		.pipe($.webserver({
-			port: 9000,
-			host: 'localhost',
-			fallback: 'index.html',
-			livereload: true,
-			open: true
-		}))
-});
+gulp.task('lint', lint);
+gulp.task('test', gulp.series(test, lint));

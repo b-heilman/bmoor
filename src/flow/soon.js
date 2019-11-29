@@ -1,4 +1,7 @@
 
+/**
+ * A debounce method that will call after N seconds of first call
+ **/
 module.exports = function( cb, time, settings ){
 	var ctx,
 		args,
@@ -13,7 +16,7 @@ module.exports = function( cb, time, settings ){
 		cb.apply( settings.context || ctx, args );
 	}
 
-	let fn = function sooned(){
+	let fn = function debounced(){
 		ctx = this;
 		args = arguments;
 

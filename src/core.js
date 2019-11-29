@@ -66,7 +66,7 @@ function isFunction( value ){
  * @return {boolean}
  **/
 function isObject( value ){
-	return value  && typeof value === 'object';
+	return !!value && typeof value === 'object';
 }
 
 /**
@@ -89,8 +89,8 @@ function isBoolean( value ){
  **/
 function isArrayLike( value ) {
 	// for me, if you have a length, I'm assuming you're array like, might change
-	if ( value ){
-		return isObject( value ) && ( value.length === 0 || (0 in value && (value.length-1) in value) );
+	if (value){
+		return isObject(value) && (value.length === 0 || (0 in value && (value.length-1) in value));
 	}else{
 		return false;
 	}
@@ -120,15 +120,15 @@ function isArray( value ) {
 function isEmpty( value ){
 	var key;
 
-	if ( isObject(value) ){
-		for( key in value ){ 
-			if ( value.hasOwnProperty(key) ){
+	if (isObject(value)){
+		for(key in value){ 
+			if (value.hasOwnProperty(key)){
 				return false;
 			}
 		}
-	}else if ( isArrayLike(value) ){
+	} else if (isArrayLike(value)){
 		return value.length === 0;
-	}else{
+	} else {
 		return isUndefined( value );
 	}
 
@@ -335,108 +335,6 @@ function del( root, space ){
 	return old;
 }
 
-/**
- * Call a function against all elements of an array like object, from 0 to length.  
- *
- * @function loop
- * @param {array} arr The array to iterate through
- * @param {function} fn The function to call against each element
- * @param {object} context The context to call each function against
- **/
-function loop( arr, fn, context ){
-	var i, c;
-
-	if ( !context ){
-		context = arr;
-	}
-
-	if ( arr.forEach ){
-		arr.forEach( fn, context );
-	}else{
-		for ( i = 0, c = arr.length; i < c; ++i ){
-			if ( i in arr ) {
-				fn.call(context, arr[i], i, arr);
-			}
-		}
-	}
-}
-
-/**
- * Call a function against all own properties of an object.  
- *
- * @function each
- * @param {object} arr The object to iterate through
- * @param {function} fn The function to call against each element
- * @param {object} context The context to call each function against
- **/
-function each( obj, fn, context ){
-	var key;
-
-	if ( !context ){
-		context = obj;
-	}
-
-	for( key in obj ){
-		if ( obj.hasOwnProperty(key) ){
-			fn.call( context, obj[key], key, obj );
-		}
-	}
-}
-
-/**
- * Call a function against all own properties of an object, skipping specific framework properties.
- * In this framework, $ implies a system function, _ implies private, so skip _
- *
- * @function iterate
- * @param {object} obj The object to iterate through
- * @param {function} fn The function to call against each element
- * @param {object} context The scope to call each function against
- **/
-function iterate( obj, fn, context ){
-	var key;
-
-	if ( !context ){
-		context = obj;
-	}
-
-	for( key in obj ){ 
-		if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' ){
-			fn.call( context, obj[key], key, obj );
-		}
-	}
-}
-
-/**
- * Call a function against all own properties of an object, skipping specific framework properties.
- * In this framework, $ implies a system function, _ implies private, so skip both
- *
- * @function safe
- * @param {object} obj - The object to iterate through
- * @param {function} fn - The function to call against each element
- * @param {object} scope - The scope to call each function against
- **/
-function safe( obj, fn, context ){
-	var key;
-
-	if ( !context ){
-		context = obj;
-	}
-
-	for( key in obj ){ 
-		if ( obj.hasOwnProperty(key) && key.charAt(0) !== '_' && key.charAt(0) !== '$' ){
-			fn.call( context, obj[key], key, obj );
-		}
-	}
-}
-
-function naked( obj, fn, context ){
-	safe( obj, function( t, k, o ){
-		if ( !isFunction(t) ){
-			fn.call( context, t, k, o );
-		}
-	});
-}
-
 module.exports = {
 	// booleans
 	isUndefined: isUndefined,
@@ -455,11 +353,5 @@ module.exports = {
 	makeSetter: makeSetter,
 	get: get,
 	makeGetter: makeGetter,
-	del: del,
-	// controls
-	loop: loop,
-	each: each,
-	iterate: iterate,
-	safe: safe,
-	naked: naked
+	del: del
 };
