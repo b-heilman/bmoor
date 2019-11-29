@@ -19,11 +19,8 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "gulp": "^4.0.2",
-    "gulp-jsdoc3": "0.3.0",
     "gulp-jshint": "^2.1.0",
     "gulp-mocha": "^7.0.2",
-    "gulp-webserver": "0.9.1",
-    "jasmine": "^2.9.0",
     "jshint": "^2.10.3",
     "jshint-stylish": "2.1.0",
     "mocha": "^6.2.2",
