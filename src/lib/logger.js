@@ -1,5 +1,5 @@
 
-const {Config} = require('./Config.js');
+const {Config} = require('./config.js');
 
 const silent = Symbol('isSilent');
 const error = Symbol('isError');
