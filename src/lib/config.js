@@ -1,7 +1,7 @@
 
 const core = require('../core.js');
 const {implode} = require('../object.js');
-const {Broadcast} = require('../eventing/Broadcast.js');
+const {Broadcast} = require('../eventing/broadcast.js');
 
 // TODO : allow sub configs
 class Config extends Broadcast {
