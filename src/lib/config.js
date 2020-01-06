@@ -35,8 +35,6 @@ class Config extends Broadcast {
 		
 		if (core.isArray(rtn)){
 			return rtn.slice(0);
-		} else if (core.isObject(rtn)){
-			return Object.create(rtn);
 		} else {
 			return rtn;
 		}
