@@ -39,6 +39,10 @@ class Config extends Broadcast {
 			return rtn;
 		}
 	}
+
+	keys(){
+		Object.keys(this.settings);
+	}
 }
 
 module.exports = {

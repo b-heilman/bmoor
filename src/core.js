@@ -198,7 +198,7 @@ function set( root, space, value ){
 
 function _makeSetter( property, next ){
 	if ( next ){
-		return function( ctx, value ){
+		return function setter( ctx, value ){
 			var t = ctx[property];
 
 			if ( !t ){
@@ -262,8 +262,8 @@ function get( root, path ){
 }
 
 function _makeGetter( property, next ){
-	if ( next ){
-		return function( obj ){
+	if (next){
+		return function getter( obj ){
 			try {
 				return next( obj[property] );
 			}catch( ex ){
@@ -274,7 +274,7 @@ function _makeGetter( property, next ){
 		return function( obj ){
 			try {
 				return obj[property];
-			}catch( ex ){
+			} catch(ex){
 				return undefined;
 			}
 		};
