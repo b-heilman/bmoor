@@ -271,7 +271,7 @@ function _makeGetter( property, next ){
 			}
 		};
 	}else{
-		return function( obj ){
+		return function getter( obj ){
 			try {
 				return obj[property];
 			} catch(ex){

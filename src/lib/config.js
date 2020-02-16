@@ -27,7 +27,15 @@ class Config extends Broadcast {
 		return Promise.all(
 			Object.keys(settings)
 			.map(key => this.set(key, settings[key]))
-		);
+		).then(() => Object.assign({}, this.settings));
+	}
+
+	mask(override){
+		return Object.assign(Object.create(this.settings), override);
+	}
+
+	clone(override){
+		return Object.assign({}, this.settings, override);
 	}
 
 	get(path){
@@ -41,7 +49,20 @@ class Config extends Broadcast {
 	}
 
 	keys(){
-		Object.keys(this.settings);
+		return Object.keys(this.settings);
+	}
+
+	sub(path, assign = null){
+		let rtn = core.get(this.settings, path);
+
+		if (!rtn){
+			rtn = assign || {};
+			this.set(path, rtn);
+		} else if (assign){
+			Object.assign(rtn, assign);
+		}
+
+		return new Config(rtn);
 	}
 }
 
