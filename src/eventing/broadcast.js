@@ -36,6 +36,19 @@ class Broadcast {
 		return clear;
 	}
 
+	// a wrapper around once that returns a promise
+	promised(event, cb){
+		return new Promise((resolve, reject) => {
+			this.once(event,  function(...args){
+				try {
+					resolve(cb(...args));
+				} catch(ex){
+					reject(ex);
+				}
+			});
+		});
+	}
+
 	subscribe(subscriptions){
 		const dis = this;
 		const kills = [];
