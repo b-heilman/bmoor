@@ -91,12 +91,36 @@ describe('bmoor.lib.logger', function() {
 		it('should not call if lower level', function(){
 			const spy = sinon.spy();
 
-			config.set('log', spy);
+			config.set('comment', spy);
 
 			config.set('level', logger.levels.error);
 			logger.comment(logger.levels.warn, 'something', 'foo bar');
 
 			expect(spy.getCall(0)).not.to.exist;
+		});
+	});
+
+	describe('::error', function(){
+		it('should handle a promise', async function(){
+			let called = false;
+
+			config.set('log', function(){
+				return new Promise(resolve => {
+					setTimeout(() => {
+						called = true;
+
+						resolve(true);
+					}, 100);
+				});
+			});
+
+			config.set('level', logger.levels.error);
+			await logger.error('something', {
+				'foo': 'bar'
+			});
+
+			expect(called)
+			.to.equal(true);
 		});
 	});
 });

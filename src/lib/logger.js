@@ -148,7 +148,7 @@ function logFormat(content){
 	return dump;
 }
 
-function log(onLevel, header, content = {}){
+async function log(onLevel, header, content = {}){
 	const level = levels[onLevel];
 
 	if (levels[config.get('level')].rank <= level.rank){
@@ -164,11 +164,11 @@ function log(onLevel, header, content = {}){
 		wrap.type = level.name;
 		wrap.level = onLevel;
 
-		config.get('log')(logFormat(wrap));
+		return config.get('log')(logFormat(wrap));
 	}
 }
 
-function comment(onLevel, header, comment){
+async function comment(onLevel, header, comment){
 	const level = levels[onLevel];
 
 	if (levels[config.get('level')].rank <= level.rank){
@@ -179,19 +179,19 @@ function comment(onLevel, header, comment){
 			timestamp: new Date()
 		};
 
-		config.get('comment')(ctx, comment);
+		return config.get('comment')(ctx, comment);
 	}
 }
 
 function logFactory(onLevel){
-	return function(header, content={}){
-		log(onLevel, header, content);
+	return async function(header, content={}){
+		return log(onLevel, header, content);
 	};
 }
 
 function commentFactory(onLevel){
-	return function(header, content){
-		comment(onLevel, header, content);
+	return async function(header, content){
+		return comment(onLevel, header, content);
 	};
 }
 
