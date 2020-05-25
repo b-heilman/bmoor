@@ -6,22 +6,51 @@ class Broadcast {
 
 	constructor(){
 		this._listeners = {};
+		this._routers = [];
 	}
 
 	on(event, cb){
-		let listeners = null;
+		if (typeof(event) === 'string'){
+			let listeners = null;
 
-		if ( !this._listeners[event] ){
-			this._listeners[event] = [];
-		}
+			if ( !this._listeners[event] ){
+				this._listeners[event] = [];
+			}
 
-		listeners = this._listeners[event];
+			listeners = this._listeners[event];
 
-		listeners.push( cb );
+			listeners.push( cb );
 
-		return function clear$on(){
-			listeners.splice(listeners.indexOf(cb), 1);
-		};
+			return function clear$Listener(){
+				listeners.splice(listeners.indexOf(cb), 1);
+			};
+		} else if (event){
+			const routers = this._routers;
+
+			let fn = null;
+
+			if (event.test){
+				fn = function(type, ...args){
+					if (event.test(type)){
+						return cb(...args);
+					}
+				};
+			} else if (typeof(event) === 'function'){
+				fn = function(type, ...args){
+					const ctx = event(type);
+					
+					if (ctx){
+						return cb(ctx, ...args);
+					}
+				};
+			}
+
+			routers.push(fn);
+
+			return function clear$Router(){
+				routers.splice(routers.indexOf(fn), 1);
+			};
+		} 
 	}
 
 	once(event, cb){
@@ -67,12 +96,19 @@ class Broadcast {
 		};
 	}
 
+	hasWaiting( event ){
+		return !!this._listeners[event];
+	}
+
 	trigger(event, ...args){
+		let proms = [];
+
 		if (this.hasWaiting(event)){
 			// slice and deep copy in case someone gets cute and unregisters
 			try {
 				const callbacks = this._listeners[event];
-				return Promise.all(callbacks.slice(0).map(cb => {
+
+				proms = callbacks.slice(0).map(cb => {
 					let fn = null;
 
 					if (core.isArray(cb)){
@@ -93,17 +129,24 @@ class Broadcast {
 						return;
 					}
 					
-				}));
+				});
 			} catch(ex) {
-				return Promise.reject(ex);
+				proms.push(Promise.reject(ex));
 			}
-		} else {
-			return Promise.resolve([]);
 		}
-	}
 
-	hasWaiting( event ){
-		return !!this._listeners[event];
+		const routers = this._routers;
+		if (routers.length){
+			try {
+				proms = proms.concat(
+					routers.slice(0).map(cb => cb(event, ...args))
+				);
+			} catch(ex) {
+				proms.push(Promise.reject(ex));
+			}
+		}
+
+		return Promise.all(proms);
 	}
 
 	destroy(){
@@ -112,6 +155,7 @@ class Broadcast {
 		});
 
 		this._listeners = null;
+		this._routers = null;
 	}
 }
 

@@ -159,28 +159,129 @@ describe('bmoor.eventing.Broadcast', function(){
 		obj.trigger('step-1');
 	});
 
-	it('should clear event when a once is applied', function( done ){
+	it('should clear event when a once is applied', async function(){
 		var value;
+
+		let called1 = false;
+		let called2 = false;
+		let called3 = false;
 
 		obj.once('test-1', function( v ){
 			value = v;
+
+			called1 = true;
 		});
 
-		obj.on('test-1', function( v ){
+		obj.on('test-1', async function( v ){
 			if (v !== 2){
-				obj.trigger('test-1', v+1);
+				await obj.trigger('test-1', v+1);
 			} else {
-				obj.trigger('test-2', v+1);
+				await obj.trigger('test-2', v+1);
 			}
+
+			called2 = true;
 		});
 
 		obj.on('test-2', function( v ){
 			expect( value ).to.equal( 0 );
 			expect( v ).to.equal( 3 );
 
-			done();
+			called3 = true;
 		});
 
-		obj.trigger('test-1', 0);
+		await obj.trigger('test-1', 0);
+
+		expect(called1)
+		.to.equal(true);
+
+		expect(called2)
+		.to.equal(true);
+
+		expect(called3)
+		.to.equal(true);
+	});
+
+	describe('via a RegEx', function(){
+		it ('should work with a text defined regex', async function(){
+			let outside1 = null;
+			let outside2 = null;
+
+			obj.on(/foo/, (eins, zwei) => {
+				outside1 = eins;
+				outside2 = zwei;
+			});
+
+			await obj.trigger('oh-foo-sur', 1, 2);
+
+			expect(outside1)
+			.to.equal(1);
+
+			expect(outside2)
+			.to.equal(2);
+
+			await obj.trigger('foobar', 3, 4);
+
+			expect(outside1)
+			.to.equal(3);
+
+			expect(outside2)
+			.to.equal(4);
+
+			await obj.trigger('hello-world', 5, 6);
+
+			expect(outside1)
+			.to.equal(3);
+
+			expect(outside2)
+			.to.equal(4);
+
+			let o1 = null;
+			let o2 = null;
+			obj.on(/./, function(v1, v2){
+				o1 = v1;
+				o2 = v2;
+			});
+
+			await obj.trigger('bunch-of-junk', 10, 11);
+
+			expect(o1)
+			.to.equal(10);
+
+			expect(o2)
+			.to.equal(11);
+		});
+	});
+
+	describe('via a function', function(){
+		it('should always fire the test', async function(){
+			let outside1 = null;
+			let outside2 = null;
+
+			const junk = {};
+
+			obj.on(
+				(event) => {
+					expect(event)
+					.to.equal('hello-world');
+
+					return junk;
+				}, 
+				(ctx, eins, zwei) => {
+					outside1 = eins;
+					outside2 = zwei;
+
+					expect(ctx)
+					.to.equal(junk);
+				}
+			);
+
+			await obj.trigger('hello-world', 1, 2);
+
+			expect(outside1)
+			.to.equal(1);
+
+			expect(outside2)
+			.to.equal(2);
+		});
 	});
 });
