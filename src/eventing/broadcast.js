@@ -32,15 +32,13 @@ class Broadcast {
 			if (event.test){
 				fn = function(type, ...args){
 					if (event.test(type)){
-						return cb(...args);
+						return cb(type, ...args);
 					}
 				};
 			} else if (typeof(event) === 'function'){
 				fn = function(type, ...args){
-					const ctx = event(type);
-					
-					if (ctx){
-						return cb(ctx, ...args);
+					if (event(type)){
+						return cb(type, ...args);
 					}
 				};
 			}

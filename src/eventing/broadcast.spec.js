@@ -203,10 +203,12 @@ describe('bmoor.eventing.Broadcast', function(){
 
 	describe('via a RegEx', function(){
 		it ('should work with a text defined regex', async function(){
+			let myType = null;
 			let outside1 = null;
 			let outside2 = null;
 
-			obj.on(/foo/, (eins, zwei) => {
+			obj.on(/foo/, (type, eins, zwei) => {
+				myType = type;
 				outside1 = eins;
 				outside2 = zwei;
 			});
@@ -219,6 +221,9 @@ describe('bmoor.eventing.Broadcast', function(){
 			expect(outside2)
 			.to.equal(2);
 
+			expect(myType)
+			.to.equal('oh-foo-sur');
+
 			await obj.trigger('foobar', 3, 4);
 
 			expect(outside1)
@@ -226,6 +231,9 @@ describe('bmoor.eventing.Broadcast', function(){
 
 			expect(outside2)
 			.to.equal(4);
+
+			expect(myType)
+			.to.equal('foobar');
 
 			await obj.trigger('hello-world', 5, 6);
 
@@ -237,7 +245,7 @@ describe('bmoor.eventing.Broadcast', function(){
 
 			let o1 = null;
 			let o2 = null;
-			obj.on(/./, function(v1, v2){
+			obj.on(/./, function(_, v1, v2){
 				o1 = v1;
 				o2 = v2;
 			});
@@ -254,24 +262,21 @@ describe('bmoor.eventing.Broadcast', function(){
 
 	describe('via a function', function(){
 		it('should always fire the test', async function(){
+			let myType = null;
 			let outside1 = null;
 			let outside2 = null;
-
-			const junk = {};
 
 			obj.on(
 				(event) => {
 					expect(event)
 					.to.equal('hello-world');
 
-					return junk;
+					return true;
 				}, 
-				(ctx, eins, zwei) => {
+				(type, eins, zwei) => {
+					myType = type;
 					outside1 = eins;
 					outside2 = zwei;
-
-					expect(ctx)
-					.to.equal(junk);
 				}
 			);
 
@@ -282,6 +287,9 @@ describe('bmoor.eventing.Broadcast', function(){
 
 			expect(outside2)
 			.to.equal(2);
+
+			expect(myType)
+			.to.equal('hello-world');
 		});
 	});
 });
