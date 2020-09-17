@@ -184,6 +184,10 @@ function set( root, space, value ){
 	for( i = 0, c = space.length; i < c; i++ ){
 		nextSpace = space[ i ];
 			
+		if (nextSpace === '__proto__'){
+			return null;
+		}
+
 		if ( isUndefined(curSpace[nextSpace]) ){
 			curSpace[ nextSpace ] = {};
 		}
@@ -197,6 +201,10 @@ function set( root, space, value ){
 }
 
 function _makeSetter( property, next ){
+	if (property === '__proto__'){
+		throw new Error('unable to access __proto__');
+	}
+
 	if ( next ){
 		return function setter( ctx, value ){
 			var t = ctx[property];
@@ -250,6 +258,10 @@ function get( root, path ){
 		for( i = 0, c = space.length; i < c; i++ ){
 			nextSpace = space[i];
 				
+			if (nextSpace === '__proto__'){
+				return null;
+			}
+
 			if ( isUndefined(curSpace[nextSpace]) ){
 				return;
 			}
@@ -262,6 +274,10 @@ function get( root, path ){
 }
 
 function _makeGetter( property, next ){
+	if (property === '__proto__'){
+		throw new Error('unable to access __proto__');
+	}
+
 	if (next){
 		return function getter( obj ){
 			try {
