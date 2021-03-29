@@ -3,39 +3,27 @@ const core = require('../core.js');
 const {implode} = require('../object.js');
 const {Broadcast} = require('../eventing/broadcast.js');
 
-// TODO : allow sub configs
+// this doesn't do a deep copy, I'm fine with that
 class Config extends Broadcast {
-	constructor(defaults){
+	constructor(defaults={}){
 		super();
 
-		this.settings = {};
-
-		if (defaults){
-			Object.assign(this.settings, defaults);
-		}
+		this.settings = defaults;
 	}
 
-	set(path, value){
+	async set(path, value){
 		core.set(this.settings, path, value);
 
 		return this.trigger(path, value);
 	}
 
-	assign(properties){
+	async assign(properties){
 		const settings = implode(properties, {skipArray: true});
 
 		return Promise.all(
 			Object.keys(settings)
 			.map(key => this.set(key, settings[key]))
-		).then(() => Object.assign({}, this.settings));
-	}
-
-	mask(override){
-		return Object.assign(Object.create(this.settings), override);
-	}
-
-	clone(override){
-		return Object.assign({}, this.settings, override);
+		);
 	}
 
 	get(path){
@@ -52,17 +40,23 @@ class Config extends Broadcast {
 		return Object.keys(this.settings);
 	}
 
-	sub(path, assign = null){
+	sub(path){
 		let rtn = core.get(this.settings, path);
 
 		if (!rtn){
-			rtn = assign || {};
+			rtn = {};
 			this.set(path, rtn);
-		} else if (assign){
-			Object.assign(rtn, assign);
 		}
 
 		return new Config(rtn);
+	}
+
+	extend(settings){
+		const child = new Config(Object.create(this.settings));
+
+		child.assign(settings);
+
+		return child;
 	}
 }
 
