@@ -132,7 +132,10 @@ describe('bmoor.lib.config', function() {
 			const c1 = new Config({
 				foo: 'bar',
 				obj: {
-					hello: 'world'
+					hello: 'world',
+					eins: {
+						zwei: 12
+					}
 				}
 			});
 
@@ -143,7 +146,7 @@ describe('bmoor.lib.config', function() {
 			c2.set('obj.hello', 'world2');
 
 			expect(c1.get('obj.hello'))
-			.to.equal('world2');
+			.to.equal('world');
 
 			expect(c2.get('obj.hello'))
 			.to.equal('world2');
@@ -153,6 +156,14 @@ describe('bmoor.lib.config', function() {
 
 			expect(c2.get('foo'))
 			.to.equal('bar2');
+
+			c2.set('obj.eins.zwei', 0);
+
+			expect(c1.get('obj.eins.zwei'))
+			.to.equal(0);
+
+			expect(c2.get('obj.eins.zwei'))
+			.to.equal(0);
 		});
 	});
 

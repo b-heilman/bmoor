@@ -54,7 +54,18 @@ class Config extends Broadcast {
 	extend(settings){
 		const child = new Config(Object.create(this.settings));
 
-		child.assign(settings);
+		// maybe put this logic in object?
+		Object.keys(this.settings)
+		.forEach(k  => {
+			const value = this.settings[k];
+			if (core.isObject(value)){
+				child.settings[k] = Object.create(value);
+			}
+		});
+
+		if (settings){
+			child.assign(settings);
+		}
 
 		return child;
 	}
