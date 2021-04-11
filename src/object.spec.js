@@ -177,4 +177,61 @@ describe('bmoor.object', function() {
 			});
 		});
 	});
+
+	describe('::deepCopy', function(){
+		it('should create a real deep copy', function(){
+			const cloned = {
+				eins: 1,
+				arr: [
+					1,
+					{
+						foo: 'bar'
+					}
+				],
+				zwei: {
+					arr: [
+						{}
+					]
+				}
+			};
+
+			const target = bmoor.object.deepCopy(cloned);
+
+			cloned.arr[1].foo = 'bar2';
+			cloned.zwei.arr.push('bar3');
+
+			expect(cloned)
+			.to.deep.equal({
+				eins: 1,
+				arr: [
+					1,
+					{
+						foo: 'bar2'
+					}
+				],
+				zwei: {
+					arr: [
+						{},
+						'bar3'
+					]
+				}
+			});
+
+			expect(target)
+			.to.deep.equal({
+				eins: 1,
+				arr: [
+					1,
+					{
+						foo: 'bar'
+					}
+				],
+				zwei: {
+					arr: [
+						{}
+					]
+				}
+			});
+		});
+	});
 });

@@ -151,8 +151,12 @@ function copy( to ){
 	return extend(...arguments);
 }
 
-// Deep copy version of extend
-function merge(to){
+// TODO
+function deepCopy(from){
+	return JSON.parse(JSON.stringify(from));
+}
+
+function merge(to, ...args){
 	function m(val, key){
 		if (bmoor.isArray(val)){
 			to[key] = val;
@@ -161,8 +165,8 @@ function merge(to){
 		}
 	}
 
-	for(let i = 1, c = arguments.length; i < c; i++){
-		let from = arguments[i];
+	for(let i = 0, c = args.length; i < c; i++){
+		let from = args[i];
 
 		if (to === from){
 			continue;
@@ -250,13 +254,14 @@ function equals( obj1, obj2 ){
 // TODO : property watch
 
 module.exports = {
-	explode: explode,
-	makeExploder: makeExploder,
-	implode: implode,
-	mask: mask,
-	extend: extend,
-	empty: empty,
-	copy: copy,
-	merge: merge,
-	equals: equals
+	explode,
+	makeExploder,
+	implode,
+	mask,
+	extend,
+	empty,
+	copy,
+	deepCopy,
+	merge,
+	equals
 };
