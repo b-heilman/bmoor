@@ -115,8 +115,8 @@ function implode(obj, settings = {}){
  * @param {array} args The arguments to pass to the constructor
  * @return {object} The new object that has been constructed
  **/
-function mask( obj ){
-	if ( Object.create ){
+function mask(obj){
+	if (Object.create){
 		var T = function Masked(){};
 
 		T.prototype = obj;

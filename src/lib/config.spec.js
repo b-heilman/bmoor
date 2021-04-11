@@ -106,6 +106,67 @@ describe('bmoor.lib.config', function() {
 		});
 	});
 
+	describe('::sub', function(){
+		it('should work', function(){
+			const c1 = new Config({
+				foo: 'bar',
+				obj: {
+					hello: 'world'
+				}
+			});
+
+			const c2 = c1.sub('obj');
+
+			c2.set('hello', 'world2');
+
+			expect(c1.get('obj.hello'))
+			.to.equal('world2');
+
+			expect(c2.get('hello'))
+			.to.equal('world2');
+		});
+	});
+
+	describe('::extend', function(){
+		it('should work', function(){
+			const c1 = new Config({
+				foo: 'bar',
+				obj: {
+					hello: 'world',
+					eins: {
+						zwei: 12
+					}
+				}
+			});
+
+			const c2 = c1.extend({
+				foo: 'bar2'
+			});
+
+			c2.set('obj.hello', 'world2');
+
+			expect(c1.get('obj.hello'))
+			.to.equal('world');
+
+			expect(c2.get('obj.hello'))
+			.to.equal('world2');
+
+			expect(c1.get('foo'))
+			.to.equal('bar');
+
+			expect(c2.get('foo'))
+			.to.equal('bar2');
+
+			c2.set('obj.eins.zwei', 0);
+
+			expect(c1.get('obj.eins.zwei'))
+			.to.equal(0);
+
+			expect(c2.get('obj.eins.zwei'))
+			.to.equal(0);
+		});
+	});
+
 	describe('::on', function(){
 		it('should trigger off a ::set', function(done){
 			let called = false;

@@ -4,75 +4,127 @@ const {expect} = require('chai');
 const bmoor = require('./index.js');
 
 describe('Testing object setting/getting', function() {
-	it('should have get working', function(){
-		var t = {
-				eins : 1,
-				zwei: {
-					drei: 3
-				}
-			};
 
-		expect( bmoor.get(t,'eins') ).to.equal(1);
-		expect( bmoor.get(t,'zwei.drei') ).to.equal(3);
+	describe('::get', function(){
+		it('should be working', function(){
+			var t = {
+					eins : 1,
+					zwei: {
+						drei: 3
+					}
+				};
+
+			expect( bmoor.get(t,'eins') ).to.equal(1);
+			expect( bmoor.get(t,'zwei.drei') ).to.equal(3);
+		});
+
+		it('should be working with empty strings', function(){
+			var t = {
+					eins : 1,
+					zwei: {
+						drei: 3
+					}
+				};
+
+			expect( bmoor.get(t,'') ).to.equal(t);
+		});
+
+		it('should not allow __proto__', function(){
+			var t = bmoor.get({}, '__proto__');
+			
+			expect(t)
+			.to.equal(null);
+		});
+	});
+	
+	describe('::makeGetter', function(){
+		it('should be working', function(){
+			var t = {
+					eins : 1,
+					zwei: {
+						drei: 3
+					}
+				},
+				f1 = bmoor.makeGetter('eins'),
+				f2 = bmoor.makeGetter('zwei.drei');
+
+			expect( f1(t) ).to.equal(1);
+			expect( f2(t) ).to.equal(3);
+		});
+
+		it('should fail with __proto__', function(){
+			let failed = false;
+
+			try {
+				bmoor.makeGetter('__proto__.polluted');
+			} catch(ex){
+				failed = true;
+			}
+
+			expect(failed)
+			.to.equal(true);
+		});
+
+		it('should work with empty strings', function(){
+			var t = {
+					eins : 1,
+					zwei: {
+						drei: 3
+					}
+				},
+				f1 = bmoor.makeGetter('');
+
+			expect( f1(t) ).to.equal(t);
+		});
+	});	
+
+	describe('::set', function(){
+		it('should be working working', function(){
+			var t = {};
+
+			bmoor.set(t,'eins',1);
+			bmoor.set(t,'zwei.drei',3);
+
+			expect( t.eins ).to.equal(1);
+			expect( t.zwei.drei ).to.equal(3);
+		});
+
+		it('should not allow __proto__', function(){
+			var t = {};
+
+			bmoor.set(t,'__proto__.polluted', true);
+			
+			expect( t.polluted )
+			.to.not.equal(true);
+		});
 	});
 
-	it('should have get working with empty strings', function(){
-		var t = {
-				eins : 1,
-				zwei: {
-					drei: 3
-				}
-			};
+	describe('::makeSetter', function(){
+		it('should actually work', function(){
+			var t = {},
+				f1 = bmoor.makeSetter('eins'),
+				f2 = bmoor.makeSetter('zwei.drei');
 
-		expect( bmoor.get(t,'') ).to.equal(t);
-	});
+			f1(t,1);
+			f2(t,3);
 
-	it('should have makeGetter working', function(){
-		var t = {
-				eins : 1,
-				zwei: {
-					drei: 3
-				}
-			},
-			f1 = bmoor.makeGetter('eins'),
-			f2 = bmoor.makeGetter('zwei.drei');
+			expect( t.eins ).to.equal(1);
+			expect( t.zwei.drei ).to.equal(3);
+		});
 
-		expect( f1(t) ).to.equal(1);
-		expect( f2(t) ).to.equal(3);
-	});
+		it('should fail with __proto__', function(){
+			let failed = false;
 
-	it('should have makeGetter working with empty strings', function(){
-		var t = {
-				eins : 1,
-				zwei: {
-					drei: 3
-				}
-			},
-			f1 = bmoor.makeGetter('');
+			try {
+				bmoor.makeGetter('__proto__.polluted');
+			} catch(ex){
+				failed = true;
+			}
+				
 
-		expect( f1(t) ).to.equal(t);
-	});
-
-	it('should have set working', function(){
-		var t = {};
-
-		bmoor.set(t,'eins',1);
-		bmoor.set(t,'zwei.drei',3);
-
-		expect( t.eins ).to.equal(1);
-		expect( t.zwei.drei ).to.equal(3);
-	});
-
-	it('should have makeSetter working', function(){
-		var t = {},
-			f1 = bmoor.makeSetter('eins'),
-			f2 = bmoor.makeSetter('zwei.drei');
-
-		f1(t,1);
-		f2(t,3);
-
-		expect( t.eins ).to.equal(1);
-		expect( t.zwei.drei ).to.equal(3);
+			expect(failed)
+			.to.equal(true);
+		});
 	});
 
 	it('should have del working', function(){
