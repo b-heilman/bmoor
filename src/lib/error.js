@@ -17,6 +17,7 @@ function addStatus(err, ctx =  {}){
 
 function addTrace(err, ctx = {}){
 	const context = ctx.context || {};
+	const protected = ctx.protected || {};
 
 	if (ctx.code){
 		if (err.code){
@@ -26,12 +27,14 @@ function addTrace(err, ctx = {}){
 
 			err.trace.unshift({
 				code: err.code,
-				context: err.context
+				context: err.context,
+				protected: err.protected
 			});
 		}
 
 		err.code = ctx.code;
 		err.context = context;
+		err.protected = protected;
 	}
 
 	return err;
