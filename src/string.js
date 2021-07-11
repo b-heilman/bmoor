@@ -25,172 +25,19 @@ function rtrim( str, chr ){
 	return str.replace( new RegExp(chr+'+$','g'), '' );
 }
 
-/*
-// TODO : Don't use these.  I wrote a tokenizer in bmoor-data, I will use that to write a parser library
-//   for methods like this
-	var commands = str.split('|');
-
-	commands.forEach(function( command, key ){
-		var args = command.split(':');
-
-		args.forEach(function( arg, k ){
-			args[k] = trim( arg );
-		});
-
-		commands[key] = {
-			command: command,
-			method: args.shift(),
-			args: args
-		};
-	});
-
-	return commands;
+function skewerToCamel(str){
+	const arr = str.split('-');
+	const capital = arr.map(
+		(item, index) => index ? 
+			item.charAt(0).toUpperCase() + item.slice(1).toLowerCase() : item
+	);
+	
+	return capital.join('');
 }
 
-function stackFunctions( newer, older ){
-	return function( o ){
-		return older( newer(o) );
-	};
-}
-
-var filters = {
-	precision: function( dec ){
-		dec = parseInt(dec,10);
-
-		return function ( num ){
-			return parseFloat(num,10).toFixed( dec );
-		};
-	},
-	currency: function(){
-		return function( num ){
-			return '$'+num;
-		};
-	},
-	url: function(){
-		return function( param ){
-			return encodeURIComponent( param );
-		};
-	}
-};
-
-function doFilters( ters ){
-	var fn,
-		command,
-		filter;
-
-	while( ters.length ){
-		command = ters.pop();
-		fn = filters[command.method];
-		
-		if ( fn ){
-			fn = fn.apply( null, command.args );
-
-			if ( filter ){
-				filter = stackFunctions( fn, filter );
-			}else{
-				filter = fn;
-			}
-		}
-	}
-
-	return filter;
-}
-
-function doVariable( lines ){
-	var fn,
-		rtn,
-		dex,
-		line,
-		getter,
-		command,
-		commands,
-		remainder;
-
-	if ( !lines.length ){
-		return null;
-	}else{
-		line = lines.shift();
-		dex = line.indexOf('}}');
-		fn = doVariable(lines);
-		
-		if ( dex === -1 ){
-			return function(){
-				return '| no close |';
-			};
-		}else if ( dex === 0 ){
-			// is looks like this {{}}
-			remainder = line.substr(2);
-			getter = function( o ){
-				if ( bmoor.isObject(o) ){
-					return JSON.stringify(o);
-				}else{
-					return o;
-				}
-			};
-		}else{
-			commands = getCommands( line.substr(0,dex) );
-			command = commands.shift().command;
-			remainder = line.substr(dex+2);
-			getter = bmoor.makeGetter( command );
-
-			if ( commands.length ){
-				commands = doFilters(commands,getter);
-
-				if ( commands ){
-					getter = stackFunctions( getter, commands );
-				}
-			}
-		}
-
-		//let's optimize this a bit
-		if ( fn ){
-			// we have a child method
-			rtn = function( obj ){
-				return getter(obj)+remainder+fn(obj);
-			};
-			rtn.$vars = fn.$vars;
-		}else{
-			// this is the last variable
-			rtn = function( obj ){
-				return getter(obj)+remainder;
-			};
-			rtn.$vars = [];
-		}
-
-		if ( command ){
-			rtn.$vars.push(command);
-		}
-
-		return rtn;
-	}
-}
-
-function getFormatter( str ){
-	var fn,
-		rtn,
-		lines = str.split(/{{/g);
-
-	if ( lines.length > 1 ){
-		str = lines.shift();
-		fn = doVariable( lines );
-		rtn = function( obj ){
-			return str + fn( obj );
-		};
-		rtn.$vars = fn.$vars;
-	}else{
-		rtn = function(){
-			return str;
-		};
-		rtn.$vars = [];
-	}
-
-	return rtn;
-}
-
-getFormatter.filters = filters;
-*/
 module.exports = {
-	trim: trim,
-	ltrim: ltrim,
-	rtrim: rtrim
+	trim,
+	ltrim,
+	rtrim,
+	skewerToCamel
 };
