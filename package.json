@@ -1,6 +1,6 @@
 {
   "name": "bmoor",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "author": "Brian Heilman <das.ist.junk@gmail.com>",
   "description": "A basic foundation for other libraries, establishing useful patterbs, and letting them be more.",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "chai": "^4.2.0",
     "gulp": "^4.0.2",
     "gulp-jshint": "^2.1.0",
-    "gulp-mocha": "^7.0.2",
+    "gulp-mocha": "^8.0.0",
     "jshint": "^2.11.1",
     "jshint-stylish": "2.1.0",
     "mocha": "^6.2.3",
