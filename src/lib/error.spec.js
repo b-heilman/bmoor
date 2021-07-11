@@ -64,6 +64,9 @@ describe('bmoor.lib.error', function() {
 				code: 400,
 				context: {
 					foo: 'bar'
+				},
+				protected: {
+					hello: 'world'
 				}
 			});
 
@@ -73,13 +76,18 @@ describe('bmoor.lib.error', function() {
 			expect(err.context)
 			.to.deep.equal({foo: 'bar'});
 
+			expect(err.protected)
+			.to.deep.equal({hello: 'world'});
+
 			expect(err.trace)
 			.to.deep.equal([{
 				code: 300,
-				context: {}
+				context: {},
+				protected: {}
 			}, {
 				code: 200,
-				context: undefined
+				context: undefined,
+				protected: undefined
 			}]);
 		});
 	});
@@ -123,6 +131,7 @@ describe('bmoor.lib.error', function() {
 				type: levels.warn,
 				code: 301,
 				context: {hello: 'world'},
+				protected: {eins: 1},
 				response: 'boom',
 				payload: {foo: 'bar'}
 			});
@@ -139,10 +148,14 @@ describe('bmoor.lib.error', function() {
 			expect(err.context)
 			.to.deep.equal({hello: 'world'});
 
+			expect(err.protected)
+			.to.deep.equal({eins: 1});
+
 			expect(err.trace)
 			.to.deep.equal([{
 				code: 200,
-				context: undefined
+				context: undefined,
+				protected: undefined
 			}]);
 
 			expect(err.response)
