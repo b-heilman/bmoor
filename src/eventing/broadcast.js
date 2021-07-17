@@ -98,7 +98,7 @@ class Broadcast {
 		return !!this._listeners[event];
 	}
 
-	trigger(event, ...args){
+	async trigger(event, ...args){
 		let proms = [];
 
 		if (this.hasWaiting(event)){

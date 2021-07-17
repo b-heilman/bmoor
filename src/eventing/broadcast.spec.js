@@ -1,11 +1,11 @@
 
 const {expect} = require('chai');
 
-describe('bmoor.eventing.Broadcast', function(){
+describe('bmoor.eventing.broadcast', function(){
 	var obj,
 		triggered;
 
-	const {Broadcast} = require('./Broadcast.js');
+	const {Broadcast} = require('./broadcast.js');
 
 	beforeEach(function(){
 		obj = new Broadcast();
