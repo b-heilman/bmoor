@@ -27,7 +27,8 @@ describe('bmoor.lib.error', function() {
 			const err = {};
 
 			error.addStatus(err, {
-				status: 101
+				status: 101,
+				type: levels.error
 			});
 
 			expect(err.status)
@@ -70,14 +71,29 @@ describe('bmoor.lib.error', function() {
 				}
 			});
 
+			error.setContext(err, {
+				context: {
+					eins: 1
+				},
+				protected: {
+					zwei: 2
+				}
+			});
+
 			expect(err.code)
 			.to.equal(400);
 
 			expect(err.context)
-			.to.deep.equal({foo: 'bar'});
+			.to.deep.equal({
+				foo: 'bar',
+				eins: 1
+			});
 
 			expect(err.protected)
-			.to.deep.equal({hello: 'world'});
+			.to.deep.equal({
+				hello: 'world',
+				zwei: 2
+			});
 
 			expect(err.trace)
 			.to.deep.equal([{
@@ -121,7 +137,7 @@ describe('bmoor.lib.error', function() {
 	});
 
 	describe('::apply', function(){
-		it('should apply everything', function(){
+		it('should apply everything to a base object', function(){
 			const err = {
 				code: 200
 			};
@@ -163,6 +179,56 @@ describe('bmoor.lib.error', function() {
 
 			expect(err.payload)
 			.to.deep.equal({foo: 'bar'});
+
+			// console.log(error.stringify(err));
+		});
+
+		it('should apply everything to a Error', function(){
+			const err = new Error('oh, hey');
+
+			error.apply(err, {
+				code: 200
+			});
+
+			error.apply(err, {
+				status: 200,
+				type: levels.warn,
+				code: 301,
+				context: {hello: 'world'},
+				protected: {eins: 1},
+				response: 'boom',
+				payload: {foo: 'bar'}
+			});
+
+			expect(err.status)
+			.to.equal(200);
+
+			expect(err.type)
+			.to.equal(levels.warn);
+
+			expect(err.code)
+			.to.equal(301);
+
+			expect(err.context)
+			.to.deep.equal({hello: 'world'});
+
+			expect(err.protected)
+			.to.deep.equal({eins: 1});
+
+			expect(err.trace)
+			.to.deep.equal([{
+				code: 200,
+				context: {},
+				protected: {}
+			}]);
+
+			expect(err.response)
+			.to.equal('boom');
+
+			expect(err.payload)
+			.to.deep.equal({foo: 'bar'});
+
+			// console.log(error.stringify(err));
 		});
 	});
 });

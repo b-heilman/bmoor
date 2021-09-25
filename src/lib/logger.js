@@ -1,5 +1,6 @@
 
 const {Config} = require('./config.js');
+const {stringify} = require('./error.js');
 
 const silent = Symbol('isSilent');
 const error = Symbol('isError');
@@ -38,30 +39,12 @@ const config = new Config({
 	log: function(dump){
 		writeHeading(dump);
 
-		if (dump.ref || dump.message || dump.code){
-			console.log(JSON.stringify({
-				message: dump.message,
-				ref: dump.ref,
-				status: dump.status,
-				code: dump.code
-			}, null, 2));
-		}
-
 		if (dump.error){
-			console.log('> error :', dump.error.message);
-			console.log(dump.error.stack);
+			dump.message = dump.error.message;
+			dump.stack = dump.error.stack;
 		}
 
-		if (dump.context){
-			console.log('> context :', JSON.stringify(dump.context, null, 2));
-		}
-
-		if (dump.trace){
-			console.log('> context trace');
-			dump.trace.forEach(row => {
-				console.log('> '+row.code+' =>', JSON.stringify(row.context, null, 2));
-			});
-		}
+		console.log(stringify(dump));
 	},
 	comment: function(dump, message){
 		writeHeading(dump);
@@ -87,7 +70,7 @@ function logFormat(content){
 	}
 
 	dump.level = content.level;
-	dump.type = content.type || 'debug';
+	dump.type = content.type;
 
 	if (content.header){
 		if (!content.message){
