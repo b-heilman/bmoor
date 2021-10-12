@@ -1,4 +1,3 @@
-
 module.exports = {
 	soon: require('./soon.js'),
 	debounce: require('./debounce.js'),

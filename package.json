@@ -14,14 +14,17 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "jshint": "^2.11.1",
+    "eslint": "^8.0.0",
+    "jshint": "^2.13.1",
     "jshint-stylish": "2.1.0",
-    "mocha": "^6.2.3",
+    "mocha": "^9.1.2",
+    "prettier": "2.4.1",
     "sinon": "^7.5.0",
     "yargs": "^15.3.1"
   },
   "scripts": {
-    "lint": "node ./node_modules/jshint/bin/jshint ./src",
-    "test": "npm run lint && mocha --recursive \"./src/**/*.spec.js\""
+    "lint": "node ./node_modules/eslint/bin/eslint ./src",
+    "test": "npm run lint && mocha --recursive \"./src/**/*.spec.js\"",
+    "prettier": "npx prettier --write ./src && npm run lint"
   }
 }

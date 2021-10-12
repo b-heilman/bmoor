@@ -1,4 +1,3 @@
-
 const {Config} = require('../lib/config.js');
 
 const config = new Config({
@@ -6,46 +5,40 @@ const config = new Config({
 });
 
 class Manager {
-	constructor(broadcast, conf=config){
+	constructor(broadcast, conf = config) {
 		this.cache = {};
 		this.config = conf;
 		this.broadcast = broadcast;
 	}
 
-	async trigger(event, key, args){
+	async trigger(event, key, args) {
 		let issued = this.cache[event];
 
-		if (!issued){
+		if (!issued) {
 			issued = {};
 
 			this.cache[event] = issued;
 		}
 
 		let instance = issued[key];
-		if (!instance){
+		if (!instance) {
 			instance = {
-				prom: new Promise(
-					(resolve, reject) => setTimeout(
-						async () => {
-							issued[key] = null;
+				prom: new Promise((resolve, reject) =>
+					setTimeout(async () => {
+						issued[key] = null;
 
-							try {
-								const rtn = await this.broadcast.trigger(
-									event, 
-									...instance.args
-								);
+						try {
+							const rtn = await this.broadcast.trigger(event, ...instance.args);
 
-								resolve(rtn);
-							} catch (ex){
-								reject(ex);
-							}
-						}, 
-						this.config.timeout
-					)
+							resolve(rtn);
+						} catch (ex) {
+							reject(ex);
+						}
+					}, this.config.timeout)
 				)
 			};
-			
-			issued[key] = instance;	
+
+			issued[key] = instance;
 		}
 
 		instance.args = args;

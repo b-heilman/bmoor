@@ -1,20 +1,17 @@
-
 const {expect} = require('chai');
 
-describe('bmoor.object', function() {
-	
+describe('bmoor.object', function () {
 	const bmoor = require('./index.js');
 
-	describe('::explode', function(){
-		it('should operate explode correctly', function(){
+	describe('::explode', function () {
+		it('should operate explode correctly', function () {
 			var t = {
 				'eins.zwei': 12,
 				'eins.drei': 13,
-				'fier': 4
+				fier: 4
 			};
 
-			expect(bmoor.object.explode(t))
-			.to.deep.equal({
+			expect(bmoor.object.explode(t)).to.deep.equal({
 				eins: {
 					zwei: 12,
 					drei: 13
@@ -23,16 +20,15 @@ describe('bmoor.object', function() {
 			});
 		});
 
-		it('should operate makeExploder correctly', function(){
+		it('should operate makeExploder correctly', function () {
 			var t = {
 					'eins.zwei': 12,
 					'eins.drei': 13,
-					'fier': 4
+					fier: 4
 				},
-				explode = bmoor.object.makeExploder( Object.keys(t) );
+				explode = bmoor.object.makeExploder(Object.keys(t));
 
-			expect(explode(t))
-			.to.deep.equal({
+			expect(explode(t)).to.deep.equal({
 				eins: {
 					zwei: 12,
 					drei: 13
@@ -42,8 +38,8 @@ describe('bmoor.object', function() {
 		});
 	});
 
-	describe('::implode', function(){
-		it('should operate correctly', function(){
+	describe('::implode', function () {
+		it('should operate correctly', function () {
 			var t = {
 				time: {
 					start: 99,
@@ -55,21 +51,21 @@ describe('bmoor.object', function() {
 						hello: 'world'
 					}
 				},
-				arr: [{
-					eins: 1,
-				}, {
-					zwei: 2
-				}],
-				double: [
-					[0]
-				]
+				arr: [
+					{
+						eins: 1
+					},
+					{
+						zwei: 2
+					}
+				],
+				double: [[0]]
 			};
 
-			expect(bmoor.object.implode(t))
-			.to.deep.equal({
+			expect(bmoor.object.implode(t)).to.deep.equal({
 				'time.start': 99,
 				'time.stop': 100,
-				'id': 'woot',
+				id: 'woot',
 				'foo.bar.hello': 'world',
 				'arr[0].eins': 1,
 				'arr[1].zwei': 2,
@@ -77,7 +73,7 @@ describe('bmoor.object', function() {
 			});
 		});
 
-		it('should operate correctly', function(){
+		it('should operate correctly', function () {
 			var t = {
 				time: {
 					start: 99,
@@ -89,34 +85,35 @@ describe('bmoor.object', function() {
 						hello: 'world'
 					}
 				},
-				arr: [{
-					eins: 1,
-				}, {
-					zwei: 2
-				}],
-				double: [
-					[0]
-				]
+				arr: [
+					{
+						eins: 1
+					},
+					{
+						zwei: 2
+					}
+				],
+				double: [[0]]
 			};
 
-			expect(bmoor.object.implode(t, {skipArray: true}))
-			.to.deep.equal({
+			expect(bmoor.object.implode(t, {skipArray: true})).to.deep.equal({
 				'time.start': 99,
 				'time.stop': 100,
-				'id': 'woot',
+				id: 'woot',
 				'foo.bar.hello': 'world',
-				'arr': [{
-					eins: 1,
-				}, {
-					zwei: 2
-				}],
-				'double': [
-					[0]
-				]
+				arr: [
+					{
+						eins: 1
+					},
+					{
+						zwei: 2
+					}
+				],
+				double: [[0]]
 			});
 		});
 
-		it('should operate implode correctly - with an ignore', function(){
+		it('should operate implode correctly - with an ignore', function () {
 			var t = {
 				time: {
 					start: 99,
@@ -130,43 +127,49 @@ describe('bmoor.object', function() {
 				}
 			};
 
-			expect(bmoor.object.implode(t, {
-				ignore: {
-					time:{
-						start:true
-					},
-					id: true,
-					foo: true
-				}
-			})).to.deep.equal({
+			expect(
+				bmoor.object.implode(t, {
+					ignore: {
+						time: {
+							start: true
+						},
+						id: true,
+						foo: true
+					}
+				})
+			).to.deep.equal({
 				'time.stop': 100
 			});
 		});
 	});
 
-	describe('::merge', function(){
-		it('should replace null correctly', function(){
-			expect( bmoor.object.merge({
-				foo: null,
-				bar: { a: 'ok'},
-				hello: {
-					world: 1,
-					other: 'thing',
-					arr: null
-				},
-				arr: [1, 2],
-				arr2: [8, 9]
-			},{
-				foo: 'bar',
-				bar: null,
-				hello: {
-					world: null,
-					arr: [1, 2]
-				},
-				arr: null,
-				arr2: [4, 5]
-			}))
-			.to.deep.equal({
+	describe('::merge', function () {
+		it('should replace null correctly', function () {
+			expect(
+				bmoor.object.merge(
+					{
+						foo: null,
+						bar: {a: 'ok'},
+						hello: {
+							world: 1,
+							other: 'thing',
+							arr: null
+						},
+						arr: [1, 2],
+						arr2: [8, 9]
+					},
+					{
+						foo: 'bar',
+						bar: null,
+						hello: {
+							world: null,
+							arr: [1, 2]
+						},
+						arr: null,
+						arr2: [4, 5]
+					}
+				)
+			).to.deep.equal({
 				foo: 'bar',
 				bar: null,
 				hello: {
@@ -180,8 +183,8 @@ describe('bmoor.object', function() {
 		});
 	});
 
-	describe('::deepCopy', function(){
-		it('should create a real deep copy', function(){
+	describe('::deepCopy', function () {
+		it('should create a real deep copy', function () {
 			const cloned = {
 				eins: 1,
 				arr: [
@@ -191,9 +194,7 @@ describe('bmoor.object', function() {
 					}
 				],
 				zwei: {
-					arr: [
-						{}
-					]
+					arr: [{}]
 				}
 			};
 
@@ -202,8 +203,7 @@ describe('bmoor.object', function() {
 			cloned.arr[1].foo = 'bar2';
 			cloned.zwei.arr.push('bar3');
 
-			expect(cloned)
-			.to.deep.equal({
+			expect(cloned).to.deep.equal({
 				eins: 1,
 				arr: [
 					1,
@@ -212,15 +212,11 @@ describe('bmoor.object', function() {
 					}
 				],
 				zwei: {
-					arr: [
-						{},
-						'bar3'
-					]
+					arr: [{}, 'bar3']
 				}
 			});
 
-			expect(target)
-			.to.deep.equal({
+			expect(target).to.deep.equal({
 				eins: 1,
 				arr: [
 					1,
@@ -229,9 +225,7 @@ describe('bmoor.object', function() {
 					}
 				],
 				zwei: {
-					arr: [
-						{}
-					]
+					arr: [{}]
 				}
 			});
 		});

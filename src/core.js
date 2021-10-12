@@ -10,7 +10,7 @@
  * @param {*} value - The variable to test
  * @return {boolean}
  **/
-function isUndefined( value ) {
+function isUndefined(value) {
 	return value === undefined;
 }
 
@@ -21,7 +21,7 @@ function isUndefined( value ) {
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isDefined( value ) {
+function isDefined(value) {
 	return value !== undefined;
 }
 
@@ -32,7 +32,7 @@ function isDefined( value ) {
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isString( value ){
+function isString(value) {
 	return typeof value === 'string';
 }
 
@@ -43,7 +43,7 @@ function isString( value ){
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isNumber( value ){
+function isNumber(value) {
 	return typeof value === 'number';
 }
 
@@ -54,7 +54,7 @@ function isNumber( value ){
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isFunction( value ){
+function isFunction(value) {
 	return typeof value === 'function';
 }
 
@@ -65,7 +65,7 @@ function isFunction( value ){
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isObject( value ){
+function isObject(value) {
 	return !!value && typeof value === 'object';
 }
 
@@ -76,7 +76,7 @@ function isObject( value ){
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isBoolean( value ){
+function isBoolean(value) {
 	return typeof value === 'boolean';
 }
 
@@ -87,11 +87,14 @@ function isBoolean( value ){
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isArrayLike( value ) {
+function isArrayLike(value) {
 	// for me, if you have a length, I'm assuming you're array like, might change
-	if (value){
-		return isObject(value) && (value.length === 0 || (0 in value && (value.length-1) in value));
-	}else{
+	if (value) {
+		return (
+			isObject(value) &&
+			(value.length === 0 || (0 in value && value.length - 1 in value))
+		);
+	} else {
 		return false;
 	}
 }
@@ -103,7 +106,7 @@ function isArrayLike( value ) {
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isArray( value ) {
+function isArray(value) {
 	return value instanceof Array;
 }
 
@@ -117,34 +120,33 @@ function isArray( value ) {
  * @param {*} value The variable to test
  * @return {boolean}
  **/
-function isEmpty( value ){
+function isEmpty(value) {
 	var key;
 
-	if (isObject(value)){
-		for(key in value){ 
-			if (value.hasOwnProperty(key)){
+	if (isObject(value)) {
+		for (key in value) {
+			if (Object.prototype.hasOwnProperty.call(value, key)) {
 				return false;
 			}
 		}
-	} else if (isArrayLike(value)){
+	} else if (isArrayLike(value)) {
 		return value.length === 0;
 	} else {
-		return isUndefined( value );
+		return isUndefined(value);
 	}
 
 	return true;
 }
 
-function parse( path ){
-	if (!path){
+function parse(path) {
+	if (!path) {
 		return [];
-	} else if (isString(path)){
+	} else if (isString(path)) {
 		// this isn't perfect, I'm making it work with arrays though
-		if (path.indexOf('[') !== -1){
-			return path.match(/[^\]\[.]+/g)
-			.map(d => {
-				if (d[0] === '"' || d[0] === '\''){
-					return d.substring(1, d.length-1);
+		if (path.indexOf('[') !== -1) {
+			return path.match(/[^\][.]+/g).map((d) => {
+				if (d[0] === '"' || d[0] === "'") {
+					return d.substring(1, d.length - 1);
 				} else {
 					return d;
 				}
@@ -152,13 +154,10 @@ function parse( path ){
 		} else {
 			return path.split('.');
 		}
-	} else if (isArray(path)){
+	} else if (isArray(path)) {
 		return path.slice(0);
 	} else {
-		throw new Error(
-			'unable to parse path: '+
-			path+ ' : '+typeof(path)
-		);
+		throw new Error('unable to parse path: ' + path + ' : ' + typeof path);
 	}
 }
 
@@ -171,65 +170,74 @@ function parse( path ){
  * @param {*} value The value to set the namespace to
  * @return {*}
  **/
-function set( root, space, value ){
-	var i, c, 
+function set(root, space, value) {
+	var i,
+		c,
 		val,
 		nextSpace,
 		curSpace = root;
-	
+
 	space = parse(space);
 
 	val = space.pop();
 
-	for( i = 0, c = space.length; i < c; i++ ){
-		nextSpace = space[ i ];
-			
-		if (nextSpace === '__proto__' || nextSpace === 'constructor' || nextSpace === 'prototype'){
+	for (i = 0, c = space.length; i < c; i++) {
+		nextSpace = space[i];
+
+		if (
+			nextSpace === '__proto__' ||
+			nextSpace === 'constructor' ||
+			nextSpace === 'prototype'
+		) {
 			return null;
 		}
 
-		if ( isUndefined(curSpace[nextSpace]) ){
-			curSpace[ nextSpace ] = {};
+		if (isUndefined(curSpace[nextSpace])) {
+			curSpace[nextSpace] = {};
 		}
-			
-		curSpace = curSpace[ nextSpace ];
+
+		curSpace = curSpace[nextSpace];
 	}
 
-	curSpace[ val ] = value;
+	curSpace[val] = value;
 
 	return curSpace;
 }
 
-function _makeSetter( property, next ){
-	if (property === '__proto__' || property === 'constructor' || property === 'prototype'){
+function _makeSetter(property, next) {
+	if (
+		property === '__proto__' ||
+		property === 'constructor' ||
+		property === 'prototype'
+	) {
 		throw new Error('unable to access __proto__, constructor, prototype');
 	}
 
-	if ( next ){
-		return function setter( ctx, value ){
+	if (next) {
+		return function setter(ctx, value) {
 			var t = ctx[property];
 
-			if ( !t ){
+			if (!t) {
 				t = ctx[property] = {};
 			}
-			
-			return next( t, value );
+
+			return next(t, value);
 		};
-	}else{
-		return function( ctx, value ){
+	} else {
+		return function (ctx, value) {
 			ctx[property] = value;
 			return ctx;
 		};
 	}
 }
 
-function makeSetter( space ){
+function makeSetter(space) {
 	var i,
 		fn,
 		readings = parse(space);
 
-	for( i = readings.length-1; i > -1; i-- ){
-		fn = _makeSetter( readings[i], fn );
+	for (i = readings.length - 1; i > -1; i--) {
+		fn = _makeSetter(readings[i], fn);
 	}
 
 	return fn;
@@ -243,29 +251,34 @@ function makeSetter( space ){
  * @param {string|array|function} space The namespace
  * @return {array}
  **/
-function get( root, path ){
-	var i, c,
+function get(root, path) {
+	var i,
+		c,
 		space,
 		nextSpace,
 		curSpace = root;
-	
-	if ( !root ){
+
+	if (!root) {
 		return root;
 	}
 
 	space = parse(path);
-	if ( space.length ){
-		for( i = 0, c = space.length; i < c; i++ ){
+	if (space.length) {
+		for (i = 0, c = space.length; i < c; i++) {
 			nextSpace = space[i];
-				
-			if (nextSpace === '__proto__' || nextSpace === 'constructor' || nextSpace === 'prototype'){
+
+			if (
+				nextSpace === '__proto__' ||
+				nextSpace === 'constructor' ||
+				nextSpace === 'prototype'
+			) {
 				return null;
 			}
 
-			if ( isUndefined(curSpace[nextSpace]) ){
+			if (isUndefined(curSpace[nextSpace])) {
 				return;
 			}
-			
+
 			curSpace = curSpace[nextSpace];
 		}
 	}
@@ -273,41 +286,45 @@ function get( root, path ){
 	return curSpace;
 }
 
-function _makeGetter( property, next ){
-	if (property === '__proto__' || property === 'constructor' || property === 'prototype'){
+function _makeGetter(property, next) {
+	if (
+		property === '__proto__' ||
+		property === 'constructor' ||
+		property === 'prototype'
+	) {
 		throw new Error('unable to access __proto__, constructor, prototype');
 	}
 
-	if (next){
-		return function getter( obj ){
+	if (next) {
+		return function getter(obj) {
 			try {
-				return next( obj[property] );
-			}catch( ex ){
+				return next(obj[property]);
+			} catch (ex) {
 				return undefined;
 			}
 		};
-	}else{
-		return function getter( obj ){
+	} else {
+		return function getter(obj) {
 			try {
 				return obj[property];
-			} catch(ex){
+			} catch (ex) {
 				return undefined;
 			}
 		};
 	}
 }
 
-function makeGetter( path ){
+function makeGetter(path) {
 	var i,
 		fn,
 		space = parse(path);
 
-	if ( space.length ){
-		for( i = space.length-1; i > -1; i-- ){
-			fn = _makeGetter( space[i], fn );
+	if (space.length) {
+		for (i = space.length - 1; i > -1; i--) {
+			fn = _makeGetter(space[i], fn);
 		}
-	}else{
-		return function( obj ){
+	} else {
+		return function (obj) {
 			return obj;
 		};
 	}
@@ -323,29 +340,29 @@ function makeGetter( path ){
  * @param {string|array} space The namespace
  * @return {*}
  **/
-function del( root, space ){
+function del(root, space) {
 	var old,
 		val,
 		nextSpace,
 		curSpace = root;
-	
-	if ( space && (isString(space) || isArrayLike(space)) ){
-		space = parse( space );
+
+	if (space && (isString(space) || isArrayLike(space))) {
+		space = parse(space);
 
 		val = space.pop();
 
-		for( var i = 0; i < space.length; i++ ){
-			nextSpace = space[ i ];
-				
-			if ( isUndefined(curSpace[nextSpace]) ){
+		for (var i = 0; i < space.length; i++) {
+			nextSpace = space[i];
+
+			if (isUndefined(curSpace[nextSpace])) {
 				return;
 			}
-				
-			curSpace = curSpace[ nextSpace ];
+
+			curSpace = curSpace[nextSpace];
 		}
 
-		old = curSpace[ val ];
-		delete curSpace[ val ];
+		old = curSpace[val];
+		delete curSpace[val];
 	}
 
 	return old;

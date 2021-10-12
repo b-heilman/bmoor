@@ -1,30 +1,33 @@
-
 const {expect} = require('chai');
 const sinon = require('sinon');
 
-describe('bmoor.flow.window', function(){
+describe('bmoor.flow.window', function () {
 	const service = require('./window.js');
 
 	let clock = null;
-	function moveClock( increment ){
+	function moveClock(increment) {
 		clock.tick(increment);
 	}
 
 	let timerCallback = null;
-	beforeEach(function() {
+	beforeEach(function () {
 		timerCallback = sinon.spy();
 
 		clock = sinon.useFakeTimers();
 	});
 
-	afterEach(function() {
+	afterEach(function () {
 		clock.restore();
 	});
 
-	it('should call a callback method within min edge of the window', function() {
-		var fn = service(function() {
-			timerCallback();
-		}, 10, 30);
+	it('should call a callback method within min edge of the window', function () {
+		var fn = service(
+			function () {
+				timerCallback();
+			},
+			10,
+			30
+		);
 
 		fn();
 		moveClock(5);
@@ -46,10 +49,14 @@ describe('bmoor.flow.window', function(){
 		expect(timerCallback.callCount).to.equal(2);
 	});
 
-	it('should not be able to go over the max edge of the window', function() {
-		var fn = service(function() {
-			timerCallback();
-		}, 10, 30);
+	it('should not be able to go over the max edge of the window', function () {
+		var fn = service(
+			function () {
+				timerCallback();
+			},
+			10,
+			30
+		);
 
 		fn();
 		moveClock(5);

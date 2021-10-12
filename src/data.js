@@ -3,25 +3,25 @@
  * @module bmoor.data
  **/
 
- var _id = 0;
+var _id = 0;
 
-function nextUid(){
+function nextUid() {
 	return ++_id;
 }
 
-function setUid( obj ){
+function setUid(obj) {
 	var t = obj.$$bmoorUid;
 
-	if ( !t ){
+	if (!t) {
 		t = obj.$$bmoorUid = nextUid();
 	}
 
 	return t;
 }
 
-function getUid( obj ){
-	if ( !obj.$$bmoorUid ){
-		setUid( obj );
+function getUid(obj) {
+	if (!obj.$$bmoorUid) {
+		setUid(obj);
 	}
 
 	return obj.$$bmoorUid;

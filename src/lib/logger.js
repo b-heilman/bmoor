@@ -1,4 +1,3 @@
-
 const {Config} = require('./config.js');
 const {stringify} = require('./error.js');
 
@@ -31,22 +30,26 @@ const levels = {
 	}
 };
 
-function writeHeading(dump){
-	console.log(`--- ${dump.type} : ${dump.timestamp} ${dump.header ? `: ${dump.header} ` : ''}---`);
+function writeHeading(dump) {
+	console.log(
+		`--- ${dump.type} : ${dump.timestamp} ${
+			dump.header ? `: ${dump.header} ` : ''
+		}---`
+	);
 }
 
 const config = new Config({
-	log: function(dump){
+	log: function (dump) {
 		writeHeading(dump);
 
-		if (dump.error){
+		if (dump.error) {
 			dump.message = dump.error.message;
 			dump.stack = dump.error.stack;
 		}
 
 		console.log(stringify(dump));
 	},
-	comment: function(dump, message){
+	comment: function (dump, message) {
 		writeHeading(dump);
 
 		console.log('> comment :', message);
@@ -54,10 +57,10 @@ const config = new Config({
 	level: error
 });
 
-function logFormat(content){
+function logFormat(content) {
 	const dump = {};
 
-	if (typeof(content) === 'string'){
+	if (typeof content === 'string') {
 		content = {
 			type: 'debug',
 			level: 'debug',
@@ -65,77 +68,76 @@ function logFormat(content){
 		};
 	}
 
-	if (!content.type){
+	if (!content.type) {
 		console.trace('!!!missing type');
 	}
 
 	dump.level = content.level;
 	dump.type = content.type;
 
-	if (content.header){
-		if (!content.message){
+	if (content.header) {
+		if (!content.message) {
 			dump.message = content.header;
 		} else {
 			dump.header = content.header;
 		}
-		
 	}
 
 	dump.timestamp = new Date();
 
-	if (content.message){
+	if (content.message) {
 		dump.message = content.message;
 	}
 
-	if (content.ref){
+	if (content.ref) {
 		dump.ref = content.ref;
 	}
 
-	if (content.status){
+	if (content.status) {
 		dump.status = content.status;
 	}
 
-	if (content.code){
+	if (content.code) {
 		dump.code = content.code;
 	}
 
-	if (content.stack){
+	if (content.stack) {
 		dump.stack = content.stack;
 	}
 
-	if (content instanceof Error){
+	if (content instanceof Error) {
 		dump.error = {
 			message: content.message,
 			stack: content.stack
 		};
-	} else if (content.error){
+	} else if (content.error) {
 		dump.error = {
 			message: content.error.message,
 			stack: content.error.stack
 		};
-	} else if (content.error !== null){
+	} else if (content.error !== null) {
 		dump.error = {
 			message: 'no error supplied',
-			stack: (new Error('need stack')).stack
+			stack: new Error('need stack').stack
 		};
 	}
 
-	if (content.context){
+	if (content.context) {
 		dump.context = content.context;
 	}
 
-	if (content.trace){
+	if (content.trace) {
 		dump.trace = content.trace;
 	}
 
 	return dump;
 }
 
-async function log(onLevel, header, content = {}){
+async function log(onLevel, header, content = {}) {
 	const level = levels[onLevel];
 
-	if (levels[config.get('level')].rank <= level.rank){
-		if (typeof(content) === 'string'){
+	if (levels[config.get('level')].rank <= level.rank) {
+		if (typeof content === 'string') {
 			content = {
 				message: content
 			};
@@ -151,10 +153,10 @@ async function log(onLevel, header, content = {}){
 	}
 }
 
-async function comment(onLevel, header, comment){
+async function comment(onLevel, header, comment) {
 	const level = levels[onLevel];
 
-	if (levels[config.get('level')].rank <= level.rank){
+	if (levels[config.get('level')].rank <= level.rank) {
 		const ctx = {
 			header,
 			type: level.name,
@@ -166,14 +168,14 @@ async function comment(onLevel, header, comment){
 	}
 }
 
-function logFactory(onLevel){
-	return async function(header, content={}){
+function logFactory(onLevel) {
+	return async function (header, content = {}) {
 		return log(onLevel, header, content);
 	};
 }
 
-function commentFactory(onLevel){
-	return async function(header, content){
+function commentFactory(onLevel) {
+	return async function (header, content) {
 		return comment(onLevel, header, content);
 	};
 }
@@ -191,7 +193,7 @@ module.exports = {
 	comment,
 	error: logFactory(error),
 	warn: logFactory(warn),
-	warnComment: commentFactory(warn),  
+	warnComment: commentFactory(warn),
 	info: logFactory(info),
 	infoComment: commentFactory(info),
 	verbose: logFactory(verbose),

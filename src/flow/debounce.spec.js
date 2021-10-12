@@ -1,28 +1,27 @@
-
 const {expect} = require('chai');
 const sinon = require('sinon');
 
-describe('bmoor.flow.debounce', function(){
+describe('bmoor.flow.debounce', function () {
 	const service = require('./debounce.js');
 
 	let clock = null;
-	function moveClock( increment ){
+	function moveClock(increment) {
 		clock.tick(increment);
 	}
 
 	let timerCallback = null;
-	beforeEach(function() {
+	beforeEach(function () {
 		timerCallback = sinon.spy();
 
 		clock = sinon.useFakeTimers();
 	});
 
-	afterEach(function() {
+	afterEach(function () {
 		clock.restore();
 	});
 
-	it('should call a callback method within timeframe of last call', function() {
-		var fn = service(function() {
+	it('should call a callback method within timeframe of last call', function () {
+		var fn = service(function () {
 			timerCallback();
 		}, 10);
 

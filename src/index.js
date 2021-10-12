@@ -1,4 +1,3 @@
-
 var bmoor = Object.assign({}, require('./core.js'));
 
 bmoor.array = require('./array.js');

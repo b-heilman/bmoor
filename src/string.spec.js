@@ -1,36 +1,34 @@
-
 const {expect} = require('chai');
 
-describe('bmoor.string', function() {
-
+describe('bmoor.string', function () {
 	const bmoor = require('./index.js');
 
-	it('should operate trim correctly, default is white space', function(){
+	it('should operate trim correctly, default is white space', function () {
 		var s = '  test    \n',
-			t = bmoor.string.trim( s );
+			t = bmoor.string.trim(s);
 
-		expect( t ).to.equal( 'test' );
+		expect(t).to.equal('test');
 	});
 
-	it('should operate trim correctly, using "a"', function(){
+	it('should operate trim correctly, using "a"', function () {
 		var s = 'aatasteaaaa',
-			t = bmoor.string.trim( s, 'a' );
+			t = bmoor.string.trim(s, 'a');
 
-		expect( t ).to.equal( 'taste' );
+		expect(t).to.equal('taste');
 	});
 
-	it('should operate ltrim correctly, default is white space', function(){
+	it('should operate ltrim correctly, default is white space', function () {
 		var s = '  test    \n',
-			t = bmoor.string.ltrim( s );
+			t = bmoor.string.ltrim(s);
 
-		expect( t ).to.equal( 'test    \n' );
+		expect(t).to.equal('test    \n');
 	});
 
-	it('should operate rtrim correctly, default is white space', function(){
+	it('should operate rtrim correctly, default is white space', function () {
 		var s = '  test    \n',
-			t = bmoor.string.rtrim( s );
+			t = bmoor.string.rtrim(s);
 
-		expect( t ).to.equal( '  test' );
+		expect(t).to.equal('  test');
 	});
 
 	/*

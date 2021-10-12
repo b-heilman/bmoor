@@ -1,28 +1,27 @@
-
 const {expect} = require('chai');
 const sinon = require('sinon');
 
-describe('bmoor.flow.soon', function(){
+describe('bmoor.flow.soon', function () {
 	const service = require('./soon.js');
 
 	let clock = null;
-	function moveClock( increment ){
+	function moveClock(increment) {
 		clock.tick(increment);
 	}
 
 	let timerCallback = null;
-	beforeEach(function() {
+	beforeEach(function () {
 		timerCallback = sinon.spy();
 
 		clock = sinon.useFakeTimers();
 	});
 
-	afterEach(function() {
+	afterEach(function () {
 		clock.restore();
 	});
 
-	it('should call a callback method within timeframe of first call', function() {
-		var fn = service(function() {
+	it('should call a callback method within timeframe of first call', function () {
+		var fn = service(function () {
 			timerCallback();
 		}, 10);
 
