@@ -1,6 +1,6 @@
 {
   "name": "bmoor",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "author": "Brian Heilman <das.ist.junk@gmail.com>",
   "description": "A basic foundation for other libraries, establishing useful patterbs, and letting them be more.",
   "license": "MIT",
@@ -29,7 +29,8 @@
   },
   "scripts": {
     "lint": "node ./node_modules/eslint/bin/eslint ./src",
-    "test": "npm run prettier && mocha --recursive \"./src/**/*.spec.js\"",
-    "prettier": "npx prettier --write ./src && npm run lint"
+    "test": "mocha --recursive \"./src/**/*.spec.js\"",
+    "prettier": "npx prettier --write ./src",
+    "finalize": "npm run lint && npm run prettier && npm run test"
   }
 }

@@ -182,7 +182,7 @@ function set(root, space, value) {
 	val = space.pop();
 
 	for (i = 0, c = space.length; i < c; i++) {
-		nextSpace = space[i];
+		nextSpace = String(space[i]);
 
 		if (
 			nextSpace === '__proto__' ||
@@ -205,6 +205,8 @@ function set(root, space, value) {
 }
 
 function _makeSetter(property, next) {
+	property = String(property);
+
 	if (
 		property === '__proto__' ||
 		property === 'constructor' ||
@@ -265,7 +267,7 @@ function get(root, path) {
 	space = parse(path);
 	if (space.length) {
 		for (i = 0, c = space.length; i < c; i++) {
-			nextSpace = space[i];
+			nextSpace = String(space[i]);
 
 			if (
 				nextSpace === '__proto__' ||
@@ -287,6 +289,8 @@ function get(root, path) {
 }
 
 function _makeGetter(property, next) {
+	property = String(property);
+
 	if (
 		property === '__proto__' ||
 		property === 'constructor' ||

@@ -92,6 +92,14 @@ describe('Testing object setting/getting', function () {
 
 			expect(t.polluted).to.not.equal(true);
 		});
+
+		it('should not allow __proto__ when in array', function () {
+			var t = {};
+
+			bmoor.set(t, [['__proto__'], 'polluted'], 'polluted');
+
+			expect(t.polluted).to.not.equal('polluted');
+		});
 	});
 
 	describe('::makeSetter', function () {
