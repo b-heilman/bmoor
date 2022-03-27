@@ -97,7 +97,10 @@ function implode(obj, settings = {}) {
 		if (t !== true) {
 			if (settings.skipArray && bmoor.isArray(val)) {
 				rtn[format(key)] = val;
-			} else if (bmoor.isObject(val)) {
+			} else if (
+				bmoor.isObject(val) &&
+				(!settings.instanceOf || !(val instanceof settings.instanceOf))
+			) {
 				const todo = implode(val, Object.assign({}, settings, {ignore: t}));
 
 				for (const k in todo) {

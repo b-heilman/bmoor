@@ -1,8 +1,6 @@
-const uuid = require('uuid/v1');
-
 function addStatus(err, ctx = {}) {
 	if (!err.ref) {
-		err.ref = uuid();
+		err.ref = Date.now() + Math.random();
 	}
 
 	if (ctx.status) {

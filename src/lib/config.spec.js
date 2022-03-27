@@ -1,199 +1,121 @@
 const {expect} = require('chai');
 
 describe('bmoor.lib.config', function () {
-	const {Config} = require('./config.js');
+	const {Config, ConfigObject} = require('./config.js');
 
 	describe('basic functionality', function () {
-		it('should allow defaults to be set', function () {
-			const config = new Config({
-				foo: 'bar',
-				hello: {
-					world: 'value'
-				}
+		let cfg = null;
+
+		beforeEach(function () {
+			const otherSub = new Config({
+				value: 'v-10'
 			});
 
-			expect(config.get('foo')).to.equal('bar');
-
-			expect(config.get('hello')).to.deep.equal({
-				world: 'value'
-			});
-
-			expect(config.get('hello.world')).to.equal('value');
-		});
-
-		it('should allow the overriding of default values', function () {
-			const config = new Config({
-				foo: 'eins',
-				hello: {
-					world: 'zwei'
-				}
-			});
-
-			config.set('foo', 1);
-			config.set('hello.world', 2);
-
-			expect(config.get('foo')).to.equal(1);
-
-			expect(config.get('hello')).to.deep.equal({
-				world: 2
-			});
-
-			expect(config.get('hello.world')).to.equal(2);
-		});
-	});
-
-	describe('::assign', function () {
-		it('should allow bulk overriding', function () {
-			const config = new Config({
-				foo: 'eins',
-				hello: {
-					world: 'zwei'
-				}
-			});
-
-			config.assign({
-				foo: 1,
-				hello: {
-					world: 2
-				}
-			});
-
-			expect(config.get('foo')).to.equal(1);
-
-			expect(config.get('hello')).to.deep.equal({
-				world: 2
-			});
-
-			expect(config.get('hello.world')).to.equal(2);
-		});
-
-		it('should work with arrays', function () {
-			const config = new Config({
-				arr: [0],
-				hello: [
-					{
-						world: 1
-					}
-				]
-			});
-
-			config.assign({
-				arr: [1, 2],
-				hello: [
-					{
-						world: 2
-					}
-				]
-			});
-
-			expect(config.get('arr')).to.deep.equal([1, 2]);
-
-			expect(config.get('hello')).to.deep.equal([
+			cfg = new Config(
 				{
-					world: 2
+					value: 'v-1',
+					obj: new ConfigObject({
+						hello: 'world',
+						foo: 'bar'
+					})
+				},
+				{
+					sub: otherSub
 				}
+			);
+		});
+
+		it('should work with values', function () {
+			expect(cfg.get('value')).to.equal('v-1');
+
+			expect(cfg.keys()).to.deep.equal([
+				'value',
+				'obj'
 			]);
 
-			expect(config.get('hello.0.world')).to.equal(2);
+			expect(cfg.get('obj').hello).to.equal('world');
+			expect(cfg.get('obj').foo).to.equal('bar');
+		});
+
+		it('should work with subs', function () {
+			expect(cfg.getSub('sub').get('value')).to.equal('v-10');
 		});
 	});
 
-	describe('::sub', function () {
-		it('should work', function () {
-			const c1 = new Config({
-				foo: 'bar',
-				obj: {
-					hello: 'world'
+	describe('allow system configuration', function () {
+		let cfg = null;
+		let otherSub = null;
+
+		beforeEach(function () {
+			otherSub = new Config({
+				value: 'v-10'
+			});
+
+			cfg = new Config(
+				{
+					value: 'v-1'
+				},
+				{
+					sub: otherSub
+				}
+			);
+		});
+
+		it('should work with values', function () {
+			cfg.set('value', 'v-100');
+
+			expect(cfg.get('value')).to.equal('v-100');
+		});
+
+		it('should work with subs', function () {
+			otherSub.set('value', 'v-101');
+
+			expect(cfg.getSub('sub').get('value')).to.equal('v-101');
+		});
+	});
+
+	describe('allow override by local settings', function () {
+		let cfg = null;
+		let otherSub = null;
+
+		beforeEach(function () {
+			otherSub = new Config({
+				value: 'v-10',
+				hello: {
+					world: 'h-1'
 				}
 			});
 
-			const c2 = c1.sub('obj');
-
-			c2.set('hello', 'world2');
-
-			expect(c1.get('obj.hello')).to.equal('world2');
-
-			expect(c2.get('hello')).to.equal('world2');
-		});
-	});
-
-	describe('::extend', function () {
-		it('should work', function () {
-			const c1 = new Config({
-				foo: 'bar',
-				obj: {
-					hello: 'world',
-					eins: {
-						zwei: 12
+			cfg = new Config(
+				{
+					value: 'v-1',
+					foo: {
+						bar: 'ok'
 					}
+				},
+				{
+					sub: otherSub
 				}
-			});
-
-			const c2 = c1.extend({
-				foo: 'bar2'
-			});
-
-			c2.set('obj.hello', 'world2');
-
-			expect(c1.get('obj.hello')).to.equal('world');
-
-			expect(c2.get('obj.hello')).to.equal('world2');
-
-			expect(c1.get('foo')).to.equal('bar');
-
-			expect(c2.get('foo')).to.equal('bar2');
-
-			c2.set('obj.eins.zwei', 0);
-
-			expect(c1.get('obj.eins.zwei')).to.equal(0);
-
-			expect(c2.get('obj.eins.zwei')).to.equal(0);
-		});
-	});
-
-	describe('::on', function () {
-		it('should trigger off a ::set', function (done) {
-			let called = false;
-
-			const config = new Config({
-				foo: 'bar'
-			});
-
-			config.on('foo', function () {
-				called = true;
-			});
-
-			config.set('foo', 'eins').then(() => {
-				expect(called).to.equal(true);
-
-				expect(config.get('foo')).to.equal('eins');
-
-				done();
-			});
+			);
 		});
 
-		it('should trigger off an ::assign', function (done) {
-			let called = false;
-
-			const config = new Config({
-				foo: 'bar'
+		it('should work with values', function () {
+			const myCfg = cfg.override({
+				value: 'v-9'
 			});
 
-			config.on('foo', function () {
-				called = true;
+			expect(myCfg.get('value')).to.equal('v-9');
+
+			expect(myCfg.get('foo.bar')).to.equal('ok');
+		});
+
+		it('should work with subs', function () {
+			const myCfg = cfg.getSub('sub').override({
+				value: 'v-9'
 			});
 
-			config
-				.assign({
-					foo: 'eins'
-				})
-				.then(() => {
-					expect(called).to.equal(true);
-
-					expect(config.get('foo')).to.equal('eins');
-
-					done();
-				});
+			expect(myCfg.get('value')).to.equal('v-9');
+			expect(myCfg.get('hello.world')).to.equal('h-1');
 		});
 	});
 });

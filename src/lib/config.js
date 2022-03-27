@@ -1,73 +1,45 @@
-const core = require('../core.js');
 const {implode} = require('../object.js');
-const {Broadcast} = require('../eventing/broadcast.js');
 
-// this doesn't do a deep copy, I'm fine with that
-class Config extends Broadcast {
-	constructor(defaults = {}) {
+class ConfigObject extends Object {
+	constructor(settings) {
 		super();
 
-		this.settings = defaults;
+		if (settings) {
+			Object.assign(this, settings);
+		}
+	}
+}
+
+class Config extends ConfigObject {
+	constructor(settings = {}, subs = {}) {
+		super({
+			settings: implode(settings, {instanceOf: ConfigObject}),
+			subs: implode(subs, {instanceOf: Config})
+		});
 	}
 
-	async set(path, value) {
-		core.set(this.settings, path, value);
-
-		return this.trigger(path, value);
-	}
-
-	async assign(properties) {
-		const settings = implode(properties, {skipArray: true});
-
-		return Promise.all(
-			Object.keys(settings).map((key) => this.set(key, settings[key]))
-		);
+	set(path, value) {
+		return (this.settings[path] = value);
 	}
 
 	get(path) {
-		const rtn = core.get(this.settings, path);
-
-		if (core.isArray(rtn)) {
-			return rtn.slice(0);
-		} else {
-			return rtn;
-		}
+		return this.settings[path];
 	}
 
-	keys() {
+	keys(){
 		return Object.keys(this.settings);
 	}
 
-	sub(path) {
-		let rtn = core.get(this.settings, path);
-
-		if (!rtn) {
-			rtn = {};
-			this.set(path, rtn);
-		}
-
-		return new Config(rtn);
+	getSub(sub) {
+		return this.subs[sub];
 	}
 
-	extend(settings) {
-		const child = new Config(Object.create(this.settings));
-
-		// maybe put this logic in object?
-		Object.keys(this.settings).forEach((k) => {
-			const value = this.settings[k];
-			if (core.isObject(value)) {
-				child.settings[k] = Object.create(value);
-			}
-		});
-
-		if (settings) {
-			child.assign(settings);
-		}
-
-		return child;
+	override(settings) {
+		return new Config(Object.assign({}, this.settings, implode(settings)));
 	}
 }
 
 module.exports = {
-	Config
+	Config,
+	ConfigObject
 };
