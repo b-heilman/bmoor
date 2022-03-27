@@ -34,8 +34,14 @@ class Config extends ConfigObject {
 		return this.subs[sub];
 	}
 
-	override(settings) {
-		return new Config(Object.assign({}, this.settings, implode(settings)));
+	override(settings={}, subs={}) {
+		return new Config({
+			...this.settings, 
+			...implode(settings)
+		}, {
+			...this.subs,
+			...implode(subs)
+		});
 	}
 }
 
