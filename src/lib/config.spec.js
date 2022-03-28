@@ -28,10 +28,7 @@ describe('bmoor.lib.config', function () {
 		it('should work with values', function () {
 			expect(cfg.get('value')).to.equal('v-1');
 
-			expect(cfg.keys()).to.deep.equal([
-				'value',
-				'obj'
-			]);
+			expect(cfg.keys()).to.deep.equal(['value', 'obj']);
 
 			expect(cfg.get('obj').hello).to.equal('world');
 			expect(cfg.get('obj').foo).to.equal('bar');
@@ -110,12 +107,19 @@ describe('bmoor.lib.config', function () {
 		});
 
 		it('should work with subs', function () {
-			const myCfg = cfg.getSub('sub').override({
-				value: 'v-9'
-			});
+			const myCfg = cfg.override(
+				{},
+				{
+					sub: new Config({
+						value: 'v-9',
+						foo: 1,
+						bar: 2
+					})
+				}
+			);
 
-			expect(myCfg.get('value')).to.equal('v-9');
-			expect(myCfg.get('hello.world')).to.equal('h-1');
+			expect(myCfg.getSub('sub').keys()).to.deep.equal(['value', 'foo', 'bar']);
+			expect(myCfg.getSub('sub').get('value')).to.equal('v-9');
 		});
 	});
 });

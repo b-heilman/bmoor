@@ -99,6 +99,7 @@ function implode(obj, settings = {}) {
 				rtn[format(key)] = val;
 			} else if (
 				bmoor.isObject(val) &&
+				!(val instanceof Symbol) &&
 				(!settings.instanceOf || !(val instanceof settings.instanceOf))
 			) {
 				const todo = implode(val, Object.assign({}, settings, {ignore: t}));

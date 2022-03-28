@@ -26,7 +26,7 @@ class Config extends ConfigObject {
 		return this.settings[path];
 	}
 
-	keys(){
+	keys() {
 		return Object.keys(this.settings);
 	}
 
@@ -34,14 +34,17 @@ class Config extends ConfigObject {
 		return this.subs[sub];
 	}
 
-	override(settings={}, subs={}) {
-		return new Config({
-			...this.settings, 
-			...implode(settings)
-		}, {
-			...this.subs,
-			...implode(subs)
-		});
+	override(settings = {}, subs = {}) {
+		return new Config(
+			{
+				...this.settings,
+				...implode(settings, {instanceOf: ConfigObject})
+			},
+			{
+				...this.subs,
+				...implode(subs, {instanceOf: Config})
+			}
+		);
 	}
 }
 
